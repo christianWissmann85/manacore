@@ -139,9 +139,10 @@ function validateDeclareAttackers(state: GameState, action: DeclareAttackersActi
     errors.push('Not your turn');
   }
 
-  // Check if in declare attackers step
-  if (state.step !== 'declare_attackers') {
-    errors.push('Not in declare attackers step');
+  // Phase 0: Can attack from main1 (simplified)
+  // Phase 1+: Must be in declare_attackers step
+  if (state.phase !== 'main1' && state.step !== 'declare_attackers') {
+    errors.push('Can only declare attackers in main1 or declare_attackers step');
   }
 
   const player = getPlayer(state, action.playerId);

@@ -113,6 +113,7 @@ function applyCastSpell(state: GameState, action: CastSpellAction): GameState {
  */
 function applyDeclareAttackers(state: GameState, action: DeclareAttackersAction): GameState {
   const player = getPlayer(state, action.playerId);
+  const opponent = state.players[action.playerId === 'player' ? 'opponent' : 'player'];
 
   // Mark creatures as attacking and tap them
   for (const attackerId of action.payload.attackers) {
@@ -123,8 +124,36 @@ function applyDeclareAttackers(state: GameState, action: DeclareAttackersAction)
     }
   }
 
-  // Move to declare blockers step
-  state.step = 'declare_blockers';
+  // Phase 0: Simplified - no blockers, just deal damage
+  // Calculate total damage
+  let totalDamage = 0;
+  for (const attackerId of action.payload.attackers) {
+    const attacker = player.battlefield.find(c => c.instanceId === attackerId);
+    if (attacker) {
+      const template = CardLoader.getById(attacker.scryfallId);
+      if (template?.power) {
+        totalDamage += parseInt(template.power, 10);
+      }
+    }
+  }
+
+  // Deal damage to opponent
+  opponent.life -= totalDamage;
+
+  // Check for game over
+  if (opponent.life <= 0) {
+    state.gameOver = true;
+    state.winner = action.playerId;
+  }
+
+  // Clean up attacking status
+  for (const creature of player.battlefield) {
+    creature.attacking = false;
+  }
+
+  // Move to main 2
+  state.phase = 'main2';
+  state.step = 'main';
 
   return state;
 }

@@ -44,12 +44,12 @@
 ### Week 2: Data & Engine Core
 
 **Tasks:**
-- [ ] Implement Scryfall scraper (`packages/data-scraper`)
-- [ ] Fetch 6th Edition card data
-- [ ] Parse and cache JSON locally
-- [ ] Implement `CardLoader` in engine
-- [ ] Define core types: `GameState`, `PlayerState`, `CardInstance`
-- [ ] Implement basic `applyAction` reducer for:
+- [x] Implement Scryfall scraper (`packages/data-scraper`)
+- [x] Fetch 6th Edition card data
+- [x] Parse and cache JSON locally
+- [x] Implement `CardLoader` in engine
+- [x] Define core types: `GameState`, `PlayerState`, `CardInstance`
+- [x] Implement basic `applyAction` reducer for:
   - Play land
   - Cast creature (sorcery speed)
   - Attack (attacker chooses blocker)

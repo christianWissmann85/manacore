@@ -71,5 +71,14 @@ export {
 
 export { validateAction } from './actions/validators';
 export { applyAction } from './actions/reducer';
+export { getLegalActions, describeAction } from './actions/getLegalActions';
+
+// Utilities
+export {
+  shuffle,
+  createSimpleDeck,
+  initializeGame,
+  createVanillaDeck,
+} from './utils/gameInit';
 
 console.log(`✅ @manacore/engine v${ENGINE_VERSION} loaded`);
