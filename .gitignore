@@ -27,5 +27,12 @@ npm-debug.log*
 # Test coverage
 coverage/
 
+# Card images (downloaded via fetch-cards script)
+packages/web-client/public/assets/cards/*.jpg
+packages/web-client/public/assets/cards/*.png
+
+# Keep the directory structure
+!packages/web-client/public/assets/cards/.gitkeep
+
 # Bun lockfile (optional - can be committed for reproducibility)
 # bun.lockb

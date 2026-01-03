@@ -44,12 +44,12 @@
 ### Week 2: Data & Engine Core
 
 **Tasks:**
-- [x] Implement Scryfall scraper (`packages/data-scraper`)
-- [x] Fetch 6th Edition card data
-- [x] Parse and cache JSON locally
-- [x] Implement `CardLoader` in engine
-- [x] Define core types: `GameState`, `PlayerState`, `CardInstance`
-- [x] Implement basic `applyAction` reducer for:
+- [ ] Implement Scryfall scraper (`packages/data-scraper`)
+- [ ] Fetch 6th Edition card data
+- [ ] Parse and cache JSON locally
+- [ ] Implement `CardLoader` in engine
+- [ ] Define core types: `GameState`, `PlayerState`, `CardInstance`
+- [ ] Implement basic `applyAction` reducer for:
   - Play land
   - Cast creature (sorcery speed)
   - Attack (attacker chooses blocker)
@@ -72,12 +72,12 @@
 ### Week 3: CLI & RandomBot
 
 **Tasks:**
-- [x] Build CLI interface (`packages/cli-client`)
+- [ ] Build CLI interface (`packages/cli-client`)
   - Display game state in ASCII art
   - Accept text commands (play 0, attack 1, etc.)
-- [x] Implement `RandomBot` that picks random legal actions
-- [x] Run 100 games of RandomBot vs RandomBot
-- [x] Verify games complete without crashes
+- [ ] Implement `RandomBot` that picks random legal actions
+- [ ] Run 100 games of RandomBot vs RandomBot
+- [ ] Verify games complete without crashes
 
 **Success Criteria:**
 - ✅ Two RandomBots finish 100 games
@@ -118,11 +118,11 @@ HAND: [Lightning Bolt] [Grizzly Bears] [Mountain]
 ### Week 4-5: The Stack
 
 **Tasks:**
-- [x] Implement stack data structure (LIFO)
-- [x] Add priority system (both players must pass to resolve)
-- [x] Implement `PASS_PRIORITY` action
-- [x] Add instant-speed spells
-- [x] Implement `Counterspell` as test case
+- [ ] Implement stack data structure (LIFO)
+- [ ] Add priority system (both players must pass to resolve)
+- [ ] Implement `PASS_PRIORITY` action
+- [ ] Add instant-speed spells
+- [ ] Implement `Counterspell` as test case
 
 **New Cards:**
 ```
@@ -151,14 +151,14 @@ Player A: Pass priority
 ### Week 6: Proper Combat
 
 **Tasks:**
-- [x] Implement combat phases:
+- [ ] Implement combat phases:
   - Beginning of Combat
   - Declare Attackers
   - Declare Blockers
   - Combat Damage
   - End of Combat
-- [x] Add damage assignment for multiple blockers
-- [x] Implement keywords: Flying, First Strike, Trample
+- [ ] Add damage assignment for multiple blockers
+- [ ] Implement keywords: Flying, First Strike, Trample
 
 **New Cards:**
 ```
@@ -182,14 +182,14 @@ Player B declares blockers: Air Elemental (4/4 Flying)
 ### Week 7: State-Based Actions & Triggers
 
 **Tasks:**
-- [x] Implement state-based actions:
+- [ ] Implement state-based actions:
   - Creatures with 0 or less toughness die
   - Players at 0 or less life lose
   - Legendary rule (if needed)
-- [x] Implement triggered abilities:
+- [ ] Implement triggered abilities:
   - "When ~ enters the battlefield"
   - "When ~ dies"
-- [x] Add activated abilities:
+- [ ] Add activated abilities:
   - "Tap: Deal 1 damage" (Prodigal Sorcerer)
 
 **New Cards:**
@@ -206,12 +206,12 @@ Nekrataal (2BB) - 2/1, When ~ ETB: Destroy target nonblack creature
 ### Week 8: Basic Web UI
 
 **Tasks:**
-- [x] Set up Vite + PixiJS project
-- [x] Load card images from Scryfall URLs
-- [x] Render battlefield zones
-- [x] Implement drag-and-drop for playing cards
-- [x] Add click-to-target for spells
-- [x] Connect UI to engine (same action system)
+- [ ] Set up Vite + PixiJS project
+- [ ] Load card images from Scryfall URLs
+- [ ] Render battlefield zones
+- [ ] Implement drag-and-drop for playing cards
+- [ ] Add click-to-target for spells
+- [ ] Connect UI to engine (same action system)
 
 **Success Criteria:**
 - ✅ Can play a full game in the browser
@@ -236,13 +236,13 @@ Nekrataal (2BB) - 2/1, When ~ ETB: Destroy target nonblack creature
 ### Week 9-10: MCTS Core
 
 **Tasks:**
-- [x] Implement MCTS algorithm
+- [ ] Implement MCTS algorithm
   - Selection (UCB1)
   - Expansion
   - Simulation (rollout)
   - Backpropagation
-- [x] Add determinization for hidden info
-- [x] Implement GreedyBot for rollout policy
+- [ ] Add determinization for hidden info
+- [ ] Implement GreedyBot for rollout policy
 
 **Success Criteria:**
 - ✅ MCTS can run 1000 iterations in <5 seconds
@@ -252,7 +252,7 @@ Nekrataal (2BB) - 2/1, When ~ ETB: Destroy target nonblack creature
 ### Week 11: Evaluation Function
 
 **Tasks:**
-- [x] Implement board evaluation heuristic:
+- [ ] Implement board evaluation heuristic:
   ```typescript
   evaluation = 
     (myLife - oppLife) * 2.0 +
@@ -261,8 +261,8 @@ Nekrataal (2BB) - 2/1, When ~ ETB: Destroy target nonblack creature
     (myLandsInPlay * 0.3) +
     (myCardAdvantage * 1.0)
   ```
-- [x] Tune weights through self-play
-- [x] Add tempo bonuses (untapped creatures > tapped)
+- [ ] Tune weights through self-play
+- [ ] Add tempo bonuses (untapped creatures > tapped)
 
 **Test:**
 Run 1000 games with different weight values, find optimal.
@@ -270,10 +270,10 @@ Run 1000 games with different weight values, find optimal.
 ### Week 12-13: Card Advantage & Disruption
 
 **Tasks:**
-- [x] Add card draw spells
-- [x] Add discard spells
-- [x] Add removal spells
-- [x] Implement Enchantments (Auras)
+- [ ] Add card draw spells
+- [ ] Add discard spells
+- [ ] Add removal spells
+- [ ] Implement Enchantments (Auras)
 
 **New Cards:**
 ```
@@ -292,13 +292,13 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 ### Week 14: Replay System & Stats
 
 **Tasks:**
-- [x] Implement game replay (save actions + seed)
-- [x] Build statistics dashboard:
+- [ ] Implement game replay (save actions + seed)
+- [ ] Build statistics dashboard:
   - Win rate by deck
   - Average game length
   - Cards played per game
   - Decision quality metrics
-- [x] Add match history viewer
+- [ ] Add match history viewer
 
 **Deliverable:** 
 - Replay any game to debug AI decisions
@@ -320,17 +320,17 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 ### Week 15-16: UI Polish
 
 **Tasks:**
-- [x] Add animations:
+- [ ] Add animations:
   - Card sliding between zones
   - Attack animations (card moves forward)
   - Damage numbers (floating text)
   - Spell effects (particle effects)
-- [x] Add sound effects:
+- [ ] Add sound effects:
   - Card play sound
   - Attack sound
   - Damage sound
   - Win/lose music
-- [x] Improve visual feedback:
+- [ ] Improve visual feedback:
   - Highlight valid targets
   - Show mana cost on hover
   - Glow effect for playable cards
@@ -344,14 +344,14 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 ### Week 17-18: Deck Builder
 
 **Tasks:**
-- [x] Build deck builder UI:
+- [ ] Build deck builder UI:
   - Browse all available cards
   - Filter by color, type, CMC
   - Add/remove cards from deck
   - View mana curve chart
   - Validate deck (60 cards minimum)
-- [x] Save/load custom decks
-- [x] Create 5-10 pre-built decks:
+- [ ] Save/load custom decks
+- [ ] Create 5-10 pre-built decks:
   - Red Aggro
   - Blue Control
   - Green Midrange
@@ -366,13 +366,13 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 ### Week 19: AI Difficulty Tuning
 
 **Tasks:**
-- [x] Tune AI difficulty levels:
+- [ ] Tune AI difficulty levels:
   - Easy: RandomBot (random legal moves)
   - Medium: GreedyBot (1-ply lookahead)
   - Hard: MCTS-500 (500 iterations)
   - Expert: MCTS-2000 (2000 iterations)
-- [x] Test with playtesters (get real humans to play!)
-- [x] Adjust evaluation function based on feedback
+- [ ] Test with playtesters (get real humans to play!)
+- [ ] Adjust evaluation function based on feedback
 
 **Target Win Rates (for average player):**
 - Easy: 90% player win rate
@@ -383,12 +383,12 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 ### Week 20: Final Polish & Testing
 
 **Tasks:**
-- [x] Tutorial for new players
-- [x] Help system (rules reference)
-- [x] Settings menu (sound, animation speed)
-- [x] Bug fixes from playtesting
-- [x] Performance optimization
-- [x] Write user documentation
+- [ ] Tutorial for new players
+- [ ] Help system (rules reference)
+- [ ] Settings menu (sound, animation speed)
+- [ ] Bug fixes from playtesting
+- [ ] Performance optimization
+- [ ] Write user documentation
 
 **Deliverable:** 🚀 **PUBLIC RELEASE v1.0**
 
@@ -407,10 +407,10 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 ### Week 21-22: Tournament Simulator
 
 **Tasks:**
-- [x] Implement Swiss-style tournament
-- [x] Implement Single-Elimination bracket
-- [x] Run large-scale simulations (10,000+ games)
-- [x] Generate reports:
+- [ ] Implement Swiss-style tournament
+- [ ] Implement Single-Elimination bracket
+- [ ] Run large-scale simulations (10,000+ games)
+- [ ] Generate reports:
   - Win rate by deck matchup
   - Top-performing cards
   - Meta-game breakdown
@@ -430,15 +430,15 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 ### Week 23-24: Deck Analytics
 
 **Tasks:**
-- [x] Implement deck scoring algorithms:
+- [ ] Implement deck scoring algorithms:
   - Mana curve optimization
   - Synergy detection (cards that work well together)
   - Consistency metrics (how often you draw what you need)
-- [x] Build card statistics:
+- [ ] Build card statistics:
   - Win% when drawn
   - Average turn played
   - Most common targets
-- [x] Create meta-game reports:
+- [ ] Create meta-game reports:
   - Most played decks
   - Counter-strategy recommendations
 
@@ -462,11 +462,11 @@ Recommendation: Replace Goblin King with more removal
 ### Week 25: MCTS Visualization
 
 **Tasks:**
-- [x] Build decision tree visualizer
-- [x] Show node visit counts
-- [x] Highlight best path
-- [x] Display win rate estimates
-- [x] Animate tree growth in real-time
+- [ ] Build decision tree visualizer
+- [ ] Show node visit counts
+- [ ] Highlight best path
+- [ ] Display win rate estimates
+- [ ] Animate tree growth in real-time
 
 **Use Cases:**
 - Understand why AI makes certain plays
@@ -485,15 +485,15 @@ Recommendation: Replace Goblin King with more removal
 ### Week 26: A/B Testing Framework
 
 **Tasks:**
-- [x] Compare different MCTS configurations:
+- [ ] Compare different MCTS configurations:
   - Exploration parameter (c value)
   - Rollout depth
   - Determinization count
-- [x] Compare evaluation functions:
+- [ ] Compare evaluation functions:
   - Material-only
   - Material + tempo
   - Material + tempo + card advantage
-- [x] Statistical significance testing
+- [ ] Statistical significance testing
 
 **Example Test:**
 ```
@@ -523,16 +523,16 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 ### Week 27-30: Neural Network Evaluation
 
 **Tasks:**
-- [x] Collect training data (100,000+ games)
-- [x] Design network architecture:
+- [ ] Collect training data (100,000+ games)
+- [ ] Design network architecture:
   ```
   Input: Game state (vectorized)
   Hidden: 3 layers (512, 256, 128 neurons)
   Output: Win probability [0, 1]
   ```
-- [x] Train model with supervised learning
-- [x] Replace heuristic evaluation in MCTS
-- [x] Benchmark: NN-MCTS vs Heuristic-MCTS
+- [ ] Train model with supervised learning
+- [ ] Replace heuristic evaluation in MCTS
+- [ ] Benchmark: NN-MCTS vs Heuristic-MCTS
 
 **Success Criteria:**
 - ✅ NN evaluation is faster than rollout
@@ -541,15 +541,15 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 ### Week 31-34: Genetic Algorithm Deck Builder
 
 **Tasks:**
-- [x] Implement GA framework:
+- [ ] Implement GA framework:
   1. Generate random population (100 decks)
   2. Run tournament (fitness = win rate)
   3. Selection (top 20%)
   4. Crossover (combine decks)
   5. Mutation (swap 1-5 cards)
   6. Repeat for 50 generations
-- [x] Visualize deck evolution over generations
-- [x] Compare GA-decks to hand-crafted decks
+- [ ] Visualize deck evolution over generations
+- [ ] Compare GA-decks to hand-crafted decks
 
 **Research Questions:**
 ```
@@ -565,14 +565,14 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 ### Week 35+: Self-Play & AlphaZero
 
 **Tasks:**
-- [x] Implement self-play loop:
+- [ ] Implement self-play loop:
   1. AI plays against itself
   2. Collect training data
   3. Train NN on outcomes
   4. Update MCTS with new NN
   5. Repeat
-- [x] Compare to AlphaZero paper methodology
-- [x] Measure improvement over time
+- [ ] Compare to AlphaZero paper methodology
+- [ ] Measure improvement over time
 
 **Long-term Goal:**
 - Discover optimal play for our card pool
