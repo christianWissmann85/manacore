@@ -73,3 +73,45 @@ export function isArtifact(card: CardTemplate): boolean {
 export function hasKeyword(card: CardTemplate, keyword: string): boolean {
   return card.keywords.some(k => k.toLowerCase() === keyword.toLowerCase());
 }
+
+/**
+ * Check if a creature has Flying
+ */
+export function hasFlying(card: CardTemplate): boolean {
+  return hasKeyword(card, 'Flying');
+}
+
+/**
+ * Check if a creature has First Strike
+ */
+export function hasFirstStrike(card: CardTemplate): boolean {
+  return hasKeyword(card, 'First Strike') || hasKeyword(card, 'Double Strike');
+}
+
+/**
+ * Check if a creature has Double Strike
+ */
+export function hasDoubleStrike(card: CardTemplate): boolean {
+  return hasKeyword(card, 'Double Strike');
+}
+
+/**
+ * Check if a creature has Trample
+ */
+export function hasTrample(card: CardTemplate): boolean {
+  return hasKeyword(card, 'Trample');
+}
+
+/**
+ * Check if a creature has Vigilance
+ */
+export function hasVigilance(card: CardTemplate): boolean {
+  return hasKeyword(card, 'Vigilance');
+}
+
+/**
+ * Check if a creature has Reach
+ */
+export function hasReach(card: CardTemplate): boolean {
+  return hasKeyword(card, 'Reach');
+}

@@ -6,7 +6,7 @@ import type {
   GameState,
   PlayerState,
   CardInstance,
-  CardTemplate,
+
 } from '@manacore/engine';
 import { CardLoader, getPlayer, getOpponent } from '@manacore/engine';
 
@@ -56,11 +56,15 @@ export function renderGameState(state: GameState, viewingPlayer: 'player' | 'opp
   // Stack (if active)
   if (state.stack.length > 0) {
     lines.push('─'.repeat(width));
-    lines.push('STACK (resolves top to bottom)');
+    lines.push(`STACK (resolves top to bottom) - Priority: ${state.priorityPlayer.toUpperCase()}`);
     lines.push('─'.repeat(width));
     for (let i = state.stack.length - 1; i >= 0; i--) {
       const stackObj = state.stack[i]!;
-      lines.push(`  [${i + 1}] ${stackObj.card ? getCardName(stackObj.card) : 'Unknown'}`);
+      const cardName = stackObj.card ? getCardName(stackObj.card) : 'Unknown';
+      const controller = stackObj.controller.toUpperCase();
+      const status = stackObj.countered ? ' [COUNTERED]' : '';
+      const targets = stackObj.targets.length > 0 ? ` -> ${stackObj.targets.join(', ')}` : '';
+      lines.push(`  [${state.stack.length - i}] ${cardName} (${controller})${status}${targets}`);
     }
     lines.push('');
   }

@@ -45,7 +45,8 @@ export interface PlayerState {
 
   // Game rules tracking
   landsPlayedThisTurn: number;
-  hasPassedPriority: boolean;
+  hasPassedPriority: boolean;       // Passed priority on current stack state
+  consecutivePasses: number;        // Track consecutive priority passes
 }
 
 /**
@@ -67,5 +68,6 @@ export function createPlayerState(
     exile: [],
     landsPlayedThisTurn: 0,
     hasPassedPriority: false,
+    consecutivePasses: 0,
   };
 }

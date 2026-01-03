@@ -72,12 +72,12 @@
 ### Week 3: CLI & RandomBot
 
 **Tasks:**
-- [ ] Build CLI interface (`packages/cli-client`)
+- [x] Build CLI interface (`packages/cli-client`)
   - Display game state in ASCII art
   - Accept text commands (play 0, attack 1, etc.)
-- [ ] Implement `RandomBot` that picks random legal actions
-- [ ] Run 100 games of RandomBot vs RandomBot
-- [ ] Verify games complete without crashes
+- [x] Implement `RandomBot` that picks random legal actions
+- [x] Run 100 games of RandomBot vs RandomBot
+- [x] Verify games complete without crashes
 
 **Success Criteria:**
 - ✅ Two RandomBots finish 100 games
@@ -118,11 +118,11 @@ HAND: [Lightning Bolt] [Grizzly Bears] [Mountain]
 ### Week 4-5: The Stack
 
 **Tasks:**
-- [ ] Implement stack data structure (LIFO)
-- [ ] Add priority system (both players must pass to resolve)
-- [ ] Implement `PASS_PRIORITY` action
-- [ ] Add instant-speed spells
-- [ ] Implement `Counterspell` as test case
+- [x] Implement stack data structure (LIFO)
+- [x] Add priority system (both players must pass to resolve)
+- [x] Implement `PASS_PRIORITY` action
+- [x] Add instant-speed spells
+- [x] Implement `Counterspell` as test case
 
 **New Cards:**
 ```
@@ -151,14 +151,14 @@ Player A: Pass priority
 ### Week 6: Proper Combat
 
 **Tasks:**
-- [ ] Implement combat phases:
+- [x] Implement combat phases:
   - Beginning of Combat
   - Declare Attackers
   - Declare Blockers
   - Combat Damage
   - End of Combat
-- [ ] Add damage assignment for multiple blockers
-- [ ] Implement keywords: Flying, First Strike, Trample
+- [x] Add damage assignment for multiple blockers
+- [x] Implement keywords: Flying, First Strike, Trample
 
 **New Cards:**
 ```

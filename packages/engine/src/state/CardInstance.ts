@@ -36,7 +36,8 @@ export interface CardInstance {
 
   // Combat state
   attacking?: boolean;
-  blocking?: string;  // Instance ID of attacker being blocked
+  blocking?: string;      // Instance ID of attacker being blocked
+  blockedBy?: string[];   // Instance IDs of creatures blocking this attacker
 }
 
 /**

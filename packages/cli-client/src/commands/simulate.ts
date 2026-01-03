@@ -3,7 +3,7 @@
  */
 
 import type { Bot } from '@manacore/ai';
-import type { GameState, PlayerId } from '@manacore/engine';
+import type { PlayerId } from '@manacore/engine';
 import {
   initializeGame,
   createVanillaDeck,
@@ -107,22 +107,22 @@ async function runSingleGame(
   const maxTurns = options.maxTurns;
 
   while (!state.gameOver && turnCount < maxTurns) {
-    // Get the active bot
-    const activeBot = state.activePlayer === 'player' ? playerBot : opponentBot;
+    // Get the bot with priority (Phase 1+: priority determines who can act)
+    const priorityBot = state.priorityPlayer === 'player' ? playerBot : opponentBot;
 
-    // Get legal actions
-    const legalActions = getLegalActions(state, state.activePlayer);
+    // Get legal actions for the player with priority
+    const legalActions = getLegalActions(state, state.priorityPlayer);
 
     if (legalActions.length === 0) {
       // No legal actions - game is stuck
       if (options.verbose) {
-        console.log(`No legal actions for ${state.activePlayer} - ending game`);
+        console.log(`No legal actions for ${state.priorityPlayer} - ending game`);
       }
       break;
     }
 
     // Bot chooses action
-    const action = activeBot.chooseAction(state, state.activePlayer);
+    const action = priorityBot.chooseAction(state, state.priorityPlayer);
 
     // Apply action
     try {

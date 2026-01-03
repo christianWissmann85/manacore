@@ -15,8 +15,10 @@ import type { PlayerId, GamePhase, GameStep } from './Zone';
 export interface StackObject {
   id: string;
   controller: PlayerId;
-  card?: CardInstance;  // The spell (if it's a card)
-  targets: string[];    // Instance IDs of targets
+  card: CardInstance;      // The spell being cast
+  targets: string[];       // Instance IDs of targets
+  resolved: boolean;       // Has this resolved?
+  countered: boolean;      // Was this countered?
 }
 
 /**

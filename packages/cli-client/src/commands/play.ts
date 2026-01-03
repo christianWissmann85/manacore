@@ -11,7 +11,7 @@ import {
   getLegalActions,
   describeAction,
 } from '@manacore/engine';
-import { renderGameState, clearScreen, printError, printSuccess, printInfo } from '../display/board';
+import { renderGameState, printError, printSuccess, printInfo } from '../display/board';
 
 const readline = require('readline');
 

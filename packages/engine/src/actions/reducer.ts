@@ -6,11 +6,13 @@
  */
 
 import type { GameState } from '../state/GameState';
-import type { Action, PlayLandAction, CastSpellAction, DeclareAttackersAction, EndTurnAction } from './Action';
+import type { Action, PlayLandAction, CastSpellAction, DeclareAttackersAction, DeclareBlockersAction, EndTurnAction, PassPriorityAction } from './Action';
 import { validateAction } from './validators';
-import { getPlayer, findCard } from '../state/GameState';
+import { getPlayer } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
-import { isCreature } from '../cards/CardTemplate';
+import { hasVigilance } from '../cards/CardTemplate';
+import { pushToStack, resolveTopOfStack, canResolveStack, bothPlayersPassedPriority } from '../rules/stack';
+import { resolveCombatDamage, cleanupCombat } from '../rules/combat';
 
 /**
  * Apply an action to the game state
@@ -36,6 +38,8 @@ export function applyAction(state: GameState, action: Action): GameState {
       return applyCastSpell(newState, action);
     case 'DECLARE_ATTACKERS':
       return applyDeclareAttackers(newState, action);
+    case 'DECLARE_BLOCKERS':
+      return applyDeclareBlockers(newState, action);
     case 'END_TURN':
       return applyEndTurn(newState, action);
     case 'PASS_PRIORITY':
@@ -76,7 +80,7 @@ function applyPlayLand(state: GameState, action: PlayLandAction): GameState {
 
 /**
  * Cast a spell from hand
- * Phase 0: Simplified - creatures just go directly to battlefield
+ * Phase 1: Put spell on the stack
  */
 function applyCastSpell(state: GameState, action: CastSpellAction): GameState {
   const player = getPlayer(state, action.playerId);
@@ -89,71 +93,84 @@ function applyCastSpell(state: GameState, action: CastSpellAction): GameState {
   const card = player.hand[cardIndex]!;
   player.hand.splice(cardIndex, 1);
 
-  // Get card template to determine type
-  const template = CardLoader.getById(card.scryfallId);
-  if (!template) return state;
+  // Card is now on the stack (not in any zone yet)
+  card.zone = 'stack';
 
-  // Phase 0: Creatures go to battlefield, everything else to graveyard
-  if (isCreature(template)) {
-    card.zone = 'battlefield';
-    card.summoningSick = true;  // Can't attack this turn
-    player.battlefield.push(card);
-  } else {
-    // Sorceries/instants go to graveyard after resolving
-    card.zone = 'graveyard';
-    player.graveyard.push(card);
-    // TODO: Apply spell effects (Lightning Bolt, etc.)
-  }
+  // Push to stack
+  pushToStack(state, card, action.playerId, action.payload.targets || []);
 
   return state;
 }
 
 /**
  * Declare attackers
+ * Phase 1+: Move to declare_blockers step
  */
 function applyDeclareAttackers(state: GameState, action: DeclareAttackersAction): GameState {
   const player = getPlayer(state, action.playerId);
-  const opponent = state.players[action.playerId === 'player' ? 'opponent' : 'player'];
 
-  // Mark creatures as attacking and tap them
+  // Mark creatures as attacking and tap them (unless they have Vigilance)
   for (const attackerId of action.payload.attackers) {
     const attacker = player.battlefield.find(c => c.instanceId === attackerId);
     if (attacker) {
       attacker.attacking = true;
-      attacker.tapped = true;  // Attacking taps the creature
-    }
-  }
 
-  // Phase 0: Simplified - no blockers, just deal damage
-  // Calculate total damage
-  let totalDamage = 0;
-  for (const attackerId of action.payload.attackers) {
-    const attacker = player.battlefield.find(c => c.instanceId === attackerId);
-    if (attacker) {
+      // Check for Vigilance keyword
       const template = CardLoader.getById(attacker.scryfallId);
-      if (template?.power) {
-        totalDamage += parseInt(template.power, 10);
+      if (template && !hasVigilance(template)) {
+        attacker.tapped = true;  // Attacking taps the creature (unless Vigilance)
       }
     }
   }
 
-  // Deal damage to opponent
-  opponent.life -= totalDamage;
+  // Move to declare blockers step
+  state.phase = 'combat';
+  state.step = 'declare_blockers';
 
-  // Check for game over
-  if (opponent.life <= 0) {
-    state.gameOver = true;
-    state.winner = action.playerId;
+  // Priority goes to defending player for blockers
+  state.priorityPlayer = state.activePlayer === 'player' ? 'opponent' : 'player';
+
+  return state;
+}
+
+/**
+ * Declare blockers
+ * Phase 1+: Assign blockers to attackers, then resolve combat damage
+ */
+function applyDeclareBlockers(state: GameState, action: DeclareBlockersAction): GameState {
+  // Assign each blocker to its attacker
+  for (const block of action.payload.blocks) {
+    const blocker = state.players[action.playerId].battlefield.find(
+      c => c.instanceId === block.blockerId
+    );
+    const attacker = state.players[state.activePlayer].battlefield.find(
+      c => c.instanceId === block.attackerId
+    );
+
+    if (blocker && attacker) {
+      // Mark blocker as blocking this attacker
+      blocker.blocking = block.attackerId;
+
+      // Add blocker to attacker's blockedBy list
+      if (!attacker.blockedBy) {
+        attacker.blockedBy = [];
+      }
+      attacker.blockedBy.push(block.blockerId);
+    }
   }
 
-  // Clean up attacking status
-  for (const creature of player.battlefield) {
-    creature.attacking = false;
-  }
+  // Resolve combat damage (handles First Strike, Trample, etc.)
+  resolveCombatDamage(state);
 
-  // Move to main 2
+  // Clean up combat state
+  cleanupCombat(state);
+
+  // Move to second main phase
   state.phase = 'main2';
   state.step = 'main';
+
+  // Priority returns to active player
+  state.priorityPlayer = state.activePlayer;
 
   return state;
 }
@@ -161,7 +178,7 @@ function applyDeclareAttackers(state: GameState, action: DeclareAttackersAction)
 /**
  * End the turn
  */
-function applyEndTurn(state: GameState, action: EndTurnAction): GameState {
+function applyEndTurn(state: GameState, _action: EndTurnAction): GameState {
   const currentPlayer = getPlayer(state, state.activePlayer);
 
   // Cleanup phase
@@ -201,16 +218,41 @@ function applyEndTurn(state: GameState, action: EndTurnAction): GameState {
 /**
  * Pass priority
  */
-function applyPassPriority(state: GameState, action: Action): GameState {
+function applyPassPriority(state: GameState, action: PassPriorityAction): GameState {
   const player = getPlayer(state, action.playerId);
   player.hasPassedPriority = true;
+  player.consecutivePasses++;
 
-  // If both players passed, resolve stack or move to next step
-  const opponent = getPlayer(state, action.playerId === 'player' ? 'opponent' : 'player');
+  // Phase 0: During beginning phase, auto-advance to main1
+  if (state.phase === 'beginning' && state.activePlayer === action.playerId) {
+    state.phase = 'main1';
+    state.step = 'main';
+    // Reset priority passes
+    state.players.player.hasPassedPriority = false;
+    state.players.opponent.hasPassedPriority = false;
+    state.players.player.consecutivePasses = 0;
+    state.players.opponent.consecutivePasses = 0;
+    return state;
+  }
 
-  if (opponent.hasPassedPriority) {
-    // Both passed - resolve top of stack or move forward
-    // Phase 0: Simplified turn structure
+  // Switch priority to opponent
+  state.priorityPlayer = action.playerId === 'player' ? 'opponent' : 'player';
+
+  // Check if both players passed
+  if (bothPlayersPassedPriority(state)) {
+    // Both passed - resolve stack if there's anything on it
+    if (canResolveStack(state)) {
+      resolveTopOfStack(state);
+      // After resolution, priority returns to active player
+      // Stack resets priority passes
+    } else if (state.stack.length === 0) {
+      // Stack is empty and both passed - move to next phase/step
+      // For now, just reset passes
+      state.players.player.hasPassedPriority = false;
+      state.players.opponent.hasPassedPriority = false;
+      state.players.player.consecutivePasses = 0;
+      state.players.opponent.consecutivePasses = 0;
+    }
   }
 
   return state;
@@ -221,7 +263,7 @@ function applyPassPriority(state: GameState, action: Action): GameState {
  */
 function applyDrawCard(state: GameState, action: Action): GameState {
   const player = getPlayer(state, action.playerId);
-  const count = (action.payload as any).count || 1;
+  const count = (action.payload as { count?: number }).count || 1;
 
   for (let i = 0; i < count; i++) {
     const card = player.library.pop();

@@ -2,6 +2,7 @@
   "name": "manacore",
   "version": "0.0.1",
   "private": true,
+  "type": "module",
   "workspaces": ["packages/*"],
   "scripts": {
     "fetch-cards": "bun run scripts/fetch-cards.ts",
@@ -9,10 +10,15 @@
     "test:engine": "cd packages/engine && bun test",
     "test:ai": "cd packages/ai && bun test",
     "cli": "cd packages/cli-client && bun run src/index.ts",
-    "dev:web": "cd packages/web-client && bun run dev"
+    "dev:web": "cd packages/web-client && bun run dev",
+    "lint": "eslint packages/*/src/**/*.ts",
+    "lint:fix": "eslint --fix packages/*/src/**/*.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@typescript-eslint/eslint-plugin": "^8.51.0",
+    "@typescript-eslint/parser": "^8.51.0",
+    "eslint": "^9.39.2",
     "typescript": "^5.0.0"
   }
 }

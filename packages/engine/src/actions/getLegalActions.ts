@@ -5,10 +5,10 @@
  */
 
 import type { GameState } from '../state/GameState';
-import type { Action, PlayLandAction, CastSpellAction, DeclareAttackersAction, EndTurnAction, PassPriorityAction } from './Action';
+import type { Action, PlayLandAction, CastSpellAction, DeclareAttackersAction, DeclareBlockersAction, EndTurnAction, PassPriorityAction } from './Action';
 import { getPlayer } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
-import { isLand, isCreature, isSorcery, isInstant } from '../cards/CardTemplate';
+import { isLand, isCreature, isInstant, hasFlying, hasReach } from '../cards/CardTemplate';
 import { validateAction } from './validators';
 
 /**
@@ -17,9 +17,28 @@ import { validateAction } from './validators';
 export function getLegalActions(state: GameState, playerId: 'player' | 'opponent'): Action[] {
   const actions: Action[] = [];
 
-  // Always can pass priority (Phase 1+) or end turn
-  // For Phase 0, we'll just allow ending turn when it's your turn
-  if (state.activePlayer === playerId) {
+  // During beginning phase, only active player can take actions
+  // Phase 0: Automatically advance through beginning phase by passing priority
+  if (state.phase === 'beginning' && state.activePlayer === playerId) {
+    actions.push({
+      type: 'PASS_PRIORITY',
+      playerId,
+      payload: {},
+    } as PassPriorityAction);
+    return actions;
+  }
+
+  // Phase 1+: Can always pass priority when it's your priority
+  if (state.priorityPlayer === playerId) {
+    actions.push({
+      type: 'PASS_PRIORITY',
+      playerId,
+      payload: {},
+    } as PassPriorityAction);
+  }
+
+  // Can end turn when it's your turn (only during your priority)
+  if (state.activePlayer === playerId && state.priorityPlayer === playerId) {
     actions.push({
       type: 'END_TURN',
       playerId,
@@ -27,7 +46,12 @@ export function getLegalActions(state: GameState, playerId: 'player' | 'opponent
     } as EndTurnAction);
   }
 
-  // Can't do anything if not your turn (Phase 0 simplification)
+  // Phase 1+: Can cast instant-speed spells whenever you have priority
+  if (state.priorityPlayer === playerId) {
+    actions.push(...getLegalInstantCasts(state, playerId));
+  }
+
+  // Sorcery-speed actions require it to be your turn
   if (state.activePlayer !== playerId) {
     return actions;
   }
@@ -37,8 +61,8 @@ export function getLegalActions(state: GameState, playerId: 'player' | 'opponent
     // Play lands
     actions.push(...getLegalLandPlays(state, playerId));
 
-    // Cast spells (Phase 0: sorcery speed only)
-    actions.push(...getLegalSpellCasts(state, playerId));
+    // Cast sorcery-speed spells
+    actions.push(...getLegalSorcerySpeedCasts(state, playerId));
   }
 
   // Phase 0: Simplified combat - can attack from main1
@@ -50,6 +74,13 @@ export function getLegalActions(state: GameState, playerId: 'player' | 'opponent
   if (state.phase === 'combat') {
     if (state.step === 'declare_attackers') {
       actions.push(...getLegalAttackerDeclarations(state, playerId));
+    }
+    if (state.step === 'declare_blockers') {
+      // Defending player declares blockers (regardless of priority)
+      const defendingPlayer = state.activePlayer === 'player' ? 'opponent' : 'player';
+      if (playerId === defendingPlayer) {
+        actions.push(...getLegalBlockerDeclarations(state, playerId));
+      }
     }
   }
 
@@ -91,10 +122,10 @@ function getLegalLandPlays(state: GameState, playerId: 'player' | 'opponent'): P
 }
 
 /**
- * Get legal spell casts
- * Phase 0: Only sorcery-speed spells (creatures, sorceries)
+ * Get legal sorcery-speed spell casts
+ * Phase 1+: Only when it's your turn, main phase, stack empty
  */
-function getLegalSpellCasts(state: GameState, playerId: 'player' | 'opponent'): CastSpellAction[] {
+function getLegalSorcerySpeedCasts(state: GameState, playerId: 'player' | 'opponent'): CastSpellAction[] {
   const actions: CastSpellAction[] = [];
   const player = getPlayer(state, playerId);
 
@@ -103,18 +134,54 @@ function getLegalSpellCasts(state: GameState, playerId: 'player' | 'opponent'): 
     return actions;
   }
 
-  // Find castable cards in hand
+  // Find sorcery-speed castable cards in hand
   for (const card of player.hand) {
     const template = CardLoader.getById(card.scryfallId);
     if (!template || isLand(template)) continue;
 
-    // Phase 0: Allow all non-land cards (we'll add mana checking later)
+    // Skip instants - they're handled separately
+    if (isInstant(template)) continue;
+
     const action: CastSpellAction = {
       type: 'CAST_SPELL',
       playerId,
       payload: {
         cardInstanceId: card.instanceId,
-        targets: [],  // TODO: Handle targeting in Phase 1
+        targets: [],  // TODO: Handle targeting in Phase 1+
+      },
+    };
+
+    // Validate before adding
+    if (validateAction(state, action).length === 0) {
+      actions.push(action);
+    }
+  }
+
+  return actions;
+}
+
+/**
+ * Get legal instant-speed spell casts
+ * Phase 1+: Can cast instants any time you have priority
+ */
+function getLegalInstantCasts(state: GameState, playerId: 'player' | 'opponent'): CastSpellAction[] {
+  const actions: CastSpellAction[] = [];
+  const player = getPlayer(state, playerId);
+
+  // Find instant-speed castable cards in hand
+  for (const card of player.hand) {
+    const template = CardLoader.getById(card.scryfallId);
+    if (!template || isLand(template)) continue;
+
+    // Only instants
+    if (!isInstant(template)) continue;
+
+    const action: CastSpellAction = {
+      type: 'CAST_SPELL',
+      playerId,
+      payload: {
+        cardInstanceId: card.instanceId,
+        targets: [],  // TODO: Handle targeting in Phase 1+
       },
     };
 
@@ -187,6 +254,71 @@ function getLegalAttackerDeclarations(state: GameState, playerId: 'player' | 'op
 }
 
 /**
+ * Get legal blocker declarations
+ * Phase 1+: Defender can assign blockers to attackers
+ */
+function getLegalBlockerDeclarations(state: GameState, playerId: 'player' | 'opponent'): DeclareBlockersAction[] {
+  const actions: DeclareBlockersAction[] = [];
+  const player = getPlayer(state, playerId);
+  const activePlayerId = state.activePlayer;
+  const activePlayer = getPlayer(state, activePlayerId);
+
+  // Find potential blockers
+  const potentialBlockers = player.battlefield.filter(card => {
+    const template = CardLoader.getById(card.scryfallId);
+    if (!template || !isCreature(template)) return false;
+    if (card.tapped) return false;
+    return true;
+  });
+
+  // Find attackers
+  const attackers = activePlayer.battlefield.filter(c => c.attacking);
+
+  // Option 1: Don't block at all
+  actions.push({
+    type: 'DECLARE_BLOCKERS',
+    playerId,
+    payload: { blocks: [] },
+  });
+
+  // Option 2: Block each attacker individually with each possible blocker
+  for (const attacker of attackers) {
+    const attackerTemplate = CardLoader.getById(attacker.scryfallId);
+    if (!attackerTemplate) continue;
+
+    for (const blocker of potentialBlockers) {
+      const blockerTemplate = CardLoader.getById(blocker.scryfallId);
+      if (!blockerTemplate) continue;
+
+      // Check Flying restriction
+      if (hasFlying(attackerTemplate)) {
+        if (!hasFlying(blockerTemplate) && !hasReach(blockerTemplate)) {
+          continue; // Can't block flying
+        }
+      }
+
+      const action: DeclareBlockersAction = {
+        type: 'DECLARE_BLOCKERS',
+        playerId,
+        payload: {
+          blocks: [{
+            blockerId: blocker.instanceId,
+            attackerId: attacker.instanceId,
+          }],
+        },
+      };
+
+      // Validate before adding
+      if (validateAction(state, action).length === 0) {
+        actions.push(action);
+      }
+    }
+  }
+
+  return actions;
+}
+
+/**
  * Describe an action in human-readable form
  */
 export function describeAction(action: Action, state: GameState): string {
@@ -218,6 +350,13 @@ export function describeAction(action: Action, state: GameState): string {
       if (count === 0) return 'Attack with no creatures';
       if (count === 1) return 'Attack with 1 creature';
       return `Attack with ${count} creatures`;
+    }
+
+    case 'DECLARE_BLOCKERS': {
+      const count = action.payload.blocks.length;
+      if (count === 0) return 'Don\'t block';
+      if (count === 1) return 'Block with 1 creature';
+      return `Block with ${count} creatures`;
     }
 
     case 'END_TURN':
