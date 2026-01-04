@@ -6,11 +6,16 @@
 
 import type { GameState } from '../state/GameState';
 import type { Action, PlayLandAction, CastSpellAction, DeclareAttackersAction, DeclareBlockersAction, EndTurnAction, PassPriorityAction, ActivateAbilityAction } from './Action';
-import { getPlayer } from '../state/GameState';
+import { getPlayer, findCard } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
 import { isLand, isCreature, isInstant, hasFlying, hasReach } from '../cards/CardTemplate';
 import { validateAction } from './validators';
 import { getActivatedAbilities } from '../rules/activatedAbilities';
+import {
+  parseTargetRequirements,
+  getAllLegalTargetCombinations,
+  requiresTargets,
+} from '../rules/targeting';
 
 /**
  * Get all legal actions for a player
@@ -144,18 +149,48 @@ function getLegalSorcerySpeedCasts(state: GameState, playerId: 'player' | 'oppon
     // Skip instants - they're handled separately
     if (isInstant(template)) continue;
 
-    const action: CastSpellAction = {
-      type: 'CAST_SPELL',
-      playerId,
-      payload: {
-        cardInstanceId: card.instanceId,
-        targets: [],  // TODO: Handle targeting in Phase 1+
-      },
-    };
+    // Check if this spell requires targets
+    const targetRequirements = parseTargetRequirements(template.oracle_text || '');
 
-    // Validate before adding
-    if (validateAction(state, action).length === 0) {
-      actions.push(action);
+    if (targetRequirements.length > 0) {
+      // Generate actions for each valid target combination
+      const targetCombinations = getAllLegalTargetCombinations(
+        state,
+        targetRequirements,
+        playerId,
+        card
+      );
+
+      for (const targets of targetCombinations) {
+        const action: CastSpellAction = {
+          type: 'CAST_SPELL',
+          playerId,
+          payload: {
+            cardInstanceId: card.instanceId,
+            targets,
+          },
+        };
+
+        // Validate before adding
+        if (validateAction(state, action).length === 0) {
+          actions.push(action);
+        }
+      }
+    } else {
+      // No targets required
+      const action: CastSpellAction = {
+        type: 'CAST_SPELL',
+        playerId,
+        payload: {
+          cardInstanceId: card.instanceId,
+          targets: [],
+        },
+      };
+
+      // Validate before adding
+      if (validateAction(state, action).length === 0) {
+        actions.push(action);
+      }
     }
   }
 
@@ -178,18 +213,48 @@ function getLegalInstantCasts(state: GameState, playerId: 'player' | 'opponent')
     // Only instants
     if (!isInstant(template)) continue;
 
-    const action: CastSpellAction = {
-      type: 'CAST_SPELL',
-      playerId,
-      payload: {
-        cardInstanceId: card.instanceId,
-        targets: [],  // TODO: Handle targeting in Phase 1+
-      },
-    };
+    // Check if this spell requires targets
+    const targetRequirements = parseTargetRequirements(template.oracle_text || '');
 
-    // Validate before adding
-    if (validateAction(state, action).length === 0) {
-      actions.push(action);
+    if (targetRequirements.length > 0) {
+      // Generate actions for each valid target combination
+      const targetCombinations = getAllLegalTargetCombinations(
+        state,
+        targetRequirements,
+        playerId,
+        card
+      );
+
+      for (const targets of targetCombinations) {
+        const action: CastSpellAction = {
+          type: 'CAST_SPELL',
+          playerId,
+          payload: {
+            cardInstanceId: card.instanceId,
+            targets,
+          },
+        };
+
+        // Validate before adding
+        if (validateAction(state, action).length === 0) {
+          actions.push(action);
+        }
+      }
+    } else {
+      // No targets required
+      const action: CastSpellAction = {
+        type: 'CAST_SPELL',
+        playerId,
+        payload: {
+          cardInstanceId: card.instanceId,
+          targets: [],
+        },
+      };
+
+      // Validate before adding
+      if (validateAction(state, action).length === 0) {
+        actions.push(action);
+      }
     }
   }
 
@@ -214,33 +279,24 @@ function getLegalAbilityActivations(state: GameState, playerId: 'player' | 'oppo
         continue;
       }
 
-      // For abilities that require targets, we need to generate actions for each valid target
-      // For now, simplify by generating actions for common targets (creatures + players)
-      const requiresTarget = ability.effect.type === 'DAMAGE' || ability.effect.type === 'DESTROY';
+      // Check if this ability requires targets
+      if (ability.targetRequirements && ability.targetRequirements.length > 0) {
+        // Generate actions for each valid target combination
+        const targetCombinations = getAllLegalTargetCombinations(
+          state,
+          ability.targetRequirements,
+          playerId,
+          permanent
+        );
 
-      if (requiresTarget) {
-        // Generate action for each potential target
-        const targets: string[] = ['player', 'opponent'];
-
-        // Add all creatures as potential targets
-        for (const targetPlayerId of ['player', 'opponent'] as const) {
-          const targetPlayer = getPlayer(state, targetPlayerId);
-          for (const creature of targetPlayer.battlefield) {
-            const template = CardLoader.getById(creature.scryfallId);
-            if (template && isCreature(template)) {
-              targets.push(creature.instanceId);
-            }
-          }
-        }
-
-        for (const target of targets) {
+        for (const targets of targetCombinations) {
           const action: ActivateAbilityAction = {
             type: 'ACTIVATE_ABILITY',
             playerId,
             payload: {
               sourceId: permanent.instanceId,
               abilityId: ability.id,
-              targets: [target],
+              targets,
             },
           };
 
@@ -396,6 +452,31 @@ function getLegalBlockerDeclarations(state: GameState, playerId: 'player' | 'opp
 }
 
 /**
+ * Get a human-readable name for a target
+ */
+function getTargetName(state: GameState, targetId: string): string {
+  // Player targets
+  if (targetId === 'player') return 'Player';
+  if (targetId === 'opponent') return 'Opponent';
+
+  // Stack targets (for counterspells)
+  const stackObj = state.stack.find(s => s.id === targetId);
+  if (stackObj) {
+    const template = CardLoader.getById(stackObj.card.scryfallId);
+    return template?.name || 'spell';
+  }
+
+  // Card targets
+  const card = findCard(state, targetId);
+  if (card) {
+    const template = CardLoader.getById(card.scryfallId);
+    return template?.name || 'permanent';
+  }
+
+  return targetId;
+}
+
+/**
  * Describe an action in human-readable form
  */
 export function describeAction(action: Action, state: GameState): string {
@@ -417,7 +498,15 @@ export function describeAction(action: Action, state: GameState): string {
       );
       if (card) {
         const template = CardLoader.getById(card.scryfallId);
-        return `Cast ${template?.name || 'spell'}`;
+        const spellName = template?.name || 'spell';
+
+        // Include targets in description
+        const targets = action.payload.targets || [];
+        if (targets.length > 0) {
+          const targetNames = targets.map(t => getTargetName(state, t)).join(', ');
+          return `Cast ${spellName} targeting ${targetNames}`;
+        }
+        return `Cast ${spellName}`;
       }
       return 'Cast spell';
     }
@@ -452,9 +541,10 @@ export function describeAction(action: Action, state: GameState): string {
           const abilities = getActivatedAbilities(card, state);
           const ability = abilities.find(a => a.id === action.payload.abilityId);
           if (ability && template) {
-            if (action.payload.targets && action.payload.targets.length > 0) {
-              const targetName = action.payload.targets[0];
-              return `${template.name}: ${ability.name} targeting ${targetName}`;
+            const targets = action.payload.targets || [];
+            if (targets.length > 0) {
+              const targetNames = targets.map(t => getTargetName(state, t)).join(', ');
+              return `${template.name}: ${ability.name} targeting ${targetNames}`;
             }
             return `${template.name}: ${ability.name}`;
           }

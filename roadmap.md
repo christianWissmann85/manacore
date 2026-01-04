@@ -1,8 +1,8 @@
 # MANACORE: Development Roadmap
 
 **Version:** 1.0.0  
-**Last Updated:** January 3, 2026  
-**Total Estimated Duration:** 26+ weeks  
+**Last Updated:** January 4, 2026  
+**Total Estimated Duration:** 30+ weeks  
 **Approach:** Agile, iterative, ship early and often
 
 ---
@@ -210,7 +210,7 @@ Nekrataal (2BB) - 2/1, When ~ ETB: Destroy target nonblack creature
 
 **Tasks:**
 - [ ] Set up Vite + PixiJS project
-- [ ] Load card images from Scryfall URLs
+- [ ] Load card images from `packages/web-client/public/assets/cards/`
 - [ ] Render battlefield zones
 - [ ] Implement drag-and-drop for playing cards
 - [ ] Add click-to-target for spells
@@ -270,22 +270,22 @@ Action: Cast Hill Giant (3R) - SUCCESS
 ### Week 10: Targeting System ⚠️ CRITICAL
 
 **Tasks:**
-- [ ] Implement target validation:
+- [x] Implement target validation:
   - Valid target types (creature, player, "any target")
   - Legal targets (in play, controller restrictions)
   - Protection/Hexproof/Shroud (if needed)
-- [ ] Add targeting to actions:
+- [x] Add targeting to actions:
   - `CastSpellAction.targets` array
   - `ActivateAbilityAction.targets` array
   - Target validation in validators
-- [ ] Implement "target" text parser:
+- [x] Implement "target" text parser:
   - "Target creature" → filter battlefield for creatures
   - "Target player" → return player list
   - "Any target" → creatures + players
-- [ ] Update reducers to use targets:
+- [x] Update reducers to use targets:
   - Apply effects to specified targets
   - Handle illegal targets (fizzle spell)
-- [ ] Add targeting to UI:
+- [x] Add targeting to UI:
   - Click-to-target interface
   - Highlight valid targets
   - Cancel targeting
@@ -836,82 +836,6 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 5. **Card Design Tool** (Phase 10)
    - Generate new cards
    - Test balance via simulation
-
----
-
-## Getting Started
-
-### Immediate Next Steps (This Week)
-
-**Day 1-2: Setup**
-```bash
-# Create monorepo
-mkdir mana-core && cd mana-core
-bun init -y
-
-# Create workspace structure
-mkdir -p packages/{engine,ai,cli-client,data-scraper}
-
-# Initialize each package
-cd packages/engine && bun init -y
-cd packages/ai && bun init -y
-cd packages/cli-client && bun init -y
-cd packages/data-scraper && bun init -y
-```
-
-**Day 3-4: Fetch Card Data**
-```bash
-# Run Scryfall scraper
-cd packages/data-scraper
-bun run ../scripts/fetch-cards.ts
-
-# Verify output
-cat ../engine/data/cards/6ed.json | wc -l
-# Should show ~350 cards
-```
-
-**Day 5-7: First Playable**
-```bash
-# Implement minimal engine
-cd packages/engine
-# Code GameState, actions, reducer
-
-# Build CLI
-cd packages/cli-client
-# Code game loop, display functions
-
-# Test
-bun cli play
-```
-
----
-
-## Appendix: Time Estimates by Component
-
-| Component | Estimated Hours | Notes |
-|-----------|----------------|-------|
-| Project setup | 8h | Monorepo, TypeScript, tooling |
-| Scryfall scraper | 4h | Straightforward API calls |
-| Engine core (Phase 0) | 20h | GameState, actions, zones |
-| Combat system | 16h | Declare attackers/blockers, damage |
-| The Stack | 12h | Priority, LIFO resolution |
-| State-based actions | 8h | Die triggers, cleanup |
-| CLI client | 12h | ASCII art, input handling |
-| RandomBot | 2h | Pick random legal action |
-| GreedyBot | 8h | Board evaluation heuristic |
-| MCTS core | 24h | UCB1, rollouts, determinization |
-| Web UI (basic) | 40h | PixiJS setup, card rendering |
-| Web UI (polish) | 60h | Animations, sounds, effects |
-| Deck builder | 24h | UI, validation, persistence |
-| Tournament simulator | 16h | Swiss, Single-Elim, stats |
-| Analytics dashboard | 20h | Visualizations, reports |
-| MCTS visualizer | 16h | Tree rendering, animations |
-| Neural network | 40h | Data collection, training, integration |
-| Genetic algorithm | 32h | GA loop, fitness function, mutations |
-
-**Total Estimated:** ~402 hours (~10 weeks @ 40h/week)
-
-This aligns with our 20-week timeline for Phases 0-3 (accounting for debugging, testing, iteration).
 
 ---
 

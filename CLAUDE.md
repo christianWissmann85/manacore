@@ -251,7 +251,7 @@ manacore/
 - ✅ CLI displays abilities (keywords + activated)
 - 🔜 Playable web game with card images and drag-and-drop
 - ✅ Complete mana system with costs and payment
-- 🔜 **Targeting system for spells and abilities**
+- ✅ Targeting system for spells and abilities
 - 🔜 **20-30 working cards (creatures, removal, draw, counterspells)**
 
 ### 🔜 Phase 2: Hidden Information & Smart AI (Weeks 12-17)
@@ -917,14 +917,13 @@ bun build src/index.ts                  # Build a file
 
 ## Version History
 
-- **v0.0.1** (Current): Phase 0 + Phase 1 Weeks 1-7 complete (Weeks 8-11 pending)
+- **v0.0.1** 
   - Foundation: Monorepo, card loader, basic engine, CLI, RandomBot
   - The Stack: LIFO resolution, priority system, instant vs sorcery timing
   - Combat: Blockers, Flying, First Strike, Trample, Vigilance, Reach
   - Abilities: State-based actions, triggered abilities, activated abilities
   - CLI: Display of keywords and activated abilities
   - **Next**:
-    - Week 10 - Targeting System ⚠️ **CRITICAL**
     - Week 11 - Card Library Expansion (20-30 cards)
     - Week 8 - Basic Web UI (Vite + PixiJS)
 

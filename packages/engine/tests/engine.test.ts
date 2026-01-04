@@ -439,8 +439,8 @@ describe('The Stack', () => {
     // Lightning Blast resolved
     expect(state.stack.length).toBe(0);
 
-    // Opponent should have taken 3 damage
+    // Opponent should have taken 4 damage (Lightning Blast deals 4)
     const opponent = getPlayer(state, 'opponent');
-    expect(opponent.life).toBe(17);
+    expect(opponent.life).toBe(16);
   });
 });

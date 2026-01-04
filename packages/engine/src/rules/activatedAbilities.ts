@@ -20,6 +20,7 @@ import { CardLoader } from '../cards/CardLoader';
 import { isLand } from '../cards/CardTemplate';
 import type { ManaColor } from '../utils/manaCosts';
 import { getLandManaColors, parseManaCost, canPayManaCost, payManaCost, addManaToPool } from '../utils/manaCosts';
+import type { TargetRequirement } from './targeting';
 
 /**
  * Activated ability definition
@@ -30,6 +31,7 @@ export interface ActivatedAbility {
   cost: AbilityCost;    // What you pay to activate
   effect: AbilityEffect; // What happens when it resolves
   isManaAbility: boolean; // Mana abilities don't use the stack
+  targetRequirements?: TargetRequirement[]; // Targeting requirements (if ability targets)
   canActivate: (state: GameState, sourceId: string, controller: PlayerId) => boolean;
 }
 
@@ -73,10 +75,19 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
       // "{T}: Prodigal Sorcerer deals 1 damage to any target"
       abilities.push({
         id: `${card.instanceId}_tap_damage`,
-        name: 'Tap: Deal 1 damage',
+        name: 'Tap: Deal 1 damage to any target',
         cost: { tap: true },
         effect: { type: 'DAMAGE', amount: 1 },
         isManaAbility: false,
+        targetRequirements: [{
+          id: 'target_0',
+          count: 1,
+          targetType: 'any',
+          zone: 'battlefield',
+          restrictions: [],
+          optional: false,
+          description: 'any target',
+        }],
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
           const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
           if (!source) return false;

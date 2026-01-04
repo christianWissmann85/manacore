@@ -115,3 +115,41 @@ export function hasVigilance(card: CardTemplate): boolean {
 export function hasReach(card: CardTemplate): boolean {
   return hasKeyword(card, 'Reach');
 }
+
+/**
+ * Check if a creature has Haste
+ */
+export function hasHaste(card: CardTemplate): boolean {
+  return hasKeyword(card, 'Haste');
+}
+
+/**
+ * Check if a permanent has Hexproof
+ * (Can't be targeted by opponents)
+ */
+export function hasHexproof(card: CardTemplate): boolean {
+  return hasKeyword(card, 'Hexproof');
+}
+
+/**
+ * Check if a permanent has Shroud
+ * (Can't be targeted by anyone)
+ */
+export function hasShroud(card: CardTemplate): boolean {
+  return hasKeyword(card, 'Shroud');
+}
+
+/**
+ * Check if a permanent has Protection from a color
+ */
+export function hasProtectionFromColor(card: CardTemplate, color: 'W' | 'U' | 'B' | 'R' | 'G'): boolean {
+  const oracleText = card.oracle_text?.toLowerCase() || '';
+  const colorNames: Record<string, string> = {
+    W: 'white',
+    U: 'blue',
+    B: 'black',
+    R: 'red',
+    G: 'green',
+  };
+  return oracleText.includes(`protection from ${colorNames[color]}`);
+}

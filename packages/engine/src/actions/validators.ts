@@ -13,6 +13,11 @@ import { getActivatedAbilities } from '../rules/activatedAbilities';
 import type { PlayerId } from '../state/Zone';
 import type { ManaPool } from '../state/PlayerState';
 import { parseManaCost, canPayManaCost, hasXInCost } from '../utils/manaCosts';
+import {
+  parseTargetRequirements,
+  validateTargets,
+  getRequiredTargetCount,
+} from '../rules/targeting';
 
 /**
  * Validate any action
@@ -161,6 +166,32 @@ function validateCastSpell(state: GameState, action: CastSpellAction): string[] 
   // For X spells, validate the X value makes sense
   if (hasXInCost(template.mana_cost) && xValue < 0) {
     errors.push('X value cannot be negative');
+  }
+
+  // Target validation
+  const targetRequirements = parseTargetRequirements(template.oracle_text || '');
+
+  if (targetRequirements.length > 0) {
+    const targets = action.payload.targets || [];
+    const requiredCount = getRequiredTargetCount(targetRequirements);
+
+    // Check if targets were provided when required
+    if (requiredCount > 0 && targets.length === 0) {
+      errors.push(`This spell requires ${requiredCount} target(s)`);
+      return errors;
+    }
+
+    // Validate the provided targets
+    if (targets.length > 0) {
+      const targetErrors = validateTargets(
+        state,
+        targets,
+        targetRequirements,
+        action.playerId,
+        card
+      );
+      errors.push(...targetErrors);
+    }
   }
 
   return errors;
@@ -329,6 +360,30 @@ function validateActivateAbility(state: GameState, action: ActivateAbilityAction
   // Check if ability can be activated
   if (!ability.canActivate(state, action.payload.sourceId, action.playerId)) {
     errors.push('Ability cannot be activated');
+  }
+
+  // Target validation for abilities that require targets
+  if (ability.targetRequirements && ability.targetRequirements.length > 0) {
+    const targets = action.payload.targets || [];
+    const requiredCount = getRequiredTargetCount(ability.targetRequirements);
+
+    // Check if targets were provided when required
+    if (requiredCount > 0 && targets.length === 0) {
+      errors.push(`This ability requires ${requiredCount} target(s)`);
+      return errors;
+    }
+
+    // Validate the provided targets
+    if (targets.length > 0) {
+      const targetErrors = validateTargets(
+        state,
+        targets,
+        ability.targetRequirements,
+        action.playerId,
+        card
+      );
+      errors.push(...targetErrors);
+    }
   }
 
   return errors;

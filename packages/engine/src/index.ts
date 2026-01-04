@@ -52,6 +52,10 @@ export {
   hasTrample,
   hasVigilance,
   hasReach,
+  hasHaste,
+  hasHexproof as hasHexproofTemplate,
+  hasShroud as hasShroudTemplate,
+  hasProtectionFromColor,
 } from './cards/CardTemplate';
 
 // Action exports
@@ -82,6 +86,29 @@ export { getLegalActions, describeAction } from './actions/getLegalActions';
 // Rules exports
 export type { ActivatedAbility, AbilityCost, AbilityEffect } from './rules/activatedAbilities';
 export { getActivatedAbilities } from './rules/activatedAbilities';
+
+// Targeting exports
+export type {
+  TargetType,
+  TargetRestriction,
+  TargetRequirement,
+  ResolvedTarget,
+  MtgColor,
+} from './rules/targeting';
+
+export {
+  parseTargetRequirements,
+  requiresTargets,
+  getRequiredTargetCount,
+  getMaxTargetCount,
+  validateTargets,
+  getLegalTargets,
+  getAllLegalTargetCombinations,
+  shouldSpellFizzle,
+  hasHexproof,
+  hasShroud,
+  hasProtectionFrom,
+} from './rules/targeting';
 
 // Utilities
 export {
