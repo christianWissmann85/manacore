@@ -41,10 +41,10 @@ ManaCore is a digital implementation of Magic: The Gathering, designed from the 
 - ✅ Card data pipeline from Scryfall API
 - ✅ CLI client for human vs bot play
 - ✅ RandomBot AI for testing
+- ✅ Mana system and spell costs
+- ⚙️ Full card abilities and interactions (in progress)
 - ⚙️ Advanced AI agents (in progress)
 - 🔜 Web client with React
-- ✅ Mana system and spell costs
-- 🔜 Full card abilities and interactions
 
 ---
 
@@ -228,17 +228,16 @@ manacore/
 - ✅ CLI for human vs bot
 - ✅ RandomBot AI
 
-### 🔄 Phase 1: Core MTG Rules (Weeks 4-11) - IN PROGRESS
+### ✅ Phase 1: Core MTG Rules (Weeks 4-11) - COMPLETE
 
 **Goal**: "This Actually Feels Like Magic"
 
 - Week 4-5: **The Stack** ✅ (LIFO spell resolution, priority system, instant vs sorcery timing)
 - Week 6: **Proper Combat** ✅ (blockers, Flying, First Strike, Trample, Vigilance, Reach)
 - Week 7: **State-Based Actions & Triggers** ✅ (SBAs, ETB triggers, death triggers, activated abilities)
-- Week 8: **Basic Web UI** 🔜 (Vite + PixiJS, card rendering, drag-and-drop)
 - Week 9: **Mana System** ✅ (mana pools, paying costs, mana abilities)
 - Week 10: **Targeting System** ✅ (legal targets, target validation)
-- Week 11: **Card Library Expansion** (implement 20-30 common 6th Edition cards)
+- Week 11: **Card Library Expansion** ✅ (20-30 common 6th Edition cards)
 
 **Deliverables**:
 - ✅ Stack system with priority passing
@@ -249,55 +248,80 @@ manacore/
 - ✅ Triggered abilities framework
 - ✅ Activated abilities framework
 - ✅ CLI displays abilities (keywords + activated)
-- 🔜 Playable web game with card images and drag-and-drop
 - ✅ Complete mana system with costs and payment
 - ✅ Targeting system for spells and abilities
 - ✅ 20-30 working cards (creatures, removal, draw, counterspells)
 
-### 🔜 Phase 2: Hidden Information & Smart AI (Weeks 12-17)
+### 🔄 Phase 1.5: Complete Card Library (Weeks 12-18) - NEXT
+
+**Goal**: "Every Card Works"
+
+- Week 1.5.1: **Infrastructure** (death triggers, sacrifice, X-costs, tokens, all lands)
+- Week 1.5.2: **Instants & Sorceries** (38 instants + 53 sorceries)
+- Week 1.5.3: **Creatures Part 1** (vanilla, keywords, ETB, mana dorks)
+- Week 1.5.4: **Creatures Part 2** (activated abilities, lords, complex triggers)
+- Week 1.5.5: **Auras & Enchantments** (22 auras + 34 enchantments)
+- Week 1.5.6: **Artifacts** (41 artifacts)
+- Week 1.5.7: **Integration Testing** (1000-game simulation, documentation)
+
+**Deliverable**: 302+ cards (90% of 6th Edition) fully playable
+
+> **Tracking:** See [CARD_STATUS.md](./CARD_STATUS.md) for detailed implementation status. Always update the Tracker after Implementing a Task.
+
+### 🔜 Phase 1.6: Complex Card Mechanics (Weeks 19-20)
+
+**Goal**: "The Last 10%"
+
+- Control-changing effects (Abduction, Juxtapose)
+- Replacement effects (Forbidden Crypt, Teferi's Puzzle Box)
+- Type/color changing (Celestial Dawn, Living Lands)
+- Complex interactions (Doomsday, Polymorph)
+
+**Deliverable**: 100% of 6th Edition (335 cards) complete
+
+### 🔜 Phase 2: Hidden Information & Smart AI (Weeks 21-26)
 
 **Goal**: "The AI Gets Dangerous"
 
-- Week 12-13: **MCTS Core** (Monte Carlo Tree Search with hidden information handling)
-- Week 14: **Evaluation Function** (heuristic board evaluation, weight tuning)
-- Week 15-16: **Card Advantage & Disruption** (draw spells, removal, enchantments)
-- Week 17: **Replay System & Stats** (game replay, statistics dashboard, match history)
+- Week 21-22: **MCTS Core** (Monte Carlo Tree Search with hidden information handling)
+- Week 23: **Evaluation Function** (heuristic board evaluation, weight tuning)
+- Week 24-25: **Card Advantage & Disruption** (draw spells, removal, enchantments)
+- Week 26: **Replay System & Stats** (game replay, statistics dashboard, match history)
 
 **Key Deliverables**:
 - MCTS bot that beats RandomBot 90%+ of games
 - Evaluation function tuned through self-play
-- Card draw, discard, and removal spells
 - Game replay system for debugging AI decisions
 
-### 🔜 Phase 3: Polished Game Experience (Weeks 18-23)
+### 🔜 Phase 3: Polished Game Experience (Weeks 27-32)
 
 **Goal**: "Ship a Real Game" 🚀
 
-- Week 18-19: **UI Polish** (animations, sound effects, visual feedback)
-- Week 20-21: **Deck Builder** (browse cards, build decks, mana curve visualization)
-- Week 22: **AI Difficulty Tuning** (Easy, Medium, Hard, Expert modes)
-- Week 23: **Final Polish & Testing** (tutorial, help system, bug fixes)
+- Week 27: **Basic Web UI** (Vite + PixiJS, card rendering, drag-and-drop)
+- Week 28-29: **UI Polish** (animations, sound effects, visual feedback)
+- Week 30-31: **Deck Builder** (browse cards, build decks, mana curve visualization)
+- Week 32: **Final Polish** (AI difficulty, tutorial, help system, bug fixes)
 
 **Deliverable**: 🎮 **PUBLIC RELEASE v1.0**
 
-### 🔜 Phase 4: AI Research Tools (Weeks 24-29)
+### 🔜 Phase 4: AI Research Tools (Weeks 33-38)
 
 **Goal**: "The AI Research Laboratory"
 
-- Week 24-25: **Tournament Simulator** (Swiss/Single-Elimination, large-scale simulations)
-- Week 26-27: **Deck Analytics** (deck scoring, card statistics, meta-game reports)
-- Week 28: **MCTS Visualization** (decision tree visualizer, win rate estimates)
-- Week 29: **A/B Testing Framework** (compare MCTS configs, evaluation functions)
+- Week 33-34: **Tournament Simulator** (Swiss/Single-Elimination, large-scale simulations)
+- Week 35-36: **Deck Analytics** (deck scoring, card statistics, meta-game reports)
+- Week 37: **MCTS Visualization** (decision tree visualizer, win rate estimates)
+- Week 38: **A/B Testing Framework** (compare MCTS configs, evaluation functions)
 
 **Deliverable**: Research platform for AI experimentation
 
-### 🔜 Phase 5: Machine Learning (Weeks 30+)
+### 🔜 Phase 5: Machine Learning (Weeks 39+)
 
 **Goal**: "Skynet Learns Magic"
 
-- Week 30-33: **Neural Network Evaluation** (100k+ game dataset, NN-based evaluation)
-- Week 34-37: **Genetic Algorithm Deck Builder** (evolve decks through generations)
-- Week 38+: **Self-Play & AlphaZero** (self-play loop, discover optimal strategies)
+- Week 39-42: **Neural Network Evaluation** (100k+ game dataset, NN-based evaluation)
+- Week 43-46: **Genetic Algorithm Deck Builder** (evolve decks through generations)
+- Week 47+: **Self-Play & AlphaZero** (self-play loop, discover optimal strategies)
 
 **Long-term Goal**: AI discovers optimal play and designs tournament-winning decks
 

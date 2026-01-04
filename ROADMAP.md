@@ -13,10 +13,12 @@
 |-------|----------|-------|------------|
 | **Phase 0** | Weeks 1-3 | Foundation | ❌ CLI only |
 | **Phase 1** | Weeks 4-11 | Core MTG | ✅ Complete game |
-| **Phase 2** | Weeks 12-17 | Smart AI | ✅ Challenging AI |
-| **Phase 3** | Weeks 18-23 | Polish | ✅ **PUBLIC RELEASE** |
-| **Phase 4** | Weeks 24-29 | Research Tools | ✅ AI Lab |
-| **Phase 5** | Weeks 30+ | Machine Learning | ✅ Advanced AI |
+| **Phase 1.5** | Weeks 12-18 | Card Library | ✅ 90% cards |
+| **Phase 1.6** | Weeks 19-20 | Complex Cards | ✅ 100% cards |
+| **Phase 2** | Weeks 21-26 | Smart AI | ✅ Challenging AI |
+| **Phase 3** | Weeks 27-32 | Polish | ✅ **PUBLIC RELEASE** |
+| **Phase 4** | Weeks 33-38 | Research Tools | ✅ AI Lab |
+| **Phase 5** | Weeks 39+ | Machine Learning | ✅ Advanced AI |
 
 ---
 
@@ -206,23 +208,7 @@ Nekrataal (2BB) - 2/1, When ~ ETB: Destroy target nonblack creature
 - ✅ ETB triggers happen in correct order
 - ✅ Activated abilities can be used at instant speed
 
-### Week 8: Basic Web UI
 
-**Tasks:**
-- [ ] Set up Vite + PixiJS project
-- [ ] Load card images from `packages/web-client/public/assets/cards/`
-- [ ] Render battlefield zones
-- [ ] Implement drag-and-drop for playing cards
-- [ ] Add click-to-target for spells
-- [ ] Connect UI to engine (same action system)
-
-**Success Criteria:**
-- ✅ Can play a full game in the browser
-- ✅ UI updates when game state changes
-- ✅ Card artwork loads correctly
-- ✅ Smooth at 60 FPS
-
-**Deliverable:** Playable web game (basic, but functional)
 
 ### Week 9: Mana System ⚠️ CRITICAL
 
@@ -362,7 +348,315 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 
 ---
 
-## Phase 2: Hidden Information & Smart AI (Weeks 12-17)
+## Phase 1.5: Complete Card Library (Weeks 12-18)
+
+**Theme:** "Every Card Works"
+
+### Goals
+- Implement ALL 335 cards from 6th Edition (90% target, ~302 cards)
+- Add missing game mechanics required for card effects
+- Comprehensive testing with full deck simulations
+- Defer only truly complex cards to Phase 1.6
+
+> **Tracking:** See [CARD_STATUS.md](./CARD_STATUS.md) for detailed implementation status of all cards.
+
+### Week 1.5.1: Infrastructure & Lands
+
+**New Mechanics Required:**
+- [ ] Death triggers (complete TODO in stateBasedActions.ts)
+- [ ] Sacrifice effects ("Sacrifice a creature:")
+- [ ] X-cost spell handling (Blaze, Fireball, etc.)
+- [ ] Token generation framework
+- [ ] Damage prevention ("Prevent X damage")
+- [ ] Life gain/loss effects
+
+**Land Tasks:**
+- [ ] Pain lands (Adarkar Wastes, etc.) - tap for colorless or colored + damage
+- [ ] Depletion lands (Svyelunite Temple, etc.) - counter-based mana
+- [ ] City of Brass - any color + damage trigger
+
+**Success Criteria:**
+- ✅ All 17 lands working (5 basic + 12 non-basic)
+- ✅ Death triggers fire correctly
+- ✅ Sacrifice actions work
+- ✅ X-cost spells resolve correctly
+
+### Week 1.5.2: Instants & Sorceries
+
+**Instant Tasks (38 cards):**
+- [ ] Damage spells: Volcanic Geyser, Inferno, Vertigo
+- [ ] Counter variants: Power Sink, Remove Soul, Memory Lapse, Spell Blast
+- [ ] Tutors: Enlightened, Mystical, Vampiric, Worldly
+- [ ] Damage prevention: Fog, Healing Salve, Remedy, Reverse Damage
+- [ ] Utility: Boomerang, Early Harvest, Flash, Mana Short, Vitalize
+
+**Sorcery Tasks (53 cards):**
+- [ ] X-cost damage: Blaze, Earthquake, Hurricane
+- [ ] Board wipes: Wrath of God, Jokulhaups, Shatterstorm, Tranquility
+- [ ] Land destruction: Armageddon, Stone Rain, Flashfires, Pillage
+- [ ] Card draw: Ancestral Memories, Dream Cache, Inspiration
+- [ ] Graveyard: Raise Dead, Elven Cache, Hammer of Bogardan
+- [ ] Ramp: Rampant Growth, Untamed Wilds, Summer Bloom
+- [ ] Discard: Mind Warp, Stupor, Painful Memories
+
+**Success Criteria:**
+- ✅ All 38 instants implemented
+- ✅ All 53 sorceries implemented
+- ✅ 100-game simulation passes without crashes
+
+### Week 1.5.3: Creatures (Part 1 - 65 cards)
+
+**Focus: Vanilla, Keywords, and Simple Abilities**
+
+**Vanilla/Keyword Creatures (~40):**
+- [ ] All vanilla creatures verified working
+- [ ] All keyword-only creatures verified (Flying, First Strike, etc.)
+- [ ] Landwalk keywords: Swampwalk, Forestwalk, Islandwalk, Mountainwalk
+
+**Mana Dorks (~8):**
+- [ ] Fyndhorn Elder ({T}: Add {G}{G})
+- [ ] Blood Pet (Sac: Add {B})
+- [ ] Implement remaining mana-producing creatures
+
+**Simple ETB Creatures (~10):**
+- [ ] Venerable Monk (ETB: Gain 2 life)
+- [ ] Staunch Defenders (ETB: Gain 4 life)
+- [ ] Uktabi Orangutan (ETB: Destroy artifact)
+- [ ] Sage Owl (ETB: Look at top 4, rearrange)
+- [ ] Hidden Horror (ETB: Discard creature)
+
+**Success Criteria:**
+- ✅ 65 creatures working
+- ✅ All landwalk keywords functional
+- ✅ ETB triggers working reliably
+- ✅ 100-game simulation passes
+
+### Week 1.5.4: Creatures (Part 2 - 65 cards)
+
+**Focus: Activated Abilities and Complex Triggers**
+
+**Activated Abilities (~25):**
+- [ ] Tap to deal damage: Orcish Artillery, Heavy Ballista
+- [ ] Tap to buff: Infantry Veteran, Wyluli Wolf
+- [ ] Tap to tap/untap: Elder Druid, Fyndhorn Brownie
+- [ ] Pump abilities: Flame Spirit, Dragon Engine, Pearl Dragon
+- [ ] Regeneration: Drudge Skeletons, River Boa, Gorilla Chieftain
+
+**Damage Triggers (~5):**
+- [ ] Hypnotic Specter (random discard on damage - note: not in 6ed, skip)
+- [ ] Sibilant Spirit (opponent draws on attack)
+
+**Death/Leave Triggers (~5):**
+- [ ] Gravebane Zombie (dies: put on library)
+- [ ] Necrosavant (pay from graveyard: return)
+
+**Lords/Anthems (~5):**
+- [ ] Goblin King (Goblins get +1/+1 and mountainwalk)
+- [ ] Lord of Atlantis (Merfolk get +1/+1 and islandwalk)
+- [ ] Zombie Master (Zombies get regeneration and swampwalk)
+
+**Complex Creatures (~10):**
+- [ ] Maro (P/T = cards in hand)
+- [ ] Nightmare (P/T = Swamps)
+- [ ] Uktabi Wildcats (P/T = Forests)
+- [ ] Phantom Warrior (can't be blocked)
+- [ ] Thicket Basilisk (deathtouch-like)
+
+**Success Criteria:**
+- ✅ All 130 creatures implemented
+- ✅ Lords correctly buff creature types
+- ✅ Regeneration mechanic working
+- ✅ 100-game simulation passes
+
+### Week 1.5.5: Auras & Enchantments
+
+**Aura Tasks (22 cards):**
+
+**Stat Modifications (~8):**
+- [ ] Divine Transformation (+3/+3)
+- [ ] Giant Strength (+2/+2)
+- [ ] Hero's Resolve (+1/+5)
+- [ ] Feast of the Unicorn (+4/+0)
+- [ ] Enfeeblement (-2/-2)
+
+**Keyword Granting (~6):**
+- [ ] Flight (Flying)
+- [ ] Fear (Fear keyword)
+- [ ] Burrowing (Mountainwalk)
+- [ ] Leshrac's Rite (Swampwalk)
+
+**Ability Granting (~4):**
+- [ ] Firebreathing ({R}: +1/+0)
+- [ ] Regeneration ({G}: Regenerate)
+- [ ] Spirit Link (lifelink-like)
+
+**Land Auras (~4):**
+- [ ] Wild Growth (extra mana on tap)
+- [ ] Psychic Venom (damage on tap)
+- [ ] Blight (destroy on tap)
+- [ ] Conquer (steal land)
+
+**Global Enchantment Tasks (34 cards):**
+
+**Static Buffs/Debuffs (~8):**
+- [ ] Crusade (White creatures +1/+1)
+- [ ] Castle (Untapped creatures +0/+2)
+- [ ] Dread of Night (White creatures -1/-1)
+- [ ] Orcish Oriflamme (Attacking creatures +1/+0)
+- [ ] Fervor (Your creatures have haste)
+- [ ] Serra's Blessing (Your creatures have vigilance)
+
+**Restriction Effects (~6):**
+- [ ] Light of Day (Black creatures can't attack)
+- [ ] Kismet (Opponent's stuff enters tapped)
+- [ ] Familiar Ground (Can't be blocked by 2+)
+- [ ] Dense Foliage (Creatures can't be targeted)
+
+**Damage Triggers (~4):**
+- [ ] Aether Flash (2 damage to entering creatures)
+- [ ] Manabarbs (Damage when tapping lands)
+- [ ] Pestilence ({B}: 1 damage to all)
+
+**Protection (~5):**
+- [ ] Circle of Protection: Black/Blue/Green/Red/White
+
+**Misc (~6):**
+- [ ] Greed (Pay life: Draw)
+- [ ] Howling Mine (All draw extra) - already noted
+- [ ] Warmth/Insight/Chill (color hosers)
+
+**Success Criteria:**
+- ✅ All 22 auras working
+- ✅ All 34 enchantments working
+- ✅ Static effects correctly modify creatures
+- ✅ 100-game simulation passes
+
+### Week 1.5.6: Artifacts
+
+**Artifact Tasks (41 cards):**
+
+**Mana Rocks (~7):**
+- [ ] Charcoal/Fire/Marble/Moss/Sky Diamond (enters tapped, {T}: Add color)
+- [ ] Mana Prism ({1},{T}: Add any color)
+
+**Activated Damage (~4):**
+- [ ] Rod of Ruin ({3},{T}: 1 damage)
+- [ ] Aladdin's Ring ({8},{T}: 4 damage)
+- [ ] Skull Catapult (Sac creature: 2 damage)
+
+**Activated Draw/Discard (~4):**
+- [ ] Jayemdae Tome ({4},{T}: Draw)
+- [ ] Jalum Tome ({2},{T}: Draw, discard)
+- [ ] Disrupting Scepter ({3},{T}: Target discards)
+
+**Triggered Life Gain (~5):**
+- [ ] Crystal Rod, Iron Star, Ivory Cup, Throne of Bone, Wooden Sphere
+
+**Tokens (~3):**
+- [ ] The Hive ({5},{T}: Create Wasp)
+- [ ] Snake Basket ({X},{T},{Sac}: X Snakes)
+- [ ] Bottle of Suleiman (random Djinn)
+
+**Static Effects (~6):**
+- [ ] Howling Mine (All draw extra)
+- [ ] Ankh of Mishra (Damage on land play)
+- [ ] Dingus Egg (Damage when land dies)
+- [ ] Meekstone (Big creatures don't untap)
+- [ ] Cursed Totem (Disable creature abilities)
+
+**Utility (~6):**
+- [ ] Millstone ({2},{T}: Mill 2)
+- [ ] Flying Carpet ({2},{T}: Grant flying)
+- [ ] Dragon Mask ({3}: +2/+2, bounce)
+- [ ] Glasses of Urza (See opponent's hand)
+- [ ] Grinning Totem (Search opponent's library)
+
+**Misc (~6):**
+- [ ] Fountain of Youth ({2},{T}: Gain 1 life)
+- [ ] Phyrexian Vault (Sac creature: Draw)
+- [ ] Ashnod's Altar (Sac creature: {C}{C})
+- [ ] Amber Prison (Detain)
+- [ ] Pentagram of the Ages (Prevent damage)
+- [ ] Soul Net (Gain life on death)
+
+**Success Criteria:**
+- ✅ All 41 artifacts working
+- ✅ Mana rocks enter tapped correctly
+- ✅ Sacrifice outlets working
+- ✅ 100-game simulation passes
+
+### Week 1.5.7: Integration Testing & Documentation
+
+**Testing Tasks:**
+- [ ] Run 1,000-game simulation with all cards
+- [ ] Test each color pair combination (10 matchups)
+- [ ] Verify all 302+ cards work in actual games
+- [ ] Identify and document remaining edge cases
+
+**Documentation Tasks:**
+- [ ] Update CARD_STATUS.md with final counts
+- [ ] Finalize Phase 1.6 deferred list
+- [ ] Update CLAUDE.md with Phase 1.5 completion
+- [ ] Create release notes for Phase 1.5
+
+**Final Verification:**
+- [ ] RandomBot vs RandomBot: 500 games, no crashes
+- [ ] Human playtesting: Each color viable
+- [ ] Performance check: Still 500+ games/second
+
+**Success Criteria:**
+- ✅ 302+ cards (90%) fully implemented
+- ✅ 1000-game simulation completes
+- ✅ All documentation updated
+- ✅ Phase 1.6 scope clearly defined
+
+**Deliverable:** Full 6th Edition card pool playable!
+
+---
+
+## Phase 1.6: Complex Card Mechanics (Weeks 19-20)
+
+**Theme:** "The Last 10%"
+
+### Goals
+- Implement remaining complex cards deferred from Phase 1.5
+- Add specialized mechanics for unusual effects
+- Complete 100% of 6th Edition
+
+### Deferred Card Categories
+
+**Control-Changing Effects (~5 cards):**
+- Abduction (steal creature, return on death)
+- Conquer (steal land)
+- Juxtapose (exchange creatures)
+
+**Replacement Effects (~3 cards):**
+- Forbidden Crypt (graveyard replacement)
+- Teferi's Puzzle Box (draw replacement)
+- Zur's Weirding (draw denial)
+
+**Type/Color Changing (~3 cards):**
+- Celestial Dawn (all colors become white)
+- Living Lands (forests become creatures)
+- Phantasmal Terrain (change land type)
+
+**Complex Interactions (~5 cards):**
+- Doomsday (build 5-card library)
+- Illicit Auction (life bidding)
+- Polymorph (creature transformation)
+- Primal Clay (shapeshifter choice)
+- Psychic Transfer (life exchange)
+
+### Success Criteria
+- ✅ All 335 cards implemented
+- ✅ No known card bugs
+- ✅ Full 6th Edition complete
+
+**Deliverable:** 100% 6th Edition support!
+
+---
+
+## Phase 2: Hidden Information & Smart AI (Weeks 21-26)
 
 **Theme:** "The AI Gets Dangerous"
 
@@ -372,7 +666,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 - Add card advantage mechanics
 - Build replay system for debugging
 
-### Week 12-13: MCTS Core
+### Week 21-22: MCTS Core
 
 **Tasks:**
 - [ ] Implement MCTS algorithm
@@ -388,7 +682,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 - ✅ MCTS-Bot beats RandomBot 90%+ of games
 - ✅ MCTS-Bot beats GreedyBot 60%+ of games
 
-### Week 14: Evaluation Function
+### Week 23: Evaluation Function
 
 **Tasks:**
 - [ ] Implement board evaluation heuristic:
@@ -406,7 +700,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 **Test:**
 Run 1000 games with different weight values, find optimal.
 
-### Week 15-16: Card Advantage & Disruption
+### Week 24-25: Card Advantage & Disruption
 
 **Tasks:**
 - [ ] Add card draw spells
@@ -428,7 +722,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 - ✅ AI uses removal at appropriate times
 - ✅ AI doesn't discard important cards
 
-### Week 17: Replay System & Stats
+### Week 26: Replay System & Stats
 
 **Tasks:**
 - [ ] Implement game replay (save actions + seed)
@@ -445,7 +739,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 
 ---
 
-## Phase 3: Polished Game Experience (Weeks 18-23)
+## Phase 3: Polished Game Experience (Weeks 27-32)
 
 **Theme:** "Ship a Real Game"
 
@@ -456,7 +750,25 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 - Sound effects
 - Tutorial/Help system
 
-### Week 18-19: UI Polish
+### Week 27: Basic Web UI
+
+**Tasks:**
+- [ ] Set up Vite + PixiJS project
+- [ ] Load card images from `packages/web-client/public/assets/cards/`
+- [ ] Render battlefield zones
+- [ ] Implement drag-and-drop for playing cards
+- [ ] Add click-to-target for spells
+- [ ] Connect UI to engine (same action system)
+
+**Success Criteria:**
+- ✅ Can play a full game in the browser
+- ✅ UI updates when game state changes
+- ✅ Card artwork loads correctly
+- ✅ Smooth at 60 FPS
+
+**Deliverable:** Playable web game (basic, but functional)
+
+### Week 28-29: UI Polish
 
 **Tasks:**
 - [ ] Add animations:
@@ -480,7 +792,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 - Win/lose music
 - Particle sprites
 
-### Week 20-21: Deck Builder
+### Week 30-31: Deck Builder
 
 **Tasks:**
 - [ ] Build deck builder UI:
@@ -502,7 +814,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 - ✅ Deck validation prevents illegal decks
 - ✅ Mana curve visualization helps deck building
 
-### Week 22: AI Difficulty Tuning
+### Week 32: AI Difficulty Tuning & Final Polish
 
 **Tasks:**
 - [ ] Tune AI difficulty levels:
@@ -519,9 +831,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 - Hard: 50% player win rate
 - Expert: 30% player win rate
 
-### Week 23: Final Polish & Testing
-
-**Tasks:**
+**Additional Tasks:**
 - [ ] Tutorial for new players
 - [ ] Help system (rules reference)
 - [ ] Settings menu (sound, animation speed)
@@ -533,7 +843,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 
 ---
 
-## Phase 4: AI Research Tools (Weeks 24-29)
+## Phase 4: AI Research Tools (Weeks 33-38)
 
 **Theme:** "The AI Research Laboratory"
 
@@ -543,7 +853,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 - MCTS visualization
 - Meta-game analysis
 
-### Week 24-25: Tournament Simulator
+### Week 33-34: Tournament Simulator
 
 **Tasks:**
 - [ ] Implement Swiss-style tournament
@@ -566,7 +876,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
    Metric: Win% when card is in deck
 ```
 
-### Week 26-27: Deck Analytics
+### Week 35-36: Deck Analytics
 
 **Tasks:**
 - [ ] Implement deck scoring algorithms:
@@ -598,7 +908,7 @@ Weak Cards:
 Recommendation: Replace Goblin King with more removal
 ```
 
-### Week 28: MCTS Visualization
+### Week 37: MCTS Visualization
 
 **Tasks:**
 - [ ] Build decision tree visualizer
@@ -621,7 +931,7 @@ Recommendation: Replace Goblin King with more removal
       [End: 200] [Attack: 200] ...      [Target A]  [Target B]
 ```
 
-### Week 29: A/B Testing Framework
+### Week 38: A/B Testing Framework
 
 **Tasks:**
 - [ ] Compare different MCTS configurations:
@@ -649,7 +959,7 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 
 ---
 
-## Phase 5: Machine Learning (Weeks 30+)
+## Phase 5: Machine Learning (Weeks 39+)
 
 **Theme:** "Skynet Learns Magic"
 
@@ -659,7 +969,7 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 - Self-play training
 - Novel strategy discovery
 
-### Week 30-33: Neural Network Evaluation
+### Week 39-42: Neural Network Evaluation
 
 **Tasks:**
 - [ ] Collect training data (100,000+ games)
@@ -677,7 +987,7 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 - ✅ NN evaluation is faster than rollout
 - ✅ NN-MCTS beats Heuristic-MCTS by 10%+
 
-### Week 34-37: Genetic Algorithm Deck Builder
+### Week 43-46: Genetic Algorithm Deck Builder
 
 **Tasks:**
 - [ ] Implement GA framework:
@@ -701,7 +1011,7 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 3. How many generations to converge?
 ```
 
-### Week 38+: Self-Play & AlphaZero
+### Week 47+: Self-Play & AlphaZero
 
 **Tasks:**
 - [ ] Implement self-play loop:
@@ -727,22 +1037,30 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 **Outcome:** You can play a simple game in terminal
 
 ### Checkpoint 2: End of Phase 1 (Week 11)
-**Demo:** Open browser, play real Magic with mana costs, targeting, and 20+ cards
+**Demo:** Play real Magic with mana costs, targeting, and 20+ cards
 **Outcome:** Game feels like Magic, not just generic card game
 
-### Checkpoint 3: End of Phase 2 (Week 17)
+### Checkpoint 3: End of Phase 1.5 (Week 18)
+**Demo:** Run 1000 games with full 6th Edition card pool (90%)
+**Outcome:** 302+ cards working, all game mechanics complete
+
+### Checkpoint 4: End of Phase 1.6 (Week 20)
+**Demo:** All 335 cards from 6th Edition playable
+**Outcome:** 100% card coverage achieved
+
+### Checkpoint 5: End of Phase 2 (Week 26)
 **Demo:** MCTS-Bot vs GreedyBot (MCTS wins 70%+)
 **Outcome:** AI is legitimately challenging
 
-### Checkpoint 4: End of Phase 3 (Week 23)
+### Checkpoint 6: End of Phase 3 (Week 32)
 **Demo:** 🎮 PUBLIC RELEASE - Full game on GitHub
 **Outcome:** People can actually play and have fun
 
-### Checkpoint 5: End of Phase 4 (Week 29)
+### Checkpoint 7: End of Phase 4 (Week 38)
 **Demo:** Run 10,000 game tournament overnight
 **Outcome:** Discover which deck is strongest in meta
 
-### Checkpoint 6: Phase 5+ (Ongoing)
+### Checkpoint 8: Phase 5+ (Ongoing)
 **Demo:** GA evolves a winning deck from scratch
 **Outcome:** AI designs decks better than humans
 

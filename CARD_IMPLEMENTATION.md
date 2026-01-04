@@ -2,6 +2,10 @@
 
 This document explains how to add and implement cards in ManaCore.
 
+> **Card Status Tracking:** For current implementation status of all 335 6th Edition cards, see [CARD_STATUS.md](./CARD_STATUS.md).
+
+---
+
 ## Quick Reference
 
 | Card Type | Implementation Effort | Location |
@@ -53,123 +57,6 @@ This document explains how to add and implement cards in ManaCore.
 │  - Spells: switch(name) in reducer.ts                           │
 └─────────────────────────────────────────────────────────────────┘
 ```
-
----
-
-## 6th Edition Card Status
-
-### Summary (335 total cards)
-
-| Category | Count | Status |
-|----------|-------|--------|
-| Vanilla creatures | 16 | ✅ Working |
-| Keyword-only creatures | 48 | ✅ Working |
-| Basic lands | 5 | ✅ Working |
-| Other lands | 12 | ⚠️ Need mana abilities |
-| Creatures with abilities | 66 | ⚠️ Need implementation |
-| Instants | 38 | ⚠️ Need spell effects |
-| Sorceries | 53 | ⚠️ Need spell effects |
-| Enchantments | 56 | ⚠️ Need effects |
-| Artifacts | 48 | ⚠️ Need abilities |
-
-### Already Working (No Implementation Needed)
-
-These cards work out of the box:
-
-**Vanilla Creatures (16):**
-- Balduvian Barbarians (3/2)
-- Fire Elemental (5/4)
-- Goblin Hero (2/2)
-- Grizzly Bears (2/2)
-- Horned Turtle (1/4)
-- And 11 more...
-
-**Keyword-Only Creatures (48):**
-- Air Elemental (4/4 Flying)
-- Archangel (5/5 Flying, Vigilance)
-- Fog Elemental (4/4 Flying)
-- Hurloon Minotaur (2/3)
-- And 44 more...
-
-**Basic Lands (5):**
-- Plains, Island, Swamp, Mountain, Forest
-
-### Implemented Cards (20)
-
-These cards have full ability implementations:
-
-| Card | Type | Abilities |
-|------|------|-----------|
-| Llanowar Elves | Creature | {T}: Add {G} |
-| Birds of Paradise | Creature | {T}: Add any color |
-| Anaba Shaman | Creature | {R}, {T}: 1 damage |
-| Shock | Instant | 2 damage to any target |
-| Lightning Blast | Instant | 4 damage to any target |
-| Terror | Instant | Destroy creature |
-| Unsummon | Instant | Return creature to hand |
-| Counterspell | Instant | Counter spell |
-| Giant Growth | Instant | +3/+3 until EOT |
-| Disenchant | Instant | Destroy artifact/enchantment |
-| Exile | Instant | Exile attacking creature |
-| Coercion | Sorcery | Target discard |
-| Pacifism | Aura | Can't attack or block |
-| Gravedigger | Creature | ETB: Return creature from graveyard |
-| Abyssal Specter | Creature | Damage trigger: discard |
-
-### Cards Needing Implementation
-
-#### Priority 1: Simple Effects (Easy)
-
-**Burn Spells:**
-- Blaze ({X}{R}: X damage)
-- Fireball ({X}{R}: X damage, splits)
-- Incinerate (3 damage, no regen)
-
-**Removal:**
-- Dark Banishing (Destroy nonblack)
-- Nekrataal (ETB: destroy)
-- Wrath of God (Destroy all creatures)
-
-**Creature Buffs:**
-- Unholy Strength (+2/+1 aura)
-- Holy Strength (+1/+2 aura)
-
-#### Priority 2: Mana Dorks (Medium)
-
-These need mana ability implementations:
-
-- Quirion Elves ({T}: Add {G} or chosen color)
-- Manakin ({T}: Add {C})
-- Charcoal Diamond ({T}: Add {B})
-- Fire Diamond ({T}: Add {R})
-- Marble Diamond ({T}: Add {W})
-- Moss Diamond ({T}: Add {G})
-- Sky Diamond ({T}: Add {U})
-- Sol Ring ({T}: Add {C}{C})
-
-#### Priority 3: Activated Abilities (Medium)
-
-- Prodigal Sorcerer ({T}: 1 damage)
-- Royal Assassin ({T}: Destroy tapped creature)
-- Hypnotic Specter (damage → random discard)
-- Nettling Imp ({T}: Force attack)
-- Icy Manipulator ({1}, {T}: Tap permanent)
-
-#### Priority 4: Triggered Abilities (Medium-Hard)
-
-- Nekrataal (ETB: destroy nonblack)
-- Man-o'-War (ETB: bounce creature)
-- Uktabi Orangutan (ETB: destroy artifact)
-- Vampire Bats (Upkeep: pay or sacrifice)
-- Ball Lightning (EOT: sacrifice)
-
-#### Priority 5: Complex Cards (Hard)
-
-- Control Magic (Steal creature)
-- Animate Dead (Return from graveyard)
-- Nevinyrral's Disk (Destroy all)
-- Howling Mine (All players draw)
-- Winter Orb (Lands don't untap)
 
 ---
 
