@@ -68,6 +68,8 @@ We will implement a **curated subset** of Magic: The Gathering's 6th Edition Cor
 - ✅ **Enchantments** (Auras with targeting)
 - ✅ **Disruption** (Counterspell, discard)
 - ✅ **Mana abilities** (Dark Ritual, mana acceleration)
+- ✅ **Registry-based abilities** (refactored for O(1) lookup)
+- ✅ **Registry-based spells** (stack.ts refactored: 1,760 lines to 437 lines)
 
 #### Phase 3+: Advanced
 
@@ -384,6 +386,48 @@ interface CardInstance {
   // Combat
   attacking?: boolean;
   blocking?: string; // instanceId of attacker
+}
+```
+
+### 7.3 Activated Ability Schema
+
+The activated abilities system uses typed interfaces for costs, effects, and abilities:
+
+```typescript
+interface AbilityCost {
+  tap?: boolean; // Requires tapping the source
+  mana?: string; // Mana cost string (e.g., '{R}', '{2}{G}')
+  life?: number; // Life payment
+  sacrifice?: SacrificeCost; // Sacrifice requirement
+}
+
+interface SacrificeCost {
+  type: 'self' | 'creature' | 'permanent' | 'artifact' | 'land';
+  count?: number; // Number to sacrifice (default: 1)
+  landType?: string; // Specific land type required
+  creatureSubtype?: string; // Specific creature subtype required
+  restriction?: {
+    notSelf?: boolean; // Can't sacrifice the source itself
+  };
+}
+
+interface AbilityEffect {
+  type: 'ADD_MANA' | 'DAMAGE' | 'REGENERATE' | 'PUMP' | 'DESTROY' | 'PREVENT_DAMAGE' | 'CUSTOM';
+  amount?: number; // Amount for numeric effects
+  manaColors?: ManaColor[]; // For ADD_MANA effects
+  powerChange?: number; // For PUMP effects
+  toughnessChange?: number; // For PUMP effects
+  custom?: (state: GameState) => void; // For CUSTOM type
+}
+
+interface ActivatedAbility {
+  id: string; // Unique identifier
+  name: string; // Display name (e.g., '{T}: Add {G}')
+  cost: AbilityCost; // Cost to activate
+  effect: AbilityEffect; // Effect when resolved
+  isManaAbility: boolean; // If true, doesn't use the stack
+  targetRequirements?: TargetRequirement[]; // Targeting (if any)
+  canActivate: (state: GameState, sourceId: string, controller: PlayerId) => boolean;
 }
 ```
 

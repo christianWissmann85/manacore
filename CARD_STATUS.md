@@ -591,8 +591,8 @@ These cards require complex mechanics that will be addressed after Phase 1.5:
 - [x] ETB creatures: Venerable Monk (+2 life), Staunch Defenders (+4 life), Uktabi Orangutan (destroy artifact), Sage Owl (look at top 4), Hidden Horror (discard or sacrifice)
 - [x] 100-game stability test: 0 errors
 - [x] 372 unit tests passing
-- [ ] Remaining vanilla/keyword creatures (Week 1.5.4)
-- [ ] Remaining activated ability creatures (Week 1.5.4)
+- [x] Remaining vanilla/keyword creatures (Week 1.5.4)
+- [x] Remaining activated ability creatures (Week 1.5.4)
 
 ### Week 1.5.4 (Creatures Part 2) ✅ COMPLETE
 
@@ -610,9 +610,9 @@ These cards require complex mechanics that will be addressed after Phase 1.5:
   - Mana: Blood Pet, Fyndhorn Elder, Soldevi Sage
   - X-cost: Crimson Hellkite, Reckless Embermage, Rag Man
 - [x] 525 unit tests passing
-- [ ] Lords system (Day 5-6)
-- [ ] Regeneration mechanic (Day 7-8)
-- [ ] Variable P/T creatures (Day 9-10)
+- [x] Lords system (Day 5-6)
+- [x] Regeneration mechanic (Day 7-8)
+- [x] Variable P/T creatures (Day 9-10)
 
 ### Week 1.5.5 (Enchantments)
 

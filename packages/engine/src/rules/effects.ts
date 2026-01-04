@@ -828,3 +828,274 @@ export function destroyIfPowerFourOrGreater(state: GameState, targetId: string):
     return power >= 4;
   });
 }
+
+// ============================================================================
+// SINGLE TARGET EFFECTS
+// ============================================================================
+
+/**
+ * Destroy a single permanent by instance ID
+ * Used for: Shatter, Stone Rain, targeted removal
+ */
+export function destroyPermanent(state: GameState, targetId: string): boolean {
+  for (const playerId of ['player', 'opponent'] as const) {
+    const player = state.players[playerId];
+    const index = player.battlefield.findIndex((c) => c.instanceId === targetId);
+
+    if (index !== -1) {
+      const permanent = player.battlefield[index]!;
+      const template = CardLoader.getById(permanent.scryfallId);
+
+      player.battlefield.splice(index, 1);
+      permanent.zone = 'graveyard';
+      permanent.damage = 0;
+      permanent.tapped = false;
+      player.graveyard.push(permanent);
+
+      // Fire death trigger for creatures
+      if (template && isCreature(template)) {
+        registerTrigger(state, {
+          type: 'DIES',
+          cardId: permanent.instanceId,
+          controller: playerId,
+          wasController: playerId,
+        });
+      }
+
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Return a permanent to its owner's hand
+ * Used for: Boomerang, Unsummon, bounce effects
+ */
+export function returnToHand(state: GameState, targetId: string): boolean {
+  for (const playerId of ['player', 'opponent'] as const) {
+    const player = state.players[playerId];
+    const index = player.battlefield.findIndex((c) => c.instanceId === targetId);
+
+    if (index !== -1) {
+      const permanent = player.battlefield[index]!;
+      player.battlefield.splice(index, 1);
+      permanent.zone = 'hand';
+      permanent.tapped = false;
+      permanent.damage = 0;
+      permanent.summoningSick = false;
+      // Return to owner's hand (not controller's)
+      state.players[permanent.owner].hand.push(permanent);
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Exile a creature and gain life equal to its toughness
+ * Used for: Exile effects with lifegain (Swords to Plowshares style)
+ */
+export function exileWithLifegain(
+  state: GameState,
+  targetId: string,
+  controller: PlayerId,
+): boolean {
+  for (const playerId of ['player', 'opponent'] as const) {
+    const player = state.players[playerId];
+    const index = player.battlefield.findIndex((c) => c.instanceId === targetId);
+
+    if (index !== -1) {
+      const creature = player.battlefield[index]!;
+      const template = CardLoader.getById(creature.scryfallId);
+
+      // Get toughness for life gain
+      const toughness = template?.toughness ? parseInt(template.toughness, 10) : 0;
+
+      // Exile the creature
+      player.battlefield.splice(index, 1);
+      creature.zone = 'exile' as 'graveyard'; // Note: exile zone not fully implemented
+
+      // Gain life equal to toughness
+      state.players[controller].life += toughness;
+
+      return true;
+    }
+  }
+  return false;
+}
+
+// ============================================================================
+// CARD DRAW AND DISCARD
+// ============================================================================
+
+/**
+ * Draw cards for a player
+ * Used for: Inspiration, Ancestral Recall, draw effects
+ */
+export function drawCards(state: GameState, playerId: PlayerId, count: number): CardInstance[] {
+  const player = state.players[playerId];
+  const drawn: CardInstance[] = [];
+
+  for (let i = 0; i < count; i++) {
+    if (player.library.length === 0) {
+      // Can't draw from empty library
+      // Note: Drawing from empty library causes loss (handled by SBAs)
+      break;
+    }
+    const card = player.library.pop()!;
+    card.zone = 'hand';
+    player.hand.push(card);
+    drawn.push(card);
+  }
+
+  return drawn;
+}
+
+/**
+ * Discard cards from a player's hand (random selection)
+ * Used for: Mind Rot, discard effects
+ */
+export function discardCards(state: GameState, playerId: PlayerId, count: number): CardInstance[] {
+  const player = state.players[playerId];
+  const discarded: CardInstance[] = [];
+
+  for (let i = 0; i < count && player.hand.length > 0; i++) {
+    // Random discard for non-deterministic effects
+    const index = Math.floor(Math.random() * player.hand.length);
+    const card = player.hand.splice(index, 1)[0]!;
+    card.zone = 'graveyard';
+    player.graveyard.push(card);
+    discarded.push(card);
+  }
+
+  return discarded;
+}
+
+/**
+ * Discard specific cards from hand (deterministic - takes from front)
+ * Used for deterministic AI training
+ */
+export function discardCardsDeterministic(
+  state: GameState,
+  playerId: PlayerId,
+  count: number,
+): CardInstance[] {
+  const player = state.players[playerId];
+  const discarded: CardInstance[] = [];
+
+  for (let i = 0; i < count && player.hand.length > 0; i++) {
+    const card = player.hand.shift()!;
+    card.zone = 'graveyard';
+    player.graveyard.push(card);
+    discarded.push(card);
+  }
+
+  return discarded;
+}
+
+// ============================================================================
+// DAMAGE EFFECTS
+// ============================================================================
+
+/**
+ * Apply damage to a target (creature or player)
+ * Used for: Lightning Bolt, Shock, direct damage spells
+ */
+export function applyDamage(state: GameState, targetId: string, damage: number): boolean {
+  // Check if target is a player
+  if (targetId === 'player' || targetId === 'opponent') {
+    state.players[targetId].life -= damage;
+
+    // Check for game over
+    if (state.players[targetId].life <= 0) {
+      state.gameOver = true;
+      state.winner = targetId === 'player' ? 'opponent' : 'player';
+    }
+    return true;
+  }
+
+  // Otherwise, target is a creature
+  for (const playerId of ['player', 'opponent'] as const) {
+    const player = state.players[playerId];
+    const creature = player.battlefield.find((c) => c.instanceId === targetId);
+
+    if (creature) {
+      creature.damage += damage;
+
+      // Check if creature should die
+      const template = CardLoader.getById(creature.scryfallId);
+      if (template?.toughness) {
+        const baseToughness = parseInt(template.toughness, 10);
+        const effectiveToughness = getEffectiveToughness(creature, baseToughness);
+        if (creature.damage >= effectiveToughness) {
+          // Creature dies
+          const index = player.battlefield.indexOf(creature);
+          player.battlefield.splice(index, 1);
+          creature.zone = 'graveyard';
+          player.graveyard.push(creature);
+
+          // Fire death trigger
+          registerTrigger(state, {
+            type: 'DIES',
+            cardId: creature.instanceId,
+            controller: playerId,
+            wasController: playerId,
+          });
+        }
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+/**
+ * Find a permanent on any player's battlefield by instance ID
+ */
+export function findPermanentByInstanceId(
+  state: GameState,
+  instanceId: string,
+): CardInstance | null {
+  for (const playerId of ['player', 'opponent'] as const) {
+    const card = state.players[playerId].battlefield.find((c) => c.instanceId === instanceId);
+    if (card) return card;
+  }
+  return null;
+}
+
+/**
+ * Find the controller of a permanent by instance ID
+ */
+export function findPermanentController(state: GameState, instanceId: string): PlayerId | null {
+  for (const playerId of ['player', 'opponent'] as const) {
+    const card = state.players[playerId].battlefield.find((c) => c.instanceId === instanceId);
+    if (card) return playerId;
+  }
+  return null;
+}
+
+/**
+ * Gain life for a player
+ * Used for: Healing Salve, life gain effects
+ */
+export function gainLife(state: GameState, playerId: PlayerId, amount: number): void {
+  state.players[playerId].life += amount;
+}
+
+/**
+ * Lose life for a player
+ * Used for: Life loss effects (different from damage)
+ */
+export function loseLife(state: GameState, playerId: PlayerId, amount: number): void {
+  state.players[playerId].life -= amount;
+
+  if (state.players[playerId].life <= 0) {
+    state.gameOver = true;
+    state.winner = playerId === 'player' ? 'opponent' : 'player';
+  }
+}

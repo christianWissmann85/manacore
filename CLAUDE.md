@@ -177,6 +177,11 @@ manacore/
 │   │   │   ├── state/       # GameState, PlayerState, CardInstance
 │   │   │   ├── actions/     # Action types, validators, reducers
 │   │   │   ├── rules/       # Game rules (stack, combat, SBAs, triggers)
+│   │   │   │   ├── abilities/  # Activated ability registry (O(1) lookup)
+│   │   │   │   ├── effects.ts  # Reusable effect helpers
+│   │   │   │   └── tokens.ts   # Token creation helpers
+│   │   │   ├── spells/      # Spell registry (O(1) lookup, 70 spells)
+│   │   │   │   └── categories/ # damage, destruction, counters, etc.
 │   │   │   ├── cards/       # CardLoader, card templates
 │   │   │   └── utils/       # Game initialization, deck building
 │   │   ├── data/
@@ -668,27 +673,48 @@ bun test combat.test.ts
    }
    ```
 
-3. **For activated abilities**, add to `packages/engine/src/rules/activatedAbilities.ts`:
+3. **For instant/sorcery spells**, add to the spell registry in `packages/engine/src/spells/categories/`:
+
+   Choose the appropriate category file:
+   - `damage.ts` - Damage spells (Tremor, Inferno)
+   - `destruction.ts` - Destroy effects (Wrath of God, Armageddon)
+   - `counters.ts` - Counterspells (Memory Lapse, Remove Soul)
+   - `xcost.ts` - X-cost spells (Earthquake, Hurricane)
+   - `tutors.ts` - Library search (Enlightened Tutor)
+   - `card-draw.ts` - Draw/discard (Inspiration)
+   - `graveyard.ts` - Graveyard recursion (Raise Dead)
+   - `untap.ts` - Tap/untap effects (Vitalize)
+   - `prevention.ts` - Prevention/lifegain (Fog)
+   - `misc.ts` - Other effects (Boomerang, tokens)
 
    ```typescript
-   switch (template.name) {
-     case 'Prodigal Sorcerer':
-       abilities.push({
-         id: `${card.instanceId}_tap_damage`,
-         name: 'Tap: Deal 1 damage',
-         cost: { tap: true },
-         effect: { type: 'DAMAGE', amount: 1 },
-         canActivate: (state, sourceId, controller) => {
-           // Check if can activate
-         },
-       });
-       break;
-   }
+   // In spells/categories/damage.ts
+   {
+     cardName: 'Lightning Bolt',
+     resolve: (state, stackObj) => {
+       const target = stackObj.targets[0];
+       if (target) applyDamage(state, target, 3);
+     },
+   },
    ```
 
-4. **For triggered abilities**, add to `packages/engine/src/rules/triggers.ts`
+   Use helpers from `rules/effects.ts` (applyDamage, destroyPermanent, drawCards, etc.)
+   For tokens, use `createTokens()` from `rules/tokens.ts`
 
-5. **Write card-specific tests**
+4. **For activated abilities**, add to `packages/engine/src/rules/abilities/sets/6ed/*.ts`:
+
+   Use templates from `abilities/templates/` when possible:
+
+   ```typescript
+   // In abilities/sets/6ed/mana-creatures.ts
+   registerAbilities('Llanowar Elves', (card) => [
+     createTapForMana(card, ['G']),
+   ]);
+   ```
+
+5. **For triggered abilities**, add to `packages/engine/src/rules/triggers.ts`
+
+6. **Write card-specific tests**
 
 ### Running a Simulation
 
@@ -922,8 +948,15 @@ bun build src/index.ts                  # Build a file
 | Reducers            | `packages/engine/src/actions/reducer.ts`                         |
 | Combat rules        | `packages/engine/src/rules/combat.ts`                            |
 | Stack system        | `packages/engine/src/rules/stack.ts`                             |
+| Spell registry      | `packages/engine/src/spells/` (O(1) lookup for 70 spells)        |
+| Spell categories    | `packages/engine/src/spells/categories/*.ts`                     |
+| Ability registry    | `packages/engine/src/rules/abilities/` (O(1) lookup)             |
+| Ability templates   | `packages/engine/src/rules/abilities/templates/*.ts`             |
+| Effect helpers      | `packages/engine/src/rules/effects.ts`                           |
+| Token helpers       | `packages/engine/src/rules/tokens.ts`                            |
+| Triggers            | `packages/engine/src/rules/triggers.ts`                          |
 | State-based actions | `packages/engine/src/rules/stateBasedActions.ts`                 |
-| Abilities           | `packages/engine/src/rules/activatedAbilities.ts`, `triggers.ts` |
+| Legacy abilities    | `packages/engine/src/rules/activatedAbilities.ts` (fallback)     |
 | Card data           | `packages/engine/data/cards/6ed.json`                            |
 | Tests               | `packages/engine/tests/*.test.ts`                                |
 | CLI display         | `packages/cli-client/src/display/board.ts`                       |

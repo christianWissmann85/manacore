@@ -474,9 +474,200 @@ const creatures = CardLoader.getCardsByType('Creature');
 
 ---
 
-## 4. Engine Architecture
+## 4. Ability System Architecture
 
-### 4.1 Immutable State Pattern
+The activated abilities system uses a **registry-based pattern** for O(1) card lookup, replacing the previous monolithic switch statement.
+
+### 4.1 Architecture Overview
+
+```
+getActivatedAbilities(card, state)
+         │
+         ▼
+┌─────────────────────┐
+│   Ability Registry  │ ◄── Map<cardName, AbilityFactory>
+│   (O(1) lookup)     │     ~80+ cards registered
+└─────────┬───────────┘
+          │
+          │ not found?
+          ▼
+┌─────────────────────┐
+│   Legacy Fallback   │ ◄── Original switch statement
+│   (activatedAbilities.ts)
+└─────────────────────┘
+```
+
+### 4.2 Directory Structure
+
+```
+packages/engine/src/rules/abilities/
+├── index.ts                    # Main entry: getActivatedAbilities()
+├── registry.ts                 # Central Map<string, AbilityFactory>
+├── types.ts                    # ActivatedAbility, AbilityCost, AbilityEffect
+│
+├── templates/
+│   ├── index.ts               # Re-export all templates
+│   ├── common.ts              # Shared utilities (standardTapCheck, etc.)
+│   ├── mana.ts                # createTapForMana, createSacrificeForMana
+│   ├── damage.ts              # createTapForDamage, createTimAbility
+│   ├── pump.ts                # createPumpSelf, createFirebreathing
+│   ├── combat.ts              # createRegenerate, createPreventDamage
+│   └── sacrifice.ts           # createSacrificeForEffect
+│
+└── sets/
+    ├── index.ts               # Aggregates all sets
+    └── 6ed/
+        ├── index.ts           # Register all 6ed cards
+        ├── lands.ts           # Pain lands, City of Brass, etc.
+        ├── mana-creatures.ts  # Llanowar Elves, Birds of Paradise
+        ├── pingers.ts         # Prodigal Sorcerer, Anaba Shaman
+        ├── pumpers.ts         # Flame Spirit, Dragon Engine
+        ├── regeneration.ts    # Drudge Skeletons, River Boa
+        ├── sacrifice.ts       # Fallen Angel, Blood Pet
+        └── utility.ts         # Samite Healer, Elder Druid
+```
+
+### 4.3 Key Components
+
+**Registry (`registry.ts`)**
+
+- Central `Map<string, AbilityFactory>` for O(1) lookup
+- `registerAbilities(cardName, factory)` - register a single card
+- `registerBulk(cardNames, factory)` - register multiple cards with same pattern
+- `getFromRegistry(cardName, card, state)` - retrieve abilities
+
+**Templates (`templates/*.ts`)**
+
+- Factory functions that create `ActivatedAbility` objects
+- Eliminate code duplication across similar cards
+- Examples: `createTapForMana()`, `createTimAbility()`, `createRegenerate()`
+
+**Set Files (`sets/6ed/*.ts`)**
+
+- Organize cards by category (mana creatures, pingers, etc.)
+- Call `registerAbilities()` during module initialization
+- Export a count for debugging purposes
+
+### 4.4 Resolution Order
+
+1. **Registry lookup (O(1))**: Check if card has registered abilities
+2. **Legacy fallback**: Fall back to `activatedAbilities.ts` for non-migrated cards
+3. **Return empty**: If no abilities found anywhere
+
+---
+
+## 5. Spell Registry System
+
+The spell resolution system uses a **registry-based pattern** for O(1) card lookup, similar to the activated abilities registry. This refactor reduced `stack.ts` from 1,760 lines to 437 lines (75% reduction).
+
+### 5.1 Architecture Overview
+
+```
+resolveSpell(state, stackObj)
+         │
+         ▼
+┌─────────────────────┐
+│   Spell Registry    │ ◄── Map<cardName, SpellImplementation>
+│   (O(1) lookup)     │     ~70 spells registered
+└─────────┬───────────┘
+          │
+          │ not found?
+          ▼
+┌─────────────────────┐
+│  Generic Parsing    │ ◄── Oracle text parsing for simple spells
+│  (parseSpellEffect) │
+└─────────────────────┘
+```
+
+### 5.2 Directory Structure
+
+```
+packages/engine/src/spells/
+├── SpellImplementation.ts      # Type definitions (SpellImplementation interface)
+├── registry.ts                 # Central Map<string, SpellImplementation> registry
+├── index.ts                    # Entry point, imports all categories
+└── categories/                 # Organized by effect type
+    ├── damage.ts               # Dry Spell, Tremor, Inferno, Vertigo, etc. (6 spells)
+    ├── destruction.ts          # Wrath of God, Armageddon, Tranquility, etc. (14 spells)
+    ├── counters.ts             # Memory Lapse, Remove Soul (2 spells)
+    ├── xcost.ts                # Earthquake, Hurricane, Dark Ritual, etc. (9 spells)
+    ├── tutors.ts               # Enlightened/Mystical/Vampiric/Worldly Tutor (6 spells)
+    ├── card-draw.ts            # Inspiration, Ancestral Memories, etc. (10 spells)
+    ├── graveyard.ts            # Raise Dead, Elven Cache, etc. (5 spells)
+    ├── untap.ts                # Early Harvest, Vitalize, etc. (5 spells)
+    ├── prevention.ts           # Fog, Healing Salve, etc. (4 spells)
+    └── misc.ts                 # Boomerang, Icatian Town, etc. (9 spells)
+```
+
+### 5.3 Key Components
+
+**SpellImplementation Interface (`SpellImplementation.ts`)**
+
+```typescript
+interface SpellImplementation {
+  cardName: string;                                         // Must match CardTemplate.name exactly
+  resolve: (state: GameState, stackObj: StackObject) => void;  // Apply spell effects
+  shouldFizzle?: (state: GameState, stackObj: StackObject) => boolean;  // Custom fizzle logic
+}
+```
+
+**Registry (`registry.ts`)**
+
+- Central `Map<string, SpellImplementation>` for O(1) lookup
+- `registerSpell(impl)` - register a single spell
+- `registerSpells(impls[])` - register multiple spells
+- `getSpellImplementation(cardName)` - retrieve implementation
+
+**Category Files (`categories/*.ts`)**
+
+- Each file exports a `SpellImplementation[]` array
+- Calls `registerSpells()` during module initialization
+- Organized by spell effect type for easy discovery
+
+### 5.4 Resolution Order
+
+When resolving a spell, `stack.ts` follows this order:
+
+1. **Registry lookup (O(1))**: Check if card has registered implementation
+2. **Generic parsing**: Fall back to `parseSpellEffect()` for unregistered spells
+3. **No effect**: If neither works, spell resolves doing nothing
+
+```typescript
+function applySpellEffects(state: GameState, stackObj: StackObject): void {
+  const impl = getSpellImplementation(template.name);
+  if (impl) {
+    impl.resolve(state, stackObj);
+    return;
+  }
+  // Fall back to generic oracle text parsing
+  const effect = parseSpellEffect(oracleText);
+  if (effect) { /* apply parsed effect */ }
+}
+```
+
+### 5.5 Helper Modules
+
+**Effects Library (`rules/effects.ts`)**
+
+Reusable effect functions used by spell implementations:
+- `destroyPermanent()`, `destroyAllCreatures()`, `destroyAllLands()`
+- `applyDamage()`, `dealDamageToAll()`
+- `drawCards()`, `discardCards()`
+- `searchLibrary()`, `returnFromGraveyard()`
+- `returnToHand()`, `gainLife()`, `loseLife()`
+
+**Token Creation (`rules/tokens.ts`)**
+
+Token creation for spells like Icatian Town:
+- `createTokens(state, controller, tokenType, count)`
+- `TOKEN_DEFINITIONS` - predefined token types (Citizen, Cat, Goblin, etc.)
+- `createCustomTokens()` - for non-standard tokens
+
+---
+
+## 6. Engine Architecture
+
+### 6.1 Immutable State Pattern
 
 The engine uses **pure functions** and **immutable data** to enable:
 
@@ -504,7 +695,7 @@ function playCard(state: GameState, cardId: string): GameState {
 }
 ```
 
-### 4.2 Action System
+### 6.2 Action System
 
 All game logic flows through the **reducer**:
 
@@ -535,7 +726,7 @@ export interface PlaySpellAction extends GameAction {
 }
 ```
 
-### 4.3 The Reducer
+### 6.3 The Reducer
 
 ```typescript
 // packages/engine/src/actions/reducer.ts
@@ -564,7 +755,7 @@ export function applyAction(state: GameState, action: GameAction): GameState {
 }
 ```
 
-### 4.4 Zone Management
+### 6.4 Zone Management
 
 ```typescript
 // packages/engine/src/state/Zone.ts
@@ -609,9 +800,9 @@ export class ZoneManager {
 
 ---
 
-## 5. AI Architecture
+## 7. AI Architecture
 
-### 5.1 MCTS Node Structure
+### 7.1 MCTS Node Structure
 
 ```typescript
 // packages/ai/src/search/Node.ts
@@ -658,7 +849,7 @@ export class MCTSNode {
 }
 ```
 
-### 5.2 UCB1 Selection
+### 7.2 UCB1 Selection
 
 ```typescript
 // packages/ai/src/search/UCB1.ts
@@ -683,7 +874,7 @@ function calculateUCB1(node: MCTSNode, parentVisits: number, c: number): number 
 }
 ```
 
-### 5.3 Determinization for Hidden Information
+### 7.3 Determinization for Hidden Information
 
 ```typescript
 // packages/ai/src/search/determinization.ts
@@ -720,9 +911,9 @@ function shuffle<T>(array: T[], seed: number): void {
 
 ---
 
-## 6. Visualization Architecture
+## 8. Visualization Architecture
 
-### 6.1 React Component Structure
+### 8.1 React Component Structure
 
 We use a standard React component tree to render the game state. This provides a "Scientific Dashboard" look rather than a game engine look.
 
@@ -755,7 +946,7 @@ export function App() {
 }
 ```
 
-### 6.2 Card Component
+### 8.2 Card Component
 
 Cards are rendered as DOM elements, allowing easy CSS styling and debugging.
 
@@ -796,9 +987,9 @@ export function Card({ data, onClick }: CardProps) {
 
 ---
 
-## 7. Performance Optimizations
+## 9. Performance Optimizations
 
-### 7.1 Fast State Cloning
+### 9.1 Fast State Cloning
 
 ```typescript
 // Use structuredClone for deep cloning
@@ -808,14 +999,14 @@ const newState = structuredClone(state);
 const newState = { ...state };
 ```
 
-### 7.2 MCTS Optimizations
+### 9.2 MCTS Optimizations
 
 - **Transposition Table**: Cache evaluated positions
 - **Move Ordering**: Try high-value moves first
 - **Early Termination**: Stop search when one move is clearly best
 - **Parallel MCTS**: Run multiple searches concurrently (Phase 5)
 
-### 7.3 Visualization Optimizations
+### 9.3 Visualization Optimizations
 
 - **React Memo**: Prevent re-rendering cards that haven't changed
 - **Virtualization**: Use `react-window` for large log lists
@@ -824,9 +1015,9 @@ const newState = { ...state };
 
 ---
 
-## 8. Testing Strategy
+## 10. Testing Strategy
 
-### 8.1 Unit Tests
+### 10.1 Unit Tests
 
 ```typescript
 // packages/engine/tests/combat.test.ts
@@ -845,7 +1036,7 @@ describe('Combat', () => {
 });
 ```
 
-### 8.2 Integration Tests
+### 10.2 Integration Tests
 
 Run full games between bots to catch edge cases:
 
@@ -853,7 +1044,7 @@ Run full games between bots to catch edge cases:
 bun test:integration
 ```
 
-### 8.3 Simulation Replay System
+### 10.3 Simulation Replay System
 
 To support scientific peer review and debugging, the platform can reproduce any simulation:
 
@@ -875,9 +1066,9 @@ This JSON allows researchers to perfectly reconstruct the state at any point in 
 
 ---
 
-## 9. Deployment
+## 11. Deployment
 
-### 9.1 CLI Tool
+### 11.1 CLI Tool
 
 ```bash
 # Install globally
@@ -887,7 +1078,7 @@ bun install -g @manacore/cli
 manacore play --deck red-burn --opponent mcts
 ```
 
-### 9.2 Web Client
+### 11.2 Web Client
 
 ```bash
 # Build for production
