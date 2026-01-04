@@ -128,7 +128,8 @@ export function calculateVariablePT(
       return { power: forestCount, toughness: forestCount };
     }
 
-    case 'Primal Clay': { // Default to 3/3 if no choice has been made // The choice is stored on the card instance when it enters // "As Primal Clay enters the battlefield, it becomes your choice of..."
+    case 'Primal Clay': {
+      // Default to 3/3 if no choice has been made // The choice is stored on the card instance when it enters // "As Primal Clay enters the battlefield, it becomes your choice of..."
       const choice = card.primalClayChoice || '3/3';
       switch (choice) {
         case '2/2 flying':

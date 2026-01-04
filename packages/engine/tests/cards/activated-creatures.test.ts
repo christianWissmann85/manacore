@@ -100,7 +100,10 @@ describe('Tap to Deal Damage Creatures', () => {
 
       expect(damageAbility).toBeDefined();
       expect(damageAbility!.cost.tap).toBe(true);
-      expect(damageAbility!.targetRequirements![0].restrictions).toContain('attacking_or_blocking');
+      expect(damageAbility!.targetRequirements![0].restrictions).toContainEqual({
+        type: 'combat',
+        status: 'attacking_or_blocking',
+      });
     });
   });
 
@@ -149,8 +152,14 @@ describe('Tap to Deal Damage Creatures', () => {
 
       expect(damageAbility).toBeDefined();
       expect(damageAbility!.effect.amount).toBe(4);
-      expect(damageAbility!.targetRequirements![0].restrictions).toContain('attacking');
-      expect(damageAbility!.targetRequirements![0].restrictions).toContain('flying');
+      expect(damageAbility!.targetRequirements![0].restrictions).toContainEqual({
+        type: 'combat',
+        status: 'attacking',
+      });
+      expect(damageAbility!.targetRequirements![0].restrictions).toContainEqual({
+        type: 'keyword',
+        keyword: 'flying',
+      });
     });
   });
 
@@ -205,7 +214,10 @@ describe('Tap to Buff Creatures', () => {
 
       expect(buffAbility).toBeDefined();
       expect(buffAbility!.cost.tap).toBe(true);
-      expect(buffAbility!.targetRequirements![0].restrictions).toContain('attacking');
+      expect(buffAbility!.targetRequirements![0].restrictions).toContainEqual({
+        type: 'combat',
+        status: 'attacking',
+      });
     });
   });
 
@@ -288,7 +300,7 @@ describe('Pump Ability Creatures', () => {
       expect(pumpAbility!.cost.tap).toBeUndefined();
     });
 
-    test('pump ability applies modifier', () => {
+    test('pump ability has correct effect values', () => {
       const spirit = CardLoader.getByName('Flame Spirit')!;
       const state = setupGameWithMana({ R: 3 });
 
@@ -298,12 +310,10 @@ describe('Pump Ability Creatures', () => {
       const abilities = getActivatedAbilities(spiritCard, state);
       const pumpAbility = abilities.find((a) => a.id.includes('pump'));
 
-      // Execute the custom effect
-      pumpAbility!.effect.custom!(state);
-
-      expect(spiritCard.temporaryModifications.length).toBe(1);
-      expect(spiritCard.temporaryModifications[0].powerChange).toBe(1);
-      expect(spiritCard.temporaryModifications[0].toughnessChange).toBe(0);
+      // Verify effect structure
+      expect(pumpAbility!.effect.type).toBe('PUMP');
+      expect(pumpAbility!.effect.powerChange).toBe(1);
+      expect(pumpAbility!.effect.toughnessChange).toBe(0);
     });
   });
 
@@ -352,10 +362,10 @@ describe('Pump Ability Creatures', () => {
       expect(pumpAbility).toBeDefined();
       expect(pumpAbility!.cost.mana).toBe('{1}{W}');
 
-      // Execute and verify +0/+1
-      pumpAbility!.effect.custom!(state);
-      expect(dragonCard.temporaryModifications[0].powerChange).toBe(0);
-      expect(dragonCard.temporaryModifications[0].toughnessChange).toBe(1);
+      // Verify +0/+1 effect structure
+      expect(pumpAbility!.effect.type).toBe('PUMP');
+      expect(pumpAbility!.effect.powerChange).toBe(0);
+      expect(pumpAbility!.effect.toughnessChange).toBe(1);
     });
   });
 
@@ -404,8 +414,15 @@ describe('Pump Ability Creatures', () => {
       // First activation should work
       expect(pumpAbility!.canActivate(state, drakeCard.instanceId, 'player')).toBe(true);
 
-      // After activation, should not work again
-      pumpAbility!.effect.custom!(state);
+      // Simulate activation by adding a temporaryModification (what the executor does)
+      drakeCard.temporaryModifications.push({
+        source: drakeCard.instanceId,
+        powerChange: 1,
+        toughnessChange: 0,
+        expiresAt: 'end_of_turn',
+      });
+
+      // After activation, should not work again this turn
       expect(pumpAbility!.canActivate(state, drakeCard.instanceId, 'player')).toBe(false);
     });
   });
@@ -600,7 +617,11 @@ describe('Sacrifice Ability Creatures', () => {
 
       expect(sacAbility).toBeDefined();
       expect(sacAbility!.cost.sacrifice).toEqual({ type: 'self' });
-      expect(sacAbility!.targetRequirements![0].restrictions).toContain('black');
+      expect(sacAbility!.targetRequirements![0].restrictions).toContainEqual({
+        type: 'color',
+        color: 'B',
+        negated: false,
+      });
     });
   });
 
@@ -666,7 +687,10 @@ describe('Sacrifice Ability Creatures', () => {
       expect(sacAbility).toBeDefined();
       expect(sacAbility!.cost.tap).toBe(true);
       expect(sacAbility!.cost.sacrifice).toEqual({ type: 'self' });
-      expect(sacAbility!.targetRequirements![0].restrictions).toContain('wall');
+      expect(sacAbility!.targetRequirements![0].restrictions).toContainEqual({
+        type: 'subtype',
+        subtype: 'Wall',
+      });
     });
   });
 
@@ -903,7 +927,7 @@ describe('More Activated Ability Creatures', () => {
       state.players.player.battlefield.push(hellkiteCard);
 
       const abilities = getActivatedAbilities(hellkiteCard, state);
-      const xAbility = abilities.find((a) => a.id.includes('x_damage'));
+      const xAbility = abilities.find((a) => a.id.includes('tap_damage'));
 
       expect(xAbility).toBeDefined();
       expect(xAbility!.cost.tap).toBe(true);

@@ -349,6 +349,10 @@ bun test                      # NOT: jest, vitest
 # ESLint with type-aware rules (catches code style, patterns, unsafe any usage)
 bun run check
 
+# Formatting
+bun run format:check
+bun run format
+
 # Package management
 bun install                   # NOT: npm install, yarn
 bun add <package>
