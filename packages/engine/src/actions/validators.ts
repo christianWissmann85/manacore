@@ -5,7 +5,7 @@
  */
 
 import type { GameState } from '../state/GameState';
-import type { Action, PlayLandAction, CastSpellAction, DeclareAttackersAction, DeclareBlockersAction, ActivateAbilityAction } from './Action';
+import type { Action, PlayLandAction, CastSpellAction, DeclareAttackersAction, DeclareBlockersAction, ActivateAbilityAction, SacrificePermanentAction } from './Action';
 import { getPlayer, findCard } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
 import { isLand, isCreature, isInstant, isSorcery, hasFlying, hasReach, isAura } from '../cards/CardTemplate';
@@ -65,6 +65,8 @@ export function validateAction(state: GameState, action: Action): string[] {
       return validateDeclareBlockers(state, action);
     case 'ACTIVATE_ABILITY':
       return validateActivateAbility(state, action);
+    case 'SACRIFICE_PERMANENT':
+      return validateSacrificePermanent(state, action);
     default:
       return [];  // Other actions are always valid for now
   }
@@ -485,4 +487,30 @@ export function calculateAvailableMana(state: GameState, playerId: PlayerId): Ma
   }
 
   return available;
+}
+
+/**
+ * Validate sacrificing a permanent
+ */
+function validateSacrificePermanent(state: GameState, action: SacrificePermanentAction): string[] {
+  const errors: string[] = [];
+
+  // Find the permanent
+  const permanent = findCard(state, action.payload.permanentId);
+  if (!permanent) {
+    errors.push('Permanent not found');
+    return errors;
+  }
+
+  // Must be on the battlefield
+  if (permanent.zone !== 'battlefield') {
+    errors.push('Can only sacrifice permanents on the battlefield');
+  }
+
+  // Must control the permanent to sacrifice it
+  if (permanent.controller !== action.playerId) {
+    errors.push('You do not control this permanent');
+  }
+
+  return errors;
 }

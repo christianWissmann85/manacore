@@ -111,6 +111,18 @@ export interface ActivateAbilityAction extends GameAction {
     abilityId: string;    // Which ability to activate
     targets?: string[];   // Targets for the ability
     manaColorChoice?: 'W' | 'U' | 'B' | 'R' | 'G' | 'C';  // For multi-color mana abilities
+    xValue?: number;      // For abilities with X in cost
+  };
+}
+
+/**
+ * Sacrifice a permanent (as a cost or effect)
+ */
+export interface SacrificePermanentAction extends GameAction {
+  type: 'SACRIFICE_PERMANENT';
+  payload: {
+    permanentId: string;  // Permanent to sacrifice
+    reason?: 'cost' | 'effect' | 'state_based';  // Why it's being sacrificed
   };
 }
 
@@ -126,7 +138,8 @@ export type Action =
   | EndTurnAction
   | DrawCardAction
   | UntapAction
-  | ActivateAbilityAction;
+  | ActivateAbilityAction
+  | SacrificePermanentAction;
 
 /**
  * Type guard helpers
@@ -145,4 +158,8 @@ export function isDeclareAttackersAction(action: Action): action is DeclareAttac
 
 export function isDeclareBlockersAction(action: Action): action is DeclareBlockersAction {
   return action.type === 'DECLARE_BLOCKERS';
+}
+
+export function isSacrificePermanentAction(action: Action): action is SacrificePermanentAction {
+  return action.type === 'SACRIFICE_PERMANENT';
 }

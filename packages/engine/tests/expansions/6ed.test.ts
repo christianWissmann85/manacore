@@ -14,9 +14,11 @@ describe('6th Edition Data Validation', () => {
     expect(allCards.length).toBeLessThan(400);
   });
 
-  test('all cards have set code "6ed"', () => {
+  test('all non-token cards have set code "6ed"', () => {
     const allCards = CardLoader.getAllCards();
-    for (const card of allCards) {
+    // Exclude tokens which have set "TOKEN"
+    const realCards = allCards.filter(card => card.set !== 'TOKEN');
+    for (const card of realCards) {
       expect(card.set).toBe('6ed');
     }
   });

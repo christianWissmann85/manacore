@@ -3,9 +3,12 @@
  *
  * This provides fast in-memory access to all card data without
  * requiring API calls during gameplay.
+ *
+ * Also includes token definitions for programmatic token creation.
  */
 
 import type { CardTemplate } from './CardTemplate';
+import { TOKEN_REGISTRY, type TokenDefinition } from '../tokens/TokenRegistry';
 
 // Import the card data at compile time
 import cards6ed from '../../data/cards/6ed.json';
@@ -31,8 +34,44 @@ export class CardLoader {
       this.nameIndex.set(card.name.toLowerCase(), card);
     }
 
+    // Add token definitions as synthetic CardTemplates
+    this.loadTokenDefinitions();
+
     this.initialized = true;
     console.log(`🃏 CardLoader: Loaded ${this.cache.size} cards from 6th Edition`);
+  }
+
+  /**
+   * Load token definitions into the cache
+   */
+  private static loadTokenDefinitions(): void {
+    for (const [key, tokenDef] of Object.entries(TOKEN_REGISTRY)) {
+      const template = this.tokenToTemplate(tokenDef);
+      this.cache.set(tokenDef.id, template);
+      this.nameIndex.set(tokenDef.name.toLowerCase(), template);
+    }
+  }
+
+  /**
+   * Convert a TokenDefinition to a CardTemplate for unified lookup
+   */
+  private static tokenToTemplate(token: TokenDefinition): CardTemplate {
+    return {
+      id: token.id,
+      name: token.name,
+      mana_cost: '',  // Tokens have no mana cost
+      cmc: 0,
+      type_line: token.type_line,
+      oracle_text: '',
+      power: token.power,
+      toughness: token.toughness,
+      colors: token.colors,
+      color_identity: token.colors,
+      keywords: token.keywords || [],
+      rarity: 'token',  // Special rarity for tokens
+      set: 'TOKEN',
+      set_name: 'Token',
+    };
   }
 
   /**

@@ -15,6 +15,7 @@ import type { CardInstance } from '../state/CardInstance';
 import { getEffectiveToughness } from '../state/CardInstance';
 import { CardLoader } from '../cards/CardLoader';
 import { isCreature, isAura } from '../cards/CardTemplate';
+import { registerTrigger } from './triggers';
 
 /**
  * Check and perform all state-based actions
@@ -94,7 +95,13 @@ function checkCreatureDeath(state: GameState): boolean {
 
         actionsPerformed = true;
 
-        // TODO Phase 1: Trigger death triggers here
+        // Fire death triggers for this creature
+        registerTrigger(state, {
+          type: 'DIES',
+          cardId: creature.instanceId,
+          controller: playerId,
+          wasController: playerId,
+        });
       }
     }
   }

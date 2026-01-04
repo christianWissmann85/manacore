@@ -256,7 +256,7 @@ manacore/
 
 **Goal**: "Every Card Works"
 
-- Week 1.5.1: **Infrastructure** (death triggers, sacrifice, X-costs, tokens, all lands)
+- Week 1.5.1: **Infrastructure** ✅ (death triggers, sacrifice, X-costs, tokens, all lands)
 - Week 1.5.2: **Instants & Sorceries** (38 instants + 53 sorceries)
 - Week 1.5.3: **Creatures Part 1** (vanilla, keywords, ETB, mana dorks)
 - Week 1.5.4: **Creatures Part 2** (activated abilities, lords, complex triggers)

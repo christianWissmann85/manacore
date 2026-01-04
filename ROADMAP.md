@@ -363,12 +363,12 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 ### Week 1.5.1: Infrastructure & Lands
 
 **New Mechanics Required:**
-- [ ] Death triggers (complete TODO in stateBasedActions.ts)
-- [ ] Sacrifice effects ("Sacrifice a creature:")
-- [ ] X-cost spell handling (Blaze, Fireball, etc.)
-- [ ] Token generation framework
-- [ ] Damage prevention ("Prevent X damage")
-- [ ] Life gain/loss effects
+- [x] Death triggers (complete TODO in stateBasedActions.ts)
+- [x] Sacrifice effects ("Sacrifice a creature:")
+- [x] X-cost spell handling (Blaze, Fireball, etc.)
+- [x] Token generation framework
+- [x] Damage prevention ("Prevent X damage")
+- [x] Life gain/loss effects
 
 **Land Tasks:**
 - [ ] Pain lands (Adarkar Wastes, etc.) - tap for colorless or colored + damage

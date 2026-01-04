@@ -64,6 +64,20 @@ export {
   hasProtectionFromColor,
 } from './cards/CardTemplate';
 
+// Token exports (Phase 1.5.1)
+export type { TokenDefinition } from './tokens/TokenRegistry';
+export {
+  TOKEN_REGISTRY,
+  getTokenDefinition,
+  isTokenCard,
+  isTokenType,
+  createToken,
+  createTokens,
+  putTokensOntoBattlefield,
+  removeAllTokensOfType,
+  removeTokensCreatedBy,
+} from './tokens/TokenRegistry';
+
 // Action exports
 export type {
   Action,
@@ -76,6 +90,8 @@ export type {
   EndTurnAction,
   DrawCardAction,
   UntapAction,
+  ActivateAbilityAction,
+  SacrificePermanentAction,
 } from './actions/Action';
 
 export {
@@ -83,6 +99,7 @@ export {
   isCastSpellAction,
   isDeclareAttackersAction,
   isDeclareBlockersAction,
+  isSacrificePermanentAction,
 } from './actions/Action';
 
 export { validateAction } from './actions/validators';
@@ -90,8 +107,8 @@ export { applyAction } from './actions/reducer';
 export { getLegalActions, describeAction } from './actions/getLegalActions';
 
 // Rules exports
-export type { ActivatedAbility, AbilityCost, AbilityEffect } from './rules/activatedAbilities';
-export { getActivatedAbilities } from './rules/activatedAbilities';
+export type { ActivatedAbility, AbilityCost, AbilityEffect, SacrificeCost } from './rules/activatedAbilities';
+export { getActivatedAbilities, payCosts } from './rules/activatedAbilities';
 
 // Targeting exports
 export type {

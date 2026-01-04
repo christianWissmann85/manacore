@@ -15,9 +15,10 @@ import {
 } from '../src/index';
 
 describe('CardLoader', () => {
-  test('loads 6th Edition cards', () => {
+  test('loads 6th Edition cards and tokens', () => {
     const allCards = CardLoader.getAllCards();
-    expect(allCards.length).toBe(335);
+    // 335 real cards + 7 token definitions
+    expect(allCards.length).toBe(335 + 7);
   });
 
   test('can find Lightning Blast by name', () => {

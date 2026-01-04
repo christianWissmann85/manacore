@@ -23,6 +23,7 @@ export interface CardInstance {
   instanceId: string;
 
   // Reference to Scryfall card data (from CardLoader)
+  // For tokens, this is a synthetic token ID like "token_serf"
   scryfallId: string;
 
   // Ownership
@@ -53,6 +54,11 @@ export interface CardInstance {
   attacking?: boolean;
   blocking?: string;      // Instance ID of attacker being blocked
   blockedBy?: string[];   // Instance IDs of creatures blocking this attacker
+
+  // Token-specific fields (Phase 1.5.1)
+  isToken?: boolean;      // True if this is a token (not a real card)
+  tokenType?: string;     // Token type name (e.g., "Serf", "Cat", "Goblin")
+  createdBy?: string;     // Instance ID of the card that created this token
 }
 
 /**

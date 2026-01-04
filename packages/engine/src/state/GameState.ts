@@ -52,6 +52,9 @@ export interface GameState {
 
   // History (for undo/debugging)
   actionHistory: string[];  // JSON of actions applied
+
+  // Prevention effects (Phase 1.5.1)
+  preventAllCombatDamage?: boolean;  // Fog effect
 }
 
 /**

@@ -22,6 +22,12 @@ import { registerTrigger } from './triggers';
  * Resolve all combat damage for the current combat
  */
 export function resolveCombatDamage(state: GameState): void {
+  // Check for Fog effect (Phase 1.5.1)
+  if (state.preventAllCombatDamage) {
+    // Skip all combat damage - Fog prevents it
+    return;
+  }
+
   // First Strike damage step
   assignCombatDamage(state, true);  // onlyFirstStrike = true
   checkCreatureDeath(state);

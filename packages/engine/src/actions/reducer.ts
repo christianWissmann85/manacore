@@ -6,7 +6,7 @@
  */
 
 import type { GameState } from '../state/GameState';
-import type { Action, PlayLandAction, CastSpellAction, DeclareAttackersAction, DeclareBlockersAction, EndTurnAction, PassPriorityAction, ActivateAbilityAction } from './Action';
+import type { Action, PlayLandAction, CastSpellAction, DeclareAttackersAction, DeclareBlockersAction, EndTurnAction, PassPriorityAction, ActivateAbilityAction, SacrificePermanentAction } from './Action';
 import { validateAction } from './validators';
 import { getPlayer } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
@@ -65,6 +65,9 @@ export function applyAction(state: GameState, action: Action): GameState {
     case 'ACTIVATE_ABILITY':
       applyActivateAbility(newState, action);
       break;
+    case 'SACRIFICE_PERMANENT':
+      applySacrificePermanent(newState, action);
+      break;
     default:
       break;
   }
@@ -93,6 +96,17 @@ export function applyAction(state: GameState, action: Action): GameState {
 }
 
 /**
+ * Lands that enter the battlefield tapped (Phase 1.5.1)
+ */
+const LANDS_THAT_ENTER_TAPPED = new Set([
+  'Dwarven Ruins',
+  'Ebon Stronghold',
+  'Havenwood Battleground',
+  'Ruins of Trokair',
+  'Svyelunite Temple',
+]);
+
+/**
  * Play a land from hand onto the battlefield
  */
 function applyPlayLand(state: GameState, action: PlayLandAction): void {
@@ -106,9 +120,13 @@ function applyPlayLand(state: GameState, action: PlayLandAction): void {
   const card = player.hand[cardIndex]!;
   player.hand.splice(cardIndex, 1);
 
+  // Check if land enters tapped
+  const template = CardLoader.getById(card.scryfallId);
+  const entersTapped = template && LANDS_THAT_ENTER_TAPPED.has(template.name);
+
   // Add to battlefield
   card.zone = 'battlefield';
-  card.tapped = false;  // Lands enter untapped
+  card.tapped = entersTapped || false;
   player.battlefield.push(card);
 
   // Increment lands played this turn
@@ -259,6 +277,9 @@ function applyEndTurn(state: GameState, _action: EndTurnAction): void {
   state.players.player.manaPool = createEmptyManaPool();
   state.players.opponent.manaPool = createEmptyManaPool();
 
+  // 5. Reset prevention effects (Phase 1.5.1)
+  state.preventAllCombatDamage = false;
+
   // Switch active player
   state.activePlayer = state.activePlayer === 'player' ? 'opponent' : 'player';
   state.priorityPlayer = state.activePlayer;
@@ -393,6 +414,9 @@ function applyActivateAbility(state: GameState, action: ActivateAbilityAction): 
   const card = player.battlefield.find(c => c.instanceId === action.payload.sourceId);
   if (!card) return;
 
+  // Track whether card was untapped before paying costs
+  const wasUntapped = !card.tapped;
+
   // Get all abilities for this card
   const abilities = getActivatedAbilities(card, state);
   const ability = abilities.find(a => a.id === action.payload.abilityId);
@@ -401,6 +425,15 @@ function applyActivateAbility(state: GameState, action: ActivateAbilityAction): 
   // Pay costs (tap, mana, etc.)
   if (!payCosts(state, action.payload.sourceId, ability.cost)) {
     return; // Failed to pay costs
+  }
+
+  // Fire BECOMES_TAPPED trigger if card became tapped as part of the cost
+  if (wasUntapped && card.tapped) {
+    registerTrigger(state, {
+      type: 'BECOMES_TAPPED',
+      cardId: card.instanceId,
+      controller: action.playerId,
+    });
   }
 
   // Set target if provided
@@ -507,6 +540,13 @@ function autoTapForMana(
     const source = untappedSources[sourceIndex]!;
     source.permanent.tapped = true;
 
+    // Fire BECOMES_TAPPED trigger (e.g., for City of Brass)
+    registerTrigger(state, {
+      type: 'BECOMES_TAPPED',
+      cardId: source.permanent.instanceId,
+      controller: playerId,
+    });
+
     // Add mana to pool
     player.manaPool = addManaToPool(player.manaPool, color, source.ability.effect.amount ?? 1);
 
@@ -521,6 +561,13 @@ function autoTapForMana(
 
     const source = untappedSources[0]!;
     source.permanent.tapped = true;
+
+    // Fire BECOMES_TAPPED trigger (e.g., for City of Brass)
+    registerTrigger(state, {
+      type: 'BECOMES_TAPPED',
+      cardId: source.permanent.instanceId,
+      controller: playerId,
+    });
 
     // Pick the first color this source can produce
     const color = source.colors[0] || 'C';
@@ -576,5 +623,50 @@ function autoTapForMana(
                     color === 'G' ? 'green' : 'colorless';
     player.manaPool[poolKey]--;
     needed.generic--;
+  }
+}
+
+/**
+ * Sacrifice a permanent
+ *
+ * Moves the permanent from battlefield to graveyard.
+ * This triggers death triggers (for creatures) and "when sacrificed" triggers.
+ */
+function applySacrificePermanent(state: GameState, action: SacrificePermanentAction): void {
+  const player = getPlayer(state, action.playerId);
+  const permanentId = action.payload.permanentId;
+
+  // Find the permanent on the battlefield
+  const permanentIndex = player.battlefield.findIndex(c => c.instanceId === permanentId);
+  if (permanentIndex === -1) return;
+
+  const permanent = player.battlefield[permanentIndex]!;
+
+  // Remove from battlefield
+  player.battlefield.splice(permanentIndex, 1);
+
+  // Move to graveyard
+  permanent.zone = 'graveyard';
+  permanent.damage = 0;
+  permanent.tapped = false;
+  permanent.attacking = false;
+  permanent.blocking = undefined;
+  permanent.blockedBy = undefined;
+  player.graveyard.push(permanent);
+
+  // Check if it's a creature for death triggers
+  const template = CardLoader.getById(permanent.scryfallId);
+  if (template) {
+    const isCreatureType = template.type_line?.toLowerCase().includes('creature');
+
+    if (isCreatureType) {
+      // Fire death trigger (sacrifice counts as dying)
+      registerTrigger(state, {
+        type: 'DIES',
+        cardId: permanent.instanceId,
+        controller: action.playerId,
+        wasController: action.playerId,
+      });
+    }
   }
 }
