@@ -185,14 +185,14 @@ Player B declares blockers: Air Elemental (4/4 Flying)
 ### Week 7: State-Based Actions & Triggers
 
 **Tasks:**
-- [ ] Implement state-based actions:
+- [x] Implement state-based actions:
   - Creatures with 0 or less toughness die
   - Players at 0 or less life lose
   - Legendary rule (if needed)
-- [ ] Implement triggered abilities:
+- [x] Implement triggered abilities:
   - "When ~ enters the battlefield"
   - "When ~ dies"
-- [ ] Add activated abilities:
+- [x] Add activated abilities:
   - "Tap: Deal 1 damage" (Prodigal Sorcerer)
 
 **New Cards:**
@@ -227,21 +227,21 @@ Nekrataal (2BB) - 2/1, When ~ ETB: Destroy target nonblack creature
 ### Week 9: Mana System ⚠️ CRITICAL
 
 **Tasks:**
-- [ ] Implement mana pool system:
+- [x] Implement mana pool system:
   - `ManaPool` type with `{W, U, B, R, G, C}` counts
   - Add mana to pool
   - Remove mana from pool
   - Empty pool at phase transitions
-- [ ] Add mana costs to all cards:
+- [x] Add mana costs to all cards:
   - Parse mana cost strings (e.g., `"{2}{R}{R}"`)
   - Validate player can pay cost
   - Deduct mana when casting spell
-- [ ] Implement mana abilities:
+- [x] Implement mana abilities:
   - "Tap: Add {R}" (basic lands)
   - Auto-tapping for mana
   - Color identity rules
-- [ ] Update validators to check mana costs
-- [ ] Update CLI/UI to show mana pools
+- [x] Update validators to check mana costs
+- [x] Update CLI/UI to show mana pools
 
 **New Cards:**
 ```
@@ -318,7 +318,7 @@ Stack: Lightning Bolt targeting Grizzly Bears
 ### Week 11: Card Library Expansion
 
 **Tasks:**
-- [ ] Implement 20-30 common 6th Edition cards:
+- [ ] Implement 20-30 common 6th Edition cards (and check if all mentioned Cards from previous Weeks have been implemented):
   - **Creatures (10)**: Shivan Dragon, Serra Angel, Sengir Vampire, Mahamoti Djinn, etc.
   - **Removal (5)**: Swords to Plowshares, Terror, Disenchant, Fireball, etc.
   - **Card Draw (3)**: Ancestral Recall, Brainstorm, Jayemdae Tome

@@ -95,9 +95,11 @@ describe('Actions', () => {
   });
 
   test('can cast a creature', () => {
-    // Setup: Find Grizzly Bears
+    // Setup: Find Grizzly Bears (costs {1}{G})
     const bears = CardLoader.getByName('Grizzly Bears');
+    const forest = CardLoader.getByName('Forest');
     expect(bears).toBeDefined();
+    expect(forest).toBeDefined();
 
     const bearsCard = createCardInstance(bears!.id, 'player', 'hand');
 
@@ -110,6 +112,11 @@ describe('Actions', () => {
     // Put bears in hand
     const player = getPlayer(state, 'player');
     player.hand.push(bearsCard);
+
+    // Add 2 Forests to battlefield for mana (Grizzly Bears costs {1}{G})
+    const forest1 = createCardInstance(forest!.id, 'player', 'battlefield');
+    const forest2 = createCardInstance(forest!.id, 'player', 'battlefield');
+    player.battlefield.push(forest1, forest2);
 
     // Set to main phase
     state.phase = 'main1';
@@ -142,10 +149,11 @@ describe('Actions', () => {
 
     // Verify creature is on battlefield after resolution
     const newPlayer = getPlayer(state, 'player');
-    expect(newPlayer.battlefield.length).toBe(1);
+    expect(newPlayer.battlefield.length).toBe(3); // 2 forests + 1 creature
     expect(newPlayer.hand.length).toBe(0);
 
-    const creature = newPlayer.battlefield[0]!;
+    const creature = newPlayer.battlefield.find(c => c.instanceId === bearsCard.instanceId)!;
+    expect(creature).toBeDefined();
     expect(creature.summoningSick).toBe(true);
   });
 
@@ -179,7 +187,9 @@ describe('Actions', () => {
 describe('The Stack', () => {
   test('casting a spell puts it on the stack', () => {
     const bears = CardLoader.getByName('Grizzly Bears');
+    const forest = CardLoader.getByName('Forest');
     expect(bears).toBeDefined();
+    expect(forest).toBeDefined();
 
     const bearsCard = createCardInstance(bears!.id, 'player', 'hand');
     const playerLibrary = [createCardInstance(bears!.id, 'player', 'library')];
@@ -187,6 +197,12 @@ describe('The Stack', () => {
 
     const player = getPlayer(state, 'player');
     player.hand.push(bearsCard);
+
+    // Add mana sources for Grizzly Bears ({1}{G})
+    player.battlefield.push(
+      createCardInstance(forest!.id, 'player', 'battlefield'),
+      createCardInstance(forest!.id, 'player', 'battlefield'),
+    );
 
     state.phase = 'main1';
     state.step = 'main';
@@ -203,20 +219,27 @@ describe('The Stack', () => {
     expect(newState.stack.length).toBe(1);
     expect(newState.stack[0]?.card.instanceId).toBe(bearsCard.instanceId);
 
-    // Card should not be in hand or battlefield yet
+    // Card should not be in hand
     const newPlayer = getPlayer(newState, 'player');
     expect(newPlayer.hand.length).toBe(0);
-    expect(newPlayer.battlefield.length).toBe(0);
+    // Note: battlefield now has tapped lands from mana payment
   });
 
   test('both players must pass priority before resolving', () => {
     const bears = CardLoader.getByName('Grizzly Bears');
+    const forest = CardLoader.getByName('Forest');
     const bearsCard = createCardInstance(bears!.id, 'player', 'hand');
     const playerLibrary = [createCardInstance(bears!.id, 'player', 'library')];
     let state = createGameState(playerLibrary, playerLibrary);
 
     const player = getPlayer(state, 'player');
     player.hand.push(bearsCard);
+
+    // Add mana sources for Grizzly Bears ({1}{G})
+    player.battlefield.push(
+      createCardInstance(forest!.id, 'player', 'battlefield'),
+      createCardInstance(forest!.id, 'player', 'battlefield'),
+    );
 
     state.phase = 'main1';
 
@@ -253,18 +276,23 @@ describe('The Stack', () => {
     // Stack should have resolved
     expect(state.stack.length).toBe(0);
 
-    // Creature should be on battlefield
+    // Creature should be on battlefield (along with 2 tapped lands)
     const newPlayer = getPlayer(state, 'player');
-    expect(newPlayer.battlefield.length).toBe(1);
-    expect(newPlayer.battlefield[0]?.instanceId).toBe(bearsCard.instanceId);
+    expect(newPlayer.battlefield.length).toBe(3); // 2 lands + 1 creature
+    const bearOnBattlefield = newPlayer.battlefield.find(c => c.instanceId === bearsCard.instanceId);
+    expect(bearOnBattlefield).toBeDefined();
   });
 
   test('LIFO resolution - last in, first out', () => {
     const blast = CardLoader.getByName('Lightning Blast');
     const counterspell = CardLoader.getByName('Counterspell');
+    const mountain = CardLoader.getByName('Mountain');
+    const island = CardLoader.getByName('Island');
 
     expect(blast).toBeDefined();
     expect(counterspell).toBeDefined();
+    expect(mountain).toBeDefined();
+    expect(island).toBeDefined();
 
     const blastCard = createCardInstance(blast!.id, 'player', 'hand');
     const counterCard = createCardInstance(counterspell!.id, 'opponent', 'hand');
@@ -279,6 +307,14 @@ describe('The Stack', () => {
 
     player.hand.push(blastCard);
     opponent.hand.push(counterCard);
+
+    // Add mana sources - Lightning Blast costs {3}{R}, Counterspell costs {U}{U}
+    for (let i = 0; i < 4; i++) {
+      player.battlefield.push(createCardInstance(mountain!.id, 'player', 'battlefield'));
+    }
+    for (let i = 0; i < 2; i++) {
+      opponent.battlefield.push(createCardInstance(island!.id, 'opponent', 'battlefield'));
+    }
 
     state.phase = 'main1';
 
@@ -357,7 +393,9 @@ describe('The Stack', () => {
 
   test('Lightning Blast deals damage when resolved', () => {
     const blast = CardLoader.getByName('Lightning Blast');
+    const mountain = CardLoader.getByName('Mountain');
     expect(blast).toBeDefined();
+    expect(mountain).toBeDefined();
 
     const blastCard = createCardInstance(blast!.id, 'player', 'hand');
     const playerLibrary = [createCardInstance(blast!.id, 'player', 'library')];
@@ -367,6 +405,11 @@ describe('The Stack', () => {
 
     const player = getPlayer(state, 'player');
     player.hand.push(blastCard);
+
+    // Add mana sources - Lightning Blast costs {3}{R}
+    for (let i = 0; i < 4; i++) {
+      player.battlefield.push(createCardInstance(mountain!.id, 'player', 'battlefield'));
+    }
 
     state.phase = 'main1';
 

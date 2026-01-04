@@ -10,6 +10,9 @@ import { getPlayer, findCard } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
 import { isLand, isCreature, isInstant, isSorcery, hasFlying, hasReach } from '../cards/CardTemplate';
 import { getActivatedAbilities } from '../rules/activatedAbilities';
+import type { PlayerId } from '../state/Zone';
+import type { ManaPool } from '../state/PlayerState';
+import { parseManaCost, canPayManaCost, hasXInCost } from '../utils/manaCosts';
 
 /**
  * Validate any action
@@ -141,8 +144,24 @@ function validateCastSpell(state: GameState, action: CastSpellAction): string[] 
     // No additional restrictions
   }
 
-  // TODO Phase 1+: Mana cost validation (will implement in Week 5)
-  // For now, we'll allow casting any spell
+  // Mana cost validation with auto-tapping
+  const manaCost = parseManaCost(template.mana_cost);
+
+  // For X spells, check if they can afford at least X=0
+  // The actual X value will be chosen when casting
+  const xValue = action.payload.xValue ?? 0;
+
+  // Check if player can afford the spell (current pool + available mana from untapped sources)
+  const availableMana = calculateAvailableMana(state, action.playerId);
+
+  if (!canPayManaCost(availableMana, manaCost, xValue)) {
+    errors.push('Not enough mana to cast this spell');
+  }
+
+  // For X spells, validate the X value makes sense
+  if (hasXInCost(template.mana_cost) && xValue < 0) {
+    errors.push('X value cannot be negative');
+  }
 
   return errors;
 }
@@ -313,4 +332,61 @@ function validateActivateAbility(state: GameState, action: ActivateAbilityAction
   }
 
   return errors;
+}
+
+/**
+ * Calculate total available mana for a player
+ *
+ * This includes:
+ * 1. Current mana in the mana pool
+ * 2. Potential mana from untapped lands
+ * 3. Potential mana from untapped mana-producing creatures (not summoning sick)
+ *
+ * For multi-color lands, we optimistically count their best possible contribution.
+ * The actual auto-tapping will happen when the spell is cast.
+ */
+export function calculateAvailableMana(state: GameState, playerId: PlayerId): ManaPool {
+  const player = getPlayer(state, playerId);
+
+  // Start with current mana pool
+  const available: ManaPool = { ...player.manaPool };
+
+  // Add potential mana from untapped permanents
+  for (const permanent of player.battlefield) {
+    // Skip tapped permanents
+    if (permanent.tapped) continue;
+
+    const template = CardLoader.getById(permanent.scryfallId);
+    if (!template) continue;
+
+    // Get mana abilities for this permanent
+    const abilities = getActivatedAbilities(permanent, state);
+    const manaAbilities = abilities.filter(a => a.isManaAbility && a.effect.type === 'ADD_MANA');
+
+    for (const ability of manaAbilities) {
+      // Check if ability can be activated (handles summoning sickness for creatures)
+      if (!ability.canActivate(state, permanent.instanceId, playerId)) continue;
+
+      // Add the mana this ability can produce
+      // For abilities that can produce multiple colors, add all possibilities
+      // (this is optimistic - actual payment will choose specific colors)
+      if (ability.effect.manaColors) {
+        for (const color of ability.effect.manaColors) {
+          const amount = ability.effect.amount ?? 1;
+          switch (color) {
+            case 'W': available.white += amount; break;
+            case 'U': available.blue += amount; break;
+            case 'B': available.black += amount; break;
+            case 'R': available.red += amount; break;
+            case 'G': available.green += amount; break;
+            case 'C': available.colorless += amount; break;
+          }
+        }
+        // Only count the first mana ability per permanent (you can only tap once)
+        break;
+      }
+    }
+  }
+
+  return available;
 }

@@ -236,7 +236,7 @@ manacore/
 - Week 6: **Proper Combat** ✅ (blockers, Flying, First Strike, Trample, Vigilance, Reach)
 - Week 7: **State-Based Actions & Triggers** ✅ (SBAs, ETB triggers, death triggers, activated abilities)
 - Week 8: **Basic Web UI** 🔜 (Vite + PixiJS, card rendering, drag-and-drop)
-- Week 9: **Mana System** ⚠️ **CRITICAL** (mana pools, paying costs, mana abilities)
+- Week 9: **Mana System** ✅ (mana pools, paying costs, mana abilities)
 - Week 10: **Targeting System** ⚠️ **CRITICAL** (legal targets, target validation)
 - Week 11: **Card Library Expansion** (implement 20-30 common 6th Edition cards)
 
@@ -250,7 +250,7 @@ manacore/
 - ✅ Activated abilities framework
 - ✅ CLI displays abilities (keywords + activated)
 - 🔜 Playable web game with card images and drag-and-drop
-- 🔜 **Complete mana system with costs and payment**
+- ✅ Complete mana system with costs and payment
 - 🔜 **Targeting system for spells and abilities**
 - 🔜 **20-30 working cards (creatures, removal, draw, counterspells)**
 
@@ -924,10 +924,9 @@ bun build src/index.ts                  # Build a file
   - Abilities: State-based actions, triggered abilities, activated abilities
   - CLI: Display of keywords and activated abilities
   - **Next**:
-    - Week 8 - Basic Web UI (Vite + PixiJS)
-    - Week 9 - Mana System ⚠️ **CRITICAL**
     - Week 10 - Targeting System ⚠️ **CRITICAL**
     - Week 11 - Card Library Expansion (20-30 cards)
+    - Week 8 - Basic Web UI (Vite + PixiJS)
 
 ---
 

@@ -39,6 +39,7 @@ export interface CastSpellAction extends GameAction {
   payload: {
     cardInstanceId: string;  // Card in hand to cast
     targets?: string[];      // Target instance IDs (for targeted spells)
+    xValue?: number;         // For spells with {X} in cost (e.g., Fireball)
   };
 }
 
@@ -109,6 +110,7 @@ export interface ActivateAbilityAction extends GameAction {
     sourceId: string;     // Card with the ability
     abilityId: string;    // Which ability to activate
     targets?: string[];   // Targets for the ability
+    manaColorChoice?: 'W' | 'U' | 'B' | 'R' | 'G' | 'C';  // For multi-color mana abilities
   };
 }
 

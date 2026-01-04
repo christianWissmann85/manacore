@@ -19,6 +19,8 @@ import {
   hasVigilance,
   hasReach,
   getActivatedAbilities,
+  formatManaPool,
+  getTotalMana,
 } from '@manacore/engine';
 
 /**
@@ -36,7 +38,7 @@ export function renderGameState(state: GameState, viewingPlayer: 'player' | 'opp
 
   // Opponent (top of screen)
   const opponent = getOpponent(state, viewingPlayer);
-  lines.push(renderPlayerSummary(opponent, 'OPPONENT'));
+  lines.push(renderPlayerSummary(opponent, 'OPPONENT', state));
   lines.push(renderZoneSummary(opponent));
   lines.push('');
 
@@ -82,7 +84,7 @@ export function renderGameState(state: GameState, viewingPlayer: 'player' | 'opp
 
   // You (bottom of screen)
   lines.push('─'.repeat(width));
-  lines.push(renderPlayerSummary(player, 'YOU'));
+  lines.push(renderPlayerSummary(player, 'YOU', state));
   lines.push(renderZoneSummary(player));
   lines.push('');
 
@@ -112,9 +114,12 @@ export function renderGameState(state: GameState, viewingPlayer: 'player' | 'opp
 /**
  * Render player summary line
  */
-function renderPlayerSummary(player: PlayerState, label: string): string {
-  const manaCount = countAvailableMana(player);
-  return `${label}: ❤️  ${player.life} life | ⚡ ${manaCount} mana available`;
+function renderPlayerSummary(player: PlayerState, label: string, _state: GameState): string {
+  const poolMana = getTotalMana(player.manaPool);
+  const poolDisplay = poolMana > 0 ? formatManaPool(player.manaPool) : 'Empty';
+  const untappedLands = countUntappedLands(player);
+
+  return `${label}: ❤️  ${player.life} life | 💎 Mana Pool: ${poolDisplay} | ⚡ ${untappedLands} untapped lands`;
 }
 
 /**
@@ -220,9 +225,9 @@ function renderCreature(creature: CardInstance, state: GameState): string {
 }
 
 /**
- * Count available mana (untapped lands)
+ * Count untapped lands
  */
-function countAvailableMana(player: PlayerState): number {
+function countUntappedLands(player: PlayerState): number {
   return player.battlefield.filter(card => {
     const template = CardLoader.getById(card.scryfallId);
     return template?.type_line.includes('Land') && !card.tapped;

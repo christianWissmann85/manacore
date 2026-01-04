@@ -16,6 +16,8 @@ import { resolveCombatDamage, cleanupCombat } from '../rules/combat';
 import { checkStateBasedActions } from '../rules/stateBasedActions';
 import { registerTrigger, resolveTriggers } from '../rules/triggers';
 import { getActivatedAbilities, payCosts, applyAbilityEffect } from '../rules/activatedAbilities';
+import { parseManaCost, addManaToPool, type ManaColor } from '../utils/manaCosts';
+import { createEmptyManaPool, type ManaPool } from '../state/PlayerState';
 
 /**
  * Apply an action to the game state
@@ -121,7 +123,7 @@ function applyPlayLand(state: GameState, action: PlayLandAction): void {
 
 /**
  * Cast a spell from hand
- * Phase 1: Put spell on the stack
+ * Phase 1: Pay mana costs, then put spell on the stack
  */
 function applyCastSpell(state: GameState, action: CastSpellAction): void {
   const player = getPlayer(state, action.playerId);
@@ -132,13 +134,26 @@ function applyCastSpell(state: GameState, action: CastSpellAction): void {
   if (cardIndex === -1) return;
 
   const card = player.hand[cardIndex]!;
+
+  // Get card template for mana cost
+  const template = CardLoader.getById(card.scryfallId);
+  if (!template) return;
+
+  // Parse mana cost
+  const manaCost = parseManaCost(template.mana_cost);
+  const xValue = action.payload.xValue ?? 0;
+
+  // Auto-tap lands and pay mana cost
+  autoTapForMana(state, action.playerId, manaCost, xValue);
+
+  // Remove from hand
   player.hand.splice(cardIndex, 1);
 
   // Card is now on the stack (not in any zone yet)
   card.zone = 'stack';
 
-  // Push to stack
-  pushToStack(state, card, action.playerId, action.payload.targets || []);
+  // Push to stack (with xValue stored for resolution)
+  pushToStack(state, card, action.playerId, action.payload.targets || [], xValue);
 }
 
 /**
@@ -229,6 +244,10 @@ function applyEndTurn(state: GameState, _action: EndTurnAction): void {
 
   // 3. Clear "until end of turn" effects (Phase 1+)
 
+  // 4. Empty mana pools for both players
+  state.players.player.manaPool = createEmptyManaPool();
+  state.players.opponent.manaPool = createEmptyManaPool();
+
   // Switch active player
   state.activePlayer = state.activePlayer === 'player' ? 'opponent' : 'player';
   state.priorityPlayer = state.activePlayer;
@@ -279,13 +298,43 @@ function applyPassPriority(state: GameState, action: PassPriorityAction): void {
       // After resolution, priority returns to active player
       // Stack resets priority passes
     } else if (state.stack.length === 0) {
-      // Stack is empty and both passed - move to next phase/step
-      // For now, just reset passes
-      state.players.player.hasPassedPriority = false;
-      state.players.opponent.hasPassedPriority = false;
-      state.players.player.consecutivePasses = 0;
-      state.players.opponent.consecutivePasses = 0;
+      // Stack is empty and both passed - advance to next phase/step
+      advancePhase(state);
     }
+  }
+}
+
+/**
+ * Advance to the next phase/step when both players pass priority with empty stack
+ */
+function advancePhase(state: GameState): void {
+  // Reset priority passes
+  state.players.player.hasPassedPriority = false;
+  state.players.opponent.hasPassedPriority = false;
+  state.players.player.consecutivePasses = 0;
+  state.players.opponent.consecutivePasses = 0;
+
+  // Handle phase/step transitions
+  if (state.phase === 'combat') {
+    if (state.step === 'declare_attackers') {
+      // Move to declare blockers
+      state.step = 'declare_blockers';
+      // Priority goes to defending player
+      state.priorityPlayer = state.activePlayer === 'player' ? 'opponent' : 'player';
+    } else if (state.step === 'declare_blockers') {
+      // Resolve combat damage
+      resolveCombatDamage(state);
+      cleanupCombat(state);
+
+      // Move to main2
+      state.phase = 'main2';
+      state.step = 'main';
+      state.priorityPlayer = state.activePlayer;
+    }
+  } else if (state.phase === 'main1' || state.phase === 'main2') {
+    // Passing priority in main phase with empty stack - nothing special to do
+    // The active player can choose to END_TURN
+    state.priorityPlayer = state.activePlayer;
   }
 }
 
@@ -322,7 +371,9 @@ function applyUntap(state: GameState, action: Action): void {
 
 /**
  * Activate an ability
- * Phase 1+: Pay costs and put ability on stack
+ *
+ * Mana abilities resolve immediately (don't use the stack)
+ * Other abilities go on the stack (TODO: implement stack for abilities)
  */
 function applyActivateAbility(state: GameState, action: ActivateAbilityAction): void {
   const player = getPlayer(state, action.playerId);
@@ -341,10 +392,178 @@ function applyActivateAbility(state: GameState, action: ActivateAbilityAction): 
     return; // Failed to pay costs
   }
 
-  // Phase 0/1: Apply effect immediately
-  // TODO Phase 1+: Put on stack instead
+  // Set target if provided
   if (action.payload.targets && action.payload.targets.length > 0) {
     ability.effect.target = action.payload.targets[0];
   }
-  applyAbilityEffect(state, ability.effect);
+
+  // Mana abilities resolve immediately (don't use the stack)
+  if (ability.isManaAbility) {
+    // Get the color choice for multi-color mana abilities
+    const manaColorChoice = action.payload.manaColorChoice as ManaColor | undefined;
+    applyAbilityEffect(state, ability.effect, action.playerId, manaColorChoice);
+  } else {
+    // Non-mana abilities: For now, apply immediately
+    // TODO Phase 2+: Put on stack for non-mana abilities
+    applyAbilityEffect(state, ability.effect, action.playerId);
+  }
+}
+
+/**
+ * Auto-tap lands and mana-producing permanents to pay a mana cost
+ *
+ * Algorithm:
+ * 1. First use mana already in the pool
+ * 2. Then tap permanents to produce the remaining mana needed
+ * 3. For colored costs, prioritize tapping sources that produce that color
+ * 4. For generic costs, use any remaining untapped sources
+ *
+ * This is a greedy algorithm that works well for simple cases.
+ * A more sophisticated algorithm could optimize for leaving flexibility.
+ */
+function autoTapForMana(
+  state: GameState,
+  playerId: 'player' | 'opponent',
+  cost: { white: number; blue: number; black: number; red: number; green: number; colorless: number; generic: number; x: number },
+  xValue: number
+): void {
+  const player = getPlayer(state, playerId);
+
+  // Calculate what we need to pay
+  const needed = {
+    white: cost.white,
+    blue: cost.blue,
+    black: cost.black,
+    red: cost.red,
+    green: cost.green,
+    colorless: cost.colorless,
+    generic: cost.generic + (cost.x * xValue),
+  };
+
+  // First, use mana already in the pool
+  const useFromPool = (color: 'white' | 'blue' | 'black' | 'red' | 'green' | 'colorless', amount: number): number => {
+    const available = player.manaPool[color];
+    const toUse = Math.min(available, amount);
+    player.manaPool[color] -= toUse;
+    return amount - toUse;
+  };
+
+  needed.white = useFromPool('white', needed.white);
+  needed.blue = useFromPool('blue', needed.blue);
+  needed.black = useFromPool('black', needed.black);
+  needed.red = useFromPool('red', needed.red);
+  needed.green = useFromPool('green', needed.green);
+  needed.colorless = useFromPool('colorless', needed.colorless);
+
+  // Use remaining pool for generic costs
+  for (const color of ['colorless', 'white', 'blue', 'black', 'red', 'green'] as const) {
+    if (needed.generic <= 0) break;
+    const available = player.manaPool[color];
+    const toUse = Math.min(available, needed.generic);
+    player.manaPool[color] -= toUse;
+    needed.generic -= toUse;
+  }
+
+  // Now tap permanents to produce remaining mana
+  // Get list of untapped permanents with mana abilities
+  const untappedSources: Array<{
+    permanent: typeof player.battlefield[0];
+    ability: ReturnType<typeof getActivatedAbilities>[0];
+    colors: ManaColor[];
+  }> = [];
+
+  for (const permanent of player.battlefield) {
+    if (permanent.tapped) continue;
+
+    const abilities = getActivatedAbilities(permanent, state);
+    const manaAbility = abilities.find(a => a.isManaAbility && a.effect.type === 'ADD_MANA');
+
+    if (manaAbility && manaAbility.canActivate(state, permanent.instanceId, playerId)) {
+      untappedSources.push({
+        permanent,
+        ability: manaAbility,
+        colors: manaAbility.effect.manaColors || [],
+      });
+    }
+  }
+
+  // Helper to tap a source for a specific color
+  const tapSourceForColor = (color: ManaColor): boolean => {
+    // Find a source that can produce this color
+    const sourceIndex = untappedSources.findIndex(s => s.colors.includes(color));
+    if (sourceIndex === -1) return false;
+
+    const source = untappedSources[sourceIndex]!;
+    source.permanent.tapped = true;
+
+    // Add mana to pool
+    player.manaPool = addManaToPool(player.manaPool, color, source.ability.effect.amount ?? 1);
+
+    // Remove from available sources
+    untappedSources.splice(sourceIndex, 1);
+    return true;
+  };
+
+  // Helper to tap a source for any mana (for generic costs)
+  const tapSourceForAny = (): ManaColor | null => {
+    if (untappedSources.length === 0) return null;
+
+    const source = untappedSources[0]!;
+    source.permanent.tapped = true;
+
+    // Pick the first color this source can produce
+    const color = source.colors[0] || 'C';
+
+    // Add mana to pool
+    player.manaPool = addManaToPool(player.manaPool, color, source.ability.effect.amount ?? 1);
+
+    // Remove from available sources
+    untappedSources.shift();
+    return color;
+  };
+
+  // Tap sources for colored costs first
+  const colorMap: Array<{ key: keyof typeof needed; manaColor: ManaColor }> = [
+    { key: 'white', manaColor: 'W' },
+    { key: 'blue', manaColor: 'U' },
+    { key: 'black', manaColor: 'B' },
+    { key: 'red', manaColor: 'R' },
+    { key: 'green', manaColor: 'G' },
+    { key: 'colorless', manaColor: 'C' },
+  ];
+
+  for (const { key, manaColor } of colorMap) {
+    while (needed[key] > 0) {
+      if (!tapSourceForColor(manaColor)) {
+        // No source for this color - try to use mana we've already added
+        const poolKey = key as keyof ManaPool;
+        if (player.manaPool[poolKey] > 0) {
+          player.manaPool[poolKey]--;
+          needed[key]--;
+        } else {
+          break; // Can't pay - should have been caught by validator
+        }
+      } else {
+        // Used the mana we just added
+        const poolKey = key as keyof ManaPool;
+        player.manaPool[poolKey]--;
+        needed[key]--;
+      }
+    }
+  }
+
+  // Tap sources for generic costs
+  while (needed.generic > 0) {
+    const color = tapSourceForAny();
+    if (!color) break;
+
+    // Use the mana we just added
+    const poolKey = color === 'W' ? 'white' :
+                    color === 'U' ? 'blue' :
+                    color === 'B' ? 'black' :
+                    color === 'R' ? 'red' :
+                    color === 'G' ? 'green' : 'colorless';
+    player.manaPool[poolKey]--;
+    needed.generic--;
+  }
 }

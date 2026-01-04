@@ -19,6 +19,7 @@ export interface StackObject {
   targets: string[];       // Instance IDs of targets
   resolved: boolean;       // Has this resolved?
   countered: boolean;      // Was this countered?
+  xValue?: number;         // For spells with {X} in cost (e.g., Fireball)
 }
 
 /**

@@ -9,7 +9,8 @@
  * - State-based actions (creature death)
  */
 
-import type { GameState, CardInstance } from '../state/GameState';
+import type { GameState } from '../state/GameState';
+import type { CardInstance } from '../state/CardInstance';
 import type { CardTemplate } from '../cards/CardTemplate';
 import { getPlayer } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';

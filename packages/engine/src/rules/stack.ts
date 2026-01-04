@@ -21,7 +21,8 @@ export function pushToStack(
   state: GameState,
   card: CardInstance,
   controller: PlayerId,
-  targets: string[] = []
+  targets: string[] = [],
+  xValue?: number
 ): void {
   const stackObj: StackObject = {
     id: `stack_${Date.now()}_${Math.random()}`,
@@ -30,6 +31,7 @@ export function pushToStack(
     targets,
     resolved: false,
     countered: false,
+    xValue,
   };
 
   state.stack.push(stackObj);

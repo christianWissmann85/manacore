@@ -91,4 +91,23 @@ export {
   createVanillaDeck,
 } from './utils/gameInit';
 
+// Mana utilities
+export type { ManaCost, ManaColor } from './utils/manaCosts';
+export {
+  parseManaCost,
+  canPayManaCost,
+  payManaCost,
+  addManaToPool,
+  emptyManaPool,
+  formatManaPool,
+  formatManaCost,
+  getLandManaColors,
+  hasXInCost,
+  getTotalMana,
+  getConvertedManaCost,
+} from './utils/manaCosts';
+
+// Validator utilities
+export { calculateAvailableMana } from './actions/validators';
+
 console.log(`✅ @manacore/engine v${ENGINE_VERSION} loaded`);
