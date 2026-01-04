@@ -196,6 +196,7 @@ mana-core/
 ### 3.1 Overview
 
 We'll fetch all 6th Edition cards once, cache them locally, and version-control the JSON. This ensures:
+
 - No runtime API calls (fast, offline-capable)
 - Deterministic builds (data doesn't change under us)
 - No rate limiting issues
@@ -203,15 +204,19 @@ We'll fetch all 6th Edition cards once, cache them locally, and version-control 
 ### 3.2 Scryfall API Endpoints
 
 **Bulk Data (Recommended)**
+
 ```
 GET https://api.scryfall.com/bulk-data
 ```
+
 Returns download links for complete card databases. We'll use the "Default Cards" file.
 
 **Set-Specific Search**
+
 ```
 GET https://api.scryfall.com/cards/search?q=set:6ed
 ```
+
 Returns paginated results (175 cards per page).
 
 ### 3.3 Card Data Schema
@@ -221,44 +226,44 @@ Returns paginated results (175 cards per page).
 
 export interface ScryfallCard {
   // Core Identity
-  id: string;                          // UUID: "f5b6c9e4-..."
-  oracle_id: string;                   // Shared across printings
-  name: string;                        // "Lightning Bolt"
-  lang: string;                        // "en"
-  released_at: string;                 // "1999-04-21"
-  
+  id: string; // UUID: "f5b6c9e4-..."
+  oracle_id: string; // Shared across printings
+  name: string; // "Lightning Bolt"
+  lang: string; // "en"
+  released_at: string; // "1999-04-21"
+
   // Set Information
-  set: string;                         // "6ed"
-  set_name: string;                    // "Classic Sixth Edition"
-  set_type: string;                    // "core"
-  collector_number: string;            // "198"
-  rarity: string;                      // "common" | "uncommon" | "rare" | "mythic"
-  
+  set: string; // "6ed"
+  set_name: string; // "Classic Sixth Edition"
+  set_type: string; // "core"
+  collector_number: string; // "198"
+  rarity: string; // "common" | "uncommon" | "rare" | "mythic"
+
   // Game Mechanics
-  mana_cost: string;                   // "{R}"
-  cmc: number;                         // 1
-  type_line: string;                   // "Instant"
-  oracle_text: string;                 // "Lightning Bolt deals 3 damage..."
-  power?: string;                      // "2" (creatures only)
-  toughness?: string;                  // "2" (creatures only)
-  loyalty?: string;                    // For planeswalkers (not in 6ed)
-  colors: string[];                    // ["R"]
-  color_identity: string[];            // ["R"]
-  keywords: string[];                  // ["Flying", "Haste"]
-  
+  mana_cost: string; // "{R}"
+  cmc: number; // 1
+  type_line: string; // "Instant"
+  oracle_text: string; // "Lightning Bolt deals 3 damage..."
+  power?: string; // "2" (creatures only)
+  toughness?: string; // "2" (creatures only)
+  loyalty?: string; // For planeswalkers (not in 6ed)
+  colors: string[]; // ["R"]
+  color_identity: string[]; // ["R"]
+  keywords: string[]; // ["Flying", "Haste"]
+
   // Legality (we don't need this, but it's there)
   legalities: Record<string, string>;
-  
+
   // Visual Assets
   image_uris?: {
-    small: string;                     // 146x204
-    normal: string;                    // 488x680
-    large: string;                     // 672x936
-    png: string;                       // Full resolution
-    art_crop: string;                  // Just the artwork
-    border_crop: string;               // Includes border
+    small: string; // 146x204
+    normal: string; // 488x680
+    large: string; // 672x936
+    png: string; // Full resolution
+    art_crop: string; // Just the artwork
+    border_crop: string; // Includes border
   };
-  
+
   // Multi-faced cards have card_faces instead of image_uris
   card_faces?: Array<{
     name: string;
@@ -267,15 +272,15 @@ export interface ScryfallCard {
     oracle_text: string;
     image_uris: ScryfallCard['image_uris'];
   }>;
-  
+
   // Flavor
-  flavor_text?: string;                // Italic text
-  
+  flavor_text?: string; // Italic text
+
   // Rulings
-  rulings_uri: string;                 // Link to official rulings
-  
+  rulings_uri: string; // Link to official rulings
+
   // Layout (for detecting special cards)
-  layout: string;                      // "normal" | "split" | "flip" | etc.
+  layout: string; // "normal" | "split" | "flip" | etc.
 }
 ```
 
@@ -305,7 +310,7 @@ export class ScryfallScraper {
 
     while (url) {
       console.log(`Fetching: ${url}`);
-      
+
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Scryfall API error: ${response.statusText}`);
@@ -336,15 +341,15 @@ export class ScryfallScraper {
   async saveToFile(cards: ScryfallCard[], outputPath: string): Promise<void> {
     const dir = join(process.cwd(), 'packages/engine/data/cards');
     await mkdir(dir, { recursive: true });
-    
+
     const filePath = join(dir, outputPath);
     await writeFile(filePath, JSON.stringify(cards, null, 2));
-    
+
     console.log(`Saved ${cards.length} cards to ${filePath}`);
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 
@@ -364,16 +369,16 @@ import { ScryfallScraper } from '../packages/data-scraper/src/scraper';
 
 async function main() {
   const scraper = new ScryfallScraper();
-  
+
   console.log('Fetching 6th Edition cards...');
   const cards = await scraper.fetchSet('6ed');
-  
+
   // Filter to English only
-  const englishCards = cards.filter(card => card.lang === 'en');
-  
+  const englishCards = cards.filter((card) => card.lang === 'en');
+
   // Save raw data
   await scraper.saveToFile(englishCards, '6ed.json');
-  
+
   // Optionally fetch rulings for complex cards
   // const cardsWithRulings = await Promise.all(
   //   englishCards.slice(0, 10).map(async card => ({
@@ -381,7 +386,7 @@ async function main() {
   //     rulings: await scraper.fetchRulings(card)
   //   }))
   // );
-  
+
   console.log('Done! Check packages/engine/data/cards/6ed.json');
 }
 
@@ -431,19 +436,17 @@ export class CardLoader {
 
   static getAllCards(): ScryfallCard[] {
     return Array.from(this.cache.values()).filter(
-      (card, index, array) => array.indexOf(card) === index
+      (card, index, array) => array.indexOf(card) === index,
     );
   }
 
   static getCardsByColor(color: string): ScryfallCard[] {
-    return this.getAllCards().filter(card => 
-      card.colors.includes(color)
-    );
+    return this.getAllCards().filter((card) => card.colors.includes(color));
   }
 
   static getCardsByType(type: string): ScryfallCard[] {
-    return this.getAllCards().filter(card =>
-      card.type_line.toLowerCase().includes(type.toLowerCase())
+    return this.getAllCards().filter((card) =>
+      card.type_line.toLowerCase().includes(type.toLowerCase()),
     );
   }
 }
@@ -476,6 +479,7 @@ const creatures = CardLoader.getCardsByType('Creature');
 ### 4.1 Immutable State Pattern
 
 The engine uses **pure functions** and **immutable data** to enable:
+
 - Easy debugging (state history)
 - Fast cloning (for MCTS simulations)
 - Deterministic replays (given actions + RNG seed)
@@ -484,7 +488,7 @@ The engine uses **pure functions** and **immutable data** to enable:
 // BAD: Mutable state
 class Game {
   state: GameState;
-  
+
   playCard(cardId: string) {
     this.state.hand.splice(index, 1); // Mutates state!
   }
@@ -493,7 +497,7 @@ class Game {
 // GOOD: Immutable state
 function playCard(state: GameState, cardId: string): GameState {
   const newState = structuredClone(state);
-  const cardIndex = newState.hand.findIndex(c => c.id === cardId);
+  const cardIndex = newState.hand.findIndex((c) => c.id === cardId);
   newState.hand.splice(cardIndex, 1);
   newState.battlefield.push(newState.hand[cardIndex]);
   return newState;
@@ -536,10 +540,7 @@ export interface PlaySpellAction extends GameAction {
 ```typescript
 // packages/engine/src/actions/reducer.ts
 
-export function applyAction(
-  state: GameState,
-  action: GameAction
-): GameState {
+export function applyAction(state: GameState, action: GameAction): GameState {
   // 1. Validate
   const errors = validateAction(state, action);
   if (errors.length > 0) {
@@ -568,13 +569,7 @@ export function applyAction(
 ```typescript
 // packages/engine/src/state/Zone.ts
 
-export type Zone =
-  | 'library'
-  | 'hand'
-  | 'battlefield'
-  | 'graveyard'
-  | 'stack'
-  | 'exile';
+export type Zone = 'library' | 'hand' | 'battlefield' | 'graveyard' | 'stack' | 'exile';
 
 export class ZoneManager {
   static moveCard(
@@ -582,31 +577,31 @@ export class ZoneManager {
     cardId: string,
     fromZone: Zone,
     toZone: Zone,
-    playerId: PlayerId
+    playerId: PlayerId,
   ): GameState {
     const newState = structuredClone(state);
     const player = newState.players[playerId];
-    
+
     // Find card in source zone
     const sourceZone = player[fromZone] as CardInstance[];
-    const cardIndex = sourceZone.findIndex(c => c.instanceId === cardId);
-    
+    const cardIndex = sourceZone.findIndex((c) => c.instanceId === cardId);
+
     if (cardIndex === -1) {
       throw new Error(`Card ${cardId} not found in ${fromZone}`);
     }
-    
+
     const card = sourceZone[cardIndex];
-    
+
     // Remove from source
     sourceZone.splice(cardIndex, 1);
-    
+
     // Add to destination
     const destZone = player[toZone] as CardInstance[];
     destZone.push(card);
-    
+
     // Update card state
     card.zone = toZone;
-    
+
     return newState;
   }
 }
@@ -625,38 +620,38 @@ export class MCTSNode {
   state: GameState;
   parent: MCTSNode | null;
   children: MCTSNode[] = [];
-  
+
   // MCTS statistics
   visits: number = 0;
   totalReward: number = 0;
-  
+
   // Unexplored actions
   untriedActions: GameAction[] = [];
-  
+
   // The action that led to this state
   action: GameAction | null = null;
-  
+
   constructor(state: GameState, parent: MCTSNode | null, action: GameAction | null) {
     this.state = state;
     this.parent = parent;
     this.action = action;
     this.untriedActions = this.getLegalActions(state);
   }
-  
+
   getLegalActions(state: GameState): GameAction[] {
     // Generate all legal actions from this state
     // This is game-specific logic
     return [];
   }
-  
+
   isFullyExpanded(): boolean {
     return this.untriedActions.length === 0;
   }
-  
+
   isLeaf(): boolean {
     return this.children.length === 0;
   }
-  
+
   winRate(): number {
     return this.visits === 0 ? 0 : this.totalReward / this.visits;
   }
@@ -680,10 +675,10 @@ function calculateUCB1(node: MCTSNode, parentVisits: number, c: number): number 
   if (node.visits === 0) {
     return Infinity; // Prioritize unvisited nodes
   }
-  
+
   const exploitation = node.winRate();
   const exploration = c * Math.sqrt(Math.log(parentVisits) / node.visits);
-  
+
   return exploitation + exploration;
 }
 ```
@@ -696,21 +691,21 @@ function calculateUCB1(node: MCTSNode, parentVisits: number, c: number): number 
 export function determinize(state: GameState, playerId: PlayerId): GameState {
   const newState = structuredClone(state);
   const opponent = playerId === 'player' ? 'opponent' : 'player';
-  
+
   // Shuffle opponent's unknown cards back into library
   const unknownCards = newState.players[opponent].hand;
   newState.players[opponent].hand = [];
   newState.players[opponent].library.push(...unknownCards);
-  
+
   // Shuffle library
   shuffle(newState.players[opponent].library, newState.rngSeed);
-  
+
   // Redraw hand
   for (let i = 0; i < unknownCards.length; i++) {
     const card = newState.players[opponent].library.pop()!;
     newState.players[opponent].hand.push(card);
   }
-  
+
   return newState;
 }
 
@@ -777,19 +772,16 @@ interface CardProps {
 
 export function Card({ data, onClick }: CardProps) {
   // Dynamic styling based on state
-  const classes = clsx(
-    "relative w-32 h-44 rounded-lg shadow-md transition-all duration-200",
-    {
-      "ring-2 ring-yellow-400": data.canPlay,     // Highlight playable
-      "rotate-90": data.tapped,                   // Tapped state
-      "hover:scale-105 z-10": !data.tapped,       // Hover effect
-    }
-  );
+  const classes = clsx('relative w-32 h-44 rounded-lg shadow-md transition-all duration-200', {
+    'ring-2 ring-yellow-400': data.canPlay, // Highlight playable
+    'rotate-90': data.tapped, // Tapped state
+    'hover:scale-105 z-10': !data.tapped, // Hover effect
+  });
 
   return (
     <div className={classes} onClick={onClick}>
-      <img 
-        src={`/assets/cards/${data.scryfallId}.jpg`} 
+      <img
+        src={`/assets/cards/${data.scryfallId}.jpg`}
         alt={data.name}
         className="w-full h-full object-cover rounded-lg"
       />
@@ -846,7 +838,7 @@ describe('Combat', () => {
   test('2/2 attacks, gets blocked by 3/3, attacker dies', () => {
     const state = setupCombat();
     const newState = resolveCombat(state);
-    
+
     expect(newState.players.player.graveyard).toHaveLength(1);
     expect(newState.players.opponent.battlefield).toHaveLength(1);
   });
@@ -911,4 +903,4 @@ Deploy to Vercel/Netlify/GitHub Pages.
 
 **End of Architecture Document**
 
-*Next: See `roadmap.md` for development timeline and milestones.*
+_Next: See `roadmap.md` for development timeline and milestones._

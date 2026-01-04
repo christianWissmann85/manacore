@@ -34,7 +34,7 @@ async function main() {
 
       const results = await runSimulation(playerBot, opponentBot, {
         gameCount,
-        maxTurns: 50,  // Phase 0: simplified combat should finish quickly
+        maxTurns: 50, // Phase 0: simplified combat should finish quickly
         verbose,
         seed: 12345,
       });

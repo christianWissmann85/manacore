@@ -5,7 +5,12 @@
  */
 
 import { describe, test, expect } from 'bun:test';
-import { CardLoader, createCardInstance, applyAction, type ActivateAbilityAction } from '../../src/index';
+import {
+  CardLoader,
+  createCardInstance,
+  applyAction,
+  type ActivateAbilityAction,
+} from '../../src/index';
 import { setupGameWithMana, castAndResolve } from './helpers';
 
 describe('Burn Spells', () => {
@@ -42,10 +47,14 @@ describe('Burn Spells', () => {
       const shockCard = createCardInstance(shock.id, 'player', 'hand');
       state.players.player.hand.push(shockCard);
 
-      const newState = castAndResolve(state, 'player', shockCard.instanceId, [bearsCard.instanceId]);
+      const newState = castAndResolve(state, 'player', shockCard.instanceId, [
+        bearsCard.instanceId,
+      ]);
 
       // 2/2 creature dies to 2 damage
-      expect(newState.players.opponent.graveyard.some(c => c.instanceId === bearsCard.instanceId)).toBe(true);
+      expect(
+        newState.players.opponent.graveyard.some((c) => c.instanceId === bearsCard.instanceId),
+      ).toBe(true);
     });
   });
 
@@ -82,9 +91,13 @@ describe('Burn Spells', () => {
       const blastCard = createCardInstance(blast.id, 'player', 'hand');
       state.players.player.hand.push(blastCard);
 
-      const newState = castAndResolve(state, 'player', blastCard.instanceId, [creatureCard.instanceId]);
+      const newState = castAndResolve(state, 'player', blastCard.instanceId, [
+        creatureCard.instanceId,
+      ]);
 
-      expect(newState.players.opponent.graveyard.some(c => c.instanceId === creatureCard.instanceId)).toBe(true);
+      expect(
+        newState.players.opponent.graveyard.some((c) => c.instanceId === creatureCard.instanceId),
+      ).toBe(true);
     });
 
     test('does not kill a 5/5 creature', () => {
@@ -98,11 +111,13 @@ describe('Burn Spells', () => {
       const blastCard = createCardInstance(blast.id, 'player', 'hand');
       state.players.player.hand.push(blastCard);
 
-      const newState = castAndResolve(state, 'player', blastCard.instanceId, [creatureCard.instanceId]);
+      const newState = castAndResolve(state, 'player', blastCard.instanceId, [
+        creatureCard.instanceId,
+      ]);
 
       // 5/5 survives 4 damage
       const creature = newState.players.opponent.battlefield.find(
-        c => c.instanceId === creatureCard.instanceId
+        (c) => c.instanceId === creatureCard.instanceId,
       );
       expect(creature).toBeDefined();
       expect(creature!.damage).toBe(4);
@@ -132,8 +147,8 @@ describe('Damage Abilities', () => {
       state.players.player.battlefield.push(shamanCard);
 
       // Tap Mountain for mana
-      const mountain = state.players.player.battlefield.find(c =>
-        CardLoader.getById(c.scryfallId)?.name === 'Mountain'
+      const mountain = state.players.player.battlefield.find(
+        (c) => CardLoader.getById(c.scryfallId)?.name === 'Mountain',
       )!;
 
       let newState = applyAction(state, {
@@ -160,7 +175,7 @@ describe('Damage Abilities', () => {
       expect(newState.players.opponent.life).toBe(19); // 20 - 1
 
       const tappedShaman = newState.players.player.battlefield.find(
-        c => c.instanceId === shamanCard.instanceId
+        (c) => c.instanceId === shamanCard.instanceId,
       );
       expect(tappedShaman?.tapped).toBe(true);
     });

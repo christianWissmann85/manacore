@@ -27,7 +27,18 @@ import {
 import { pushToStack, resolveTopOfStack } from '../src/rules/stack';
 
 // Helper to set up a basic game state with mana
-function setupGameWithMana(state: GameState, playerId: PlayerId, mana: { white?: number; blue?: number; black?: number; red?: number; green?: number; colorless?: number }) {
+function setupGameWithMana(
+  state: GameState,
+  playerId: PlayerId,
+  mana: {
+    white?: number;
+    blue?: number;
+    black?: number;
+    red?: number;
+    green?: number;
+    colorless?: number;
+  },
+) {
   const player = getPlayer(state, playerId);
   player.manaPool = {
     white: mana.white || 0,
@@ -47,7 +58,11 @@ function createTestGameState(): GameState {
 }
 
 // Helper to create a creature on the battlefield
-function createCreatureOnBattlefield(state: GameState, playerId: PlayerId, cardName: string): string {
+function createCreatureOnBattlefield(
+  state: GameState,
+  playerId: PlayerId,
+  cardName: string,
+): string {
   const player = getPlayer(state, playerId);
   const template = CardLoader.getByName(cardName);
   if (!template) throw new Error(`Card not found: ${cardName}`);
@@ -81,7 +96,13 @@ function addCardToHand(state: GameState, playerId: PlayerId, cardName: string): 
 }
 
 // Helper to cast and resolve a spell
-function castAndResolve(state: GameState, cardName: string, playerId: PlayerId, targets: string[] = [], xValue?: number) {
+function castAndResolve(
+  state: GameState,
+  cardName: string,
+  playerId: PlayerId,
+  targets: string[] = [],
+  xValue?: number,
+) {
   const template = CardLoader.getByName(cardName);
   if (!template) throw new Error(`Card not found: ${cardName}`);
 
@@ -225,8 +246,8 @@ describe('Week 1.5.2: Untap Mechanics', () => {
     const opponentCreatureId = createCreatureOnBattlefield(state, 'opponent', 'Grizzly Bears');
 
     // Tap all creatures
-    state.players.player.battlefield.forEach(c => c.tapped = true);
-    state.players.opponent.battlefield.forEach(c => c.tapped = true);
+    state.players.player.battlefield.forEach((c) => (c.tapped = true));
+    state.players.opponent.battlefield.forEach((c) => (c.tapped = true));
 
     // Cast Vitalize
     setupGameWithMana(state, 'player', { green: 1 });
@@ -250,7 +271,7 @@ describe('Week 1.5.2: Untap Mechanics', () => {
     createLandOnBattlefield(state, 'player', 'Forest');
 
     // Tap all lands
-    state.players.player.battlefield.forEach(c => c.tapped = true);
+    state.players.player.battlefield.forEach((c) => (c.tapped = true));
 
     // Cast Early Harvest
     setupGameWithMana(state, 'player', { green: 3 });
@@ -380,7 +401,9 @@ describe('Week 1.5.2: Graveyard Recursion', () => {
     expect(player.hand.length).toBe(startingHand + 1);
 
     // Find the creature in hand
-    const bearsInHand = player.hand.find(c => CardLoader.getById(c.scryfallId)?.name === 'Grizzly Bears');
+    const bearsInHand = player.hand.find(
+      (c) => CardLoader.getById(c.scryfallId)?.name === 'Grizzly Bears',
+    );
     expect(bearsInHand).toBeDefined();
   });
 });

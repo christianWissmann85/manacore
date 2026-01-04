@@ -20,7 +20,7 @@ export function castAndResolve(
   playerId: 'player' | 'opponent',
   cardInstanceId: string,
   targets?: string[],
-  xValue?: number
+  xValue?: number,
 ): GameState {
   // Cast the spell
   let newState = applyAction(state, {
@@ -61,7 +61,7 @@ export type ManaConfig = {
  */
 export function setupGameWithMana(
   playerMana: ManaConfig,
-  opponentMana: ManaConfig = {}
+  opponentMana: ManaConfig = {},
 ): GameState {
   const plains = CardLoader.getByName('Plains')!;
   const island = CardLoader.getByName('Island')!;
@@ -82,9 +82,7 @@ export function setupGameWithMana(
   for (const [color, count] of Object.entries(playerMana)) {
     const land = landMap[color as keyof typeof landMap];
     for (let i = 0; i < count; i++) {
-      state.players.player.battlefield.push(
-        createCardInstance(land.id, 'player', 'battlefield')
-      );
+      state.players.player.battlefield.push(createCardInstance(land.id, 'player', 'battlefield'));
     }
   }
 
@@ -93,7 +91,7 @@ export function setupGameWithMana(
     const land = landMap[color as keyof typeof landMap];
     for (let i = 0; i < count; i++) {
       state.players.opponent.battlefield.push(
-        createCardInstance(land.id, 'opponent', 'battlefield')
+        createCardInstance(land.id, 'opponent', 'battlefield'),
       );
     }
   }
@@ -107,7 +105,7 @@ export function setupGameWithMana(
 export function createCreatureOnBattlefield(
   state: GameState,
   cardName: string,
-  controller: 'player' | 'opponent'
+  controller: 'player' | 'opponent',
 ) {
   const template = CardLoader.getByName(cardName)!;
   const card = createCardInstance(template.id, controller, 'battlefield');
@@ -122,7 +120,7 @@ export function createCreatureOnBattlefield(
 export function createCardInHand(
   state: GameState,
   cardName: string,
-  controller: 'player' | 'opponent'
+  controller: 'player' | 'opponent',
 ) {
   const template = CardLoader.getByName(cardName)!;
   const card = createCardInstance(template.id, controller, 'hand');

@@ -43,7 +43,7 @@ describe('Tap to Deal Damage Creatures', () => {
       const abilities = getActivatedAbilities(artilleryCard, state);
       expect(abilities.length).toBeGreaterThanOrEqual(1);
 
-      const damageAbility = abilities.find(a => a.id.includes('tap_damage'));
+      const damageAbility = abilities.find((a) => a.id.includes('tap_damage'));
       expect(damageAbility).toBeDefined();
       expect(damageAbility!.cost.tap).toBe(true);
     });
@@ -58,7 +58,7 @@ describe('Tap to Deal Damage Creatures', () => {
       state.players.player.battlefield.push(artilleryCard);
 
       const abilities = getActivatedAbilities(artilleryCard, state);
-      const damageAbility = abilities.find(a => a.id.includes('tap_damage'));
+      const damageAbility = abilities.find((a) => a.id.includes('tap_damage'));
 
       expect(damageAbility!.canActivate(state, artilleryCard.instanceId, 'player')).toBe(false);
     });
@@ -72,7 +72,7 @@ describe('Tap to Deal Damage Creatures', () => {
       state.players.player.battlefield.push(artilleryCard);
 
       const abilities = getActivatedAbilities(artilleryCard, state);
-      const damageAbility = abilities.find(a => a.id.includes('tap_damage'));
+      const damageAbility = abilities.find((a) => a.id.includes('tap_damage'));
 
       expect(damageAbility!.canActivate(state, artilleryCard.instanceId, 'player')).toBe(false);
     });
@@ -96,7 +96,7 @@ describe('Tap to Deal Damage Creatures', () => {
       state.players.player.battlefield.push(ballistaCard);
 
       const abilities = getActivatedAbilities(ballistaCard, state);
-      const damageAbility = abilities.find(a => a.id.includes('tap_damage'));
+      const damageAbility = abilities.find((a) => a.id.includes('tap_damage'));
 
       expect(damageAbility).toBeDefined();
       expect(damageAbility!.cost.tap).toBe(true);
@@ -121,7 +121,7 @@ describe('Tap to Deal Damage Creatures', () => {
       state.players.player.battlefield.push(archerCard);
 
       const abilities = getActivatedAbilities(archerCard, state);
-      const damageAbility = abilities.find(a => a.id.includes('tap_damage'));
+      const damageAbility = abilities.find((a) => a.id.includes('tap_damage'));
 
       expect(damageAbility).toBeDefined();
       expect(damageAbility!.effect.amount).toBe(1);
@@ -145,7 +145,7 @@ describe('Tap to Deal Damage Creatures', () => {
       state.players.player.battlefield.push(archersCard);
 
       const abilities = getActivatedAbilities(archersCard, state);
-      const damageAbility = abilities.find(a => a.id.includes('tap_damage'));
+      const damageAbility = abilities.find((a) => a.id.includes('tap_damage'));
 
       expect(damageAbility).toBeDefined();
       expect(damageAbility!.effect.amount).toBe(4);
@@ -170,7 +170,7 @@ describe('Tap to Deal Damage Creatures', () => {
       state.players.player.battlefield.push(mageCard);
 
       const abilities = getActivatedAbilities(mageCard, state);
-      const damageAbility = abilities.find(a => a.id.includes('damage'));
+      const damageAbility = abilities.find((a) => a.id.includes('damage'));
 
       expect(damageAbility).toBeDefined();
       expect(damageAbility!.cost.mana).toBe('{1}{R}');
@@ -201,7 +201,7 @@ describe('Tap to Buff Creatures', () => {
       state.players.player.battlefield.push(veteranCard);
 
       const abilities = getActivatedAbilities(veteranCard, state);
-      const buffAbility = abilities.find(a => a.id.includes('tap_buff'));
+      const buffAbility = abilities.find((a) => a.id.includes('tap_buff'));
 
       expect(buffAbility).toBeDefined();
       expect(buffAbility!.cost.tap).toBe(true);
@@ -226,7 +226,7 @@ describe('Tap to Buff Creatures', () => {
       state.players.player.battlefield.push(wolfCard);
 
       const abilities = getActivatedAbilities(wolfCard, state);
-      const buffAbility = abilities.find(a => a.id.includes('tap_buff'));
+      const buffAbility = abilities.find((a) => a.id.includes('tap_buff'));
 
       expect(buffAbility).toBeDefined();
       expect(buffAbility!.cost.tap).toBe(true);
@@ -251,7 +251,7 @@ describe('Tap to Buff Creatures', () => {
       state.players.player.battlefield.push(gypsiesCard);
 
       const abilities = getActivatedAbilities(gypsiesCard, state);
-      const debuffAbility = abilities.find(a => a.id.includes('tap_debuff'));
+      const debuffAbility = abilities.find((a) => a.id.includes('tap_debuff'));
 
       expect(debuffAbility).toBeDefined();
       expect(debuffAbility!.cost.tap).toBe(true);
@@ -281,7 +281,7 @@ describe('Pump Ability Creatures', () => {
       state.players.player.battlefield.push(spiritCard);
 
       const abilities = getActivatedAbilities(spiritCard, state);
-      const pumpAbility = abilities.find(a => a.id.includes('pump'));
+      const pumpAbility = abilities.find((a) => a.id.includes('pump'));
 
       expect(pumpAbility).toBeDefined();
       expect(pumpAbility!.cost.mana).toBe('{R}');
@@ -296,7 +296,7 @@ describe('Pump Ability Creatures', () => {
       state.players.player.battlefield.push(spiritCard);
 
       const abilities = getActivatedAbilities(spiritCard, state);
-      const pumpAbility = abilities.find(a => a.id.includes('pump'));
+      const pumpAbility = abilities.find((a) => a.id.includes('pump'));
 
       // Execute the custom effect
       pumpAbility!.effect.custom!(state);
@@ -323,7 +323,7 @@ describe('Pump Ability Creatures', () => {
       state.players.player.battlefield.push(engineCard);
 
       const abilities = getActivatedAbilities(engineCard, state);
-      const pumpAbility = abilities.find(a => a.id.includes('pump'));
+      const pumpAbility = abilities.find((a) => a.id.includes('pump'));
 
       expect(pumpAbility).toBeDefined();
       expect(pumpAbility!.cost.mana).toBe('{2}');
@@ -347,7 +347,7 @@ describe('Pump Ability Creatures', () => {
       state.players.player.battlefield.push(dragonCard);
 
       const abilities = getActivatedAbilities(dragonCard, state);
-      const pumpAbility = abilities.find(a => a.id.includes('pump'));
+      const pumpAbility = abilities.find((a) => a.id.includes('pump'));
 
       expect(pumpAbility).toBeDefined();
       expect(pumpAbility!.cost.mana).toBe('{1}{W}');
@@ -374,7 +374,7 @@ describe('Pump Ability Creatures', () => {
       state.players.player.battlefield.push(wallCard);
 
       const abilities = getActivatedAbilities(wallCard, state);
-      const pumpAbility = abilities.find(a => a.id.includes('pump'));
+      const pumpAbility = abilities.find((a) => a.id.includes('pump'));
 
       expect(pumpAbility).toBeDefined();
       expect(pumpAbility!.cost.mana).toBe('{R}');
@@ -396,7 +396,7 @@ describe('Pump Ability Creatures', () => {
       state.players.player.battlefield.push(drakeCard);
 
       const abilities = getActivatedAbilities(drakeCard, state);
-      const pumpAbility = abilities.find(a => a.id.includes('pump'));
+      const pumpAbility = abilities.find((a) => a.id.includes('pump'));
 
       expect(pumpAbility).toBeDefined();
       expect(pumpAbility!.name).toContain('once per turn');
@@ -433,7 +433,7 @@ describe('Tap/Untap Ability Creatures', () => {
       state.players.player.battlefield.push(druidCard);
 
       const abilities = getActivatedAbilities(druidCard, state);
-      const tapAbility = abilities.find(a => a.id.includes('tap_control'));
+      const tapAbility = abilities.find((a) => a.id.includes('tap_control'));
 
       expect(tapAbility).toBeDefined();
       expect(tapAbility!.cost.tap).toBe(true);
@@ -458,7 +458,7 @@ describe('Tap/Untap Ability Creatures', () => {
       state.players.player.battlefield.push(brownieCard);
 
       const abilities = getActivatedAbilities(brownieCard, state);
-      const untapAbility = abilities.find(a => a.id.includes('tap_untap'));
+      const untapAbility = abilities.find((a) => a.id.includes('tap_untap'));
 
       expect(untapAbility).toBeDefined();
       expect(untapAbility!.cost.tap).toBe(true);
@@ -484,7 +484,7 @@ describe('Tap/Untap Ability Creatures', () => {
       state.players.player.battlefield.push(spiritCard);
 
       const abilities = getActivatedAbilities(spiritCard, state);
-      const removeFlying = abilities.find(a => a.id.includes('remove_flying'));
+      const removeFlying = abilities.find((a) => a.id.includes('remove_flying'));
 
       expect(removeFlying).toBeDefined();
       expect(removeFlying!.cost.tap).toBe(true);
@@ -514,7 +514,7 @@ describe('Flying Granting Creatures', () => {
       state.players.player.battlefield.push(golemCard);
 
       const abilities = getActivatedAbilities(golemCard, state);
-      const flyingAbility = abilities.find(a => a.id.includes('gain_flying'));
+      const flyingAbility = abilities.find((a) => a.id.includes('gain_flying'));
 
       expect(flyingAbility).toBeDefined();
       expect(flyingAbility!.cost.mana).toBe('{3}');
@@ -536,7 +536,7 @@ describe('Flying Granting Creatures', () => {
       state.players.player.battlefield.push(efreetCard);
 
       const abilities = getActivatedAbilities(efreetCard, state);
-      const grantFlying = abilities.find(a => a.id.includes('grant_flying'));
+      const grantFlying = abilities.find((a) => a.id.includes('grant_flying'));
 
       expect(grantFlying).toBeDefined();
       expect(grantFlying!.cost.mana).toBe('{1}{U}{U}');
@@ -567,7 +567,7 @@ describe('Damage Prevention Creatures', () => {
       state.players.player.battlefield.push(healerCard);
 
       const abilities = getActivatedAbilities(healerCard, state);
-      const preventAbility = abilities.find(a => a.id.includes('tap_prevent'));
+      const preventAbility = abilities.find((a) => a.id.includes('tap_prevent'));
 
       expect(preventAbility).toBeDefined();
       expect(preventAbility!.cost.tap).toBe(true);
@@ -596,7 +596,7 @@ describe('Sacrifice Ability Creatures', () => {
       state.players.player.battlefield.push(griffinCard);
 
       const abilities = getActivatedAbilities(griffinCard, state);
-      const sacAbility = abilities.find(a => a.id.includes('sac_destroy'));
+      const sacAbility = abilities.find((a) => a.id.includes('sac_destroy'));
 
       expect(sacAbility).toBeDefined();
       expect(sacAbility!.cost.sacrifice).toEqual({ type: 'self' });
@@ -621,7 +621,7 @@ describe('Sacrifice Ability Creatures', () => {
       state.players.player.battlefield.push(apprenticeCard);
 
       const abilities = getActivatedAbilities(apprenticeCard, state);
-      const counterAbility = abilities.find(a => a.id.includes('sac_counter'));
+      const counterAbility = abilities.find((a) => a.id.includes('sac_counter'));
 
       expect(counterAbility).toBeDefined();
       expect(counterAbility!.cost.tap).toBe(true);
@@ -638,7 +638,7 @@ describe('Sacrifice Ability Creatures', () => {
       state.players.player.battlefield.push(apprenticeCard);
 
       const abilities = getActivatedAbilities(apprenticeCard, state);
-      const counterAbility = abilities.find(a => a.id.includes('sac_counter'));
+      const counterAbility = abilities.find((a) => a.id.includes('sac_counter'));
 
       expect(counterAbility!.canActivate(state, apprenticeCard.instanceId, 'player')).toBe(false);
     });
@@ -661,7 +661,7 @@ describe('Sacrifice Ability Creatures', () => {
       state.players.player.battlefield.push(goblinCard);
 
       const abilities = getActivatedAbilities(goblinCard, state);
-      const sacAbility = abilities.find(a => a.id.includes('sac_destroy_wall'));
+      const sacAbility = abilities.find((a) => a.id.includes('sac_destroy_wall'));
 
       expect(sacAbility).toBeDefined();
       expect(sacAbility!.cost.tap).toBe(true);
@@ -686,7 +686,7 @@ describe('Sacrifice Ability Creatures', () => {
       state.players.player.battlefield.push(fighterCard);
 
       const abilities = getActivatedAbilities(fighterCard, state);
-      const sacAbility = abilities.find(a => a.id.includes('sac_prevent'));
+      const sacAbility = abilities.find((a) => a.id.includes('sac_prevent'));
 
       expect(sacAbility).toBeDefined();
       expect(sacAbility!.cost.sacrifice).toEqual({ type: 'self' });
@@ -715,7 +715,7 @@ describe('Life Payment Ability Creatures', () => {
       state.players.player.battlefield.push(poltergeistCard);
 
       const abilities = getActivatedAbilities(poltergeistCard, state);
-      const regenAbility = abilities.find(a => a.id.includes('regenerate'));
+      const regenAbility = abilities.find((a) => a.id.includes('regenerate'));
 
       expect(regenAbility).toBeDefined();
       expect(regenAbility!.cost.life).toBe(1);
@@ -731,7 +731,7 @@ describe('Life Payment Ability Creatures', () => {
       state.players.player.battlefield.push(poltergeistCard);
 
       const abilities = getActivatedAbilities(poltergeistCard, state);
-      const regenAbility = abilities.find(a => a.id.includes('regenerate'));
+      const regenAbility = abilities.find((a) => a.id.includes('regenerate'));
 
       expect(regenAbility!.canActivate(state, poltergeistCard.instanceId, 'player')).toBe(true);
     });
@@ -753,7 +753,7 @@ describe('Life Payment Ability Creatures', () => {
       state.players.player.battlefield.push(championCard);
 
       const abilities = getActivatedAbilities(championCard, state);
-      const preventAbility = abilities.find(a => a.id.includes('prevent'));
+      const preventAbility = abilities.find((a) => a.id.includes('prevent'));
 
       expect(preventAbility).toBeDefined();
       expect(preventAbility!.cost.life).toBe(1);
@@ -768,7 +768,7 @@ describe('Life Payment Ability Creatures', () => {
       state.players.player.battlefield.push(championCard);
 
       const abilities = getActivatedAbilities(championCard, state);
-      const preventAbility = abilities.find(a => a.id.includes('prevent'));
+      const preventAbility = abilities.find((a) => a.id.includes('prevent'));
 
       expect(preventAbility!.canActivate(state, championCard.instanceId, 'player')).toBe(true);
     });
@@ -801,7 +801,7 @@ describe('More Activated Ability Creatures', () => {
       state.players.player.battlefield.push(hunterCard);
 
       const abilities = getActivatedAbilities(hunterCard, state);
-      const damageAbility = abilities.find(a => a.id.includes('tap_damage'));
+      const damageAbility = abilities.find((a) => a.id.includes('tap_damage'));
 
       expect(damageAbility).toBeDefined();
       expect(damageAbility!.cost.tap).toBe(true);
@@ -826,7 +826,7 @@ describe('More Activated Ability Creatures', () => {
       state.players.player.battlefield.push(shamanCard);
 
       const abilities = getActivatedAbilities(shamanCard, state);
-      const damageAbility = abilities.find(a => a.id.includes('tap_damage'));
+      const damageAbility = abilities.find((a) => a.id.includes('tap_damage'));
 
       expect(damageAbility).toBeDefined();
       expect(damageAbility!.cost.tap).toBe(true);
@@ -851,7 +851,7 @@ describe('More Activated Ability Creatures', () => {
       state.players.player.battlefield.push(petCard);
 
       const abilities = getActivatedAbilities(petCard, state);
-      const manaAbility = abilities.find(a => a.id.includes('sac_mana'));
+      const manaAbility = abilities.find((a) => a.id.includes('sac_mana'));
 
       expect(manaAbility).toBeDefined();
       expect(manaAbility!.cost.sacrifice).toEqual({ type: 'self' });
@@ -877,7 +877,7 @@ describe('More Activated Ability Creatures', () => {
       state.players.player.battlefield.push(elderCard);
 
       const abilities = getActivatedAbilities(elderCard, state);
-      const manaAbility = abilities.find(a => a.isManaAbility);
+      const manaAbility = abilities.find((a) => a.isManaAbility);
 
       expect(manaAbility).toBeDefined();
       expect(manaAbility!.cost.tap).toBe(true);
@@ -903,7 +903,7 @@ describe('More Activated Ability Creatures', () => {
       state.players.player.battlefield.push(hellkiteCard);
 
       const abilities = getActivatedAbilities(hellkiteCard, state);
-      const xAbility = abilities.find(a => a.id.includes('x_damage'));
+      const xAbility = abilities.find((a) => a.id.includes('x_damage'));
 
       expect(xAbility).toBeDefined();
       expect(xAbility!.cost.tap).toBe(true);
@@ -928,7 +928,7 @@ describe('More Activated Ability Creatures', () => {
       state.players.player.battlefield.push(angelCard, sacTarget);
 
       const abilities = getActivatedAbilities(angelCard, state);
-      const sacAbility = abilities.find(a => a.id.includes('sac_pump'));
+      const sacAbility = abilities.find((a) => a.id.includes('sac_pump'));
 
       expect(sacAbility).toBeDefined();
       expect(sacAbility!.cost.sacrifice?.type).toBe('creature');
@@ -942,7 +942,7 @@ describe('More Activated Ability Creatures', () => {
       state.players.player.battlefield.push(angelCard);
 
       const abilities = getActivatedAbilities(angelCard, state);
-      const sacAbility = abilities.find(a => a.id.includes('sac_pump'));
+      const sacAbility = abilities.find((a) => a.id.includes('sac_pump'));
 
       expect(sacAbility!.canActivate(state, angelCard.instanceId, 'player')).toBe(false);
     });
@@ -965,7 +965,7 @@ describe('More Activated Ability Creatures', () => {
       state.players.player.battlefield.push(orderCard);
 
       const abilities = getActivatedAbilities(orderCard, state);
-      const counterAbility = abilities.find(a => a.id.includes('counter_black'));
+      const counterAbility = abilities.find((a) => a.id.includes('counter_black'));
 
       expect(counterAbility).toBeDefined();
       expect(counterAbility!.cost.tap).toBe(true);
@@ -990,7 +990,7 @@ describe('More Activated Ability Creatures', () => {
       state.players.player.battlefield.push(cabalCard);
 
       const abilities = getActivatedAbilities(cabalCard, state);
-      const counterAbility = abilities.find(a => a.id.includes('counter_white'));
+      const counterAbility = abilities.find((a) => a.id.includes('counter_white'));
 
       expect(counterAbility).toBeDefined();
       expect(counterAbility!.cost.tap).toBe(true);
@@ -1016,7 +1016,7 @@ describe('More Activated Ability Creatures', () => {
       state.players.player.battlefield.push(ragManCard);
 
       const abilities = getActivatedAbilities(ragManCard, state);
-      const discardAbility = abilities.find(a => a.id.includes('discard'));
+      const discardAbility = abilities.find((a) => a.id.includes('discard'));
 
       expect(discardAbility).toBeDefined();
       expect(discardAbility!.cost.tap).toBe(true);
@@ -1033,7 +1033,7 @@ describe('More Activated Ability Creatures', () => {
       state.players.player.battlefield.push(ragManCard);
 
       const abilities = getActivatedAbilities(ragManCard, state);
-      const discardAbility = abilities.find(a => a.id.includes('discard'));
+      const discardAbility = abilities.find((a) => a.id.includes('discard'));
 
       expect(discardAbility!.canActivate(state, ragManCard.instanceId, 'player')).toBe(false);
     });

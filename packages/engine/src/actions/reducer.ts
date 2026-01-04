@@ -6,13 +6,28 @@
  */
 
 import type { GameState } from '../state/GameState';
-import type { Action, PlayLandAction, CastSpellAction, DeclareAttackersAction, DeclareBlockersAction, EndTurnAction, PassPriorityAction, ActivateAbilityAction, SacrificePermanentAction } from './Action';
+import type {
+  Action,
+  PlayLandAction,
+  CastSpellAction,
+  DeclareAttackersAction,
+  DeclareBlockersAction,
+  EndTurnAction,
+  PassPriorityAction,
+  ActivateAbilityAction,
+  SacrificePermanentAction,
+} from './Action';
 import { validateAction } from './validators';
 import { getPlayer } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
 import { hasVigilance } from '../cards/CardTemplate';
 import { clearTemporaryModifications } from '../state/CardInstance';
-import { pushToStack, resolveTopOfStack, canResolveStack, bothPlayersPassedPriority } from '../rules/stack';
+import {
+  pushToStack,
+  resolveTopOfStack,
+  canResolveStack,
+  bothPlayersPassedPriority,
+} from '../rules/stack';
 import { resolveCombatDamage, cleanupCombat } from '../rules/combat';
 import { checkStateBasedActions } from '../rules/stateBasedActions';
 import { registerTrigger, resolveTriggers } from '../rules/triggers';
@@ -114,7 +129,7 @@ function applyPlayLand(state: GameState, action: PlayLandAction): void {
   const cardId = action.payload.cardInstanceId;
 
   // Find and remove from hand
-  const cardIndex = player.hand.findIndex(c => c.instanceId === cardId);
+  const cardIndex = player.hand.findIndex((c) => c.instanceId === cardId);
   if (cardIndex === -1) return;
 
   const card = player.hand[cardIndex]!;
@@ -149,7 +164,7 @@ function applyCastSpell(state: GameState, action: CastSpellAction): void {
   const cardId = action.payload.cardInstanceId;
 
   // Find and remove from hand
-  const cardIndex = player.hand.findIndex(c => c.instanceId === cardId);
+  const cardIndex = player.hand.findIndex((c) => c.instanceId === cardId);
   if (cardIndex === -1) return;
 
   const card = player.hand[cardIndex]!;
@@ -184,14 +199,14 @@ function applyDeclareAttackers(state: GameState, action: DeclareAttackersAction)
 
   // Mark creatures as attacking and tap them (unless they have Vigilance)
   for (const attackerId of action.payload.attackers) {
-    const attacker = player.battlefield.find(c => c.instanceId === attackerId);
+    const attacker = player.battlefield.find((c) => c.instanceId === attackerId);
     if (attacker) {
       attacker.attacking = true;
 
       // Check for Vigilance keyword
       const template = CardLoader.getById(attacker.scryfallId);
       if (template && !hasVigilance(template)) {
-        attacker.tapped = true;  // Attacking taps the creature (unless Vigilance)
+        attacker.tapped = true; // Attacking taps the creature (unless Vigilance)
       }
     }
   }
@@ -212,10 +227,10 @@ function applyDeclareBlockers(state: GameState, action: DeclareBlockersAction): 
   // Assign each blocker to its attacker
   for (const block of action.payload.blocks) {
     const blocker = state.players[action.playerId].battlefield.find(
-      c => c.instanceId === block.blockerId
+      (c) => c.instanceId === block.blockerId,
     );
     const attacker = state.players[state.activePlayer].battlefield.find(
-      c => c.instanceId === block.attackerId
+      (c) => c.instanceId === block.attackerId,
     );
 
     if (blocker && attacker) {
@@ -419,7 +434,7 @@ function applyActivateAbility(state: GameState, action: ActivateAbilityAction): 
   const player = getPlayer(state, action.playerId);
 
   // Find the card with the ability
-  const card = player.battlefield.find(c => c.instanceId === action.payload.sourceId);
+  const card = player.battlefield.find((c) => c.instanceId === action.payload.sourceId);
   if (!card) return;
 
   // Track whether card was untapped before paying costs
@@ -427,7 +442,7 @@ function applyActivateAbility(state: GameState, action: ActivateAbilityAction): 
 
   // Get all abilities for this card
   const abilities = getActivatedAbilities(card, state);
-  const ability = abilities.find(a => a.id === action.payload.abilityId);
+  const ability = abilities.find((a) => a.id === action.payload.abilityId);
   if (!ability) return;
 
   // Pay costs (tap, mana, etc.)
@@ -453,7 +468,13 @@ function applyActivateAbility(state: GameState, action: ActivateAbilityAction): 
   if (ability.isManaAbility) {
     // Get the color choice for multi-color mana abilities
     const manaColorChoice = action.payload.manaColorChoice as ManaColor | undefined;
-    applyAbilityEffect(state, ability.effect, action.playerId, manaColorChoice, action.payload.sourceId);
+    applyAbilityEffect(
+      state,
+      ability.effect,
+      action.playerId,
+      manaColorChoice,
+      action.payload.sourceId,
+    );
   } else {
     // Non-mana abilities: For now, apply immediately
     // TODO Phase 2+: Put on stack for non-mana abilities
@@ -476,8 +497,17 @@ function applyActivateAbility(state: GameState, action: ActivateAbilityAction): 
 function autoTapForMana(
   state: GameState,
   playerId: 'player' | 'opponent',
-  cost: { white: number; blue: number; black: number; red: number; green: number; colorless: number; generic: number; x: number },
-  xValue: number
+  cost: {
+    white: number;
+    blue: number;
+    black: number;
+    red: number;
+    green: number;
+    colorless: number;
+    generic: number;
+    x: number;
+  },
+  xValue: number,
 ): void {
   const player = getPlayer(state, playerId);
 
@@ -489,11 +519,14 @@ function autoTapForMana(
     red: cost.red,
     green: cost.green,
     colorless: cost.colorless,
-    generic: cost.generic + (cost.x * xValue),
+    generic: cost.generic + cost.x * xValue,
   };
 
   // First, use mana already in the pool
-  const useFromPool = (color: 'white' | 'blue' | 'black' | 'red' | 'green' | 'colorless', amount: number): number => {
+  const useFromPool = (
+    color: 'white' | 'blue' | 'black' | 'red' | 'green' | 'colorless',
+    amount: number,
+  ): number => {
     const available = player.manaPool[color];
     const toUse = Math.min(available, amount);
     player.manaPool[color] -= toUse;
@@ -519,7 +552,7 @@ function autoTapForMana(
   // Now tap permanents to produce remaining mana
   // Get list of untapped permanents with mana abilities
   const untappedSources: Array<{
-    permanent: typeof player.battlefield[0];
+    permanent: (typeof player.battlefield)[0];
     ability: ReturnType<typeof getActivatedAbilities>[0];
     colors: ManaColor[];
   }> = [];
@@ -528,7 +561,7 @@ function autoTapForMana(
     if (permanent.tapped) continue;
 
     const abilities = getActivatedAbilities(permanent, state);
-    const manaAbility = abilities.find(a => a.isManaAbility && a.effect.type === 'ADD_MANA');
+    const manaAbility = abilities.find((a) => a.isManaAbility && a.effect.type === 'ADD_MANA');
 
     if (manaAbility && manaAbility.canActivate(state, permanent.instanceId, playerId)) {
       untappedSources.push({
@@ -542,7 +575,7 @@ function autoTapForMana(
   // Helper to tap a source for a specific color
   const tapSourceForColor = (color: ManaColor): boolean => {
     // Find a source that can produce this color
-    const sourceIndex = untappedSources.findIndex(s => s.colors.includes(color));
+    const sourceIndex = untappedSources.findIndex((s) => s.colors.includes(color));
     if (sourceIndex === -1) return false;
 
     const source = untappedSources[sourceIndex]!;
@@ -624,11 +657,18 @@ function autoTapForMana(
     if (!color) break;
 
     // Use the mana we just added
-    const poolKey = color === 'W' ? 'white' :
-                    color === 'U' ? 'blue' :
-                    color === 'B' ? 'black' :
-                    color === 'R' ? 'red' :
-                    color === 'G' ? 'green' : 'colorless';
+    const poolKey =
+      color === 'W'
+        ? 'white'
+        : color === 'U'
+          ? 'blue'
+          : color === 'B'
+            ? 'black'
+            : color === 'R'
+              ? 'red'
+              : color === 'G'
+                ? 'green'
+                : 'colorless';
     player.manaPool[poolKey]--;
     needed.generic--;
   }
@@ -645,7 +685,7 @@ function applySacrificePermanent(state: GameState, action: SacrificePermanentAct
   const permanentId = action.payload.permanentId;
 
   // Find the permanent on the battlefield
-  const permanentIndex = player.battlefield.findIndex(c => c.instanceId === permanentId);
+  const permanentIndex = player.battlefield.findIndex((c) => c.instanceId === permanentId);
   if (permanentIndex === -1) return;
 
   const permanent = player.battlefield[permanentIndex]!;

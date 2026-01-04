@@ -14,11 +14,16 @@ import { addTemporaryModification, getEffectiveToughness } from '../state/CardIn
 import type { PlayerId } from '../state/Zone';
 import { getPlayer } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
-import { isInstant, isSorcery, isCreature, isEnchantment, isAura, isArtifact, hasFlying } from '../cards/CardTemplate';
 import {
-  parseTargetRequirements,
-  shouldSpellFizzle,
-} from './targeting';
+  isInstant,
+  isSorcery,
+  isCreature,
+  isEnchantment,
+  isAura,
+  isArtifact,
+  hasFlying,
+} from '../cards/CardTemplate';
+import { parseTargetRequirements, shouldSpellFizzle } from './targeting';
 import { registerTrigger } from './triggers';
 import {
   // Mass destruction
@@ -62,7 +67,7 @@ export function pushToStack(
   card: CardInstance,
   controller: PlayerId,
   targets: string[] = [],
-  xValue?: number
+  xValue?: number,
 ): void {
   const stackObj: StackObject = {
     id: `stack_${Date.now()}_${Math.random()}`,
@@ -143,7 +148,7 @@ function checkSpellFizzles(state: GameState, stackObj: StackObject): boolean {
     stackObj.targets,
     targetRequirements,
     stackObj.controller,
-    stackObj.card
+    stackObj.card,
   );
 }
 
@@ -212,7 +217,17 @@ function resolveSpell(state: GameState, stackObj: StackObject): void {
  * Spell effect types parsed from oracle text
  */
 interface SpellEffect {
-  type: 'damage' | 'destroy' | 'counter' | 'return_to_hand' | 'pump' | 'draw' | 'discard' | 'exile_with_lifegain' | 'targeted_discard' | 'gain_life';
+  type:
+    | 'damage'
+    | 'destroy'
+    | 'counter'
+    | 'return_to_hand'
+    | 'pump'
+    | 'draw'
+    | 'discard'
+    | 'exile_with_lifegain'
+    | 'targeted_discard'
+    | 'gain_life';
   amount?: number;
   powerBoost?: number;
   toughnessBoost?: number;
@@ -227,7 +242,11 @@ function parseSpellEffect(oracleText: string): SpellEffect | null {
 
   // Damage spells: "deals X damage" (only for targeted spells, not mass damage)
   // Mass damage effects like "each creature" or "each player" should fall through to specific handlers
-  if (!text.includes('each creature') && !text.includes('each player') && !text.includes('each other player')) {
+  if (
+    !text.includes('each creature') &&
+    !text.includes('each player') &&
+    !text.includes('each other player')
+  ) {
     const damageMatch = text.match(/deals? (\d+|x) damage/i);
     if (damageMatch) {
       const amount = damageMatch[1] === 'x' ? 0 : parseInt(damageMatch[1]!, 10);
@@ -292,7 +311,11 @@ function parseSpellEffect(oracleText: string): SpellEffect | null {
   }
 
   // Targeted discard: "reveals their hand. You choose a card from it. That player discards that card"
-  if (text.includes('reveals') && text.includes('choose a card') && text.includes('discards that card')) {
+  if (
+    text.includes('reveals') &&
+    text.includes('choose a card') &&
+    text.includes('discards that card')
+  ) {
     return { type: 'targeted_discard' };
   }
 
@@ -328,14 +351,14 @@ function applySpellEffects(state: GameState, stackObj: StackObject): void {
       case 'damage': {
         // For X spells, use the X value from the stack object
         const damage = oracleText.toLowerCase().includes('x damage')
-          ? (stackObj.xValue || 0)
-          : (effect.amount || 0);
+          ? stackObj.xValue || 0
+          : effect.amount || 0;
         applyDamage(state, targetId, damage);
         break;
       }
 
       case 'counter': {
-        const targetStackObj = state.stack.find(s => s.id === targetId);
+        const targetStackObj = state.stack.find((s) => s.id === targetId);
         if (targetStackObj) {
           targetStackObj.countered = true;
         }
@@ -361,7 +384,7 @@ function applySpellEffects(state: GameState, stackObj: StackObject): void {
             effect.powerBoost,
             effect.toughnessBoost,
             'end_of_turn',
-            stackObj.card.instanceId
+            stackObj.card.instanceId,
           );
         }
         break;
@@ -398,9 +421,7 @@ function applySpellEffects(state: GameState, stackObj: StackObject): void {
 
       case 'gain_life': {
         // For X spells like Stream of Life, use X value
-        const lifeGain = effect.isXSpell
-          ? (stackObj.xValue || 0)
-          : (effect.amount || 0);
+        const lifeGain = effect.isXSpell ? stackObj.xValue || 0 : effect.amount || 0;
         if (targetId === 'player' || targetId === 'opponent') {
           state.players[targetId].life += lifeGain;
         }
@@ -595,7 +616,12 @@ function applySpecificCardEffect(state: GameState, stackObj: StackObject, cardNa
 
     case 'Tremor':
       // Tremor deals 1 damage to each creature without flying
-      dealDamageToAll(state, 1, { creatures: true, flyersOnly: false, players: false, excludeFlyers: true });
+      dealDamageToAll(state, 1, {
+        creatures: true,
+        flyersOnly: false,
+        players: false,
+        excludeFlyers: true,
+      });
       break;
 
     case 'Inferno':
@@ -655,7 +681,13 @@ function applySpecificCardEffect(state: GameState, stackObj: StackObject, cardNa
         const target = findPermanentByInstanceId(state, stackObj.targets[0]);
         if (target) {
           // +3/+3 and first strike tracked together
-          addTemporaryModification(target, 3, 3, 'end_of_turn', `${stackObj.card.instanceId}_fitofrageFirstStrike`);
+          addTemporaryModification(
+            target,
+            3,
+            3,
+            'end_of_turn',
+            `${stackObj.card.instanceId}_fitofrageFirstStrike`,
+          );
         }
       }
       break;
@@ -722,60 +754,84 @@ function applySpecificCardEffect(state: GameState, stackObj: StackObject, cardNa
 
     case 'Enlightened Tutor':
       // Search your library for an artifact or enchantment card, reveal it, put on top of library, shuffle
-      searchLibrary(state, stackObj.controller, stackObj.controller,
+      searchLibrary(
+        state,
+        stackObj.controller,
+        stackObj.controller,
         (card) => {
           const template = CardLoader.getById(card.scryfallId);
-          return template ? (isArtifact(template) || isEnchantment(template)) : false;
+          return template ? isArtifact(template) || isEnchantment(template) : false;
         },
-        'library_top');
+        'library_top',
+      );
       break;
 
     case 'Mystical Tutor':
       // Search your library for an instant or sorcery card, reveal it, put on top of library, shuffle
-      searchLibrary(state, stackObj.controller, stackObj.controller,
+      searchLibrary(
+        state,
+        stackObj.controller,
+        stackObj.controller,
         (card) => {
           const template = CardLoader.getById(card.scryfallId);
-          return template ? (isInstant(template) || isSorcery(template)) : false;
+          return template ? isInstant(template) || isSorcery(template) : false;
         },
-        'library_top');
+        'library_top',
+      );
       break;
 
     case 'Vampiric Tutor':
       // Search your library for a card, put on top of library, lose 2 life, shuffle
-      searchLibrary(state, stackObj.controller, stackObj.controller,
+      searchLibrary(
+        state,
+        stackObj.controller,
+        stackObj.controller,
         () => true, // Any card
-        'library_top');
+        'library_top',
+      );
       state.players[stackObj.controller].life -= 2;
       break;
 
     case 'Worldly Tutor':
       // Search your library for a creature card, reveal it, put on top of library, shuffle
-      searchLibrary(state, stackObj.controller, stackObj.controller,
+      searchLibrary(
+        state,
+        stackObj.controller,
+        stackObj.controller,
         (card) => {
           const template = CardLoader.getById(card.scryfallId);
           return template ? isCreature(template) : false;
         },
-        'library_top');
+        'library_top',
+      );
       break;
 
     case 'Rampant Growth':
       // Search your library for a basic land card, put it onto the battlefield tapped, shuffle
-      searchLibrary(state, stackObj.controller, stackObj.controller,
+      searchLibrary(
+        state,
+        stackObj.controller,
+        stackObj.controller,
         (card) => {
           const template = CardLoader.getById(card.scryfallId);
           return template ? isBasicLand(template) : false;
         },
-        'battlefield_tapped');
+        'battlefield_tapped',
+      );
       break;
 
     case 'Untamed Wilds':
       // Search your library for a basic land card, put it onto the battlefield, shuffle
-      searchLibrary(state, stackObj.controller, stackObj.controller,
+      searchLibrary(
+        state,
+        stackObj.controller,
+        stackObj.controller,
         (card) => {
           const template = CardLoader.getById(card.scryfallId);
           return template ? isBasicLand(template) : false;
         },
-        'battlefield');
+        'battlefield',
+      );
       break;
 
     // ========================================
@@ -793,7 +849,7 @@ function applySpecificCardEffect(state: GameState, stackObj: StackObject, cardNa
       returnSpellFromGraveyard(state, stackObj.controller);
       break;
 
-    case 'Nature\'s Resurgence':
+    case "Nature's Resurgence":
       // Each player returns all creature cards from their graveyard to their hand
       returnAllCreaturesFromGraveyard(state, 'player');
       returnAllCreaturesFromGraveyard(state, 'opponent');
@@ -864,7 +920,12 @@ function applySpecificCardEffect(state: GameState, stackObj: StackObject, cardNa
     case 'Infernal Contract':
       // Draw 4 cards. You lose half your life, rounded up.
       drawCards(state, stackObj.controller, 4);
-      drawCardsPayLife(state, stackObj.controller, 0, Math.ceil(state.players[stackObj.controller].life / 2));
+      drawCardsPayLife(
+        state,
+        stackObj.controller,
+        0,
+        Math.ceil(state.players[stackObj.controller].life / 2),
+      );
       break;
 
     case 'Syphon Soul':
@@ -888,7 +949,10 @@ function applySpecificCardEffect(state: GameState, stackObj: StackObject, cardNa
       // You may play up to three additional lands this turn
       // Simplified: Reset landsPlayedThisTurn to allow 3 more plays
       // Note: Full implementation would track additionalLandPlays in PlayerState
-      state.players[stackObj.controller].landsPlayedThisTurn = Math.max(0, state.players[stackObj.controller].landsPlayedThisTurn - 3);
+      state.players[stackObj.controller].landsPlayedThisTurn = Math.max(
+        0,
+        state.players[stackObj.controller].landsPlayedThisTurn - 3,
+      );
       break;
 
     case 'Relentless Assault':
@@ -938,7 +1002,7 @@ function applySpecificCardEffect(state: GameState, stackObj: StackObject, cardNa
 function destroyPermanent(state: GameState, targetId: string): void {
   for (const playerId of ['player', 'opponent'] as const) {
     const player = state.players[playerId];
-    const index = player.battlefield.findIndex(c => c.instanceId === targetId);
+    const index = player.battlefield.findIndex((c) => c.instanceId === targetId);
 
     if (index !== -1) {
       const permanent = player.battlefield[index]!;
@@ -956,7 +1020,7 @@ function destroyPermanent(state: GameState, targetId: string): void {
 function returnToHand(state: GameState, targetId: string): void {
   for (const playerId of ['player', 'opponent'] as const) {
     const player = state.players[playerId];
-    const index = player.battlefield.findIndex(c => c.instanceId === targetId);
+    const index = player.battlefield.findIndex((c) => c.instanceId === targetId);
 
     if (index !== -1) {
       const permanent = player.battlefield[index]!;
@@ -978,7 +1042,7 @@ function returnToHand(state: GameState, targetId: string): void {
 function exileWithLifegain(state: GameState, targetId: string, controller: PlayerId): void {
   for (const playerId of ['player', 'opponent'] as const) {
     const player = state.players[playerId];
-    const index = player.battlefield.findIndex(c => c.instanceId === targetId);
+    const index = player.battlefield.findIndex((c) => c.instanceId === targetId);
 
     if (index !== -1) {
       const creature = player.battlefield[index]!;
@@ -1050,7 +1114,7 @@ function applyDamage(state: GameState, targetId: string, damage: number): void {
   // Otherwise, target is a creature
   for (const playerId of ['player', 'opponent'] as const) {
     const player = state.players[playerId];
-    const creature = player.battlefield.find(c => c.instanceId === targetId);
+    const creature = player.battlefield.find((c) => c.instanceId === targetId);
 
     if (creature) {
       creature.damage += damage;
@@ -1078,7 +1142,7 @@ function applyDamage(state: GameState, targetId: string, damage: number): void {
  */
 function findPermanentByInstanceId(state: GameState, instanceId: string): CardInstance | null {
   for (const playerId of ['player', 'opponent'] as const) {
-    const card = state.players[playerId].battlefield.find(c => c.instanceId === instanceId);
+    const card = state.players[playerId].battlefield.find((c) => c.instanceId === instanceId);
     if (card) return card;
   }
   return null;
@@ -1088,10 +1152,7 @@ function findPermanentByInstanceId(state: GameState, instanceId: string): CardIn
  * Check if both players have passed priority
  */
 export function bothPlayersPassedPriority(state: GameState): boolean {
-  return (
-    state.players.player.hasPassedPriority &&
-    state.players.opponent.hasPassedPriority
-  );
+  return state.players.player.hasPassedPriority && state.players.opponent.hasPassedPriority;
 }
 
 /**
@@ -1237,7 +1298,7 @@ function applyPowerSink(state: GameState, stackObj: StackObject, xValue: number)
   const targetId = stackObj.targets[0];
   if (!targetId) return;
 
-  const targetStackObj = state.stack.find(s => s.id === targetId);
+  const targetStackObj = state.stack.find((s) => s.id === targetId);
   if (!targetStackObj) return;
 
   // Get the target spell's CMC
@@ -1265,7 +1326,7 @@ function applySpellBlast(state: GameState, stackObj: StackObject, xValue: number
   const targetId = stackObj.targets[0];
   if (!targetId) return;
 
-  const targetStackObj = state.stack.find(s => s.id === targetId);
+  const targetStackObj = state.stack.find((s) => s.id === targetId);
   if (!targetStackObj) return;
 
   // Get the target spell's CMC
@@ -1322,7 +1383,7 @@ function applyRecall(state: GameState, controller: PlayerId, xValue: number): vo
 function destroyArtifact(state: GameState, targetId: string): void {
   for (const playerId of ['player', 'opponent'] as const) {
     const player = state.players[playerId];
-    const index = player.battlefield.findIndex(c => c.instanceId === targetId);
+    const index = player.battlefield.findIndex((c) => c.instanceId === targetId);
 
     if (index !== -1) {
       const permanent = player.battlefield[index]!;
@@ -1350,8 +1411,10 @@ function countMountains(state: GameState, controller: PlayerId): number {
     const template = CardLoader.getById(permanent.scryfallId);
     if (template) {
       // Check if it's a Mountain (either basic or has Mountain type)
-      if (template.name === 'Mountain' ||
-          (template.type_line && template.type_line.includes('Mountain'))) {
+      if (
+        template.name === 'Mountain' ||
+        (template.type_line && template.type_line.includes('Mountain'))
+      ) {
         count++;
       }
     }
@@ -1383,7 +1446,7 @@ function applyPyrotechnics(state: GameState, stackObj: StackObject): void {
 function returnToLibraryTop(state: GameState, targetId: string): void {
   for (const playerId of ['player', 'opponent'] as const) {
     const player = state.players[playerId];
-    const index = player.battlefield.findIndex(c => c.instanceId === targetId);
+    const index = player.battlefield.findIndex((c) => c.instanceId === targetId);
 
     if (index !== -1) {
       const permanent = player.battlefield[index]!;
@@ -1406,7 +1469,7 @@ function applyMemoryLapse(state: GameState, stackObj: StackObject): void {
   const targetId = stackObj.targets[0];
   if (!targetId) return;
 
-  const targetStackObj = state.stack.find(s => s.id === targetId);
+  const targetStackObj = state.stack.find((s) => s.id === targetId);
   if (!targetStackObj) return;
 
   // Mark as countered (it will be handled specially)
@@ -1425,7 +1488,7 @@ function applyRemoveSoul(state: GameState, stackObj: StackObject): void {
   const targetId = stackObj.targets[0];
   if (!targetId) return;
 
-  const targetStackObj = state.stack.find(s => s.id === targetId);
+  const targetStackObj = state.stack.find((s) => s.id === targetId);
   if (!targetStackObj) return;
 
   // Check if target is a creature spell
@@ -1630,7 +1693,12 @@ function applyTariff(state: GameState): void {
 /**
  * Create tokens for a spell
  */
-function createTokensForSpell(state: GameState, controller: PlayerId, tokenType: string, count: number): void {
+function createTokensForSpell(
+  state: GameState,
+  controller: PlayerId,
+  tokenType: string,
+  count: number,
+): void {
   // Import token creation from TokenRegistry dynamically would be complex,
   // so we'll create tokens manually here
   const player = state.players[controller];
@@ -1675,8 +1743,10 @@ function applyWaitingInTheWeeds(state: GameState): void {
     for (const permanent of player.battlefield) {
       const template = CardLoader.getById(permanent.scryfallId);
       if (template && !permanent.tapped) {
-        if (template.name === 'Forest' ||
-            (template.type_line && template.type_line.includes('Forest'))) {
+        if (
+          template.name === 'Forest' ||
+          (template.type_line && template.type_line.includes('Forest'))
+        ) {
           forestCount++;
         }
       }

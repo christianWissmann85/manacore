@@ -55,18 +55,24 @@ test('Earthquake deals X damage to non-flying creatures and all players', () => 
   expect(finalState.players.opponent.life).toBe(18);
 
   // Both ground creatures should be dead (2 damage >= 2 toughness)
-  expect(finalState.players.player.battlefield.filter(c =>
-    CardLoader.getById(c.scryfallId)?.name === 'Grizzly Bears'
-  ).length).toBe(0);
+  expect(
+    finalState.players.player.battlefield.filter(
+      (c) => CardLoader.getById(c.scryfallId)?.name === 'Grizzly Bears',
+    ).length,
+  ).toBe(0);
 
-  expect(finalState.players.opponent.battlefield.filter(c =>
-    CardLoader.getById(c.scryfallId)?.name === 'Grizzly Bears'
-  ).length).toBe(0);
+  expect(
+    finalState.players.opponent.battlefield.filter(
+      (c) => CardLoader.getById(c.scryfallId)?.name === 'Grizzly Bears',
+    ).length,
+  ).toBe(0);
 
   // Flying creature should still be alive
-  expect(finalState.players.opponent.battlefield.filter(c =>
-    CardLoader.getById(c.scryfallId)?.name === 'Air Elemental'
-  ).length).toBe(1);
+  expect(
+    finalState.players.opponent.battlefield.filter(
+      (c) => CardLoader.getById(c.scryfallId)?.name === 'Air Elemental',
+    ).length,
+  ).toBe(1);
 });
 
 test('Earthquake with X=0 does nothing', () => {
@@ -84,9 +90,11 @@ test('Earthquake with X=0 does nothing', () => {
   expect(finalState.players.opponent.life).toBe(20);
 
   // Creature still alive (battlefield includes lands, so check for the bears specifically)
-  expect(finalState.players.player.battlefield.filter(c =>
-    CardLoader.getById(c.scryfallId)?.name === 'Grizzly Bears'
-  ).length).toBe(1);
+  expect(
+    finalState.players.player.battlefield.filter(
+      (c) => CardLoader.getById(c.scryfallId)?.name === 'Grizzly Bears',
+    ).length,
+  ).toBe(1);
 });
 
 // ============================================================
@@ -114,14 +122,18 @@ test('Hurricane deals X damage to flying creatures and all players', () => {
   expect(finalState.players.opponent.life).toBe(16);
 
   // Ground creature still alive
-  expect(finalState.players.player.battlefield.filter(c =>
-    CardLoader.getById(c.scryfallId)?.name === 'Grizzly Bears'
-  ).length).toBe(1);
+  expect(
+    finalState.players.player.battlefield.filter(
+      (c) => CardLoader.getById(c.scryfallId)?.name === 'Grizzly Bears',
+    ).length,
+  ).toBe(1);
 
   // Flying creature should be dead
-  expect(finalState.players.opponent.battlefield.filter(c =>
-    CardLoader.getById(c.scryfallId)?.name === 'Air Elemental'
-  ).length).toBe(0);
+  expect(
+    finalState.players.opponent.battlefield.filter(
+      (c) => CardLoader.getById(c.scryfallId)?.name === 'Air Elemental',
+    ).length,
+  ).toBe(0);
 });
 
 // ============================================================
@@ -176,9 +188,11 @@ test('Blaze deals X damage to target creature', () => {
   const finalState = castAndResolve(state, 'player', blaze.instanceId, [creature.instanceId], 2);
 
   // Grizzly Bears should be dead
-  expect(finalState.players.opponent.battlefield.filter(c =>
-    CardLoader.getById(c.scryfallId)?.name === 'Grizzly Bears'
-  ).length).toBe(0);
+  expect(
+    finalState.players.opponent.battlefield.filter(
+      (c) => CardLoader.getById(c.scryfallId)?.name === 'Grizzly Bears',
+    ).length,
+  ).toBe(0);
 });
 
 test('Blaze deals X damage to target player', () => {
@@ -213,7 +227,7 @@ test('Howl from Beyond gives +X/+0', () => {
 
   // Find the creature on battlefield
   const pumpedCreature = finalState.players.player.battlefield.find(
-    c => c.instanceId === creature.instanceId
+    (c) => c.instanceId === creature.instanceId,
   );
 
   // Should have +3/+0 modification

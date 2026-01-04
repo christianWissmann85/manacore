@@ -33,7 +33,7 @@ describe('Vanilla Creatures', () => {
       const newState = castAndResolve(state, 'player', goblinCard.instanceId);
 
       const creature = newState.players.player.battlefield.find(
-        c => c.instanceId === goblinCard.instanceId
+        (c) => c.instanceId === goblinCard.instanceId,
       );
       expect(creature).toBeDefined();
       expect(creature?.zone).toBe('battlefield');
@@ -55,7 +55,7 @@ describe('Vanilla Creatures', () => {
       });
 
       const attacker = newState.players.player.battlefield.find(
-        c => c.instanceId === goblinCard.instanceId
+        (c) => c.instanceId === goblinCard.instanceId,
       );
       expect(attacker?.attacking).toBe(true);
     });
@@ -104,7 +104,7 @@ describe('Vanilla Creatures', () => {
       const newState = castAndResolve(state, 'player', bearsCard.instanceId);
 
       const creature = newState.players.player.battlefield.find(
-        c => c.instanceId === bearsCard.instanceId
+        (c) => c.instanceId === bearsCard.instanceId,
       );
       expect(creature).toBeDefined();
     });

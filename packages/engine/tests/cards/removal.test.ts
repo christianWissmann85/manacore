@@ -30,10 +30,16 @@ describe('Destroy Effects', () => {
       const terrorCard = createCardInstance(terror.id, 'player', 'hand');
       state.players.player.hand.push(terrorCard);
 
-      const newState = castAndResolve(state, 'player', terrorCard.instanceId, [bearsCard.instanceId]);
+      const newState = castAndResolve(state, 'player', terrorCard.instanceId, [
+        bearsCard.instanceId,
+      ]);
 
-      expect(newState.players.opponent.graveyard.some(c => c.instanceId === bearsCard.instanceId)).toBe(true);
-      expect(newState.players.opponent.battlefield.some(c => c.instanceId === bearsCard.instanceId)).toBe(false);
+      expect(
+        newState.players.opponent.graveyard.some((c) => c.instanceId === bearsCard.instanceId),
+      ).toBe(true);
+      expect(
+        newState.players.opponent.battlefield.some((c) => c.instanceId === bearsCard.instanceId),
+      ).toBe(false);
     });
   });
 
@@ -56,10 +62,16 @@ describe('Destroy Effects', () => {
       const disenchantCard = createCardInstance(disenchant.id, 'player', 'hand');
       state.players.player.hand.push(disenchantCard);
 
-      const newState = castAndResolve(state, 'player', disenchantCard.instanceId, [pacifismCard.instanceId]);
+      const newState = castAndResolve(state, 'player', disenchantCard.instanceId, [
+        pacifismCard.instanceId,
+      ]);
 
-      expect(newState.players.opponent.graveyard.some(c => c.instanceId === pacifismCard.instanceId)).toBe(true);
-      expect(newState.players.opponent.battlefield.some(c => c.instanceId === pacifismCard.instanceId)).toBe(false);
+      expect(
+        newState.players.opponent.graveyard.some((c) => c.instanceId === pacifismCard.instanceId),
+      ).toBe(true);
+      expect(
+        newState.players.opponent.battlefield.some((c) => c.instanceId === pacifismCard.instanceId),
+      ).toBe(false);
     });
   });
 });
@@ -87,9 +99,13 @@ describe('Exile Effects', () => {
       const exileCard = createCardInstance(exile.id, 'player', 'hand');
       state.players.player.hand.push(exileCard);
 
-      const newState = castAndResolve(state, 'player', exileCard.instanceId, [bearsCard.instanceId]);
+      const newState = castAndResolve(state, 'player', exileCard.instanceId, [
+        bearsCard.instanceId,
+      ]);
 
-      expect(newState.players.opponent.battlefield.some(c => c.instanceId === bearsCard.instanceId)).toBe(false);
+      expect(
+        newState.players.opponent.battlefield.some((c) => c.instanceId === bearsCard.instanceId),
+      ).toBe(false);
       expect(newState.players.player.life).toBe(22); // 20 + 2 (Bears toughness)
     });
   });
@@ -117,10 +133,16 @@ describe('Bounce Effects', () => {
       const unsummonCard = createCardInstance(unsummon.id, 'player', 'hand');
       state.players.player.hand.push(unsummonCard);
 
-      const newState = castAndResolve(state, 'player', unsummonCard.instanceId, [bearsCard.instanceId]);
+      const newState = castAndResolve(state, 'player', unsummonCard.instanceId, [
+        bearsCard.instanceId,
+      ]);
 
-      expect(newState.players.opponent.hand.some(c => c.instanceId === bearsCard.instanceId)).toBe(true);
-      expect(newState.players.opponent.battlefield.some(c => c.instanceId === bearsCard.instanceId)).toBe(false);
+      expect(
+        newState.players.opponent.hand.some((c) => c.instanceId === bearsCard.instanceId),
+      ).toBe(true);
+      expect(
+        newState.players.opponent.battlefield.some((c) => c.instanceId === bearsCard.instanceId),
+      ).toBe(false);
     });
   });
 });

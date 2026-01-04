@@ -17,13 +17,7 @@ import type { PlayerId, Zone } from '../state/Zone';
 import type { CardTemplate } from '../cards/CardTemplate';
 import { CardLoader } from '../cards/CardLoader';
 import { findCard } from '../state/GameState';
-import {
-  isCreature,
-  isArtifact,
-  isEnchantment,
-  isLand,
-  hasKeyword,
-} from '../cards/CardTemplate';
+import { isCreature, isArtifact, isEnchantment, isLand, hasKeyword } from '../cards/CardTemplate';
 
 // =============================================================================
 // TYPES
@@ -33,16 +27,16 @@ import {
  * What type of thing can be targeted
  */
 export type TargetType =
-  | 'any'              // "any target" - creature or player
-  | 'creature'         // "target creature"
-  | 'player'           // "target player"
-  | 'opponent'         // "target opponent"
-  | 'spell'            // "target spell" (on stack)
-  | 'creature_spell'   // "target creature spell" (on stack)
-  | 'permanent'        // "target permanent"
-  | 'artifact'         // "target artifact"
-  | 'enchantment'      // "target enchantment"
-  | 'land'             // "target land"
+  | 'any' // "any target" - creature or player
+  | 'creature' // "target creature"
+  | 'player' // "target player"
+  | 'opponent' // "target opponent"
+  | 'spell' // "target spell" (on stack)
+  | 'creature_spell' // "target creature spell" (on stack)
+  | 'permanent' // "target permanent"
+  | 'artifact' // "target artifact"
+  | 'enchantment' // "target enchantment"
+  | 'land' // "target land"
   | 'artifact_or_enchantment'; // "target artifact or enchantment"
 
 /**
@@ -54,32 +48,34 @@ export type MtgColor = 'W' | 'U' | 'B' | 'R' | 'G';
  * Restrictions that narrow valid targets
  */
 export type TargetRestriction =
-  | { type: 'color'; color: MtgColor; negated: boolean }      // "nonblack", "black"
-  | { type: 'controller'; controller: 'you' | 'opponent' }    // "you control", "opponent controls"
+  | { type: 'color'; color: MtgColor; negated: boolean } // "nonblack", "black"
+  | { type: 'controller'; controller: 'you' | 'opponent' } // "you control", "opponent controls"
   | { type: 'combat'; status: 'attacking' | 'blocking' | 'attacking_or_blocking' }
   | { type: 'tapped' }
   | { type: 'untapped' }
   | { type: 'nonartifact' }
-  | { type: 'nonland' };
+  | { type: 'nonland' }
+  | { type: 'keyword'; keyword: string } // "flying", "trample", etc.
+  | { type: 'subtype'; subtype: string }; // "Wall", "Goblin", etc.
 
 /**
  * A single targeting requirement for a spell or ability
  */
 export interface TargetRequirement {
-  id: string;                         // Unique ID for matching with effects
-  count: number;                      // How many targets needed (usually 1)
-  targetType: TargetType;             // What can be targeted
-  zone: Zone | 'any';                 // Where targets must be
-  restrictions: TargetRestriction[];  // Additional constraints
-  optional: boolean;                  // "up to X" vs required
-  description: string;                // Human-readable description
+  id: string; // Unique ID for matching with effects
+  count: number; // How many targets needed (usually 1)
+  targetType: TargetType; // What can be targeted
+  zone: Zone | 'any'; // Where targets must be
+  restrictions: TargetRestriction[]; // Additional constraints
+  optional: boolean; // "up to X" vs required
+  description: string; // Human-readable description
 }
 
 /**
  * A resolved target with metadata
  */
 export interface ResolvedTarget {
-  id: string;           // instanceId or playerId
+  id: string; // instanceId or playerId
   type: 'card' | 'player' | 'stack_object';
 }
 
@@ -109,7 +105,7 @@ export function parseTargetRequirements(oracleText: string): TargetRequirement[]
   // Triggered abilities start with "When", "Whenever", or "At"
   const sentences = oracleText.split(/[.\n]/);
   const spellText = sentences
-    .filter(s => {
+    .filter((s) => {
       const trimmed = s.trim().toLowerCase();
       return !trimmed.startsWith('when') && !trimmed.startsWith('at ');
     })
@@ -284,10 +280,7 @@ export function parseTargetRequirements(oracleText: string): TargetRequirement[]
       count: 1,
       targetType: 'creature',
       zone: 'battlefield',
-      restrictions: [
-        { type: 'nonartifact' },
-        { type: 'color', color: 'B', negated: true },
-      ],
+      restrictions: [{ type: 'nonartifact' }, { type: 'color', color: 'B', negated: true }],
       optional: false,
       description: 'target nonartifact, nonblack creature',
     });
@@ -434,9 +427,7 @@ export function hasProtectionFromAllColors(card: CardTemplate): boolean {
  * Get the colors of a source (spell/ability source)
  */
 export function getSourceColors(card: CardTemplate): MtgColor[] {
-  return card.colors.filter((c): c is MtgColor =>
-    ['W', 'U', 'B', 'R', 'G'].includes(c)
-  );
+  return card.colors.filter((c): c is MtgColor => ['W', 'U', 'B', 'R', 'G'].includes(c));
 }
 
 // =============================================================================
@@ -453,7 +444,7 @@ export function validateTargets(
   targets: string[],
   requirements: TargetRequirement[],
   controller: PlayerId,
-  sourceCard?: CardInstance
+  sourceCard?: CardInstance,
 ): string[] {
   const errors: string[] = [];
 
@@ -476,13 +467,7 @@ export function validateTargets(
   for (const req of requirements) {
     for (let i = 0; i < req.count && targetIndex < targets.length; i++) {
       const targetId = targets[targetIndex]!;
-      const targetErrors = validateSingleTarget(
-        state,
-        targetId,
-        req,
-        controller,
-        sourceCard
-      );
+      const targetErrors = validateSingleTarget(state, targetId, req, controller, sourceCard);
       errors.push(...targetErrors);
       targetIndex++;
     }
@@ -505,7 +490,7 @@ export function validateSingleTarget(
   targetId: string,
   requirement: TargetRequirement,
   controller: PlayerId,
-  sourceCard?: CardInstance
+  sourceCard?: CardInstance,
 ): string[] {
   // === Player Targets ===
   if (targetId === 'player' || targetId === 'opponent') {
@@ -526,7 +511,7 @@ export function validateSingleTarget(
 
   // === Stack Targets (for counterspells) ===
   if (requirement.zone === 'stack') {
-    const stackObj = state.stack.find(s => s.id === targetId);
+    const stackObj = state.stack.find((s) => s.id === targetId);
     if (!stackObj) {
       return [`Target ${targetId} not found on stack`];
     }
@@ -583,7 +568,11 @@ export function validateSingleTarget(
       for (const color of sourceColors) {
         if (hasProtectionFrom(template, color)) {
           const colorNames: Record<MtgColor, string> = {
-            W: 'white', U: 'blue', B: 'black', R: 'red', G: 'green'
+            W: 'white',
+            U: 'blue',
+            B: 'black',
+            R: 'red',
+            G: 'green',
           };
           return [`Target has protection from ${colorNames[color]}`];
         }
@@ -599,13 +588,7 @@ export function validateSingleTarget(
 
   // Check restrictions
   for (const restriction of requirement.restrictions) {
-    const restrictionError = validateRestriction(
-      state,
-      target,
-      template,
-      restriction,
-      controller
-    );
+    const restrictionError = validateRestriction(state, target, template, restriction, controller);
     if (restrictionError) {
       return [restrictionError];
     }
@@ -620,7 +603,7 @@ export function validateSingleTarget(
 function validateTargetType(
   template: CardTemplate,
   card: CardInstance,
-  targetType: TargetType
+  targetType: TargetType,
 ): string | null {
   switch (targetType) {
     case 'any':
@@ -687,7 +670,7 @@ function validateRestriction(
   card: CardInstance,
   template: CardTemplate,
   restriction: TargetRestriction,
-  controller: PlayerId
+  controller: PlayerId,
 ): string | null {
   switch (restriction.type) {
     case 'color': {
@@ -696,7 +679,11 @@ function validateRestriction(
         // "nonblack" - must NOT have the color
         if (hasColor) {
           const colorNames: Record<MtgColor, string> = {
-            W: 'white', U: 'blue', B: 'black', R: 'red', G: 'green'
+            W: 'white',
+            U: 'blue',
+            B: 'black',
+            R: 'red',
+            G: 'green',
           };
           return `Target cannot be ${colorNames[restriction.color]}`;
         }
@@ -779,15 +766,16 @@ export function getLegalTargets(
   state: GameState,
   requirement: TargetRequirement,
   controller: PlayerId,
-  sourceCard?: CardInstance
+  sourceCard?: CardInstance,
 ): string[] {
   const validTargets: string[] = [];
 
   // === Player Targets ===
-  if (requirement.targetType === 'any' ||
-      requirement.targetType === 'player' ||
-      requirement.targetType === 'opponent') {
-
+  if (
+    requirement.targetType === 'any' ||
+    requirement.targetType === 'player' ||
+    requirement.targetType === 'opponent'
+  ) {
     if (requirement.targetType === 'opponent') {
       // Only the opponent
       validTargets.push(controller === 'player' ? 'opponent' : 'player');
@@ -798,10 +786,11 @@ export function getLegalTargets(
   }
 
   // === Stack Targets ===
-  if (requirement.zone === 'stack' ||
-      requirement.targetType === 'spell' ||
-      requirement.targetType === 'creature_spell') {
-
+  if (
+    requirement.zone === 'stack' ||
+    requirement.targetType === 'spell' ||
+    requirement.targetType === 'creature_spell'
+  ) {
     for (const stackObj of state.stack) {
       // Skip our own spell that's creating this targeting
       if (sourceCard && stackObj.card.instanceId === sourceCard.instanceId) {
@@ -837,7 +826,7 @@ export function getLegalTargets(
           card.instanceId,
           requirement,
           controller,
-          sourceCard
+          sourceCard,
         );
 
         if (errors.length === 0) {
@@ -861,7 +850,7 @@ export function getLegalTargets(
           card.instanceId,
           requirement,
           controller,
-          sourceCard
+          sourceCard,
         );
 
         if (errors.length === 0) {
@@ -884,15 +873,15 @@ export function getAllLegalTargetCombinations(
   state: GameState,
   requirements: TargetRequirement[],
   controller: PlayerId,
-  sourceCard?: CardInstance
+  sourceCard?: CardInstance,
 ): string[][] {
   if (requirements.length === 0) {
     return [[]]; // No targets needed
   }
 
   // Get legal targets for each requirement
-  const targetsPerRequirement: string[][] = requirements.map(req =>
-    getLegalTargets(state, req, controller, sourceCard)
+  const targetsPerRequirement: string[][] = requirements.map((req) =>
+    getLegalTargets(state, req, controller, sourceCard),
   );
 
   // Check if any required target has no valid options
@@ -905,7 +894,7 @@ export function getAllLegalTargetCombinations(
   // Generate combinations (cartesian product)
   // For simplicity, we handle single-target and dual-target cases
   if (requirements.length === 1) {
-    return targetsPerRequirement[0]!.map(t => [t]);
+    return targetsPerRequirement[0]!.map((t) => [t]);
   }
 
   if (requirements.length === 2) {
@@ -931,7 +920,7 @@ export function getAllLegalTargetCombinations(
 function generateCombinations(
   targetsPerReq: string[][],
   index: number,
-  current: string[]
+  current: string[],
 ): string[][] {
   if (index >= targetsPerReq.length) {
     return [current];
@@ -941,9 +930,7 @@ function generateCombinations(
   for (const target of targetsPerReq[index]!) {
     // Avoid duplicates
     if (!current.includes(target)) {
-      combinations.push(
-        ...generateCombinations(targetsPerReq, index + 1, [...current, target])
-      );
+      combinations.push(...generateCombinations(targetsPerReq, index + 1, [...current, target]));
     }
   }
 
@@ -965,7 +952,7 @@ export function checkTargetsStillLegal(
   targets: string[],
   requirements: TargetRequirement[],
   controller: PlayerId,
-  sourceCard?: CardInstance
+  sourceCard?: CardInstance,
 ): { allIllegal: boolean; legalTargets: string[]; illegalTargets: string[] } {
   const legalTargets: string[] = [];
   const illegalTargets: string[] = [];
@@ -1000,7 +987,7 @@ export function shouldSpellFizzle(
   targets: string[],
   requirements: TargetRequirement[],
   controller: PlayerId,
-  sourceCard?: CardInstance
+  sourceCard?: CardInstance,
 ): boolean {
   if (targets.length === 0 || requirements.length === 0) {
     return false; // No targets = can't fizzle
@@ -1011,7 +998,7 @@ export function shouldSpellFizzle(
     targets,
     requirements,
     controller,
-    sourceCard
+    sourceCard,
   );
 
   return allIllegal;

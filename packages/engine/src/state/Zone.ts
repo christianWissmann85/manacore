@@ -3,24 +3,19 @@
  */
 
 export type Zone =
-  | 'library'      // Deck
-  | 'hand'         // Hand
-  | 'battlefield'  // In play
-  | 'graveyard'    // Discard pile
-  | 'stack'        // Spells/abilities waiting to resolve
-  | 'exile';       // Removed from game
+  | 'library' // Deck
+  | 'hand' // Hand
+  | 'battlefield' // In play
+  | 'graveyard' // Discard pile
+  | 'stack' // Spells/abilities waiting to resolve
+  | 'exile'; // Removed from game
 
 export type PlayerId = 'player' | 'opponent';
 
 /**
  * Phases of a turn
  */
-export type GamePhase =
-  | 'beginning'
-  | 'main1'
-  | 'combat'
-  | 'main2'
-  | 'ending';
+export type GamePhase = 'beginning' | 'main1' | 'combat' | 'main2' | 'ending';
 
 /**
  * Steps within phases
@@ -41,8 +36,4 @@ export type GameStep =
 /**
  * Counter types (for Phase 1+)
  */
-export type CounterType =
-  | '+1/+1'
-  | '-1/-1'
-  | 'loyalty'
-  | 'charge';
+export type CounterType = '+1/+1' | '-1/-1' | 'loyalty' | 'charge';

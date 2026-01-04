@@ -32,14 +32,16 @@ export class ScryfallScraper {
 
       const response = await fetch(url);
       if (!response.ok) {
-        const error = await response.json() as ScryfallError;
+        const error = (await response.json()) as ScryfallError;
         throw new Error(`Scryfall API error: ${error.details}`);
       }
 
-      const data = await response.json() as ScryfallListResponse;
+      const data = (await response.json()) as ScryfallListResponse;
       allCards.push(...data.data);
 
-      console.log(`  ✓ Fetched ${data.data.length} cards (${allCards.length}/${data.total_cards} total)`);
+      console.log(
+        `  ✓ Fetched ${data.data.length} cards (${allCards.length}/${data.total_cards} total)`,
+      );
 
       if (data.has_more && data.next_page) {
         url = data.next_page;
@@ -63,7 +65,7 @@ export class ScryfallScraper {
       return [];
     }
 
-    const data = await response.json() as RulingsResponse;
+    const data = (await response.json()) as RulingsResponse;
     await this.delay(this.delayMs);
     return data.data;
   }
@@ -71,10 +73,7 @@ export class ScryfallScraper {
   /**
    * Download card image to local filesystem
    */
-  async downloadImage(
-    imageUrl: string,
-    outputPath: string,
-  ): Promise<void> {
+  async downloadImage(imageUrl: string, outputPath: string): Promise<void> {
     const response = await fetch(imageUrl);
     if (!response.ok) {
       throw new Error(`Failed to download image: ${imageUrl}`);
@@ -116,7 +115,10 @@ export class ScryfallScraper {
    * Get the best image URI for a card
    * Handles both normal cards and multi-faced cards
    */
-  getImageUri(card: ScryfallCard, size: 'small' | 'normal' | 'large' | 'png' = 'normal'): string | null {
+  getImageUri(
+    card: ScryfallCard,
+    size: 'small' | 'normal' | 'large' | 'png' = 'normal',
+  ): string | null {
     // Normal cards have image_uris
     if (card.image_uris) {
       return card.image_uris[size];
@@ -147,7 +149,7 @@ export class ScryfallScraper {
    * Delay helper for rate limiting
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -163,6 +165,6 @@ export class ScryfallScraper {
    * Filter cards to English only
    */
   filterEnglishCards(cards: ScryfallCard[]): ScryfallCard[] {
-    return cards.filter(card => card.lang === 'en');
+    return cards.filter((card) => card.lang === 'en');
   }
 }

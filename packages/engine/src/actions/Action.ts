@@ -26,7 +26,7 @@ export interface GameAction {
 export interface PlayLandAction extends GameAction {
   type: 'PLAY_LAND';
   payload: {
-    cardInstanceId: string;  // Card in hand to play
+    cardInstanceId: string; // Card in hand to play
   };
 }
 
@@ -37,9 +37,9 @@ export interface PlayLandAction extends GameAction {
 export interface CastSpellAction extends GameAction {
   type: 'CAST_SPELL';
   payload: {
-    cardInstanceId: string;  // Card in hand to cast
-    targets?: string[];      // Target instance IDs (for targeted spells)
-    xValue?: number;         // For spells with {X} in cost (e.g., Fireball)
+    cardInstanceId: string; // Card in hand to cast
+    targets?: string[]; // Target instance IDs (for targeted spells)
+    xValue?: number; // For spells with {X} in cost (e.g., Fireball)
   };
 }
 
@@ -49,7 +49,7 @@ export interface CastSpellAction extends GameAction {
 export interface DeclareAttackersAction extends GameAction {
   type: 'DECLARE_ATTACKERS';
   payload: {
-    attackers: string[];  // Instance IDs of creatures attacking
+    attackers: string[]; // Instance IDs of creatures attacking
   };
 }
 
@@ -61,8 +61,8 @@ export interface DeclareBlockersAction extends GameAction {
   type: 'DECLARE_BLOCKERS';
   payload: {
     blocks: Array<{
-      blockerId: string;   // Creature doing the blocking
-      attackerId: string;  // Creature being blocked
+      blockerId: string; // Creature doing the blocking
+      attackerId: string; // Creature being blocked
     }>;
   };
 }
@@ -89,7 +89,7 @@ export interface EndTurnAction extends GameAction {
 export interface DrawCardAction extends GameAction {
   type: 'DRAW_CARD';
   payload: {
-    count?: number;  // Default 1
+    count?: number; // Default 1
   };
 }
 
@@ -107,11 +107,11 @@ export interface UntapAction extends GameAction {
 export interface ActivateAbilityAction extends GameAction {
   type: 'ACTIVATE_ABILITY';
   payload: {
-    sourceId: string;     // Card with the ability
-    abilityId: string;    // Which ability to activate
-    targets?: string[];   // Targets for the ability
-    manaColorChoice?: 'W' | 'U' | 'B' | 'R' | 'G' | 'C';  // For multi-color mana abilities
-    xValue?: number;      // For abilities with X in cost
+    sourceId: string; // Card with the ability
+    abilityId: string; // Which ability to activate
+    targets?: string[]; // Targets for the ability
+    manaColorChoice?: 'W' | 'U' | 'B' | 'R' | 'G' | 'C'; // For multi-color mana abilities
+    xValue?: number; // For abilities with X in cost
   };
 }
 
@@ -121,8 +121,8 @@ export interface ActivateAbilityAction extends GameAction {
 export interface SacrificePermanentAction extends GameAction {
   type: 'SACRIFICE_PERMANENT';
   payload: {
-    permanentId: string;  // Permanent to sacrifice
-    reason?: 'cost' | 'effect' | 'state_based';  // Why it's being sacrificed
+    permanentId: string; // Permanent to sacrifice
+    reason?: 'cost' | 'effect' | 'state_based'; // Why it's being sacrificed
   };
 }
 

@@ -81,7 +81,7 @@ describe('Pain Lands', () => {
         player.battlefield.push(card);
 
         const abilities = getActivatedAbilities(card, state);
-        const colorlessAbility = abilities.find(a => a.name.includes('{C}'))!;
+        const colorlessAbility = abilities.find((a) => a.name.includes('{C}'))!;
 
         const action: ActivateAbilityAction = {
           type: 'ACTIVATE_ABILITY',
@@ -109,7 +109,7 @@ describe('Pain Lands', () => {
         player.battlefield.push(card);
 
         const abilities = getActivatedAbilities(card, state);
-        const coloredAbility = abilities.find(a => a.cost.life === 1)!;
+        const coloredAbility = abilities.find((a) => a.cost.life === 1)!;
 
         const action: ActivateAbilityAction = {
           type: 'ACTIVATE_ABILITY',
@@ -261,7 +261,7 @@ describe('Sacrifice Lands', () => {
 
         // Land should be tapped on battlefield
         const newPlayer = getPlayer(state, 'player');
-        const landOnField = newPlayer.battlefield.find(c => c.instanceId === card.instanceId);
+        const landOnField = newPlayer.battlefield.find((c) => c.instanceId === card.instanceId);
         expect(landOnField).toBeDefined();
         expect(landOnField!.tapped).toBe(true);
       });
@@ -275,13 +275,13 @@ describe('Sacrifice Lands', () => {
         expect(abilities.length).toBe(2);
 
         // First ability: tap for single mana
-        const tapAbility = abilities.find(a => !a.cost.sacrifice);
+        const tapAbility = abilities.find((a) => !a.cost.sacrifice);
         expect(tapAbility).toBeDefined();
         expect(tapAbility!.effect.amount).toBe(1);
         expect(tapAbility!.effect.manaColors).toContain(color);
 
         // Second ability: tap + sacrifice for double mana
-        const sacAbility = abilities.find(a => a.cost.sacrifice?.type === 'self');
+        const sacAbility = abilities.find((a) => a.cost.sacrifice?.type === 'self');
         expect(sacAbility).toBeDefined();
         expect(sacAbility!.effect.amount).toBe(2);
         expect(sacAbility!.effect.manaColors).toContain(color);
@@ -297,7 +297,7 @@ describe('Sacrifice Lands', () => {
         player.battlefield.push(card);
 
         const abilities = getActivatedAbilities(card, state);
-        const tapAbility = abilities.find(a => !a.cost.sacrifice)!;
+        const tapAbility = abilities.find((a) => !a.cost.sacrifice)!;
 
         const action: ActivateAbilityAction = {
           type: 'ACTIVATE_ABILITY',
@@ -313,7 +313,7 @@ describe('Sacrifice Lands', () => {
         const newPlayer = getPlayer(state, 'player');
         expect(newPlayer.manaPool[poolKey]).toBe(1);
         // Land should still be on battlefield (just tapped)
-        expect(newPlayer.battlefield.find(c => c.instanceId === card.instanceId)).toBeDefined();
+        expect(newPlayer.battlefield.find((c) => c.instanceId === card.instanceId)).toBeDefined();
       });
 
       test(`${name} tap + sacrifice for double mana works`, () => {
@@ -326,7 +326,7 @@ describe('Sacrifice Lands', () => {
         player.battlefield.push(card);
 
         const abilities = getActivatedAbilities(card, state);
-        const sacAbility = abilities.find(a => a.cost.sacrifice?.type === 'self')!;
+        const sacAbility = abilities.find((a) => a.cost.sacrifice?.type === 'self')!;
 
         const action: ActivateAbilityAction = {
           type: 'ACTIVATE_ABILITY',
@@ -342,8 +342,8 @@ describe('Sacrifice Lands', () => {
         const newPlayer = getPlayer(state, 'player');
         expect(newPlayer.manaPool[poolKey]).toBe(2);
         // Land should be in graveyard (sacrificed)
-        expect(newPlayer.battlefield.find(c => c.instanceId === card.instanceId)).toBeUndefined();
-        expect(newPlayer.graveyard.find(c => c.instanceId === card.instanceId)).toBeDefined();
+        expect(newPlayer.battlefield.find((c) => c.instanceId === card.instanceId)).toBeUndefined();
+        expect(newPlayer.graveyard.find((c) => c.instanceId === card.instanceId)).toBeDefined();
       });
     });
   }
@@ -398,7 +398,7 @@ describe('Crystal Vein', () => {
 
     // Crystal Vein should NOT be tapped on entry
     const newPlayer = getPlayer(state, 'player');
-    const landOnField = newPlayer.battlefield.find(c => c.instanceId === card.instanceId);
+    const landOnField = newPlayer.battlefield.find((c) => c.instanceId === card.instanceId);
     expect(landOnField).toBeDefined();
     expect(landOnField!.tapped).toBe(false);
   });

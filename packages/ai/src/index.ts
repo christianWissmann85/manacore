@@ -8,7 +8,7 @@
  * - Evaluation functions [Phase 2]
  */
 
-export const AI_VERSION = "0.0.1";
+export const AI_VERSION = '0.0.1';
 
 // Bot exports
 export type { Bot } from './bots/Bot';

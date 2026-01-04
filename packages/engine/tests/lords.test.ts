@@ -24,7 +24,7 @@ function createTestState() {
   const plains = CardLoader.getByName('Plains')!;
   return createGameState(
     [createCardInstance(plains.id, 'player', 'library')],
-    [createCardInstance(plains.id, 'opponent', 'library')]
+    [createCardInstance(plains.id, 'opponent', 'library')],
   );
 }
 

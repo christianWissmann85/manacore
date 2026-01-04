@@ -5,16 +5,22 @@
  */
 
 import type { GameState } from '../state/GameState';
-import type { Action, PlayLandAction, CastSpellAction, DeclareAttackersAction, DeclareBlockersAction, EndTurnAction, PassPriorityAction, ActivateAbilityAction } from './Action';
+import type {
+  Action,
+  PlayLandAction,
+  CastSpellAction,
+  DeclareAttackersAction,
+  DeclareBlockersAction,
+  EndTurnAction,
+  PassPriorityAction,
+  ActivateAbilityAction,
+} from './Action';
 import { getPlayer, findCard } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
 import { isLand, isCreature, isInstant, hasFlying, hasReach } from '../cards/CardTemplate';
 import { validateAction } from './validators';
 import { getActivatedAbilities } from '../rules/activatedAbilities';
-import {
-  parseTargetRequirements,
-  getAllLegalTargetCombinations,
-} from '../rules/targeting';
+import { parseTargetRequirements, getAllLegalTargetCombinations } from '../rules/targeting';
 
 /**
  * Get all legal actions for a player
@@ -131,7 +137,10 @@ function getLegalLandPlays(state: GameState, playerId: 'player' | 'opponent'): P
  * Get legal sorcery-speed spell casts
  * Phase 1+: Only when it's your turn, main phase, stack empty
  */
-function getLegalSorcerySpeedCasts(state: GameState, playerId: 'player' | 'opponent'): CastSpellAction[] {
+function getLegalSorcerySpeedCasts(
+  state: GameState,
+  playerId: 'player' | 'opponent',
+): CastSpellAction[] {
   const actions: CastSpellAction[] = [];
   const player = getPlayer(state, playerId);
 
@@ -157,7 +166,7 @@ function getLegalSorcerySpeedCasts(state: GameState, playerId: 'player' | 'oppon
         state,
         targetRequirements,
         playerId,
-        card
+        card,
       );
 
       for (const targets of targetCombinations) {
@@ -200,7 +209,10 @@ function getLegalSorcerySpeedCasts(state: GameState, playerId: 'player' | 'oppon
  * Get legal instant-speed spell casts
  * Phase 1+: Can cast instants any time you have priority
  */
-function getLegalInstantCasts(state: GameState, playerId: 'player' | 'opponent'): CastSpellAction[] {
+function getLegalInstantCasts(
+  state: GameState,
+  playerId: 'player' | 'opponent',
+): CastSpellAction[] {
   const actions: CastSpellAction[] = [];
   const player = getPlayer(state, playerId);
 
@@ -221,7 +233,7 @@ function getLegalInstantCasts(state: GameState, playerId: 'player' | 'opponent')
         state,
         targetRequirements,
         playerId,
-        card
+        card,
       );
 
       for (const targets of targetCombinations) {
@@ -264,7 +276,10 @@ function getLegalInstantCasts(state: GameState, playerId: 'player' | 'opponent')
  * Get legal ability activations
  * Phase 1+: Can activate abilities any time you have priority
  */
-function getLegalAbilityActivations(state: GameState, playerId: 'player' | 'opponent'): ActivateAbilityAction[] {
+function getLegalAbilityActivations(
+  state: GameState,
+  playerId: 'player' | 'opponent',
+): ActivateAbilityAction[] {
   const actions: ActivateAbilityAction[] = [];
   const player = getPlayer(state, playerId);
 
@@ -285,7 +300,7 @@ function getLegalAbilityActivations(state: GameState, playerId: 'player' | 'oppo
           state,
           ability.targetRequirements,
           playerId,
-          permanent
+          permanent,
         );
 
         for (const targets of targetCombinations) {
@@ -329,12 +344,15 @@ function getLegalAbilityActivations(state: GameState, playerId: 'player' | 'oppo
 /**
  * Get legal attacker declarations
  */
-function getLegalAttackerDeclarations(state: GameState, playerId: 'player' | 'opponent'): DeclareAttackersAction[] {
+function getLegalAttackerDeclarations(
+  state: GameState,
+  playerId: 'player' | 'opponent',
+): DeclareAttackersAction[] {
   const actions: DeclareAttackersAction[] = [];
   const player = getPlayer(state, playerId);
 
   // Find creatures that can attack
-  const potentialAttackers = player.battlefield.filter(card => {
+  const potentialAttackers = player.battlefield.filter((card) => {
     const template = CardLoader.getById(card.scryfallId);
     if (!template || !isCreature(template)) return false;
     if (card.tapped) return false;
@@ -377,7 +395,7 @@ function getLegalAttackerDeclarations(state: GameState, playerId: 'player' | 'op
       type: 'DECLARE_ATTACKERS',
       playerId,
       payload: {
-        attackers: potentialAttackers.map(c => c.instanceId),
+        attackers: potentialAttackers.map((c) => c.instanceId),
       },
     });
   }
@@ -389,14 +407,17 @@ function getLegalAttackerDeclarations(state: GameState, playerId: 'player' | 'op
  * Get legal blocker declarations
  * Phase 1+: Defender can assign blockers to attackers
  */
-function getLegalBlockerDeclarations(state: GameState, playerId: 'player' | 'opponent'): DeclareBlockersAction[] {
+function getLegalBlockerDeclarations(
+  state: GameState,
+  playerId: 'player' | 'opponent',
+): DeclareBlockersAction[] {
   const actions: DeclareBlockersAction[] = [];
   const player = getPlayer(state, playerId);
   const activePlayerId = state.activePlayer;
   const activePlayer = getPlayer(state, activePlayerId);
 
   // Find potential blockers
-  const potentialBlockers = player.battlefield.filter(card => {
+  const potentialBlockers = player.battlefield.filter((card) => {
     const template = CardLoader.getById(card.scryfallId);
     if (!template || !isCreature(template)) return false;
     if (card.tapped) return false;
@@ -404,7 +425,7 @@ function getLegalBlockerDeclarations(state: GameState, playerId: 'player' | 'opp
   });
 
   // Find attackers
-  const attackers = activePlayer.battlefield.filter(c => c.attacking);
+  const attackers = activePlayer.battlefield.filter((c) => c.attacking);
 
   // Option 1: Don't block at all
   actions.push({
@@ -433,10 +454,12 @@ function getLegalBlockerDeclarations(state: GameState, playerId: 'player' | 'opp
         type: 'DECLARE_BLOCKERS',
         playerId,
         payload: {
-          blocks: [{
-            blockerId: blocker.instanceId,
-            attackerId: attacker.instanceId,
-          }],
+          blocks: [
+            {
+              blockerId: blocker.instanceId,
+              attackerId: attacker.instanceId,
+            },
+          ],
         },
       };
 
@@ -459,7 +482,7 @@ function getTargetName(state: GameState, targetId: string): string {
   if (targetId === 'opponent') return 'Opponent';
 
   // Stack targets (for counterspells)
-  const stackObj = state.stack.find(s => s.id === targetId);
+  const stackObj = state.stack.find((s) => s.id === targetId);
   if (stackObj) {
     const template = CardLoader.getById(stackObj.card.scryfallId);
     return template?.name || 'spell';
@@ -482,7 +505,7 @@ export function describeAction(action: Action, state: GameState): string {
   switch (action.type) {
     case 'PLAY_LAND': {
       const card = state.players[action.playerId].hand.find(
-        c => c.instanceId === action.payload.cardInstanceId
+        (c) => c.instanceId === action.payload.cardInstanceId,
       );
       if (card) {
         const template = CardLoader.getById(card.scryfallId);
@@ -493,7 +516,7 @@ export function describeAction(action: Action, state: GameState): string {
 
     case 'CAST_SPELL': {
       const card = state.players[action.playerId].hand.find(
-        c => c.instanceId === action.payload.cardInstanceId
+        (c) => c.instanceId === action.payload.cardInstanceId,
       );
       if (card) {
         const template = CardLoader.getById(card.scryfallId);
@@ -502,7 +525,7 @@ export function describeAction(action: Action, state: GameState): string {
         // Include targets in description
         const targets = action.payload.targets || [];
         if (targets.length > 0) {
-          const targetNames = targets.map(t => getTargetName(state, t)).join(', ');
+          const targetNames = targets.map((t) => getTargetName(state, t)).join(', ');
           return `Cast ${spellName} targeting ${targetNames}`;
         }
         return `Cast ${spellName}`;
@@ -519,7 +542,7 @@ export function describeAction(action: Action, state: GameState): string {
 
     case 'DECLARE_BLOCKERS': {
       const count = action.payload.blocks.length;
-      if (count === 0) return 'Don\'t block';
+      if (count === 0) return "Don't block";
       if (count === 1) return 'Block with 1 creature';
       return `Block with ${count} creatures`;
     }
@@ -534,15 +557,15 @@ export function describeAction(action: Action, state: GameState): string {
       // Find the card with the ability
       for (const playerId of ['player', 'opponent'] as const) {
         const player = state.players[playerId];
-        const card = player.battlefield.find(c => c.instanceId === action.payload.sourceId);
+        const card = player.battlefield.find((c) => c.instanceId === action.payload.sourceId);
         if (card) {
           const template = CardLoader.getById(card.scryfallId);
           const abilities = getActivatedAbilities(card, state);
-          const ability = abilities.find(a => a.id === action.payload.abilityId);
+          const ability = abilities.find((a) => a.id === action.payload.abilityId);
           if (ability && template) {
             const targets = action.payload.targets || [];
             if (targets.length > 0) {
-              const targetNames = targets.map(t => getTargetName(state, t)).join(', ');
+              const targetNames = targets.map((t) => getTargetName(state, t)).join(', ');
               return `${template.name}: ${ability.name} targeting ${targetNames}`;
             }
             return `${template.name}: ${ability.name}`;

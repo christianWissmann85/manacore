@@ -59,7 +59,7 @@ export class CardLoader {
     return {
       id: token.id,
       name: token.name,
-      mana_cost: '',  // Tokens have no mana cost
+      mana_cost: '', // Tokens have no mana cost
       cmc: 0,
       type_line: token.type_line,
       oracle_text: '',
@@ -68,9 +68,11 @@ export class CardLoader {
       colors: token.colors,
       color_identity: token.colors,
       keywords: token.keywords || [],
-      rarity: 'token',  // Special rarity for tokens
+      rarity: 'token', // Special rarity for tokens
       set: 'TOKEN',
-      set_name: 'Token',
+      collector_number: '0',
+      image_filename: '',
+      rulings_uri: '',
     };
   }
 
@@ -103,9 +105,7 @@ export class CardLoader {
    */
   static getCardsByColor(color: string): CardTemplate[] {
     this.ensureInitialized();
-    return this.getAllCards().filter(card =>
-      card.colors.includes(color.toUpperCase())
-    );
+    return this.getAllCards().filter((card) => card.colors.includes(color.toUpperCase()));
   }
 
   /**
@@ -113,8 +113,8 @@ export class CardLoader {
    */
   static getCardsByType(type: string): CardTemplate[] {
     this.ensureInitialized();
-    return this.getAllCards().filter(card =>
-      card.type_line.toLowerCase().includes(type.toLowerCase())
+    return this.getAllCards().filter((card) =>
+      card.type_line.toLowerCase().includes(type.toLowerCase()),
     );
   }
 
@@ -124,9 +124,7 @@ export class CardLoader {
   static searchByName(query: string): CardTemplate[] {
     this.ensureInitialized();
     const lowerQuery = query.toLowerCase();
-    return this.getAllCards().filter(card =>
-      card.name.toLowerCase().includes(lowerQuery)
-    );
+    return this.getAllCards().filter((card) => card.name.toLowerCase().includes(lowerQuery));
   }
 
   /**
@@ -134,7 +132,7 @@ export class CardLoader {
    */
   static getCardsByCMC(cmc: number): CardTemplate[] {
     this.ensureInitialized();
-    return this.getAllCards().filter(card => card.cmc === cmc);
+    return this.getAllCards().filter((card) => card.cmc === cmc);
   }
 
   /**
@@ -142,9 +140,7 @@ export class CardLoader {
    */
   static getCardsByRarity(rarity: string): CardTemplate[] {
     this.ensureInitialized();
-    return this.getAllCards().filter(card =>
-      card.rarity.toLowerCase() === rarity.toLowerCase()
-    );
+    return this.getAllCards().filter((card) => card.rarity.toLowerCase() === rarity.toLowerCase());
   }
 
   /**

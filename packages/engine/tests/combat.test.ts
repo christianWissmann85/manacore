@@ -83,10 +83,12 @@ describe('Combat System', () => {
       type: 'DECLARE_BLOCKERS',
       playerId: 'opponent',
       payload: {
-        blocks: [{
-          blockerId: blocker.instanceId,
-          attackerId: attacker.instanceId,
-        }],
+        blocks: [
+          {
+            blockerId: blocker.instanceId,
+            attackerId: attacker.instanceId,
+          },
+        ],
       },
     } as DeclareBlockersAction);
 
@@ -123,7 +125,7 @@ describe('Combat System', () => {
 
     // Archangel has Vigilance, so it should not be tapped
     const angelAfter = getPlayer(state, 'player').battlefield.find(
-      c => c.instanceId === angel.instanceId
+      (c) => c.instanceId === angel.instanceId,
     );
     expect(angelAfter?.tapped).toBe(false);
   });

@@ -17,7 +17,7 @@ describe('6th Edition Data Validation', () => {
   test('all non-token cards have set code "6ed"', () => {
     const allCards = CardLoader.getAllCards();
     // Exclude tokens which have set "TOKEN"
-    const realCards = allCards.filter(card => card.set !== 'TOKEN');
+    const realCards = allCards.filter((card) => card.set !== 'TOKEN');
     for (const card of realCards) {
       expect(card.set).toBe('6ed');
     }
@@ -28,17 +28,37 @@ describe('6th Edition Core Cards', () => {
   // Key cards that should definitely exist in 6th Edition
   const coreCards = [
     // White
-    'Archangel', 'Disenchant', 'Pacifism', 'Exile', 'Wrath of God',
+    'Archangel',
+    'Disenchant',
+    'Pacifism',
+    'Exile',
+    'Wrath of God',
     // Blue
-    'Air Elemental', 'Counterspell', 'Unsummon', 'Fog Elemental',
+    'Air Elemental',
+    'Counterspell',
+    'Unsummon',
+    'Fog Elemental',
     // Black
-    'Abyssal Specter', 'Terror', 'Coercion', 'Gravedigger',
+    'Abyssal Specter',
+    'Terror',
+    'Coercion',
+    'Gravedigger',
     // Red
-    'Lightning Blast', 'Shock', 'Anaba Shaman', 'Balduvian Barbarians',
+    'Lightning Blast',
+    'Shock',
+    'Anaba Shaman',
+    'Balduvian Barbarians',
     // Green
-    'Giant Growth', 'Llanowar Elves', 'Grizzly Bears', 'Birds of Paradise',
+    'Giant Growth',
+    'Llanowar Elves',
+    'Grizzly Bears',
+    'Birds of Paradise',
     // Lands
-    'Plains', 'Island', 'Swamp', 'Mountain', 'Forest',
+    'Plains',
+    'Island',
+    'Swamp',
+    'Mountain',
+    'Forest',
   ];
 
   for (const cardName of coreCards) {
@@ -61,7 +81,10 @@ describe('6th Edition Implemented Cards', () => {
     // Removal
     { name: 'Terror', check: (c: any) => c.oracle_text?.toLowerCase().includes('destroy') },
     { name: 'Unsummon', check: (c: any) => c.oracle_text?.toLowerCase().includes('return') },
-    { name: 'Disenchant', check: (c: any) => c.oracle_text?.toLowerCase().includes('artifact or enchantment') },
+    {
+      name: 'Disenchant',
+      check: (c: any) => c.oracle_text?.toLowerCase().includes('artifact or enchantment'),
+    },
     // Auras
     { name: 'Pacifism', check: (c: any) => c.type_line?.includes('Aura') },
     // Combat tricks
@@ -70,7 +93,10 @@ describe('6th Edition Implemented Cards', () => {
     { name: 'Counterspell', check: (c: any) => c.oracle_text?.toLowerCase().includes('counter') },
     // Triggers
     { name: 'Gravedigger', check: (c: any) => c.oracle_text?.toLowerCase().includes('when') },
-    { name: 'Abyssal Specter', check: (c: any) => c.oracle_text?.toLowerCase().includes('whenever') },
+    {
+      name: 'Abyssal Specter',
+      check: (c: any) => c.oracle_text?.toLowerCase().includes('whenever'),
+    },
   ];
 
   for (const { name, check } of implementedCards) {
@@ -132,7 +158,7 @@ describe('6th Edition Color Distribution', () => {
 
   test('has colorless cards', () => {
     const allCards = CardLoader.getAllCards();
-    const colorless = allCards.filter(c => c.colors.length === 0);
+    const colorless = allCards.filter((c) => c.colors.length === 0);
     expect(colorless.length).toBeGreaterThan(50); // Artifacts + Lands
   });
 });

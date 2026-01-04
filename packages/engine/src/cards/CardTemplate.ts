@@ -6,22 +6,22 @@
  */
 
 export interface CardTemplate {
-  id: string;                    // Scryfall UUID
+  id: string; // Scryfall UUID
   name: string;
-  mana_cost?: string;             // "{2}{R}{R}"
-  cmc: number;                   // Converted mana cost
-  type_line: string;             // "Creature — Dragon"
-  oracle_text?: string;          // Rules text
+  mana_cost?: string; // "{2}{R}{R}"
+  cmc: number; // Converted mana cost
+  type_line: string; // "Creature — Dragon"
+  oracle_text?: string; // Rules text
   power?: string;
   toughness?: string;
-  colors: string[];              // ["R"]
+  colors: string[]; // ["R"]
   color_identity: string[];
-  keywords: string[];            // ["Flying", "Haste"]
+  keywords: string[]; // ["Flying", "Haste"]
   flavor_text?: string;
   rarity: string;
   set: string;
   collector_number: string;
-  image_filename: string;        // Local path to image
+  image_filename: string; // Local path to image
   rulings_uri: string;
 }
 
@@ -78,7 +78,7 @@ export function isArtifact(card: CardTemplate): boolean {
  * Check if a card has a keyword ability
  */
 export function hasKeyword(card: CardTemplate, keyword: string): boolean {
-  return card.keywords.some(k => k.toLowerCase() === keyword.toLowerCase());
+  return card.keywords.some((k) => k.toLowerCase() === keyword.toLowerCase());
 }
 
 /**
@@ -149,7 +149,10 @@ export function hasShroud(card: CardTemplate): boolean {
 /**
  * Check if a permanent has Protection from a color
  */
-export function hasProtectionFromColor(card: CardTemplate, color: 'W' | 'U' | 'B' | 'R' | 'G'): boolean {
+export function hasProtectionFromColor(
+  card: CardTemplate,
+  color: 'W' | 'U' | 'B' | 'R' | 'G',
+): boolean {
   const oracleText = card.oracle_text?.toLowerCase() || '';
   const colorNames: Record<string, string> = {
     W: 'white',

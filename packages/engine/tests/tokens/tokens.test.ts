@@ -56,7 +56,7 @@ describe('Token Registry', () => {
     const wasp = TOKEN_REGISTRY.wasp;
     expect(wasp.name).toBe('Wasp');
     expect(wasp.keywords).toContain('Flying');
-    expect(wasp.colors).toEqual([]);  // Colorless
+    expect(wasp.colors).toEqual([]); // Colorless
   });
 
   test('Djinn token is 5/5 with flying', () => {
@@ -70,7 +70,7 @@ describe('Token Registry', () => {
     const serf = getTokenDefinition('serf');
     expect(serf?.name).toBe('Serf');
 
-    const SERF = getTokenDefinition('SERF');  // Case insensitive
+    const SERF = getTokenDefinition('SERF'); // Case insensitive
     expect(SERF?.name).toBe('Serf');
 
     const unknown = getTokenDefinition('unknown');
@@ -117,7 +117,7 @@ describe('Token Creation', () => {
 
   test('each token has unique instanceId', () => {
     const tokens = createTokens('snake', 3, 'player');
-    const ids = new Set(tokens.map(t => t.instanceId));
+    const ids = new Set(tokens.map((t) => t.instanceId));
     expect(ids.size).toBe(3);
   });
 });
@@ -140,7 +140,7 @@ describe('Token Type Checking', () => {
   test('isTokenType correctly identifies token types', () => {
     const serf = createToken('serf', 'player');
     expect(isTokenType(serf, 'serf')).toBe(true);
-    expect(isTokenType(serf, 'Serf')).toBe(true);  // Case insensitive
+    expect(isTokenType(serf, 'Serf')).toBe(true); // Case insensitive
     expect(isTokenType(serf, 'goblin')).toBe(false);
   });
 });
@@ -186,11 +186,13 @@ describe('Token Battlefield Integration', () => {
     const removed = removeAllTokensOfType(state, 'serf');
 
     expect(removed.length).toBe(3);
-    expect(state.players.player.battlefield.filter(c => c.tokenType === 'Serf').length).toBe(0);
+    expect(state.players.player.battlefield.filter((c) => c.tokenType === 'Serf').length).toBe(0);
     // Cat should still be there
-    expect(state.players.player.battlefield.filter(c => c.tokenType === 'Cat').length).toBe(1);
+    expect(state.players.player.battlefield.filter((c) => c.tokenType === 'Cat').length).toBe(1);
     // Goblins should still be there
-    expect(state.players.opponent.battlefield.filter(c => c.tokenType === 'Goblin').length).toBe(2);
+    expect(state.players.opponent.battlefield.filter((c) => c.tokenType === 'Goblin').length).toBe(
+      2,
+    );
   });
 });
 

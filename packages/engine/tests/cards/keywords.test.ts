@@ -70,7 +70,7 @@ describe('Flying + Vigilance', () => {
       const newState = castAndResolve(state, 'player', card.instanceId);
 
       const creature = newState.players.player.battlefield.find(
-        c => c.instanceId === card.instanceId
+        (c) => c.instanceId === card.instanceId,
       );
       expect(creature).toBeDefined();
       expect(creature?.summoningSick).toBe(true);
@@ -91,7 +91,7 @@ describe('Flying + Vigilance', () => {
       });
 
       const attacker = newState.players.player.battlefield.find(
-        c => c.instanceId === card.instanceId
+        (c) => c.instanceId === card.instanceId,
       );
       expect(attacker?.attacking).toBe(true);
       expect(attacker?.tapped).toBe(false); // Vigilance!
@@ -203,8 +203,14 @@ describe('Defender', () => {
 
       // Combat resolves - both creatures survive (1 damage < 2 toughness for Bears)
       // The key test is that blocking succeeded (no error thrown) - Wall CAN block
-      expect(newState.players.player.battlefield.some(c => c.instanceId === wall.instanceId)).toBe(true);
-      expect(newState.players.opponent.battlefield.some(c => c.instanceId === attackingBears.instanceId)).toBe(true);
+      expect(
+        newState.players.player.battlefield.some((c) => c.instanceId === wall.instanceId),
+      ).toBe(true);
+      expect(
+        newState.players.opponent.battlefield.some(
+          (c) => c.instanceId === attackingBears.instanceId,
+        ),
+      ).toBe(true);
     });
   });
 
@@ -225,11 +231,13 @@ describe('Defender', () => {
       wall.summoningSick = false;
       state.players.player.battlefield.push(wall);
 
-      expect(() => applyAction(state, {
-        type: 'DECLARE_ATTACKERS',
-        playerId: 'player',
-        payload: { attackers: [wall.instanceId] },
-      })).toThrow(/Defender/i);
+      expect(() =>
+        applyAction(state, {
+          type: 'DECLARE_ATTACKERS',
+          playerId: 'player',
+          payload: { attackers: [wall.instanceId] },
+        }),
+      ).toThrow(/Defender/i);
     });
   });
 
@@ -288,13 +296,15 @@ describe('Landwalk', () => {
       state.players.opponent.battlefield.push(blockerBears);
 
       // Attempting to block should fail due to Swampwalk
-      expect(() => applyAction(state, {
-        type: 'DECLARE_BLOCKERS',
-        playerId: 'opponent',
-        payload: {
-          blocks: [{ blockerId: blockerBears.instanceId, attackerId: wraith.instanceId }],
-        },
-      })).toThrow(/Swampwalk/i);
+      expect(() =>
+        applyAction(state, {
+          type: 'DECLARE_BLOCKERS',
+          playerId: 'opponent',
+          payload: {
+            blocks: [{ blockerId: blockerBears.instanceId, attackerId: wraith.instanceId }],
+          },
+        }),
+      ).toThrow(/Swampwalk/i);
     });
 
     test('CAN be blocked if defender does NOT control a Swamp', () => {
@@ -334,8 +344,12 @@ describe('Landwalk', () => {
       });
 
       // Verify blocking succeeded by checking combat results
-      expect(newState.players.opponent.graveyard.some(c => c.instanceId === blockerBears.instanceId)).toBe(true);
-      expect(newState.players.player.battlefield.some(c => c.instanceId === wraith.instanceId)).toBe(true);
+      expect(
+        newState.players.opponent.graveyard.some((c) => c.instanceId === blockerBears.instanceId),
+      ).toBe(true);
+      expect(
+        newState.players.player.battlefield.some((c) => c.instanceId === wraith.instanceId),
+      ).toBe(true);
     });
   });
 
@@ -372,13 +386,15 @@ describe('Landwalk', () => {
       state.players.opponent.battlefield.push(blockerBears);
 
       // Should fail due to Forestwalk
-      expect(() => applyAction(state, {
-        type: 'DECLARE_BLOCKERS',
-        playerId: 'opponent',
-        payload: {
-          blocks: [{ blockerId: blockerBears.instanceId, attackerId: cats.instanceId }],
-        },
-      })).toThrow(/Forestwalk/i);
+      expect(() =>
+        applyAction(state, {
+          type: 'DECLARE_BLOCKERS',
+          playerId: 'opponent',
+          payload: {
+            blocks: [{ blockerId: blockerBears.instanceId, attackerId: cats.instanceId }],
+          },
+        }),
+      ).toThrow(/Forestwalk/i);
     });
   });
 
@@ -441,13 +457,15 @@ describe('Fear', () => {
       state.players.opponent.battlefield.push(blockerBears);
 
       // Should fail - green creature cannot block Fear
-      expect(() => applyAction(state, {
-        type: 'DECLARE_BLOCKERS',
-        playerId: 'opponent',
-        payload: {
-          blocks: [{ blockerId: blockerBears.instanceId, attackerId: attackingRats.instanceId }],
-        },
-      })).toThrow(/Fear/i);
+      expect(() =>
+        applyAction(state, {
+          type: 'DECLARE_BLOCKERS',
+          playerId: 'opponent',
+          payload: {
+            blocks: [{ blockerId: blockerBears.instanceId, attackerId: attackingRats.instanceId }],
+          },
+        }),
+      ).toThrow(/Fear/i);
     });
 
     test('CAN be blocked by black creatures', () => {
@@ -483,8 +501,12 @@ describe('Fear', () => {
       });
 
       // Verify blocking succeeded - both creatures die in combat
-      expect(newState.players.player.graveyard.some(c => c.instanceId === attackingRats.instanceId)).toBe(true);
-      expect(newState.players.opponent.graveyard.some(c => c.instanceId === blocker.instanceId)).toBe(true);
+      expect(
+        newState.players.player.graveyard.some((c) => c.instanceId === attackingRats.instanceId),
+      ).toBe(true);
+      expect(
+        newState.players.opponent.graveyard.some((c) => c.instanceId === blocker.instanceId),
+      ).toBe(true);
     });
 
     test('CAN be blocked by artifact creatures', () => {
@@ -519,8 +541,12 @@ describe('Fear', () => {
       });
 
       // Verify blocking succeeded - Rats dead, Golem survives
-      expect(newState.players.player.graveyard.some(c => c.instanceId === attackingRats.instanceId)).toBe(true);
-      expect(newState.players.opponent.battlefield.some(c => c.instanceId === blocker.instanceId)).toBe(true);
+      expect(
+        newState.players.player.graveyard.some((c) => c.instanceId === attackingRats.instanceId),
+      ).toBe(true);
+      expect(
+        newState.players.opponent.battlefield.some((c) => c.instanceId === blocker.instanceId),
+      ).toBe(true);
     });
   });
 

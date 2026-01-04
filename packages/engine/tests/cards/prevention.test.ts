@@ -158,9 +158,7 @@ describe('Fog', () => {
       type: 'DECLARE_BLOCKERS',
       playerId: 'player',
       payload: {
-        blocks: [
-          { blockerId: bearsCard.instanceId, attackerId: tigerCard.instanceId },
-        ],
+        blocks: [{ blockerId: bearsCard.instanceId, attackerId: tigerCard.instanceId }],
       },
     } as DeclareBlockersAction);
 
@@ -169,10 +167,12 @@ describe('Fog', () => {
     const newOpponent = getPlayer(state, 'opponent');
 
     // Bears should still be on battlefield (normally would die to first strike)
-    expect(newPlayer.battlefield.find(c => c.instanceId === bearsCard.instanceId)).toBeDefined();
+    expect(newPlayer.battlefield.find((c) => c.instanceId === bearsCard.instanceId)).toBeDefined();
 
     // Tiger should also survive
-    expect(newOpponent.battlefield.find(c => c.instanceId === tigerCard.instanceId)).toBeDefined();
+    expect(
+      newOpponent.battlefield.find((c) => c.instanceId === tigerCard.instanceId),
+    ).toBeDefined();
   });
 
   test('Fog resets at end of turn', () => {

@@ -12,8 +12,7 @@ import {
   describeAction,
 } from '@manacore/engine';
 import { renderGameState, printError, printSuccess, printInfo } from '../display/board';
-
-const readline = require('readline');
+import readline from 'readline';
 
 /**
  * Play an interactive game against a bot
@@ -59,7 +58,9 @@ export async function playGame(opponentBot: Bot): Promise<void> {
         state = applyAction(state, action);
         printSuccess(`Action applied: ${describeAction(action, state)}`);
       } catch (error) {
-        printError(`Failed to apply action: ${error}`);
+        printError(
+          `Failed to apply action: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     } else {
       // Bot turn
@@ -71,7 +72,7 @@ export async function playGame(opponentBot: Bot): Promise<void> {
       try {
         state = applyAction(state, action);
       } catch (error) {
-        printError(`Bot action failed: ${error}`);
+        printError(`Bot action failed: ${error instanceof Error ? error.message : String(error)}`);
         break;
       }
 
@@ -118,7 +119,7 @@ async function getHumanAction(state: GameState): Promise<Action | null> {
     output: process.stdout,
   });
 
-  return new Promise((resolve) => {
+  return new Promise<Action | null>((resolve) => {
     rl.question('Choose action (number or command): ', (answer: string) => {
       rl.close();
 
@@ -158,5 +159,5 @@ async function getHumanAction(state: GameState): Promise<Action | null> {
  * Sleep helper
  */
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

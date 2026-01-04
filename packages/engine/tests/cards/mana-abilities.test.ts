@@ -6,7 +6,12 @@
  */
 
 import { describe, test, expect } from 'bun:test';
-import { CardLoader, createCardInstance, applyAction, type ActivateAbilityAction } from '../../src/index';
+import {
+  CardLoader,
+  createCardInstance,
+  applyAction,
+  type ActivateAbilityAction,
+} from '../../src/index';
 import { setupGameWithMana } from './helpers';
 import { getActivatedAbilities } from '../../src/rules/activatedAbilities';
 
@@ -35,7 +40,7 @@ describe('Basic Lands', () => {
         state.players.player.battlefield.push(landCard);
 
         const abilities = getActivatedAbilities(landCard, state);
-        const manaAbility = abilities.find(a => a.isManaAbility);
+        const manaAbility = abilities.find((a) => a.isManaAbility);
 
         expect(manaAbility).toBeDefined();
         expect(manaAbility!.effect.manaColors).toContain(color);
@@ -63,7 +68,7 @@ describe('Mana Dorks', () => {
       state.players.player.battlefield.push(elvesCard);
 
       const abilities = getActivatedAbilities(elvesCard, state);
-      const manaAbility = abilities.find(a => a.isManaAbility);
+      const manaAbility = abilities.find((a) => a.isManaAbility);
 
       expect(manaAbility).toBeDefined();
       expect(manaAbility!.effect.manaColors).toContain('G');
@@ -79,7 +84,7 @@ describe('Mana Dorks', () => {
       state.players.player.battlefield.push(elvesCard);
 
       const abilities = getActivatedAbilities(elvesCard, state);
-      const manaAbility = abilities.find(a => a.isManaAbility);
+      const manaAbility = abilities.find((a) => a.isManaAbility);
 
       expect(manaAbility).toBeDefined();
       // canActivate should return false for summoning sick creature
@@ -105,7 +110,7 @@ describe('Mana Dorks', () => {
       state.players.player.battlefield.push(birdsCard);
 
       const abilities = getActivatedAbilities(birdsCard, state);
-      const manaAbility = abilities.find(a => a.isManaAbility);
+      const manaAbility = abilities.find((a) => a.isManaAbility);
 
       expect(manaAbility).toBeDefined();
       expect(manaAbility!.effect.manaColors).toContain('W');
@@ -133,7 +138,7 @@ describe('Mana Dorks', () => {
       state.players.player.battlefield.push(petCard);
 
       const abilities = getActivatedAbilities(petCard, state);
-      const manaAbility = abilities.find(a => a.isManaAbility);
+      const manaAbility = abilities.find((a) => a.isManaAbility);
 
       expect(manaAbility).toBeDefined();
       expect(manaAbility!.name).toBe('Sacrifice: Add {B}');
@@ -150,7 +155,7 @@ describe('Mana Dorks', () => {
       state.players.player.battlefield.push(petCard);
 
       const abilities = getActivatedAbilities(petCard, state);
-      const manaAbility = abilities.find(a => a.isManaAbility);
+      const manaAbility = abilities.find((a) => a.isManaAbility);
 
       expect(manaAbility).toBeDefined();
       // Sacrifice doesn't require tap, so summoning sickness doesn't matter
@@ -162,13 +167,20 @@ describe('Mana Dorks', () => {
       const state = setupGameWithMana({ B: 1 });
 
       // Clear mana pool first
-      state.players.player.manaPool = { white: 0, blue: 0, black: 0, red: 0, green: 0, colorless: 0 };
+      state.players.player.manaPool = {
+        white: 0,
+        blue: 0,
+        black: 0,
+        red: 0,
+        green: 0,
+        colorless: 0,
+      };
 
       const petCard = createCardInstance(pet.id, 'player', 'battlefield');
       state.players.player.battlefield.push(petCard);
 
       const abilities = getActivatedAbilities(petCard, state);
-      const manaAbility = abilities.find(a => a.isManaAbility)!;
+      const manaAbility = abilities.find((a) => a.isManaAbility)!;
 
       const newState = applyAction(state, {
         type: 'ACTIVATE_ABILITY',
@@ -184,8 +196,12 @@ describe('Mana Dorks', () => {
       expect(newState.players.player.manaPool.black).toBe(1);
 
       // Blood Pet should be in graveyard
-      expect(newState.players.player.battlefield.find(c => c.instanceId === petCard.instanceId)).toBeUndefined();
-      expect(newState.players.player.graveyard.find(c => c.instanceId === petCard.instanceId)).toBeDefined();
+      expect(
+        newState.players.player.battlefield.find((c) => c.instanceId === petCard.instanceId),
+      ).toBeUndefined();
+      expect(
+        newState.players.player.graveyard.find((c) => c.instanceId === petCard.instanceId),
+      ).toBeDefined();
     });
   });
 
@@ -207,7 +223,7 @@ describe('Mana Dorks', () => {
       state.players.player.battlefield.push(elderCard);
 
       const abilities = getActivatedAbilities(elderCard, state);
-      const manaAbility = abilities.find(a => a.isManaAbility);
+      const manaAbility = abilities.find((a) => a.isManaAbility);
 
       expect(manaAbility).toBeDefined();
       expect(manaAbility!.name).toBe('Tap: Add {G}{G}');
@@ -225,7 +241,7 @@ describe('Mana Dorks', () => {
       state.players.player.battlefield.push(elderCard);
 
       const abilities = getActivatedAbilities(elderCard, state);
-      const manaAbility = abilities.find(a => a.isManaAbility);
+      const manaAbility = abilities.find((a) => a.isManaAbility);
 
       expect(manaAbility).toBeDefined();
       expect(manaAbility!.canActivate(state, elderCard.instanceId, 'player')).toBe(false);
@@ -236,14 +252,21 @@ describe('Mana Dorks', () => {
       const state = setupGameWithMana({ G: 1 });
 
       // Clear mana pool first
-      state.players.player.manaPool = { white: 0, blue: 0, black: 0, red: 0, green: 0, colorless: 0 };
+      state.players.player.manaPool = {
+        white: 0,
+        blue: 0,
+        black: 0,
+        red: 0,
+        green: 0,
+        colorless: 0,
+      };
 
       const elderCard = createCardInstance(elder.id, 'player', 'battlefield');
       elderCard.summoningSick = false;
       state.players.player.battlefield.push(elderCard);
 
       const abilities = getActivatedAbilities(elderCard, state);
-      const manaAbility = abilities.find(a => a.isManaAbility)!;
+      const manaAbility = abilities.find((a) => a.isManaAbility)!;
 
       const newState = applyAction(state, {
         type: 'ACTIVATE_ABILITY',
@@ -265,8 +288,8 @@ describe('Mana Ability Activation', () => {
   test('tapping a land marks it as tapped', () => {
     const state = setupGameWithMana({ R: 1 });
 
-    const mountain = state.players.player.battlefield.find(c =>
-      CardLoader.getById(c.scryfallId)?.name === 'Mountain'
+    const mountain = state.players.player.battlefield.find(
+      (c) => CardLoader.getById(c.scryfallId)?.name === 'Mountain',
     )!;
 
     const newState = applyAction(state, {
@@ -280,7 +303,7 @@ describe('Mana Ability Activation', () => {
     } as ActivateAbilityAction);
 
     const tappedMountain = newState.players.player.battlefield.find(
-      c => c.instanceId === mountain.instanceId
+      (c) => c.instanceId === mountain.instanceId,
     );
     expect(tappedMountain?.tapped).toBe(true);
 

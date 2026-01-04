@@ -15,7 +15,7 @@ export interface TemporaryModification {
   powerChange: number;
   toughnessChange: number;
   expiresAt: 'end_of_turn' | 'end_of_combat';
-  source: string;  // Instance ID of the source (for tracking)
+  source: string; // Instance ID of the source (for tracking)
 }
 
 export interface CardInstance {
@@ -27,15 +27,15 @@ export interface CardInstance {
   scryfallId: string;
 
   // Ownership
-  controller: PlayerId;  // Who controls it now
-  owner: PlayerId;       // Who owns it (for return-to-hand effects)
+  controller: PlayerId; // Who controls it now
+  owner: PlayerId; // Who owns it (for return-to-hand effects)
 
   // Location
   zone: Zone;
 
   // State
   tapped: boolean;
-  summoningSick: boolean;  // Can't attack/tap on turn it entered
+  summoningSick: boolean; // Can't attack/tap on turn it entered
 
   // Damage (marked damage until cleanup)
   damage: number;
@@ -47,18 +47,18 @@ export interface CardInstance {
   temporaryModifications: TemporaryModification[];
 
   // Attachments (Phase 2+)
-  attachments: string[];  // Instance IDs of Auras/Equipment attached to this
-  attachedTo?: string;    // Instance ID of permanent this is attached to (for Auras)
+  attachments: string[]; // Instance IDs of Auras/Equipment attached to this
+  attachedTo?: string; // Instance ID of permanent this is attached to (for Auras)
 
   // Combat state
   attacking?: boolean;
-  blocking?: string;      // Instance ID of attacker being blocked
-  blockedBy?: string[];   // Instance IDs of creatures blocking this attacker
+  blocking?: string; // Instance ID of attacker being blocked
+  blockedBy?: string[]; // Instance IDs of creatures blocking this attacker
 
   // Token-specific fields (Phase 1.5.1)
-  isToken?: boolean;      // True if this is a token (not a real card)
-  tokenType?: string;     // Token type name (e.g., "Serf", "Cat", "Goblin")
-  createdBy?: string;     // Instance ID of the card that created this token
+  isToken?: boolean; // True if this is a token (not a real card)
+  tokenType?: string; // Token type name (e.g., "Serf", "Cat", "Goblin")
+  createdBy?: string; // Instance ID of the card that created this token
 
   // Regeneration shields (Phase 1.5.4)
   // When would be destroyed, instead: tap, remove from combat, remove damage
@@ -73,11 +73,7 @@ export interface CardInstance {
 /**
  * Create a new card instance
  */
-export function createCardInstance(
-  scryfallId: string,
-  owner: PlayerId,
-  zone: Zone,
-): CardInstance {
+export function createCardInstance(scryfallId: string, owner: PlayerId, zone: Zone): CardInstance {
   return {
     instanceId: generateInstanceId(),
     scryfallId,
@@ -141,7 +137,7 @@ export function addTemporaryModification(
   powerChange: number,
   toughnessChange: number,
   expiresAt: 'end_of_turn' | 'end_of_combat',
-  sourceId: string
+  sourceId: string,
 ): void {
   card.temporaryModifications.push({
     id: `mod_${Date.now()}_${Math.random()}`,
@@ -157,10 +153,10 @@ export function addTemporaryModification(
  */
 export function clearTemporaryModifications(
   card: CardInstance,
-  expiresAt: 'end_of_turn' | 'end_of_combat'
+  expiresAt: 'end_of_turn' | 'end_of_combat',
 ): void {
   card.temporaryModifications = card.temporaryModifications.filter(
-    mod => mod.expiresAt !== expiresAt
+    (mod) => mod.expiresAt !== expiresAt,
   );
 }
 

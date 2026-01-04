@@ -30,18 +30,20 @@ describe('Aura Attachment', () => {
       const pacifismCard = createCardInstance(pacifism.id, 'player', 'hand');
       state.players.player.hand.push(pacifismCard);
 
-      const newState = castAndResolve(state, 'player', pacifismCard.instanceId, [bearsCard.instanceId]);
+      const newState = castAndResolve(state, 'player', pacifismCard.instanceId, [
+        bearsCard.instanceId,
+      ]);
 
       // Pacifism should be on battlefield attached to Bears
       const attachedPacifism = newState.players.player.battlefield.find(
-        c => c.instanceId === pacifismCard.instanceId
+        (c) => c.instanceId === pacifismCard.instanceId,
       );
       expect(attachedPacifism).toBeDefined();
       expect(attachedPacifism?.attachedTo).toBe(bearsCard.instanceId);
 
       // Bears should have Pacifism in its attachments
       const enchantedBears = newState.players.opponent.battlefield.find(
-        c => c.instanceId === bearsCard.instanceId
+        (c) => c.instanceId === bearsCard.instanceId,
       );
       expect(enchantedBears?.attachments).toContain(pacifismCard.instanceId);
     });
@@ -62,7 +64,9 @@ describe('Aura Effects', () => {
       const pacifismCard = createCardInstance(pacifism.id, 'player', 'hand');
       state.players.player.hand.push(pacifismCard);
 
-      const newState = castAndResolve(state, 'player', pacifismCard.instanceId, [bearsCard.instanceId]);
+      const newState = castAndResolve(state, 'player', pacifismCard.instanceId, [
+        bearsCard.instanceId,
+      ]);
 
       // Try to declare Bears as attacker - should fail
       expect(() => {
@@ -100,17 +104,27 @@ describe('Aura State-Based Actions', () => {
       state.players.player.hand.push(terrorCard);
 
       // Kill creature with Terror
-      const newState = castAndResolve(state, 'player', terrorCard.instanceId, [bearsCard.instanceId]);
+      const newState = castAndResolve(state, 'player', terrorCard.instanceId, [
+        bearsCard.instanceId,
+      ]);
 
       // Bears should be in graveyard
-      expect(newState.players.opponent.graveyard.some(c => c.instanceId === bearsCard.instanceId)).toBe(true);
+      expect(
+        newState.players.opponent.graveyard.some((c) => c.instanceId === bearsCard.instanceId),
+      ).toBe(true);
 
       // Pacifism should also be in graveyard (SBA)
-      expect(newState.players.player.graveyard.some(c => c.instanceId === pacifismCard.instanceId)).toBe(true);
+      expect(
+        newState.players.player.graveyard.some((c) => c.instanceId === pacifismCard.instanceId),
+      ).toBe(true);
 
       // Neither on battlefield
-      expect(newState.players.opponent.battlefield.some(c => c.instanceId === bearsCard.instanceId)).toBe(false);
-      expect(newState.players.player.battlefield.some(c => c.instanceId === pacifismCard.instanceId)).toBe(false);
+      expect(
+        newState.players.opponent.battlefield.some((c) => c.instanceId === bearsCard.instanceId),
+      ).toBe(false);
+      expect(
+        newState.players.player.battlefield.some((c) => c.instanceId === pacifismCard.instanceId),
+      ).toBe(false);
     });
   });
 });

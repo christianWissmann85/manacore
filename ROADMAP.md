@@ -9,16 +9,16 @@
 
 ## Quick Reference
 
-| Phase | Duration | Focus | Shippable? |
-|-------|----------|-------|------------|
-| **Phase 0** | Weeks 1-3 | Foundation | ❌ CLI only |
-| **Phase 1** | Weeks 4-11 | Core MTG | ✅ Complete game |
-| **Phase 1.5** | Weeks 12-18 | Card Library | ✅ 90% cards |
-| **Phase 1.6** | Weeks 19-20 | Complex Cards | ✅ 100% cards |
-| **Phase 2** | Weeks 21-26 | Smart AI | ✅ Challenging AI |
-| **Phase 3** | Weeks 27-32 | Polish | ✅ **PUBLIC RELEASE** |
-| **Phase 4** | Weeks 33-38 | Research Tools | ✅ AI Lab |
-| **Phase 5** | Weeks 39+ | Machine Learning | ✅ Advanced AI |
+| Phase         | Duration    | Focus            | Shippable?            |
+| ------------- | ----------- | ---------------- | --------------------- |
+| **Phase 0**   | Weeks 1-3   | Foundation       | ❌ CLI only           |
+| **Phase 1**   | Weeks 4-11  | Core MTG         | ✅ Complete game      |
+| **Phase 1.5** | Weeks 12-18 | Card Library     | ✅ 90% cards          |
+| **Phase 1.6** | Weeks 19-20 | Complex Cards    | ✅ 100% cards         |
+| **Phase 2**   | Weeks 21-26 | Smart AI         | ✅ Challenging AI     |
+| **Phase 3**   | Weeks 27-32 | Polish           | ✅ **PUBLIC RELEASE** |
+| **Phase 4**   | Weeks 33-38 | Research Tools   | ✅ AI Lab             |
+| **Phase 5**   | Weeks 39+   | Machine Learning | ✅ Advanced AI        |
 
 ---
 
@@ -27,6 +27,7 @@
 **Theme:** "Prove the Architecture Works"
 
 ### Goals
+
 - Set up monorepo with clean separation of concerns
 - Implement minimal game loop (play cards, attack, win/lose)
 - Validate that the engine can run headless at high speed
@@ -35,6 +36,7 @@
 ### Week 1: Project Setup
 
 **Tasks:**
+
 - [x] Initialize Bun workspace monorepo
 - [x] Create `packages/engine`, `packages/ai`, `packages/cli-client`
 - [x] Configure TypeScript for each package
@@ -46,6 +48,7 @@
 ### Week 2: Data & Engine Core
 
 **Tasks:**
+
 - [x] Implement Scryfall scraper (`packages/data-scraper`)
 - [x] Fetch 6th Edition card data
 - [x] Parse and cache JSON locally
@@ -59,14 +62,15 @@
 **Deliverable:** Engine can simulate a vanilla creature game
 
 **Test Deck:**
+
 ```json
 {
   "name": "Vanilla Red",
   "cards": [
-    {"name": "Mountain", "count": 24},
-    {"name": "Grizzly Bears", "count": 12},  // 2/2 for 1G
-    {"name": "Hill Giant", "count": 12},     // 3/3 for 3R
-    {"name": "Lightning Bolt", "count": 12}  // 3 damage
+    { "name": "Mountain", "count": 24 },
+    { "name": "Grizzly Bears", "count": 12 }, // 2/2 for 1G
+    { "name": "Hill Giant", "count": 12 }, // 3/3 for 3R
+    { "name": "Lightning Bolt", "count": 12 } // 3 damage
   ]
 }
 ```
@@ -74,6 +78,7 @@
 ### Week 3: CLI & RandomBot
 
 **Tasks:**
+
 - [x] Build CLI interface (`packages/cli-client`)
   - Display game state in ASCII art
   - Accept text commands (play 0, attack 1, etc.)
@@ -82,6 +87,7 @@
 - [x] Verify games complete without crashes
 
 **Success Criteria:**
+
 - ✅ Two RandomBots finish 100 games
 - ✅ Average game length: 20-50 turns
 - ✅ No infinite loops or crashes
@@ -90,6 +96,7 @@
 **Deliverable:** Working CLI client you can play against RandomBot
 
 **Screenshot Goal:**
+
 ```
 BATTLEFIELD
 Opponent: 15 life, 5 mana
@@ -99,7 +106,7 @@ Opponent: 15 life, 5 mana
 Your: 12 life, 4 mana
   [Mountain] [Mountain] [Mountain] [Forest]
   [Grizzly Bears] (2/2, tapped)
-  
+
 HAND: [Lightning Bolt] [Grizzly Bears] [Mountain]
 
 > cast 0 target opponent_unit_0
@@ -112,6 +119,7 @@ HAND: [Lightning Bolt] [Grizzly Bears] [Mountain]
 **Theme:** "This Actually Feels Like Magic"
 
 ### Goals
+
 - Implement The Stack with priority
 - Add proper combat (declare blockers)
 - Support instant-speed interaction
@@ -123,6 +131,7 @@ HAND: [Lightning Bolt] [Grizzly Bears] [Mountain]
 ### Week 4-5: The Stack
 
 **Tasks:**
+
 - [x] Implement stack data structure (LIFO)
 - [x] Add priority system (both players must pass to resolve)
 - [x] Implement `PASS_PRIORITY` action
@@ -130,6 +139,7 @@ HAND: [Lightning Bolt] [Grizzly Bears] [Mountain]
 - [x] Implement `Counterspell` as test case
 
 **New Cards:**
+
 ```
 Counterspell (U) - Counter target spell
 Giant Growth (G) - Target creature gets +3/+3
@@ -137,6 +147,7 @@ Unsummon (U) - Return target creature to hand
 ```
 
 **Test Scenario:**
+
 ```
 Player A: Cast Lightning Bolt targeting Player B
 Player B: Pass priority
@@ -149,6 +160,7 @@ Player A: Pass priority
 ```
 
 **Success Criteria:**
+
 - ✅ Stack resolves in correct order (LIFO)
 - ✅ Both players can respond to spells
 - ✅ Counterspell works correctly
@@ -156,6 +168,7 @@ Player A: Pass priority
 ### Week 6: Proper Combat
 
 **Tasks:**
+
 - [x] Implement combat phases:
   - Beginning of Combat
   - Declare Attackers
@@ -166,6 +179,7 @@ Player A: Pass priority
 - [x] Implement keywords: Flying, First Strike, Trample
 
 **New Cards:**
+
 ```
 Serra Angel (3WW) - 4/4 Flying, Vigilance
 Shivan Dragon (4RR) - 5/5 Flying, {R}: +1/+0
@@ -173,6 +187,7 @@ Air Elemental (3UU) - 4/4 Flying
 ```
 
 **Test Scenario:**
+
 ```
 Player A attacks with Serra Angel (4/4 Flying)
 Player B declares blockers: Air Elemental (4/4 Flying)
@@ -180,6 +195,7 @@ Player B declares blockers: Air Elemental (4/4 Flying)
 ```
 
 **Success Criteria:**
+
 - ✅ Flying creatures can only be blocked by Flying/Reach
 - ✅ First Strike damage happens before normal damage
 - ✅ Trample damage goes through to player
@@ -187,6 +203,7 @@ Player B declares blockers: Air Elemental (4/4 Flying)
 ### Week 7: State-Based Actions & Triggers
 
 **Tasks:**
+
 - [x] Implement state-based actions:
   - Creatures with 0 or less toughness die
   - Players at 0 or less life lose
@@ -198,21 +215,22 @@ Player B declares blockers: Air Elemental (4/4 Flying)
   - "Tap: Deal 1 damage" (Prodigal Sorcerer)
 
 **New Cards:**
+
 ```
 Prodigal Sorcerer (2U) - 1/1, Tap: Deal 1 damage
 Nekrataal (2BB) - 2/1, When ~ ETB: Destroy target nonblack creature
 ```
 
 **Success Criteria:**
+
 - ✅ Creatures die immediately when toughness <= 0
 - ✅ ETB triggers happen in correct order
 - ✅ Activated abilities can be used at instant speed
 
-
-
 ### Week 9: Mana System ⚠️ CRITICAL
 
 **Tasks:**
+
 - [x] Implement mana pool system:
   - `ManaPool` type with `{W, U, B, R, G, C}` counts
   - Add mana to pool
@@ -230,6 +248,7 @@ Nekrataal (2BB) - 2/1, When ~ ETB: Destroy target nonblack creature
 - [x] Update CLI/UI to show mana pools
 
 **New Cards:**
+
 ```
 Dark Ritual (B) - Add {B}{B}{B}
 Llanowar Elves (G) - Creature, Tap: Add {G}
@@ -237,6 +256,7 @@ Birds of Paradise (G) - Creature, Tap: Add one mana of any color
 ```
 
 **Test Scenario:**
+
 ```
 Player A has 3 Mountains
 Turn: Player A taps 2 Mountains for {R}{R}
@@ -246,6 +266,7 @@ Action: Cast Hill Giant (3R) - SUCCESS
 ```
 
 **Success Criteria:**
+
 - ✅ Cannot cast spells without sufficient mana
 - ✅ Mana pool empties between phases
 - ✅ Color requirements enforced (can't cast {R}{R} with {U}{U})
@@ -256,6 +277,7 @@ Action: Cast Hill Giant (3R) - SUCCESS
 ### Week 10: Targeting System ⚠️ CRITICAL
 
 **Tasks:**
+
 - [x] Implement target validation:
   - Valid target types (creature, player, "any target")
   - Legal targets (in play, controller restrictions)
@@ -277,6 +299,7 @@ Action: Cast Hill Giant (3R) - SUCCESS
   - Cancel targeting
 
 **New Cards:**
+
 ```
 Lightning Bolt (R) - Deal 3 damage to any target
 Giant Growth (G) - Target creature gets +3/+3 until EOT
@@ -285,6 +308,7 @@ Unsummon (U) - Return target creature to owner's hand
 ```
 
 **Test Scenario:**
+
 ```
 Player A casts Lightning Bolt
 Game: "Choose target (any target)"
@@ -294,6 +318,7 @@ Stack: Lightning Bolt targeting Grizzly Bears
 ```
 
 **Success Criteria:**
+
 - ✅ Can only target legal targets
 - ✅ Spell fizzles if target becomes illegal
 - ✅ UI clearly shows valid targets
@@ -304,6 +329,7 @@ Stack: Lightning Bolt targeting Grizzly Bears
 ### Week 11: Card Library Expansion
 
 **Tasks:**
+
 - [x] Implement 20-30 common 6th Edition cards (and check if all mentioned Cards from previous Weeks have been implemented):
   - **Creatures (10)**: Shivan Dragon, Serra Angel, Sengir Vampire, Mahamoti Djinn, etc.
   - **Removal (5)**: Swords to Plowshares, Terror, Disenchant, Fireball, etc.
@@ -321,6 +347,7 @@ Stack: Lightning Bolt targeting Grizzly Bears
 - [x] Run 100+ games with expanded card pool
 
 **Card Categories:**
+
 ```typescript
 // White: Removal, protection, weenie creatures
 Swords to Plowshares, Disenchant, Pacifism, White Knight, Serra Angel
@@ -339,6 +366,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 ```
 
 **Success Criteria:**
+
 - ✅ 20+ cards fully implemented and tested
 - ✅ Each color has viable cards
 - ✅ Can build functional mono-color decks
@@ -353,6 +381,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 **Theme:** "Every Card Works"
 
 ### Goals
+
 - Implement ALL 335 cards from 6th Edition (90% target, ~302 cards)
 - Add missing game mechanics required for card effects
 - Comprehensive testing with full deck simulations
@@ -363,6 +392,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 ### Week 1.5.1: Infrastructure & Lands
 
 **New Mechanics Required:**
+
 - [x] Death triggers (complete TODO in stateBasedActions.ts)
 - [x] Sacrifice effects ("Sacrifice a creature:")
 - [x] X-cost spell handling (Blaze, Fireball, etc.)
@@ -371,11 +401,13 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 - [x] Life gain/loss effects
 
 **Land Tasks:**
+
 - [ ] Pain lands (Adarkar Wastes, etc.) - tap for colorless or colored + damage
 - [ ] Depletion lands (Svyelunite Temple, etc.) - counter-based mana
 - [ ] City of Brass - any color + damage trigger
 
 **Success Criteria:**
+
 - ✅ All 17 lands working (5 basic + 12 non-basic)
 - ✅ Death triggers fire correctly
 - ✅ Sacrifice actions work
@@ -384,6 +416,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 ### Week 1.5.2: Instants & Sorceries
 
 **Instant Tasks (38 cards):**
+
 - [x] Damage spells: Volcanic Geyser, Inferno, Vertigo
 - [x] Counter variants: Power Sink, Remove Soul, Memory Lapse, Spell Blast
 - [x] Tutors: Enlightened, Mystical, Vampiric, Worldly
@@ -391,6 +424,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 - [x] Utility: Boomerang, Early Harvest, Flash, Mana Short, Vitalize
 
 **Sorcery Tasks (53 cards):**
+
 - [x] X-cost damage: Blaze, Earthquake, Hurricane
 - [x] Board wipes: Wrath of God, Jokulhaups, Shatterstorm, Tranquility
 - [x] Land destruction: Armageddon, Stone Rain, Flashfires, Pillage
@@ -400,6 +434,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 - [x] Discard: Mind Warp, Stupor, Painful Memories
 
 **Success Criteria:**
+
 - ✅ All 38 instants implemented
 - ✅ All 53 sorceries implemented
 - ✅ 100-game simulation passes without crashes
@@ -409,16 +444,19 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 **Focus: Vanilla, Keywords, and Simple Abilities**
 
 **Vanilla/Keyword Creatures (~40):**
+
 - [x] All vanilla creatures verified working
 - [x] All keyword-only creatures verified (Flying, First Strike, etc.)
 - [x] Landwalk keywords: Swampwalk, Forestwalk, Islandwalk, Mountainwalk
 
 **Mana Dorks (~8):**
+
 - [x] Fyndhorn Elder ({T}: Add {G}{G})
 - [x] Blood Pet (Sac: Add {B})
 - [x] Implement remaining mana-producing creatures
 
 **Simple ETB Creatures (~10):**
+
 - [x] Venerable Monk (ETB: Gain 2 life)
 - [x] Staunch Defenders (ETB: Gain 4 life)
 - [x] Uktabi Orangutan (ETB: Destroy artifact)
@@ -426,6 +464,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 - [x] Hidden Horror (ETB: Discard creature)
 
 **Success Criteria:**
+
 - ✅ 65 creatures working
 - ✅ All landwalk keywords functional
 - ✅ ETB triggers working reliably
@@ -436,6 +475,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 **Focus: Activated Abilities and Complex Triggers**
 
 **Activated Abilities (~25):**
+
 - [x] Tap to deal damage: Orcish Artillery, Heavy Ballista
 - [x] Tap to buff: Infantry Veteran, Wyluli Wolf
 - [x] Tap to tap/untap: Elder Druid, Fyndhorn Brownie
@@ -443,19 +483,23 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 - [x] Regeneration: Drudge Skeletons, River Boa, Gorilla Chieftain
 
 **Damage Triggers (~5):**
+
 - [x] Hypnotic Specter (random discard on damage - note: not in 6ed, skip)
 - [x] Sibilant Spirit (opponent draws on attack)
 
 **Death/Leave Triggers (~5):**
+
 - [x] Gravebane Zombie (dies: put on library)
 - [x] Necrosavant (pay from graveyard: return)
 
 **Lords/Anthems (~5):**
+
 - [x] Goblin King (Goblins get +1/+1 and mountainwalk)
 - [x] Lord of Atlantis (Merfolk get +1/+1 and islandwalk)
 - [x] Zombie Master (Zombies get regeneration and swampwalk)
 
 **Complex Creatures (~10):**
+
 - [x] Maro (P/T = cards in hand)
 - [x] Nightmare (P/T = Swamps)
 - [x] Uktabi Wildcats (P/T = Forests)
@@ -463,6 +507,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 - [x] Thicket Basilisk (deathtouch-like)
 
 **Success Criteria:**
+
 - ✅ All 130 creatures implemented
 - ✅ Lords correctly buff creature types
 - ✅ Regeneration mechanic working
@@ -473,6 +518,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 **Aura Tasks (22 cards):**
 
 **Stat Modifications (~8):**
+
 - [ ] Divine Transformation (+3/+3)
 - [ ] Giant Strength (+2/+2)
 - [ ] Hero's Resolve (+1/+5)
@@ -480,17 +526,20 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 - [ ] Enfeeblement (-2/-2)
 
 **Keyword Granting (~6):**
+
 - [ ] Flight (Flying)
 - [ ] Fear (Fear keyword)
 - [ ] Burrowing (Mountainwalk)
 - [ ] Leshrac's Rite (Swampwalk)
 
 **Ability Granting (~4):**
+
 - [ ] Firebreathing ({R}: +1/+0)
 - [ ] Regeneration ({G}: Regenerate)
 - [ ] Spirit Link (lifelink-like)
 
 **Land Auras (~4):**
+
 - [ ] Wild Growth (extra mana on tap)
 - [ ] Psychic Venom (damage on tap)
 - [ ] Blight (destroy on tap)
@@ -499,6 +548,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 **Global Enchantment Tasks (34 cards):**
 
 **Static Buffs/Debuffs (~8):**
+
 - [ ] Crusade (White creatures +1/+1)
 - [ ] Castle (Untapped creatures +0/+2)
 - [ ] Dread of Night (White creatures -1/-1)
@@ -507,25 +557,30 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 - [ ] Serra's Blessing (Your creatures have vigilance)
 
 **Restriction Effects (~6):**
+
 - [ ] Light of Day (Black creatures can't attack)
 - [ ] Kismet (Opponent's stuff enters tapped)
 - [ ] Familiar Ground (Can't be blocked by 2+)
 - [ ] Dense Foliage (Creatures can't be targeted)
 
 **Damage Triggers (~4):**
+
 - [ ] Aether Flash (2 damage to entering creatures)
 - [ ] Manabarbs (Damage when tapping lands)
 - [ ] Pestilence ({B}: 1 damage to all)
 
 **Protection (~5):**
+
 - [ ] Circle of Protection: Black/Blue/Green/Red/White
 
 **Misc (~6):**
+
 - [ ] Greed (Pay life: Draw)
 - [ ] Howling Mine (All draw extra) - already noted
 - [ ] Warmth/Insight/Chill (color hosers)
 
 **Success Criteria:**
+
 - ✅ All 22 auras working
 - ✅ All 34 enchantments working
 - ✅ Static effects correctly modify creatures
@@ -536,28 +591,34 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 **Artifact Tasks (41 cards):**
 
 **Mana Rocks (~7):**
+
 - [ ] Charcoal/Fire/Marble/Moss/Sky Diamond (enters tapped, {T}: Add color)
 - [ ] Mana Prism ({1},{T}: Add any color)
 
 **Activated Damage (~4):**
+
 - [ ] Rod of Ruin ({3},{T}: 1 damage)
 - [ ] Aladdin's Ring ({8},{T}: 4 damage)
 - [ ] Skull Catapult (Sac creature: 2 damage)
 
 **Activated Draw/Discard (~4):**
+
 - [ ] Jayemdae Tome ({4},{T}: Draw)
 - [ ] Jalum Tome ({2},{T}: Draw, discard)
 - [ ] Disrupting Scepter ({3},{T}: Target discards)
 
 **Triggered Life Gain (~5):**
+
 - [ ] Crystal Rod, Iron Star, Ivory Cup, Throne of Bone, Wooden Sphere
 
 **Tokens (~3):**
+
 - [ ] The Hive ({5},{T}: Create Wasp)
 - [ ] Snake Basket ({X},{T},{Sac}: X Snakes)
 - [ ] Bottle of Suleiman (random Djinn)
 
 **Static Effects (~6):**
+
 - [ ] Howling Mine (All draw extra)
 - [ ] Ankh of Mishra (Damage on land play)
 - [ ] Dingus Egg (Damage when land dies)
@@ -565,6 +626,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 - [ ] Cursed Totem (Disable creature abilities)
 
 **Utility (~6):**
+
 - [ ] Millstone ({2},{T}: Mill 2)
 - [ ] Flying Carpet ({2},{T}: Grant flying)
 - [ ] Dragon Mask ({3}: +2/+2, bounce)
@@ -572,6 +634,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 - [ ] Grinning Totem (Search opponent's library)
 
 **Misc (~6):**
+
 - [ ] Fountain of Youth ({2},{T}: Gain 1 life)
 - [ ] Phyrexian Vault (Sac creature: Draw)
 - [ ] Ashnod's Altar (Sac creature: {C}{C})
@@ -580,6 +643,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 - [ ] Soul Net (Gain life on death)
 
 **Success Criteria:**
+
 - ✅ All 41 artifacts working
 - ✅ Mana rocks enter tapped correctly
 - ✅ Sacrifice outlets working
@@ -588,23 +652,27 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 ### Week 1.5.7: Integration Testing & Documentation
 
 **Testing Tasks:**
+
 - [ ] Run 1,000-game simulation with all cards
 - [ ] Test each color pair combination (10 matchups)
 - [ ] Verify all 302+ cards work in actual games
 - [ ] Identify and document remaining edge cases
 
 **Documentation Tasks:**
+
 - [ ] Update CARD_STATUS.md with final counts
 - [ ] Finalize Phase 1.6 deferred list
 - [ ] Update CLAUDE.md with Phase 1.5 completion
 - [ ] Create release notes for Phase 1.5
 
 **Final Verification:**
+
 - [ ] RandomBot vs RandomBot: 500 games, no crashes
 - [ ] Human playtesting: Each color viable
 - [ ] Performance check: Still 500+ games/second
 
 **Success Criteria:**
+
 - ✅ 302+ cards (90%) fully implemented
 - ✅ 1000-game simulation completes
 - ✅ All documentation updated
@@ -613,6 +681,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 **Deliverable:** Full 6th Edition card pool playable!
 
 ### Week 1.5.8 (Adcanced Testing and Deckbuilding)
+
 - [ ] Create more Test Decks
 - [ ] Thoroughly test each Deck with AutBots
 - [ ] Observe any Issues or Errors
@@ -624,6 +693,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 **Theme:** "The Last 5%"
 
 ### Goals
+
 - Implement remaining 17 complex cards deferred from Phase 1.5
 - Add specialized mechanics for unusual effects
 - Complete 100% of 6th Edition
@@ -631,28 +701,33 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 ### Deferred Card Categories (17 cards)
 
 **Target Redirection & Extra Turns (~3 cards):**
+
 - Deflection (change target of spell)
 - Final Fortune (extra turn, then lose)
 - Flash (instant-speed creature deployment)
 
 **Control-Changing Effects (~4 cards):**
+
 - Abduction (steal creature, return on death)
 - Conquer (steal land - Aura)
 - Desertion (counter spell, steal permanent)
 - Juxtapose (exchange creatures)
 
 **Replacement Effects (~4 cards):**
+
 - Diminishing Returns (complex draw replacement)
 - Forbidden Crypt (graveyard replacement)
 - Teferi's Puzzle Box (draw replacement)
 - Zur's Weirding (draw denial)
 
 **Type/Color Changing (~3 cards):**
+
 - Celestial Dawn (all colors become white)
 - Living Lands (forests become creatures)
 - Phantasmal Terrain (change land type - Aura)
 
 **Complex Interactions (~3 cards):**
+
 - Doomsday (build 5-card library)
 - Illicit Auction (life bidding)
 - Polymorph (creature transformation)
@@ -660,6 +735,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 - Psychic Transfer (life exchange)
 
 ### Success Criteria
+
 - ✅ All 335 cards implemented
 - ✅ No known card bugs
 - ✅ Full 6th Edition complete
@@ -673,6 +749,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 **Theme:** "The AI Gets Dangerous"
 
 ### Goals
+
 - Implement MCTS with hidden information handling
 - Create heuristic evaluation function
 - Add card advantage mechanics
@@ -681,6 +758,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 ### Week 21-22: MCTS Core
 
 **Tasks:**
+
 - [ ] Implement MCTS algorithm
   - Selection (UCB1)
   - Expansion
@@ -690,6 +768,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 - [ ] Implement GreedyBot for rollout policy
 
 **Success Criteria:**
+
 - ✅ MCTS can run 1000 iterations in <5 seconds
 - ✅ MCTS-Bot beats RandomBot 90%+ of games
 - ✅ MCTS-Bot beats GreedyBot 60%+ of games
@@ -697,14 +776,15 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 ### Week 23: Evaluation Function
 
 **Tasks:**
+
 - [ ] Implement board evaluation heuristic:
   ```typescript
-  evaluation = 
+  evaluation =
     (myLife - oppLife) * 2.0 +
     (myBoardValue - oppBoardValue) * 1.5 +
     (myHandSize - oppHandSize) * 0.5 +
-    (myLandsInPlay * 0.3) +
-    (myCardAdvantage * 1.0)
+    myLandsInPlay * 0.3 +
+    myCardAdvantage * 1.0;
   ```
 - [ ] Tune weights through self-play
 - [ ] Add tempo bonuses (untapped creatures > tapped)
@@ -715,12 +795,14 @@ Run 1000 games with different weight values, find optimal.
 ### Week 24-25: Card Advantage & Disruption
 
 **Tasks:**
+
 - [ ] Add card draw spells
 - [ ] Add discard spells
 - [ ] Add removal spells
 - [ ] Implement Enchantments (Auras)
 
 **New Cards:**
+
 ```
 Ancestral Recall (U) - Draw 3 cards
 Brainstorm (U) - Draw 3, put 2 back
@@ -730,6 +812,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 ```
 
 **Success Criteria:**
+
 - ✅ MCTS values card draw correctly
 - ✅ AI uses removal at appropriate times
 - ✅ AI doesn't discard important cards
@@ -737,6 +820,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 ### Week 26: Replay System & Stats
 
 **Tasks:**
+
 - [ ] Implement game replay (save actions + seed)
 - [ ] Build statistics dashboard:
   - Win rate by deck
@@ -745,7 +829,8 @@ Pacifism (1W) - Enchant creature, it can't attack or block
   - Decision quality metrics
 - [ ] Add match history viewer
 
-**Deliverable:** 
+**Deliverable:**
+
 - Replay any game to debug AI decisions
 - Dashboard showing AI performance metrics
 
@@ -756,6 +841,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 **Theme:** "The Research Dashboard"
 
 ### Goals
+
 - Full web visualization dashboard
 - Deck construction lab
 - Multiple AI Agent configurations
@@ -765,6 +851,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 ### Week 27: Basic Web Dashboard
 
 **Tasks:**
+
 - [ ] Set up Vite + React + Tailwind project
 - [ ] Implement `useGameState` hook to connect to engine
 - [ ] Create `Card` component with Tailwind styling
@@ -775,6 +862,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
   - Implement Placeholder if Data is not present
 
 **Success Criteria:**
+
 - ✅ Dashboard renders game state via React
 - ✅ Responsive grid layout works
 - ✅ Can play a full game via UI controls
@@ -785,6 +873,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 ### Week 28-29: Visualization Polish
 
 **Tasks:**
+
 - [ ] Add Framer Motion for simple state transitions
 - [ ] Implement "Log View" with filterable action history
 - [ ] Add "Mana Pool" visualization with charts
@@ -792,12 +881,14 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 - [ ] Implement keyboard shortcuts for common actions (Space to pass)
 
 **Assets Needed:**
+
 - Icons (Lucide React)
 - Tailwind Config (Custom colors)
 
 ### Week 30-31: Deck Lab
 
 **Tasks:**
+
 - [ ] Build deck construction UI:
   - Browse all available cards
   - Filter by color, type, CMC
@@ -813,6 +904,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
   - Black Disruption
 
 **Success Criteria:**
+
 - ✅ User can configure test decks quickly
 - ✅ Deck validation prevents illegal states
 - ✅ Mana curve visualization aids analysis
@@ -820,6 +912,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 ### Week 32: AI Configuration & Final Polish
 
 **Tasks:**
+
 - [ ] Tune AI Agent profiles:
   - Baseline: RandomBot (random legal moves)
   - Heuristic: GreedyBot (1-ply lookahead)
@@ -829,11 +922,13 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 - [ ] Adjust evaluation function based on logs
 
 **Target Win Rates (vs Baseline):**
+
 - Heuristic: 90% win rate
 - Strong: 95% win rate
 - Expert: 99% win rate
 
 **Additional Tasks:**
+
 - [ ] Interactive guide for new users
 - [ ] Rules reference integration
 - [ ] Settings (visualization speed, debug mode)
@@ -850,6 +945,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 **Theme:** "The AI Research Laboratory"
 
 ### Goals
+
 - Tournament simulator
 - Deck analytics
 - MCTS visualization
@@ -858,6 +954,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 ### Week 33-34: Tournament Simulator
 
 **Tasks:**
+
 - [ ] Implement Swiss-style tournament
 - [ ] Implement Single-Elimination bracket
 - [ ] Run large-scale simulations (10,000+ games)
@@ -867,6 +964,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
   - Meta-game breakdown
 
 **Research Questions:**
+
 ```
 1. Which deck archetype is strongest?
    Run: 10,000 games, Aggro vs Control vs Midrange
@@ -881,6 +979,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 ### Week 35-36: Deck Analytics
 
 **Tasks:**
+
 - [ ] Implement deck scoring algorithms:
   - Mana curve optimization
   - Synergy detection (cards that work well together)
@@ -894,6 +993,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
   - Counter-strategy recommendations
 
 **Example Output:**
+
 ```
 DECK: Red Burn
 Mana Curve: A+ (optimal 1-3 CMC distribution)
@@ -913,6 +1013,7 @@ Recommendation: Replace Goblin King with more removal
 ### Week 37: MCTS Visualization
 
 **Tasks:**
+
 - [ ] Build decision tree visualizer
 - [ ] Show node visit counts
 - [ ] Highlight best path
@@ -920,11 +1021,13 @@ Recommendation: Replace Goblin King with more removal
 - [ ] Animate tree growth in real-time
 
 **Use Cases:**
+
 - Understand why AI makes certain plays
 - Debug evaluation function
 - Discover novel strategies
 
 **Example Visualization:**
+
 ```
                  [Root: 1000 visits, 55% WR]
                     /           |           \
@@ -936,6 +1039,7 @@ Recommendation: Replace Goblin King with more removal
 ### Week 38: A/B Testing Framework
 
 **Tasks:**
+
 - [ ] Compare different MCTS configurations:
   - Exploration parameter (c value)
   - Rollout depth
@@ -947,6 +1051,7 @@ Recommendation: Replace Goblin King with more removal
 - [ ] Statistical significance testing
 
 **Example Test:**
+
 ```
 Hypothesis: Increasing determinization samples improves win rate
 
@@ -966,6 +1071,7 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 **Theme:** "Skynet Learns Magic"
 
 ### Goals
+
 - Neural network evaluation function
 - Genetic algorithm deck building
 - Self-play training
@@ -974,6 +1080,7 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 ### Week 39-42: Neural Network Evaluation
 
 **Tasks:**
+
 - [ ] Collect training data (100,000+ games)
 - [ ] Design network architecture:
   ```
@@ -986,12 +1093,14 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 - [ ] Benchmark: NN-MCTS vs Heuristic-MCTS
 
 **Success Criteria:**
+
 - ✅ NN evaluation is faster than rollout
 - ✅ NN-MCTS beats Heuristic-MCTS by 10%+
 
 ### Week 43-46: Genetic Algorithm Deck Builder
 
 **Tasks:**
+
 - [ ] Implement GA framework:
   1. Generate random population (100 decks)
   2. Run tournament (fitness = win rate)
@@ -1003,6 +1112,7 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 - [ ] Compare GA-decks to hand-crafted decks
 
 **Research Questions:**
+
 ```
 1. Can GA rediscover known archetypes?
    (e.g., does it create a burn deck?)
@@ -1016,6 +1126,7 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 ### Week 47+: Self-Play & AlphaZero
 
 **Tasks:**
+
 - [ ] Implement self-play loop:
   1. AI plays against itself
   2. Collect training data
@@ -1026,22 +1137,24 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 - [ ] Measure improvement over time
 
 **Long-term Goal:**
+
 - Discover optimal play for our card pool
 - Generate new cards that are balanced
 - Build tournament-winning decks automatically
 
 ---
 
-
 ## Maintenance & Future Work
 
 ### Post-Release Maintenance
+
 - Bug fixes
 - Balance patches (adjust card pool)
 - Performance optimization
 - User-requested features
 
 ### Potential Expansions
+
 1. **Urza's Block** (Phase 6)
    - Add 300+ new cards
    - New mechanics (Cycling, Echo, Flashback)
@@ -1054,4 +1167,4 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 
 **End of Roadmap**
 
-*Let's build something amazing! 🎮🤖*
+_Let's build something amazing! 🎮🤖_

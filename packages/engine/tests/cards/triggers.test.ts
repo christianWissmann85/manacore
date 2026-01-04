@@ -39,14 +39,14 @@ describe('Enter the Battlefield Triggers', () => {
 
       // Gravedigger should be on battlefield
       const onBattlefield = newState.players.player.battlefield.find(
-        c => c.instanceId === gravediggerCard.instanceId
+        (c) => c.instanceId === gravediggerCard.instanceId,
       );
       expect(onBattlefield).toBeDefined();
 
       // Dead creature should be back in hand
       expect(newState.players.player.graveyard.length).toBe(0);
       const returnedCreature = newState.players.player.hand.find(
-        c => c.instanceId === deadCreature.instanceId
+        (c) => c.instanceId === deadCreature.instanceId,
       );
       expect(returnedCreature).toBeDefined();
       expect(returnedCreature?.zone).toBe('hand');
@@ -82,7 +82,7 @@ describe('Enter the Battlefield Triggers', () => {
 
       // Monk should be on battlefield
       const onBattlefield = newState.players.player.battlefield.find(
-        c => c.instanceId === monkCard.instanceId
+        (c) => c.instanceId === monkCard.instanceId,
       );
       expect(onBattlefield).toBeDefined();
 
@@ -116,7 +116,7 @@ describe('Enter the Battlefield Triggers', () => {
 
       // Defenders should be on battlefield
       const onBattlefield = newState.players.player.battlefield.find(
-        c => c.instanceId === defendersCard.instanceId
+        (c) => c.instanceId === defendersCard.instanceId,
       );
       expect(onBattlefield).toBeDefined();
 
@@ -146,7 +146,7 @@ describe('Enter the Battlefield Triggers', () => {
       const artifact = CardLoader.getByName('Sol Ring');
       if (!artifact) {
         // Find any artifact in card pool
-        const anyArtifact = CardLoader.getAllCards().find(c => c.type_line?.includes('Artifact'));
+        const anyArtifact = CardLoader.getAllCards().find((c) => c.type_line?.includes('Artifact'));
         if (!anyArtifact) {
           console.log('No artifacts in card pool, skipping test');
           return;
@@ -157,9 +157,9 @@ describe('Enter the Battlefield Triggers', () => {
 
       // Put an artifact on opponent's battlefield
       const artifactCard = createCardInstance(
-        (artifact || CardLoader.getAllCards().find(c => c.type_line?.includes('Artifact'))!).id,
+        (artifact || CardLoader.getAllCards().find((c) => c.type_line?.includes('Artifact'))!).id,
         'opponent',
-        'battlefield'
+        'battlefield',
       );
       state.players.opponent.battlefield.push(artifactCard);
 
@@ -172,17 +172,17 @@ describe('Enter the Battlefield Triggers', () => {
 
       // Orangutan should be on battlefield
       const onBattlefield = newState.players.player.battlefield.find(
-        c => c.instanceId === orangutanCard.instanceId
+        (c) => c.instanceId === orangutanCard.instanceId,
       );
       expect(onBattlefield).toBeDefined();
 
       // Artifact should be in graveyard
-      expect(newState.players.opponent.battlefield.find(
-        c => c.instanceId === artifactCard.instanceId
-      )).toBeUndefined();
-      expect(newState.players.opponent.graveyard.find(
-        c => c.instanceId === artifactCard.instanceId
-      )).toBeDefined();
+      expect(
+        newState.players.opponent.battlefield.find((c) => c.instanceId === artifactCard.instanceId),
+      ).toBeUndefined();
+      expect(
+        newState.players.opponent.graveyard.find((c) => c.instanceId === artifactCard.instanceId),
+      ).toBeDefined();
     });
   });
 
@@ -207,7 +207,7 @@ describe('Enter the Battlefield Triggers', () => {
       const state = setupGameWithMana({ U: 2 });
 
       // Remember the top 4 cards
-      const originalTop4 = state.players.player.library.slice(0, 4).map(c => c.instanceId);
+      const originalTop4 = state.players.player.library.slice(0, 4).map((c) => c.instanceId);
 
       // Put Owl in hand
       const owlCard = createCardInstance(owl.id, 'player', 'hand');
@@ -218,12 +218,12 @@ describe('Enter the Battlefield Triggers', () => {
 
       // Owl should be on battlefield
       const onBattlefield = newState.players.player.battlefield.find(
-        c => c.instanceId === owlCard.instanceId
+        (c) => c.instanceId === owlCard.instanceId,
       );
       expect(onBattlefield).toBeDefined();
 
       // The top 4 cards should contain the same cards (possibly reordered)
-      const newTop4 = newState.players.player.library.slice(0, 4).map(c => c.instanceId);
+      const newTop4 = newState.players.player.library.slice(0, 4).map((c) => c.instanceId);
       expect(newTop4.sort()).toEqual(originalTop4.sort());
     });
   });
@@ -261,14 +261,14 @@ describe('Enter the Battlefield Triggers', () => {
 
       // Horror should be on battlefield (creature card was discarded)
       const onBattlefield = newState.players.player.battlefield.find(
-        c => c.instanceId === horrorCard.instanceId
+        (c) => c.instanceId === horrorCard.instanceId,
       );
       expect(onBattlefield).toBeDefined();
 
       // Bears should be in graveyard (discarded)
-      expect(newState.players.player.graveyard.find(
-        c => c.instanceId === bearsCard.instanceId
-      )).toBeDefined();
+      expect(
+        newState.players.player.graveyard.find((c) => c.instanceId === bearsCard.instanceId),
+      ).toBeDefined();
     });
 
     test('ETB sacrifices itself if no creature to discard', () => {
@@ -287,14 +287,14 @@ describe('Enter the Battlefield Triggers', () => {
 
       // Horror should NOT be on battlefield (sacrificed)
       const onBattlefield = newState.players.player.battlefield.find(
-        c => c.instanceId === horrorCard.instanceId
+        (c) => c.instanceId === horrorCard.instanceId,
       );
       expect(onBattlefield).toBeUndefined();
 
       // Horror should be in graveyard
-      expect(newState.players.player.graveyard.find(
-        c => c.instanceId === horrorCard.instanceId
-      )).toBeDefined();
+      expect(
+        newState.players.player.graveyard.find((c) => c.instanceId === horrorCard.instanceId),
+      ).toBeDefined();
     });
   });
 });
@@ -417,8 +417,9 @@ describe('Counterspell (Stack Interaction)', () => {
 
     // Bears should be in graveyard (countered), not on battlefield
     expect(newState.players.player.graveyard.length).toBe(1);
-    expect(newState.players.player.battlefield.filter(
-      c => c.instanceId === bearsCard.instanceId
-    ).length).toBe(0);
+    expect(
+      newState.players.player.battlefield.filter((c) => c.instanceId === bearsCard.instanceId)
+        .length,
+    ).toBe(0);
   });
 });

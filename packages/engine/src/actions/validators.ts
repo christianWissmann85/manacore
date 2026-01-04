@@ -5,10 +5,31 @@
  */
 
 import type { GameState } from '../state/GameState';
-import type { Action, PlayLandAction, CastSpellAction, DeclareAttackersAction, DeclareBlockersAction, ActivateAbilityAction, SacrificePermanentAction } from './Action';
+import type {
+  Action,
+  PlayLandAction,
+  CastSpellAction,
+  DeclareAttackersAction,
+  DeclareBlockersAction,
+  ActivateAbilityAction,
+  SacrificePermanentAction,
+} from './Action';
 import { getPlayer, findCard } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
-import { isLand, isCreature, isInstant, isSorcery, hasFlying, hasReach, hasDefender, hasFear, hasIntimidate, hasMenace, getLandwalkTypes, isArtifact } from '../cards/CardTemplate';
+import {
+  isLand,
+  isCreature,
+  isInstant,
+  isSorcery,
+  hasFlying,
+  hasReach,
+  hasDefender,
+  hasFear,
+  hasIntimidate,
+  hasMenace,
+  getLandwalkTypes,
+  isArtifact,
+} from '../cards/CardTemplate';
 import type { CardInstance } from '../state/CardInstance';
 import { getActivatedAbilities } from '../rules/activatedAbilities';
 import type { PlayerId } from '../state/Zone';
@@ -33,13 +54,13 @@ function isPreventedFromCombat(state: GameState, creature: CardInstance): boolea
   for (const attachmentId of creature.attachments) {
     // Find the aura on any player's battlefield
     for (const playerId of ['player', 'opponent'] as const) {
-      const aura = state.players[playerId].battlefield.find(c => c.instanceId === attachmentId);
+      const aura = state.players[playerId].battlefield.find((c) => c.instanceId === attachmentId);
       if (aura) {
         const auraTemplate = CardLoader.getById(aura.scryfallId);
         if (auraTemplate?.oracle_text) {
           const text = auraTemplate.oracle_text.toLowerCase();
           // Check for "can't attack" or "can't attack or block"
-          if (text.includes("can't attack") || text.includes("cannot attack")) {
+          if (text.includes("can't attack") || text.includes('cannot attack')) {
             return true;
           }
         }
@@ -68,7 +89,7 @@ export function validateAction(state: GameState, action: Action): string[] {
     case 'SACRIFICE_PERMANENT':
       return validateSacrificePermanent(state, action);
     default:
-      return [];  // Other actions are always valid for now
+      return []; // Other actions are always valid for now
   }
 }
 
@@ -221,7 +242,7 @@ function validateCastSpell(state: GameState, action: CastSpellAction): string[] 
         targets,
         targetRequirements,
         action.playerId,
-        card
+        card,
       );
       errors.push(...targetErrors);
     }
@@ -370,7 +391,7 @@ function validateDeclareBlockers(state: GameState, action: DeclareBlockersAction
         const defendingPlayerState = getPlayer(state, action.playerId);
         for (const landType of landwalkTypes) {
           // Check if defending player controls a land of that type
-          const hasMatchingLand = defendingPlayerState.battlefield.some(permanent => {
+          const hasMatchingLand = defendingPlayerState.battlefield.some((permanent) => {
             const permTemplate = CardLoader.getById(permanent.scryfallId);
             if (!permTemplate) return false;
             // Check if it's the matching basic land type or has the subtype
@@ -397,7 +418,7 @@ function validateDeclareBlockers(state: GameState, action: DeclareBlockersAction
         const isArtifactCreature = isArtifact(blockerTemplate) && isCreature(blockerTemplate);
         const attackerColors = attackerTemplate.colors || [];
         const blockerColors = blockerTemplate.colors || [];
-        const sharesColor = attackerColors.some(c => blockerColors.includes(c));
+        const sharesColor = attackerColors.some((c) => blockerColors.includes(c));
         if (!isArtifactCreature && !sharesColor) {
           errors.push(`${block.blockerId} cannot block ${block.attackerId} (Intimidate)`);
         }
@@ -461,7 +482,7 @@ function validateActivateAbility(state: GameState, action: ActivateAbilityAction
 
   // Get all abilities for this card
   const abilities = getActivatedAbilities(card, state);
-  const ability = abilities.find(a => a.id === action.payload.abilityId);
+  const ability = abilities.find((a) => a.id === action.payload.abilityId);
 
   if (!ability) {
     errors.push('Ability not found on card');
@@ -491,7 +512,7 @@ function validateActivateAbility(state: GameState, action: ActivateAbilityAction
         targets,
         ability.targetRequirements,
         action.playerId,
-        card
+        card,
       );
       errors.push(...targetErrors);
     }
@@ -527,7 +548,7 @@ export function calculateAvailableMana(state: GameState, playerId: PlayerId): Ma
 
     // Get mana abilities for this permanent
     const abilities = getActivatedAbilities(permanent, state);
-    const manaAbilities = abilities.filter(a => a.isManaAbility && a.effect.type === 'ADD_MANA');
+    const manaAbilities = abilities.filter((a) => a.isManaAbility && a.effect.type === 'ADD_MANA');
 
     for (const ability of manaAbilities) {
       // Check if ability can be activated (handles summoning sickness for creatures)
@@ -540,12 +561,24 @@ export function calculateAvailableMana(state: GameState, playerId: PlayerId): Ma
         for (const color of ability.effect.manaColors) {
           const amount = ability.effect.amount ?? 1;
           switch (color) {
-            case 'W': available.white += amount; break;
-            case 'U': available.blue += amount; break;
-            case 'B': available.black += amount; break;
-            case 'R': available.red += amount; break;
-            case 'G': available.green += amount; break;
-            case 'C': available.colorless += amount; break;
+            case 'W':
+              available.white += amount;
+              break;
+            case 'U':
+              available.blue += amount;
+              break;
+            case 'B':
+              available.black += amount;
+              break;
+            case 'R':
+              available.red += amount;
+              break;
+            case 'G':
+              available.green += amount;
+              break;
+            case 'C':
+              available.colorless += amount;
+              break;
           }
         }
         // Only count the first mana ability per permanent (you can only tap once)

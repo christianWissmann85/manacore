@@ -23,7 +23,7 @@ function createTestState() {
   const plains = CardLoader.getByName('Plains')!;
   const state = createGameState(
     [createCardInstance(plains.id, 'player', 'library')],
-    [createCardInstance(plains.id, 'opponent', 'library')]
+    [createCardInstance(plains.id, 'opponent', 'library')],
   );
   return state;
 }
@@ -40,7 +40,7 @@ describe('Regeneration Ability Detection', () => {
     state.players.player.battlefield.push(instance);
 
     const abilities = getActivatedAbilities(instance, state);
-    const regenAbility = abilities.find(a => a.effect.type === 'REGENERATE');
+    const regenAbility = abilities.find((a) => a.effect.type === 'REGENERATE');
 
     expect(regenAbility).toBeDefined();
     expect(regenAbility?.cost.mana).toBe('{B}');
@@ -53,7 +53,7 @@ describe('Regeneration Ability Detection', () => {
     state.players.player.battlefield.push(instance);
 
     const abilities = getActivatedAbilities(instance, state);
-    const regenAbility = abilities.find(a => a.effect.type === 'REGENERATE');
+    const regenAbility = abilities.find((a) => a.effect.type === 'REGENERATE');
 
     expect(regenAbility).toBeDefined();
     expect(regenAbility?.cost.mana).toBe('{1}{G}');
@@ -66,7 +66,7 @@ describe('Regeneration Ability Detection', () => {
     state.players.player.battlefield.push(instance);
 
     const abilities = getActivatedAbilities(instance, state);
-    const regenAbility = abilities.find(a => a.effect.type === 'REGENERATE');
+    const regenAbility = abilities.find((a) => a.effect.type === 'REGENERATE');
 
     expect(regenAbility).toBeDefined();
     expect(regenAbility?.cost.mana).toBe('{G}');
@@ -79,7 +79,7 @@ describe('Regeneration Ability Detection', () => {
     state.players.player.battlefield.push(instance);
 
     const abilities = getActivatedAbilities(instance, state);
-    const regenAbility = abilities.find(a => a.effect.type === 'REGENERATE');
+    const regenAbility = abilities.find((a) => a.effect.type === 'REGENERATE');
 
     expect(regenAbility).toBeDefined();
     expect(regenAbility?.cost.life).toBe(1);
@@ -111,7 +111,7 @@ describe('Regeneration Shield Mechanics', () => {
     state.players.player.manaPool.black = 1;
 
     const abilities = getActivatedAbilities(skeletons, state);
-    const regenAbility = abilities.find(a => a.effect.type === 'REGENERATE')!;
+    const regenAbility = abilities.find((a) => a.effect.type === 'REGENERATE')!;
 
     // Activate regeneration
     const newState = applyAction(state, {
@@ -125,7 +125,7 @@ describe('Regeneration Shield Mechanics', () => {
 
     // Check shield was added
     const updatedSkeletons = newState.players.player.battlefield.find(
-      c => c.instanceId === skeletons.instanceId
+      (c) => c.instanceId === skeletons.instanceId,
     );
     expect(updatedSkeletons?.regenerationShields).toBe(1);
   });
@@ -151,7 +151,7 @@ describe('Regeneration Shield Mechanics', () => {
     state.players.player.manaPool.black = 2;
 
     const abilities = getActivatedAbilities(skeletons, state);
-    const regenAbility = abilities.find(a => a.effect.type === 'REGENERATE')!;
+    const regenAbility = abilities.find((a) => a.effect.type === 'REGENERATE')!;
 
     // Activate regeneration twice
     let newState = applyAction(state, {
@@ -177,7 +177,7 @@ describe('Regeneration Shield Mechanics', () => {
 
     // Check shields stacked
     const updatedSkeletons = newState.players.player.battlefield.find(
-      c => c.instanceId === skeletons.instanceId
+      (c) => c.instanceId === skeletons.instanceId,
     );
     expect(updatedSkeletons?.regenerationShields).toBe(2);
   });
@@ -210,7 +210,7 @@ describe('Regeneration Prevents Death', () => {
 
     // Check creature survived (regeneration used)
     const updatedSkeletons = newState.players.player.battlefield.find(
-      c => c.instanceId === skeletons.instanceId
+      (c) => c.instanceId === skeletons.instanceId,
     );
     expect(updatedSkeletons).toBeDefined();
     expect(updatedSkeletons?.regenerationShields).toBe(0);
@@ -237,13 +237,13 @@ describe('Regeneration Prevents Death', () => {
 
     // Check creature died
     const onBattlefield = newState.players.player.battlefield.find(
-      c => c.instanceId === skeletons.instanceId
+      (c) => c.instanceId === skeletons.instanceId,
     );
     expect(onBattlefield).toBeUndefined();
 
     // Check it went to graveyard
     const inGraveyard = newState.players.player.graveyard.find(
-      c => c.instanceId === skeletons.instanceId
+      (c) => c.instanceId === skeletons.instanceId,
     );
     expect(inGraveyard).toBeDefined();
   });
@@ -269,7 +269,7 @@ describe('Regeneration Prevents Death', () => {
 
     // Check creature is no longer attacking
     const updatedSkeletons = newState.players.player.battlefield.find(
-      c => c.instanceId === skeletons.instanceId
+      (c) => c.instanceId === skeletons.instanceId,
     );
     expect(updatedSkeletons?.attacking).toBe(false);
   });
@@ -297,7 +297,7 @@ describe('Regeneration Shield Expiration', () => {
 
     // Check shields were cleared
     const updatedSkeletons = newState.players.player.battlefield.find(
-      c => c.instanceId === skeletons.instanceId
+      (c) => c.instanceId === skeletons.instanceId,
     );
     expect(updatedSkeletons?.regenerationShields).toBeUndefined();
   });
@@ -328,12 +328,12 @@ describe('Toughness Zero Cannot Be Regenerated', () => {
 
     // Check creature died (toughness 0 cannot be regenerated)
     const onBattlefield = newState.players.player.battlefield.find(
-      c => c.instanceId === skeletons.instanceId
+      (c) => c.instanceId === skeletons.instanceId,
     );
     expect(onBattlefield).toBeUndefined();
 
     const inGraveyard = newState.players.player.graveyard.find(
-      c => c.instanceId === skeletons.instanceId
+      (c) => c.instanceId === skeletons.instanceId,
     );
     expect(inGraveyard).toBeDefined();
   });

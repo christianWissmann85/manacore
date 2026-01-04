@@ -117,9 +117,7 @@ export function parseManaCost(manaCostString: string | undefined): ManaCost {
  * Calculate the total mana in a pool
  */
 export function getTotalMana(pool: ManaPool): number {
-  return (
-    pool.white + pool.blue + pool.black + pool.red + pool.green + pool.colorless
-  );
+  return pool.white + pool.blue + pool.black + pool.red + pool.green + pool.colorless;
 }
 
 /**
@@ -127,13 +125,7 @@ export function getTotalMana(pool: ManaPool): number {
  */
 export function getConvertedManaCost(cost: ManaCost): number {
   return (
-    cost.white +
-    cost.blue +
-    cost.black +
-    cost.red +
-    cost.green +
-    cost.colorless +
-    cost.generic
+    cost.white + cost.blue + cost.black + cost.red + cost.green + cost.colorless + cost.generic
   );
 }
 
@@ -147,11 +139,7 @@ export function getConvertedManaCost(cost: ManaCost): number {
  * @param xValue - Value chosen for each X in the cost (default 0)
  * @returns true if the pool can pay the cost
  */
-export function canPayManaCost(
-  pool: ManaPool,
-  cost: ManaCost,
-  xValue: number = 0
-): boolean {
+export function canPayManaCost(pool: ManaPool, cost: ManaCost, xValue: number = 0): boolean {
   // Check colored mana requirements first
   if (pool.white < cost.white) return false;
   if (pool.blue < cost.blue) return false;
@@ -190,11 +178,7 @@ export function canPayManaCost(
  * @returns New mana pool after payment
  * @throws Error if pool cannot pay the cost
  */
-export function payManaCost(
-  pool: ManaPool,
-  cost: ManaCost,
-  xValue: number = 0
-): ManaPool {
+export function payManaCost(pool: ManaPool, cost: ManaCost, xValue: number = 0): ManaPool {
   if (!canPayManaCost(pool, cost, xValue)) {
     throw new Error('Cannot pay mana cost: insufficient mana');
   }
@@ -220,13 +204,7 @@ export function payManaCost(
 
   // Then use colored mana for remaining generic (order doesn't matter for basic auto-tap)
   // We'll use: white, blue, black, red, green order
-  const colors: (keyof ManaPool)[] = [
-    'white',
-    'blue',
-    'black',
-    'red',
-    'green',
-  ];
+  const colors: (keyof ManaPool)[] = ['white', 'blue', 'black', 'red', 'green'];
   for (const color of colors) {
     if (genericRemaining <= 0) break;
     const fromColor = Math.min(newPool[color], genericRemaining);
@@ -245,11 +223,7 @@ export function payManaCost(
  * @param amount - Amount to add (default 1)
  * @returns New mana pool with added mana
  */
-export function addManaToPool(
-  pool: ManaPool,
-  color: ManaColor,
-  amount: number = 1
-): ManaPool {
+export function addManaToPool(pool: ManaPool, color: ManaColor, amount: number = 1): ManaPool {
   const newPool: ManaPool = { ...pool };
 
   switch (color) {

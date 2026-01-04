@@ -2,12 +2,7 @@
  * ASCII art renderer for game state
  */
 
-import type {
-  GameState,
-  PlayerState,
-  CardInstance,
-  CardTemplate,
-} from '@manacore/engine';
+import type { GameState, PlayerState, CardInstance, CardTemplate } from '@manacore/engine';
 import {
   CardLoader,
   getPlayer,
@@ -26,13 +21,18 @@ import {
 /**
  * Render the complete game state to the console
  */
-export function renderGameState(state: GameState, viewingPlayer: 'player' | 'opponent' = 'player'): string {
+export function renderGameState(
+  state: GameState,
+  viewingPlayer: 'player' | 'opponent' = 'player',
+): string {
   const lines: string[] = [];
   const width = 80;
 
   // Header
   lines.push('═'.repeat(width));
-  lines.push(` TURN ${state.turnCount} - ${state.activePlayer.toUpperCase()} (${state.phase}/${state.step})`);
+  lines.push(
+    ` TURN ${state.turnCount} - ${state.activePlayer.toUpperCase()} (${state.phase}/${state.step})`,
+  );
   lines.push('═'.repeat(width));
   lines.push('');
 
@@ -48,7 +48,7 @@ export function renderGameState(state: GameState, viewingPlayer: 'player' | 'opp
   lines.push('─'.repeat(width));
 
   // Opponent's battlefield
-  lines.push('  Opponent\'s side:');
+  lines.push("  Opponent's side:");
   if (opponent.battlefield.length === 0) {
     lines.push('    (empty)');
   } else {
@@ -132,32 +132,38 @@ function renderZoneSummary(player: PlayerState): string {
 /**
  * Render battlefield cards
  */
-function renderBattlefield(battlefield: CardInstance[], indent: string, state: GameState): string[] {
+function renderBattlefield(
+  battlefield: CardInstance[],
+  indent: string,
+  state: GameState,
+): string[] {
   const lines: string[] = [];
 
   // Group by type
-  const lands = battlefield.filter(c => {
+  const lands = battlefield.filter((c) => {
     const template = CardLoader.getById(c.scryfallId);
     return template?.type_line.includes('Land');
   });
 
-  const creatures = battlefield.filter(c => {
+  const creatures = battlefield.filter((c) => {
     const template = CardLoader.getById(c.scryfallId);
     return template?.type_line.includes('Creature');
   });
 
-  const others = battlefield.filter(c => {
+  const others = battlefield.filter((c) => {
     const template = CardLoader.getById(c.scryfallId);
     return !template?.type_line.includes('Land') && !template?.type_line.includes('Creature');
   });
 
   // Render lands
   if (lands.length > 0) {
-    const landSummary = lands.map(l => {
-      const template = CardLoader.getById(l.scryfallId);
-      const name = template?.name.replace(' ', '').substring(0, 3).toUpperCase() || '???';
-      return l.tapped ? `[${name}]` : `${name}`;
-    }).join(' ');
+    const landSummary = lands
+      .map((l) => {
+        const template = CardLoader.getById(l.scryfallId);
+        const name = template?.name.replace(' ', '').substring(0, 3).toUpperCase() || '???';
+        return l.tapped ? `[${name}]` : `${name}`;
+      })
+      .join(' ');
     lines.push(`${indent}Lands: ${landSummary}`);
   }
 
@@ -219,7 +225,7 @@ function renderCreature(creature: CardInstance, state: GameState): string {
 
   // Show activated abilities
   const abilities = getActivatedAbilities(creature, state);
-  const abilityStr = abilities.length > 0 ? ` [${abilities.map(a => a.name).join(', ')}]` : '';
+  const abilityStr = abilities.length > 0 ? ` [${abilities.map((a) => a.name).join(', ')}]` : '';
 
   return `${status}${name} (${pt})${damage}${keywordStr}${abilityStr}`;
 }
@@ -228,7 +234,7 @@ function renderCreature(creature: CardInstance, state: GameState): string {
  * Count untapped lands
  */
 function countUntappedLands(player: PlayerState): number {
-  return player.battlefield.filter(card => {
+  return player.battlefield.filter((card) => {
     const template = CardLoader.getById(card.scryfallId);
     return template?.type_line.includes('Land') && !card.tapped;
   }).length;

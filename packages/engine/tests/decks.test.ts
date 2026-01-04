@@ -35,22 +35,20 @@ describe('Mono-Colored Test Decks', () => {
       for (const card of deck) {
         // Should be white or colorless (Plains)
         expect(
-          card.colors.includes('W') ||
-          card.colors.length === 0 ||
-          card.type_line.includes('Land')
+          card.colors.includes('W') || card.colors.length === 0 || card.type_line.includes('Land'),
         ).toBe(true);
       }
     });
 
     test('contains expected cards', () => {
       const deck = createWhiteDeck();
-      const cardNames = deck.map(c => c.name);
+      const cardNames = deck.map((c) => c.name);
 
-      expect(cardNames.filter(n => n === 'Plains').length).toBe(24);
-      expect(cardNames.filter(n => n === 'Archangel').length).toBe(20);
-      expect(cardNames.filter(n => n === 'Disenchant').length).toBe(4);
-      expect(cardNames.filter(n => n === 'Pacifism').length).toBe(4);
-      expect(cardNames.filter(n => n === 'Exile').length).toBe(8);
+      expect(cardNames.filter((n) => n === 'Plains').length).toBe(24);
+      expect(cardNames.filter((n) => n === 'Archangel').length).toBe(20);
+      expect(cardNames.filter((n) => n === 'Disenchant').length).toBe(4);
+      expect(cardNames.filter((n) => n === 'Pacifism').length).toBe(4);
+      expect(cardNames.filter((n) => n === 'Exile').length).toBe(8);
     });
   });
 
@@ -64,22 +62,20 @@ describe('Mono-Colored Test Decks', () => {
       const deck = createBlueDeck();
       for (const card of deck) {
         expect(
-          card.colors.includes('U') ||
-          card.colors.length === 0 ||
-          card.type_line.includes('Land')
+          card.colors.includes('U') || card.colors.length === 0 || card.type_line.includes('Land'),
         ).toBe(true);
       }
     });
 
     test('contains expected cards', () => {
       const deck = createBlueDeck();
-      const cardNames = deck.map(c => c.name);
+      const cardNames = deck.map((c) => c.name);
 
-      expect(cardNames.filter(n => n === 'Island').length).toBe(24);
-      expect(cardNames.filter(n => n === 'Air Elemental').length).toBe(10);
-      expect(cardNames.filter(n => n === 'Fog Elemental').length).toBe(10);
-      expect(cardNames.filter(n => n === 'Counterspell').length).toBe(8);
-      expect(cardNames.filter(n => n === 'Unsummon').length).toBe(8);
+      expect(cardNames.filter((n) => n === 'Island').length).toBe(24);
+      expect(cardNames.filter((n) => n === 'Air Elemental').length).toBe(10);
+      expect(cardNames.filter((n) => n === 'Fog Elemental').length).toBe(10);
+      expect(cardNames.filter((n) => n === 'Counterspell').length).toBe(8);
+      expect(cardNames.filter((n) => n === 'Unsummon').length).toBe(8);
     });
   });
 
@@ -93,22 +89,20 @@ describe('Mono-Colored Test Decks', () => {
       const deck = createBlackDeck();
       for (const card of deck) {
         expect(
-          card.colors.includes('B') ||
-          card.colors.length === 0 ||
-          card.type_line.includes('Land')
+          card.colors.includes('B') || card.colors.length === 0 || card.type_line.includes('Land'),
         ).toBe(true);
       }
     });
 
     test('contains expected cards', () => {
       const deck = createBlackDeck();
-      const cardNames = deck.map(c => c.name);
+      const cardNames = deck.map((c) => c.name);
 
-      expect(cardNames.filter(n => n === 'Swamp').length).toBe(24);
-      expect(cardNames.filter(n => n === 'Abyssal Specter').length).toBe(10);
-      expect(cardNames.filter(n => n === 'Gravedigger').length).toBe(10);
-      expect(cardNames.filter(n => n === 'Terror').length).toBe(8);
-      expect(cardNames.filter(n => n === 'Coercion').length).toBe(8);
+      expect(cardNames.filter((n) => n === 'Swamp').length).toBe(24);
+      expect(cardNames.filter((n) => n === 'Abyssal Specter').length).toBe(10);
+      expect(cardNames.filter((n) => n === 'Gravedigger').length).toBe(10);
+      expect(cardNames.filter((n) => n === 'Terror').length).toBe(8);
+      expect(cardNames.filter((n) => n === 'Coercion').length).toBe(8);
     });
   });
 
@@ -122,22 +116,20 @@ describe('Mono-Colored Test Decks', () => {
       const deck = createRedDeck();
       for (const card of deck) {
         expect(
-          card.colors.includes('R') ||
-          card.colors.length === 0 ||
-          card.type_line.includes('Land')
+          card.colors.includes('R') || card.colors.length === 0 || card.type_line.includes('Land'),
         ).toBe(true);
       }
     });
 
     test('contains expected cards', () => {
       const deck = createRedDeck();
-      const cardNames = deck.map(c => c.name);
+      const cardNames = deck.map((c) => c.name);
 
-      expect(cardNames.filter(n => n === 'Mountain').length).toBe(22);
-      expect(cardNames.filter(n => n === 'Balduvian Barbarians').length).toBe(10);
-      expect(cardNames.filter(n => n === 'Anaba Shaman').length).toBe(8);
-      expect(cardNames.filter(n => n === 'Lightning Blast').length).toBe(10);
-      expect(cardNames.filter(n => n === 'Shock').length).toBe(10);
+      expect(cardNames.filter((n) => n === 'Mountain').length).toBe(22);
+      expect(cardNames.filter((n) => n === 'Balduvian Barbarians').length).toBe(10);
+      expect(cardNames.filter((n) => n === 'Anaba Shaman').length).toBe(8);
+      expect(cardNames.filter((n) => n === 'Lightning Blast').length).toBe(10);
+      expect(cardNames.filter((n) => n === 'Shock').length).toBe(10);
     });
   });
 
@@ -151,22 +143,20 @@ describe('Mono-Colored Test Decks', () => {
       const deck = createGreenDeck();
       for (const card of deck) {
         expect(
-          card.colors.includes('G') ||
-          card.colors.length === 0 ||
-          card.type_line.includes('Land')
+          card.colors.includes('G') || card.colors.length === 0 || card.type_line.includes('Land'),
         ).toBe(true);
       }
     });
 
     test('contains expected cards', () => {
       const deck = createGreenDeck();
-      const cardNames = deck.map(c => c.name);
+      const cardNames = deck.map((c) => c.name);
 
-      expect(cardNames.filter(n => n === 'Forest').length).toBe(20);
-      expect(cardNames.filter(n => n === 'Llanowar Elves').length).toBe(8);
-      expect(cardNames.filter(n => n === 'Birds of Paradise').length).toBe(8);
-      expect(cardNames.filter(n => n === 'Grizzly Bears').length).toBe(16);
-      expect(cardNames.filter(n => n === 'Giant Growth').length).toBe(8);
+      expect(cardNames.filter((n) => n === 'Forest').length).toBe(20);
+      expect(cardNames.filter((n) => n === 'Llanowar Elves').length).toBe(8);
+      expect(cardNames.filter((n) => n === 'Birds of Paradise').length).toBe(8);
+      expect(cardNames.filter((n) => n === 'Grizzly Bears').length).toBe(16);
+      expect(cardNames.filter((n) => n === 'Giant Growth').length).toBe(8);
     });
   });
 });

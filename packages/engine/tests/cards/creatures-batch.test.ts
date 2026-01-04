@@ -95,7 +95,11 @@ describe('Vanilla Creatures - Batch Verification', () => {
       state.priorityPlayer = 'player';
 
       // Opponent attacks with 1/1
-      const attacker = createCreatureOnBattlefield(state, 'Merfolk of the Pearl Trident', 'opponent');
+      const attacker = createCreatureOnBattlefield(
+        state,
+        'Merfolk of the Pearl Trident',
+        'opponent',
+      );
       attacker.attacking = true;
 
       // Player blocks with Zombies (2/2)
@@ -110,8 +114,12 @@ describe('Vanilla Creatures - Batch Verification', () => {
       });
 
       // Zombies (2/2) survives, Merfolk (1/1) dies
-      expect(newState.players.player.battlefield.some(c => c.instanceId === blocker.instanceId)).toBe(true);
-      expect(newState.players.opponent.graveyard.some(c => c.instanceId === attacker.instanceId)).toBe(true);
+      expect(
+        newState.players.player.battlefield.some((c) => c.instanceId === blocker.instanceId),
+      ).toBe(true);
+      expect(
+        newState.players.opponent.graveyard.some((c) => c.instanceId === attacker.instanceId),
+      ).toBe(true);
     });
   });
 });
@@ -150,7 +158,7 @@ describe('Keyword Creatures - Batch Verification', () => {
         expect(isCreature(card!)).toBe(true);
 
         // Verify each keyword
-        keywords.forEach(keyword => {
+        keywords.forEach((keyword) => {
           expect(card?.keywords).toContain(keyword);
         });
       });
@@ -160,7 +168,7 @@ describe('Keyword Creatures - Batch Verification', () => {
   describe('Keyword Helper Functions', () => {
     test('Flying creatures detected correctly', () => {
       const flyers = ['Air Elemental', 'Archangel', 'Armored Pegasus', 'Wind Drake'];
-      flyers.forEach(name => {
+      flyers.forEach((name) => {
         const card = CardLoader.getByName(name)!;
         expect(hasFlying(card)).toBe(true);
       });
@@ -168,7 +176,7 @@ describe('Keyword Creatures - Batch Verification', () => {
 
     test('First Strike creatures detected correctly', () => {
       const strikers = ['Anaba Bodyguard', 'Elvish Archers', 'Tundra Wolves'];
-      strikers.forEach(name => {
+      strikers.forEach((name) => {
         const card = CardLoader.getByName(name)!;
         expect(hasFirstStrike(card)).toBe(true);
       });
@@ -176,7 +184,7 @@ describe('Keyword Creatures - Batch Verification', () => {
 
     test('Vigilance creatures detected correctly', () => {
       const vigilant = ['Archangel', 'Ardent Militia', 'Standing Troops'];
-      vigilant.forEach(name => {
+      vigilant.forEach((name) => {
         const card = CardLoader.getByName(name)!;
         expect(hasVigilance(card)).toBe(true);
       });
@@ -184,7 +192,7 @@ describe('Keyword Creatures - Batch Verification', () => {
 
     test('Reach creatures detected correctly', () => {
       const reachers = ['Giant Spider', 'Longbow Archer'];
-      reachers.forEach(name => {
+      reachers.forEach((name) => {
         const card = CardLoader.getByName(name)!;
         expect(hasReach(card)).toBe(true);
       });
@@ -192,7 +200,7 @@ describe('Keyword Creatures - Batch Verification', () => {
 
     test('Haste creatures detected correctly', () => {
       const hasty = ['Raging Goblin', 'Talruum Minotaur', 'Volcanic Dragon'];
-      hasty.forEach(name => {
+      hasty.forEach((name) => {
         const card = CardLoader.getByName(name)!;
         expect(hasHaste(card)).toBe(true);
       });
@@ -213,13 +221,15 @@ describe('Keyword Creatures - Batch Verification', () => {
       // Opponent tries to block with Grizzly Bears (no flying)
       const blocker = createCreatureOnBattlefield(state, 'Grizzly Bears', 'opponent');
 
-      expect(() => applyAction(state, {
-        type: 'DECLARE_BLOCKERS',
-        playerId: 'opponent',
-        payload: {
-          blocks: [{ blockerId: blocker.instanceId, attackerId: flyer.instanceId }],
-        },
-      })).toThrow(/Flying/i);
+      expect(() =>
+        applyAction(state, {
+          type: 'DECLARE_BLOCKERS',
+          playerId: 'opponent',
+          payload: {
+            blocks: [{ blockerId: blocker.instanceId, attackerId: flyer.instanceId }],
+          },
+        }),
+      ).toThrow(/Flying/i);
     });
 
     test('Reach creature CAN block flying creature', () => {
@@ -244,8 +254,12 @@ describe('Keyword Creatures - Batch Verification', () => {
       });
 
       // Drake dies (2 damage >= 2 toughness), Spider survives (2 damage < 4 toughness)
-      expect(newState.players.player.graveyard.some(c => c.instanceId === flyer.instanceId)).toBe(true);
-      expect(newState.players.opponent.battlefield.some(c => c.instanceId === spider.instanceId)).toBe(true);
+      expect(newState.players.player.graveyard.some((c) => c.instanceId === flyer.instanceId)).toBe(
+        true,
+      );
+      expect(
+        newState.players.opponent.battlefield.some((c) => c.instanceId === spider.instanceId),
+      ).toBe(true);
     });
 
     test('Vigilance creature does not tap when attacking', () => {
@@ -258,7 +272,9 @@ describe('Keyword Creatures - Batch Verification', () => {
         payload: { attackers: [vigilant.instanceId] },
       });
 
-      const attacker = newState.players.player.battlefield.find(c => c.instanceId === vigilant.instanceId);
+      const attacker = newState.players.player.battlefield.find(
+        (c) => c.instanceId === vigilant.instanceId,
+      );
       expect(attacker?.attacking).toBe(true);
       expect(attacker?.tapped).toBe(false); // Vigilance!
     });
@@ -319,13 +335,15 @@ describe('Landwalk Creatures - Batch Verification', () => {
     // Opponent tries to block
     const blocker = createCreatureOnBattlefield(state, 'Scathe Zombies', 'opponent');
 
-    expect(() => applyAction(state, {
-      type: 'DECLARE_BLOCKERS',
-      playerId: 'opponent',
-      payload: {
-        blocks: [{ blockerId: blocker.instanceId, attackerId: wraith.instanceId }],
-      },
-    })).toThrow(/Swampwalk/i);
+    expect(() =>
+      applyAction(state, {
+        type: 'DECLARE_BLOCKERS',
+        playerId: 'opponent',
+        payload: {
+          blocks: [{ blockerId: blocker.instanceId, attackerId: wraith.instanceId }],
+        },
+      }),
+    ).toThrow(/Swampwalk/i);
   });
 });
 
@@ -353,11 +371,13 @@ describe('Defender/Wall Creatures - Batch Verification', () => {
       const state = setupGameWithMana({ U: 5 });
       const wall = createCreatureOnBattlefield(state, name, 'player');
 
-      expect(() => applyAction(state, {
-        type: 'DECLARE_ATTACKERS',
-        playerId: 'player',
-        payload: { attackers: [wall.instanceId] },
-      })).toThrow(/Defender/i);
+      expect(() =>
+        applyAction(state, {
+          type: 'DECLARE_ATTACKERS',
+          playerId: 'player',
+          payload: { attackers: [wall.instanceId] },
+        }),
+      ).toThrow(/Defender/i);
     });
   });
 });
@@ -385,13 +405,15 @@ describe('Fear Creatures - Batch Verification', () => {
     // Opponent tries to block with green creature
     const blocker = createCreatureOnBattlefield(state, 'Grizzly Bears', 'opponent');
 
-    expect(() => applyAction(state, {
-      type: 'DECLARE_BLOCKERS',
-      playerId: 'opponent',
-      payload: {
-        blocks: [{ blockerId: blocker.instanceId, attackerId: rats.instanceId }],
-      },
-    })).toThrow(/Fear/i);
+    expect(() =>
+      applyAction(state, {
+        type: 'DECLARE_BLOCKERS',
+        playerId: 'opponent',
+        payload: {
+          blocks: [{ blockerId: blocker.instanceId, attackerId: rats.instanceId }],
+        },
+      }),
+    ).toThrow(/Fear/i);
   });
 });
 

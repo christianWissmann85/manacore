@@ -17,7 +17,14 @@ import type { CardInstance } from '../state/CardInstance';
 import type { PlayerId } from '../state/Zone';
 import { CardLoader } from '../cards/CardLoader';
 import type { CardTemplate } from '../cards/CardTemplate';
-import { isCreature, isLand, isArtifact, isEnchantment, isInstant, isSorcery } from '../cards/CardTemplate';
+import {
+  isCreature,
+  isLand,
+  isArtifact,
+  isEnchantment,
+  isInstant,
+  isSorcery,
+} from '../cards/CardTemplate';
 import { addTemporaryModification, getEffectiveToughness } from '../state/CardInstance';
 import { registerTrigger } from './triggers';
 
@@ -32,7 +39,7 @@ import { registerTrigger } from './triggers';
 export function destroyAllMatching(
   state: GameState,
   filter: (card: CardInstance, template: CardTemplate) => boolean,
-  options: { fireTriggers?: boolean } = {}
+  options: { fireTriggers?: boolean } = {},
 ): CardInstance[] {
   const destroyed: CardInstance[] = [];
   const { fireTriggers = true } = options;
@@ -154,7 +161,7 @@ export function destroyAllNonEnchantments(state: GameState): CardInstance[] {
 export function untapAllMatching(
   state: GameState,
   controller: PlayerId,
-  filter: (card: CardInstance, template: CardTemplate) => boolean
+  filter: (card: CardInstance, template: CardTemplate) => boolean,
 ): CardInstance[] {
   const untapped: CardInstance[] = [];
   const player = state.players[controller];
@@ -177,13 +184,20 @@ export function untapAllMatching(
  * Used for: Early Harvest
  * @param basicOnly - If true, only untap basic lands
  */
-export function untapAllLands(state: GameState, controller: PlayerId, basicOnly: boolean = false): CardInstance[] {
+export function untapAllLands(
+  state: GameState,
+  controller: PlayerId,
+  basicOnly: boolean = false,
+): CardInstance[] {
   return untapAllMatching(state, controller, (card, template) => {
     if (!isLand(template)) return false;
     if (basicOnly) {
       const basicLandNames = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest'];
-      return basicLandNames.includes(template.name || '') ||
-             template.type_line?.toLowerCase().includes('basic land') || false;
+      return (
+        basicLandNames.includes(template.name || '') ||
+        template.type_line?.toLowerCase().includes('basic land') ||
+        false
+      );
     }
     return true;
   });
@@ -204,12 +218,10 @@ export function untapAllCreatures(state: GameState, controller: PlayerId): CardI
 export function tapAllMatching(
   state: GameState,
   targetPlayer: PlayerId | 'all',
-  filter: (card: CardInstance, template: CardTemplate) => boolean
+  filter: (card: CardInstance, template: CardTemplate) => boolean,
 ): CardInstance[] {
   const tapped: CardInstance[] = [];
-  const players = targetPlayer === 'all'
-    ? ['player', 'opponent'] as const
-    : [targetPlayer];
+  const players = targetPlayer === 'all' ? (['player', 'opponent'] as const) : [targetPlayer];
 
   for (const playerId of players) {
     const player = state.players[playerId];
@@ -239,7 +251,10 @@ export function tapAllMatching(
  * Tap all non-flying creatures
  * Used for: Tidal Surge
  */
-export function tapAllNonFlyingCreatures(state: GameState, targetPlayer: PlayerId | 'all'): CardInstance[] {
+export function tapAllNonFlyingCreatures(
+  state: GameState,
+  targetPlayer: PlayerId | 'all',
+): CardInstance[] {
   return tapAllMatching(state, targetPlayer, (card, template) => {
     if (!isCreature(template)) return false;
     const hasFlying = template.keywords?.includes('Flying') ?? false;
@@ -263,7 +278,7 @@ export function searchLibrary(
   libraryOwner: PlayerId,
   filter: (card: CardInstance) => boolean,
   destination: 'hand' | 'library_top' | 'top_of_library' | 'battlefield' | 'battlefield_tapped',
-  options: { shuffle?: boolean } = {}
+  options: { shuffle?: boolean } = {},
 ): CardInstance | null {
   const { shuffle = true } = options;
   const tapped = destination === 'battlefield_tapped';
@@ -371,7 +386,7 @@ export function returnFromGraveyard(
   playerId: PlayerId,
   filter: (template: CardTemplate) => boolean,
   destination: 'hand' | 'battlefield' | 'top_of_library',
-  count: number = 1
+  count: number = 1,
 ): CardInstance[] {
   const player = state.players[playerId];
   const returned: CardInstance[] = [];
@@ -441,14 +456,14 @@ export function returnFromGraveyard(
  */
 export function returnCreatureFromGraveyard(
   state: GameState,
-  playerId: PlayerId
+  playerId: PlayerId,
 ): CardInstance | null {
   const result = returnFromGraveyard(
     state,
     playerId,
     (template) => isCreature(template),
     'hand',
-    1
+    1,
   );
   return result[0] ?? null;
 }
@@ -459,14 +474,14 @@ export function returnCreatureFromGraveyard(
  */
 export function returnSpellFromGraveyard(
   state: GameState,
-  playerId: PlayerId
+  playerId: PlayerId,
 ): CardInstance | null {
   const result = returnFromGraveyard(
     state,
     playerId,
     (template) => isInstant(template) || isSorcery(template),
     'hand',
-    1
+    1,
   );
   return result[0] ?? null;
 }
@@ -484,7 +499,7 @@ export function applyTeamPump(
   controller: PlayerId,
   powerBoost: number,
   toughnessBoost: number,
-  sourceId: string
+  sourceId: string,
 ): CardInstance[] {
   const player = state.players[controller];
   const pumped: CardInstance[] = [];
@@ -493,13 +508,7 @@ export function applyTeamPump(
     const template = CardLoader.getById(permanent.scryfallId);
     if (!template || !isCreature(template)) continue;
 
-    addTemporaryModification(
-      permanent,
-      powerBoost,
-      toughnessBoost,
-      'end_of_turn',
-      sourceId
-    );
+    addTemporaryModification(permanent, powerBoost, toughnessBoost, 'end_of_turn', sourceId);
     pumped.push(permanent);
   }
 
@@ -523,9 +532,15 @@ export function dealDamageToAll(
     creatureFilter?: (card: CardInstance, template: CardTemplate) => boolean;
     flyersOnly?: boolean;
     excludeFlyers?: boolean;
-  }
+  },
 ): void {
-  const { creatures = true, players = false, creatureFilter, flyersOnly = false, excludeFlyers = false } = targets;
+  const {
+    creatures = true,
+    players = false,
+    creatureFilter,
+    flyersOnly = false,
+    excludeFlyers = false,
+  } = targets;
 
   // Damage players
   if (players) {
@@ -598,7 +613,11 @@ export function dealDamageToAll(
  * Deal damage to all non-flying creatures and all players
  * Used for: Tremor
  */
-export function dealDamageToNonFlyers(state: GameState, damage: number, includePlayers: boolean): void {
+export function dealDamageToNonFlyers(
+  state: GameState,
+  damage: number,
+  includePlayers: boolean,
+): void {
   dealDamageToAll(state, damage, {
     creatures: true,
     players: includePlayers,
@@ -620,7 +639,7 @@ export function dealDamageToNonFlyers(state: GameState, damage: number, includeP
 export function putCardsOnTopOfLibrary(
   state: GameState,
   playerId: PlayerId,
-  count: number
+  count: number,
 ): CardInstance[] {
   const player = state.players[playerId];
   const moved: CardInstance[] = [];
@@ -644,7 +663,7 @@ export function discardThenDraw(
   state: GameState,
   playerId: PlayerId,
   discardCount: number,
-  drawCount: number
+  drawCount: number,
 ): void {
   const player = state.players[playerId];
 
@@ -671,7 +690,7 @@ export function drawThenPutBack(
   state: GameState,
   playerId: PlayerId,
   drawCount: number,
-  putBackCount: number
+  putBackCount: number,
 ): void {
   const player = state.players[playerId];
 
@@ -698,11 +717,7 @@ export function drawThenPutBack(
  * Drain life from opponents
  * Used for: Syphon Soul
  */
-export function drainLife(
-  state: GameState,
-  controller: PlayerId,
-  damagePerOpponent: number
-): void {
+export function drainLife(state: GameState, controller: PlayerId, damagePerOpponent: number): void {
   const opponent = controller === 'player' ? 'opponent' : 'player';
 
   // Deal damage to opponent
@@ -726,7 +741,7 @@ export function drawCardsPayLife(
   state: GameState,
   playerId: PlayerId,
   drawCount: number,
-  lifeToLose: number | 'half'
+  lifeToLose: number | 'half',
 ): void {
   const player = state.players[playerId];
 
@@ -762,11 +777,11 @@ export function drawCardsPayLife(
 export function destroyCreatureIf(
   state: GameState,
   targetId: string,
-  condition: (card: CardInstance, template: CardTemplate) => boolean
+  condition: (card: CardInstance, template: CardTemplate) => boolean,
 ): boolean {
   for (const playerId of ['player', 'opponent'] as const) {
     const player = state.players[playerId];
-    const index = player.battlefield.findIndex(c => c.instanceId === targetId);
+    const index = player.battlefield.findIndex((c) => c.instanceId === targetId);
 
     if (index !== -1) {
       const creature = player.battlefield[index]!;

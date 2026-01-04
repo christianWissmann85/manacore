@@ -29,7 +29,7 @@ function createTestState() {
   const plains = CardLoader.getByName('Plains')!;
   const state = createGameState(
     [createCardInstance(plains.id, 'player', 'library')],
-    [createCardInstance(plains.id, 'opponent', 'library')]
+    [createCardInstance(plains.id, 'opponent', 'library')],
   );
   return state;
 }
@@ -91,9 +91,9 @@ describe('Maro - Cards in Hand P/T', () => {
 
     // Start with 5 cards
     const forest = CardLoader.getByName('Forest')!;
-    state.players.player.hand = Array(5).fill(null).map(() =>
-      createCardInstance(forest.id, 'player', 'hand')
-    );
+    state.players.player.hand = Array(5)
+      .fill(null)
+      .map(() => createCardInstance(forest.id, 'player', 'hand'));
 
     expect(getEffectivePowerWithLords(state, maro, 0)).toBe(5);
     expect(getEffectiveToughnessWithLords(state, maro, 0)).toBe(5);
@@ -122,9 +122,9 @@ describe('Maro - Cards in Hand P/T', () => {
 
     // 4 cards in hand
     const island = CardLoader.getByName('Island')!;
-    state.players.player.hand = Array(4).fill(null).map(() =>
-      createCardInstance(island.id, 'player', 'hand')
-    );
+    state.players.player.hand = Array(4)
+      .fill(null)
+      .map(() => createCardInstance(island.id, 'player', 'hand'));
 
     // Add a +1/+1 counter
     maro.counters['+1/+1'] = 1;
@@ -170,9 +170,7 @@ describe('Nightmare - Swamps P/T', () => {
     // Add 3 Swamps
     const swamp = CardLoader.getByName('Swamp')!;
     for (let i = 0; i < 3; i++) {
-      state.players.player.battlefield.push(
-        createCardInstance(swamp.id, 'player', 'battlefield')
-      );
+      state.players.player.battlefield.push(createCardInstance(swamp.id, 'player', 'battlefield'));
     }
 
     const power = getEffectivePowerWithLords(state, nightmare, 0);
@@ -182,7 +180,7 @@ describe('Nightmare - Swamps P/T', () => {
     expect(toughness).toBe(3);
   });
 
-  test('Nightmare counts only controller\'s Swamps', () => {
+  test("Nightmare counts only controller's Swamps", () => {
     const state = createTestState();
     const card = CardLoader.getByName('Nightmare')!;
     const nightmare = createCardInstance(card.id, 'player', 'battlefield');
@@ -191,15 +189,13 @@ describe('Nightmare - Swamps P/T', () => {
     // Add 2 Swamps for player
     const swamp = CardLoader.getByName('Swamp')!;
     for (let i = 0; i < 2; i++) {
-      state.players.player.battlefield.push(
-        createCardInstance(swamp.id, 'player', 'battlefield')
-      );
+      state.players.player.battlefield.push(createCardInstance(swamp.id, 'player', 'battlefield'));
     }
 
     // Add 4 Swamps for opponent (should not count)
     for (let i = 0; i < 4; i++) {
       state.players.opponent.battlefield.push(
-        createCardInstance(swamp.id, 'opponent', 'battlefield')
+        createCardInstance(swamp.id, 'opponent', 'battlefield'),
       );
     }
 
@@ -226,13 +222,13 @@ describe('Nightmare - Swamps P/T', () => {
     // Add 2 more swamps
     state.players.player.battlefield.push(
       createCardInstance(swamp.id, 'player', 'battlefield'),
-      createCardInstance(swamp.id, 'player', 'battlefield')
+      createCardInstance(swamp.id, 'player', 'battlefield'),
     );
     expect(getEffectivePowerWithLords(state, nightmare, 0)).toBe(3);
 
     // Remove one swamp
     const swampIndex = state.players.player.battlefield.findIndex(
-      c => c.instanceId === swampCard.instanceId
+      (c) => c.instanceId === swampCard.instanceId,
     );
     state.players.player.battlefield.splice(swampIndex, 1);
     expect(getEffectivePowerWithLords(state, nightmare, 0)).toBe(2);
@@ -274,9 +270,7 @@ describe('Uktabi Wildcats - Forests P/T', () => {
     // Add 4 Forests
     const forest = CardLoader.getByName('Forest')!;
     for (let i = 0; i < 4; i++) {
-      state.players.player.battlefield.push(
-        createCardInstance(forest.id, 'player', 'battlefield')
-      );
+      state.players.player.battlefield.push(createCardInstance(forest.id, 'player', 'battlefield'));
     }
 
     const power = getEffectivePowerWithLords(state, wildcats, 0);
@@ -286,7 +280,7 @@ describe('Uktabi Wildcats - Forests P/T', () => {
     expect(toughness).toBe(4);
   });
 
-  test('Uktabi Wildcats counts only controller\'s Forests', () => {
+  test("Uktabi Wildcats counts only controller's Forests", () => {
     const state = createTestState();
     const card = CardLoader.getByName('Uktabi Wildcats')!;
     const wildcats = createCardInstance(card.id, 'player', 'battlefield');
@@ -295,15 +289,13 @@ describe('Uktabi Wildcats - Forests P/T', () => {
     // Add 3 Forests for player
     const forest = CardLoader.getByName('Forest')!;
     for (let i = 0; i < 3; i++) {
-      state.players.player.battlefield.push(
-        createCardInstance(forest.id, 'player', 'battlefield')
-      );
+      state.players.player.battlefield.push(createCardInstance(forest.id, 'player', 'battlefield'));
     }
 
     // Add 5 Forests for opponent (should not count)
     for (let i = 0; i < 5; i++) {
       state.players.opponent.battlefield.push(
-        createCardInstance(forest.id, 'opponent', 'battlefield')
+        createCardInstance(forest.id, 'opponent', 'battlefield'),
       );
     }
 
@@ -379,8 +371,8 @@ describe('Primal Clay - ETB Choice P/T', () => {
     clay.counters['+1/+1'] = 2;
     state.players.player.battlefield.push(clay);
 
-    expect(getEffectivePowerWithLords(state, clay, 0)).toBe(3);  // 1 + 2
-    expect(getEffectiveToughnessWithLords(state, clay, 0)).toBe(8);  // 6 + 2
+    expect(getEffectivePowerWithLords(state, clay, 0)).toBe(3); // 1 + 2
+    expect(getEffectiveToughnessWithLords(state, clay, 0)).toBe(8); // 6 + 2
   });
 
   test('Primal Clay with 2/2 flying choice has Flying keyword', () => {
@@ -461,9 +453,7 @@ describe('calculateVariablePT helper', () => {
     // 3 swamps
     const swamp = CardLoader.getByName('Swamp')!;
     for (let i = 0; i < 3; i++) {
-      state.players.player.battlefield.push(
-        createCardInstance(swamp.id, 'player', 'battlefield')
-      );
+      state.players.player.battlefield.push(createCardInstance(swamp.id, 'player', 'battlefield'));
     }
 
     const result = calculateVariablePT(state, nightmare, template);
@@ -493,13 +483,13 @@ describe('Variable P/T and State-Based Actions', () => {
 
     // Maro should be dead (0 toughness)
     const maroOnBattlefield = newState.players.player.battlefield.find(
-      c => c.instanceId === maro.instanceId
+      (c) => c.instanceId === maro.instanceId,
     );
     expect(maroOnBattlefield).toBeUndefined();
 
     // Should be in graveyard
     const maroInGraveyard = newState.players.player.graveyard.find(
-      c => c.instanceId === maro.instanceId
+      (c) => c.instanceId === maro.instanceId,
     );
     expect(maroInGraveyard).toBeDefined();
   });
@@ -519,7 +509,7 @@ describe('Variable P/T and State-Based Actions', () => {
 
     // Nightmare should be dead
     const nightmareOnBattlefield = newState.players.player.battlefield.find(
-      c => c.instanceId === nightmare.instanceId
+      (c) => c.instanceId === nightmare.instanceId,
     );
     expect(nightmareOnBattlefield).toBeUndefined();
   });
@@ -546,7 +536,7 @@ describe('Variable P/T and State-Based Actions', () => {
 
     // Maro should still be on battlefield
     const maroOnBattlefield = newState.players.player.battlefield.find(
-      c => c.instanceId === maro.instanceId
+      (c) => c.instanceId === maro.instanceId,
     );
     expect(maroOnBattlefield).toBeDefined();
   });

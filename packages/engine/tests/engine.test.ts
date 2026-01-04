@@ -63,9 +63,7 @@ describe('Actions', () => {
     const mountainCard = createCardInstance(mountain!.id, 'player', 'hand');
 
     // Create minimal game state
-    const playerLibrary = [
-      createCardInstance(mountain!.id, 'player', 'library'),
-    ];
+    const playerLibrary = [createCardInstance(mountain!.id, 'player', 'library')];
 
     const state = createGameState(playerLibrary, playerLibrary);
 
@@ -104,9 +102,7 @@ describe('Actions', () => {
 
     const bearsCard = createCardInstance(bears!.id, 'player', 'hand');
 
-    const playerLibrary = [
-      createCardInstance(bears!.id, 'player', 'library'),
-    ];
+    const playerLibrary = [createCardInstance(bears!.id, 'player', 'library')];
 
     let state = createGameState(playerLibrary, playerLibrary);
 
@@ -153,7 +149,7 @@ describe('Actions', () => {
     expect(newPlayer.battlefield.length).toBe(3); // 2 forests + 1 creature
     expect(newPlayer.hand.length).toBe(0);
 
-    const creature = newPlayer.battlefield.find(c => c.instanceId === bearsCard.instanceId)!;
+    const creature = newPlayer.battlefield.find((c) => c.instanceId === bearsCard.instanceId)!;
     expect(creature).toBeDefined();
     expect(creature.summoningSick).toBe(true);
   });
@@ -162,9 +158,7 @@ describe('Actions', () => {
     const mountain = CardLoader.getByName('Mountain');
     const mountainCard = createCardInstance(mountain!.id, 'player', 'hand');
 
-    const playerLibrary = [
-      createCardInstance(mountain!.id, 'player', 'library'),
-    ];
+    const playerLibrary = [createCardInstance(mountain!.id, 'player', 'library')];
 
     const state = createGameState(playerLibrary, playerLibrary);
     const player = getPlayer(state, 'player');
@@ -280,7 +274,9 @@ describe('The Stack', () => {
     // Creature should be on battlefield (along with 2 tapped lands)
     const newPlayer = getPlayer(state, 'player');
     expect(newPlayer.battlefield.length).toBe(3); // 2 lands + 1 creature
-    const bearOnBattlefield = newPlayer.battlefield.find(c => c.instanceId === bearsCard.instanceId);
+    const bearOnBattlefield = newPlayer.battlefield.find(
+      (c) => c.instanceId === bearsCard.instanceId,
+    );
     expect(bearOnBattlefield).toBeDefined();
   });
 

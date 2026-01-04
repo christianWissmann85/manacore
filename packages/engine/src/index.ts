@@ -11,7 +11,7 @@
  * It can run headless at 1000+ games/second for AI simulations.
  */
 
-export const ENGINE_VERSION = "0.0.1";
+export const ENGINE_VERSION = '0.0.1';
 
 // State exports
 export type { GameState, StackObject } from './state/GameState';
@@ -19,17 +19,9 @@ export type { PlayerState, ManaPool } from './state/PlayerState';
 export type { CardInstance } from './state/CardInstance';
 export type { Zone, PlayerId, GamePhase, GameStep, CounterType } from './state/Zone';
 
-export {
-  createGameState,
-  getPlayer,
-  getOpponent,
-  findCard,
-} from './state/GameState';
+export { createGameState, getPlayer, getOpponent, findCard } from './state/GameState';
 
-export {
-  createPlayerState,
-  createEmptyManaPool,
-} from './state/PlayerState';
+export { createPlayerState, createEmptyManaPool } from './state/PlayerState';
 
 export type { TemporaryModification } from './state/CardInstance';
 export {
@@ -118,7 +110,12 @@ export { applyAction } from './actions/reducer';
 export { getLegalActions, describeAction } from './actions/getLegalActions';
 
 // Rules exports
-export type { ActivatedAbility, AbilityCost, AbilityEffect, SacrificeCost } from './rules/activatedAbilities';
+export type {
+  ActivatedAbility,
+  AbilityCost,
+  AbilityEffect,
+  SacrificeCost,
+} from './rules/activatedAbilities';
 export { getActivatedAbilities, payCosts } from './rules/activatedAbilities';
 
 // Lords system (Week 1.5.4)

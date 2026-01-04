@@ -50,8 +50,10 @@ describe('Oracle Text Parsing', () => {
     expect(requirements.length).toBe(1);
     expect(requirements[0]!.targetType).toBe('creature');
     // Check for restrictions
-    expect(requirements[0]!.restrictions.some(r => r.type === 'nonartifact')).toBe(true);
-    expect(requirements[0]!.restrictions.some(r => r.type === 'color' && r.color === 'B' && r.negated)).toBe(true);
+    expect(requirements[0]!.restrictions.some((r) => r.type === 'nonartifact')).toBe(true);
+    expect(
+      requirements[0]!.restrictions.some((r) => r.type === 'color' && r.color === 'B' && r.negated),
+    ).toBe(true);
   });
 
   test('parses "target spell" from Counterspell', () => {
@@ -81,7 +83,7 @@ describe('Oracle Text Parsing', () => {
   });
 
   test('parses "target permanent" from Boomerang', () => {
-    const oracleText = 'Return target permanent to its owner\'s hand.';
+    const oracleText = "Return target permanent to its owner's hand.";
     const requirements = parseTargetRequirements(oracleText);
 
     expect(requirements.length).toBe(1);
@@ -210,8 +212,8 @@ describe('Legal Target Generation', () => {
 
     // Should have at least player and opponent
     expect(combinations.length).toBeGreaterThanOrEqual(2);
-    expect(combinations.some(c => c[0] === 'player')).toBe(true);
-    expect(combinations.some(c => c[0] === 'opponent')).toBe(true);
+    expect(combinations.some((c) => c[0] === 'player')).toBe(true);
+    expect(combinations.some((c) => c[0] === 'opponent')).toBe(true);
   });
 });
 
@@ -353,14 +355,16 @@ describe('Legal Actions with Targets', () => {
 
     // Find cast actions for Shock
     const shockActions = actions.filter(
-      a => a.type === 'CAST_SPELL' && (a as CastSpellAction).payload.cardInstanceId === shockCard.instanceId
+      (a) =>
+        a.type === 'CAST_SPELL' &&
+        (a as CastSpellAction).payload.cardInstanceId === shockCard.instanceId,
     ) as CastSpellAction[];
 
     expect(shockActions.length).toBeGreaterThan(0);
 
     // Should have one action for targeting player and one for opponent
-    const targetsPlayer = shockActions.some(a => a.payload.targets?.includes('player'));
-    const targetsOpponent = shockActions.some(a => a.payload.targets?.includes('opponent'));
+    const targetsPlayer = shockActions.some((a) => a.payload.targets?.includes('player'));
+    const targetsOpponent = shockActions.some((a) => a.payload.targets?.includes('opponent'));
 
     expect(targetsPlayer).toBe(true);
     expect(targetsOpponent).toBe(true);

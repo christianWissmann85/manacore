@@ -24,7 +24,7 @@ function createTestState() {
   const plains = CardLoader.getByName('Plains')!;
   const state = createGameState(
     [createCardInstance(plains.id, 'player', 'library')],
-    [createCardInstance(plains.id, 'opponent', 'library')]
+    [createCardInstance(plains.id, 'opponent', 'library')],
   );
   return state;
 }
@@ -99,7 +99,7 @@ describe('Fear Evasion', () => {
       },
     });
 
-    expect(errors.some(e => e.includes('Fear'))).toBe(true);
+    expect(errors.some((e) => e.includes('Fear'))).toBe(true);
   });
 
   test('Fear creature can be blocked by artifact creature', () => {
@@ -191,7 +191,7 @@ describe('Menace Evasion', () => {
       },
     });
 
-    expect(errors.some(e => e.includes('Menace'))).toBe(true);
+    expect(errors.some((e) => e.includes('Menace'))).toBe(true);
   });
 
   test('Menace creature can be blocked by two or more creatures', () => {
@@ -228,7 +228,7 @@ describe('Menace Evasion', () => {
     });
 
     // Should be valid when blocked by 2 creatures
-    expect(errors.some(e => e.includes('Menace'))).toBe(false);
+    expect(errors.some((e) => e.includes('Menace'))).toBe(false);
   });
 });
 

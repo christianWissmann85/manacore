@@ -3,7 +3,7 @@
 **Version:** 1.0.0  
 **Last Updated:** January 3, 2026  
 **Project Type:** MTG Game Engine & AI Research Platform  
-**Primary Tech Stack:** TypeScript, Bun, React, Tailwind CSS  
+**Primary Tech Stack:** TypeScript, Bun, React, Tailwind CSS
 
 ---
 
@@ -32,6 +32,7 @@ ManaCore is a **high-fidelity Magic: The Gathering simulation engine** and **AI 
 ### 2.1 Card Pool: 6th Edition Core Set
 
 We will implement a **curated subset** of Magic: The Gathering's 6th Edition Core Set to serve as our research environment. We chose 6th Edition for:
+
 - Mechanical clarity (avoid complex layer interactions)
 - Strategic depth (support multiple archetypes)
 - AI tractability (cards the MCTS can reason about)
@@ -44,6 +45,7 @@ We will implement a **curated subset** of Magic: The Gathering's 6th Edition Cor
 ### 2.2 Implemented Mechanics
 
 #### Phase 0: Foundation
+
 - ✅ Creature combat (simplified blocking: attacker chooses)
 - ✅ Sorcery-speed spells
 - ✅ Basic lands (tap for mana)
@@ -51,6 +53,7 @@ We will implement a **curated subset** of Magic: The Gathering's 6th Edition Cor
 - ✅ Deck, hand, graveyard, battlefield zones
 
 #### Phase 1: Core MTG
+
 - ✅ **The Stack** (LIFO resolution, priority passing)
 - ✅ **Proper Combat** (declare attackers → blockers → damage assignment)
 - ✅ **Keywords**: Flying, First Strike, Trample, Vigilance, Haste
@@ -60,12 +63,14 @@ We will implement a **curated subset** of Magic: The Gathering's 6th Edition Cor
 - ✅ **Activated abilities** ("Tap: deal 1 damage")
 
 #### Phase 2: Strategic Complexity
+
 - ✅ **Card Draw** (cantrips, draw spells)
 - ✅ **Enchantments** (Auras with targeting)
 - ✅ **Disruption** (Counterspell, discard)
 - ✅ **Mana abilities** (Dark Ritual, mana acceleration)
 
 #### Phase 3+: Advanced
+
 - ✅ **Multiple blockers** (damage assignment order)
 - ✅ **Combat tricks** (pump spells, removal in combat)
 - ✅ **Complex triggers** (dies triggers, attack triggers)
@@ -85,13 +90,13 @@ We will implement a **curated subset** of Magic: The Gathering's 6th Edition Cor
 
 ### 3.1 Performance Targets
 
-| Metric | Target | Rationale |
-|--------|--------|-----------|
+| Metric                    | Target          | Rationale                     |
+| ------------------------- | --------------- | ----------------------------- |
 | Headless simulation speed | 1000+ games/sec | Enables overnight AI training |
-| MCTS iterations per move | 1000-2000 | Balance quality vs latency |
-| UI frame rate | 60 FPS | Smooth animations |
-| Game state clone time | <1ms | Critical for MCTS |
-| API response time | <100ms | Card data fetching |
+| MCTS iterations per move  | 1000-2000       | Balance quality vs latency    |
+| UI frame rate             | 60 FPS          | Smooth animations             |
+| Game state clone time     | <1ms            | Critical for MCTS             |
+| API response time         | <100ms          | Card data fetching            |
 
 ### 3.2 Compatibility
 
@@ -102,6 +107,7 @@ We will implement a **curated subset** of Magic: The Gathering's 6th Edition Cor
 ### 3.3 Data Requirements
 
 All card data must be stored locally to support:
+
 - Offline development
 - Fast lookups (no API latency)
 - Consistent game state (no network failures mid-game)
@@ -109,6 +115,7 @@ All card data must be stored locally to support:
 ### 3.4 Determinism & Reproducibility (Scientific Integrity)
 
 To ensure scientific validity, ManaCore is built for 100% deterministic simulation:
+
 - **Seed-Based RNG**: Every simulation is initialized with a single `rngSeed`. Given the same seed and action sequence, the game state will always evolve identically.
 - **Action Recording**: All agent decisions are recorded in a sequential `actionLog`.
 - **Scenario Replay**: Researchers can export a `SimulationReplay` (Seed + ActionLog) to recreate and analyze specific agent behaviors or edge-case bugs.
@@ -121,17 +128,20 @@ To ensure scientific validity, ManaCore is built for 100% deterministic simulati
 ### 4.1 Simulation Modes
 
 **Interactive Debugging (Human-in-the-loop)**
+
 - Manually control one side against an AI agent
 - Test specific scenarios and edge cases
 - View step-by-step state changes
 
 **Batch Simulation (Headless)**
+
 - Run Agent vs Agent matches in background
 - Visualize MCTS decision trees
 - Pause/step through simulation
 - Export game logs for analysis
 
 **Deck Lab**
+
 - Browse available cards (filter by color, type, CMC)
 - Construct test decks for agents
 - See mana curve visualization
@@ -179,21 +189,25 @@ To ensure scientific validity, ManaCore is built for 100% deterministic simulati
 ### 5.1 Bot Difficulty Levels
 
 **Easy (RandomBot)**
+
 - Picks random legal move
 - No lookahead
 - Good for testing/debugging
 
 **Medium (GreedyBot)**
+
 - Evaluates immediate board state
 - Picks move with best material advantage
 - 1-ply lookahead
 
 **Hard (MCTS-Bot 500)**
+
 - 500 MCTS iterations per decision
 - 3-5 ply effective depth
 - Should beat GreedyBot 70%+ of the time
 
 **Expert (MCTS-Bot 2000)**
+
 - 2000 MCTS iterations
 - Discovers complex lines
 - Near-optimal play
@@ -203,24 +217,27 @@ To ensure scientific validity, ManaCore is built for 100% deterministic simulati
 **Algorithm**: UCT (Upper Confidence Bound for Trees)
 
 **Phases**:
+
 1. **Selection**: UCB1 formula to balance exploration/exploitation
 2. **Expansion**: Add unexplored child nodes
 3. **Simulation**: Rollout using GreedyBot policy
 4. **Backpropagation**: Update win rates up the tree
 
 **Hidden Information Handling**:
+
 - **Determinization**: Sample N possible opponent hands
 - **Information Set MCTS**: Cluster game states by visible info
 - **Conservative play**: Assume opponent has answers unless proven otherwise
 
 **Evaluation Function** (for non-terminal states):
+
 ```typescript
-score = 
+score =
   (myLife - opponentLife) * 2.0 +
   (myBoardValue - opponentBoardValue) * 1.5 +
   (myHandSize - opponentHandSize) * 0.5 +
-  (myLandsInPlay * 0.3) +
-  (myCardsInGraveyard * -0.1)  // Slight penalty for using resources
+  myLandsInPlay * 0.3 +
+  myCardsInGraveyard * -0.1; // Slight penalty for using resources
 ```
 
 ---
@@ -230,12 +247,14 @@ score =
 ### 6.1 Tournament Simulation
 
 **Capabilities**:
+
 - Run Swiss-style or Single-Elimination tournaments
 - Test 1000s of games to determine meta
 - Identify dominant deck archetypes
 - Discover counter-strategies
 
 **Metrics**:
+
 - Win rate by matchup (Deck A vs Deck B)
 - Average game length
 - Most impactful cards (by win% when drawn)
@@ -244,6 +263,7 @@ score =
 ### 6.2 Deck Optimization
 
 **Genetic Algorithm**:
+
 1. Generate population of random decks
 2. Run tournament to evaluate fitness
 3. Select top performers
@@ -251,6 +271,7 @@ score =
 5. Repeat for N generations
 
 **Optimization Targets**:
+
 - Maximize win rate vs meta
 - Minimize variance (consistent performance)
 - Optimize mana curve
@@ -259,6 +280,7 @@ score =
 ### 6.3 Strategy Discovery
 
 **Questions to Answer**:
+
 - "What's the optimal land count for aggro/control/midrange?"
 - "Does the AI discover tempo plays (e.g., bounce + replay)?"
 - "Can MCTS find Counterspell + card draw lock?"
@@ -273,22 +295,22 @@ score =
 ```typescript
 interface ScryfallCard {
   // Identity
-  id: string;                    // Scryfall UUID
+  id: string; // Scryfall UUID
   name: string;
-  set: string;                   // "6ed"
+  set: string; // "6ed"
   collector_number: string;
-  
+
   // Game Data
-  mana_cost: string;             // "{2}{R}{R}"
-  cmc: number;                   // 4
-  type_line: string;             // "Creature — Dragon"
-  oracle_text: string;           // Rules text
+  mana_cost: string; // "{2}{R}{R}"
+  cmc: number; // 4
+  type_line: string; // "Creature — Dragon"
+  oracle_text: string; // Rules text
   power?: string;
   toughness?: string;
-  colors: string[];              // ["R"]
-  color_identity: string[];      // For deck building
-  keywords: string[];            // ["Flying", "Haste"]
-  
+  colors: string[]; // ["R"]
+  color_identity: string[]; // For deck building
+  keywords: string[]; // ["Flying", "Haste"]
+
   // Visual
   image_uris: {
     small: string;
@@ -297,9 +319,9 @@ interface ScryfallCard {
     art_crop: string;
   };
   flavor_text?: string;
-  
+
   // Optional
-  rulings_uri?: string;          // Link to rulings
+  rulings_uri?: string; // Link to rulings
 }
 ```
 
@@ -312,22 +334,22 @@ interface GameState {
     player: PlayerState;
     opponent: PlayerState;
   };
-  
+
   // Shared zones
   stack: StackObject[];
   exile: CardInstance[];
-  
+
   // Game metadata
   activePlayer: PlayerId;
   priorityPlayer: PlayerId;
   turnCount: number;
   phase: GamePhase;
   step: GameStep;
-  
+
   // State
   gameOver: boolean;
   winner: PlayerId | null;
-  
+
   // Determinism
   rngSeed: number;
 }
@@ -344,24 +366,24 @@ interface PlayerState {
 }
 
 interface CardInstance {
-  instanceId: string;            // Unique for this game
-  scryfallId: string;            // Reference to card data
+  instanceId: string; // Unique for this game
+  scryfallId: string; // Reference to card data
   controller: PlayerId;
   owner: PlayerId;
-  
+
   // State
   zone: Zone;
   tapped: boolean;
   summoningSick: boolean;
-  damage: number;                // Marked damage
-  
+  damage: number; // Marked damage
+
   // Modifications
   counters: Record<CounterType, number>;
-  attachments: CardInstance[];  // Auras, Equipment
-  
+  attachments: CardInstance[]; // Auras, Equipment
+
   // Combat
   attacking?: boolean;
-  blocking?: string;             // instanceId of attacker
+  blocking?: string; // instanceId of attacker
 }
 ```
 
@@ -370,35 +392,41 @@ interface CardInstance {
 ## 8. Success Criteria
 
 ### Phase 0 (Week 3)
+
 - ✅ Two RandomBots can play a complete game
 - ✅ CLI shows readable game state
 - ✅ Games complete in <50 turns
 - ✅ Scryfall data cached locally
 
 ### Phase 1 (Week 8)
+
 - ✅ Human can play vs RandomBot and win reliably
 - ✅ Stack resolves correctly (Counterspell works)
 - ✅ Combat feels like MTG (blocking matters)
 - ✅ Basic web UI displays game
 
 ### Phase 2 (Week 14)
+
 - ✅ MCTS-Bot beats GreedyBot 70%+ of games
 - ✅ AI doesn't make obvious blunders
 - ✅ Game replay system works
 - ✅ Can run 1000 games in <10 minutes
 
 ### Phase 3 (Week 20)
+
 - ✅ Game is fun to play (subjective, but get feedback!)
 - ✅ UI is intuitive (playtesters can learn in <5 minutes)
 - ✅ Can play a full match in <15 minutes
 - ✅ Multiple AI difficulties feel distinct
 
 ### Phase 4 (Week 26)
+
 - ✅ Tournament simulator runs 10,000 games overnight
 - ✅ Dashboard shows actionable insights
 - ✅ MCTS discovers non-obvious plays (analyzed via tree visualization)
 
 ### Phase 5 (Open-ended)
+
 - ✅ ML-enhanced MCTS beats hand-crafted version
 - ✅ Genetic algorithm discovers known archetypes
 - ✅ Novel deck discovered that wins >55% of games
@@ -419,13 +447,13 @@ interface CardInstance {
 
 ## 10. Risks & Mitigations
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Rules complexity spirals | High | Strict phase gating, avoid complex cards |
-| MCTS too slow | High | Profile early, optimize hot paths, use Bun's speed |
-| Hidden info makes MCTS weak | Medium | Implement determinization, test vs known decks |
-| Card interactions break engine | Medium | Comprehensive test suite, replay system for bugs |
-| Scope creep | High | Ruthlessly prioritize, ship Phase 3 before Phase 4 |
+| Risk                           | Impact | Mitigation                                         |
+| ------------------------------ | ------ | -------------------------------------------------- |
+| Rules complexity spirals       | High   | Strict phase gating, avoid complex cards           |
+| MCTS too slow                  | High   | Profile early, optimize hot paths, use Bun's speed |
+| Hidden info makes MCTS weak    | Medium | Implement determinization, test vs known decks     |
+| Card interactions break engine | Medium | Comprehensive test suite, replay system for bugs   |
+| Scope creep                    | High   | Ruthlessly prioritize, ship Phase 3 before Phase 4 |
 
 ---
 
@@ -443,21 +471,25 @@ interface CardInstance {
 ## Appendix A: Key Decisions
 
 **Why 6th Edition?**
+
 - Last core set before major rules changes (6th Ed rules are cleaner)
 - Good mix of classic cards and strategic depth
 - Manageable size (~350 cards total, we'll use ~200)
 
 **Why MCTS over Deep Learning?**
+
 - MCTS is interpretable (we can see why it makes decisions)
 - Works with limited data (don't need millions of games to train)
 - Good baseline for comparing to ML approaches later
 
 **Why Bun over Node?**
+
 - Native TypeScript support (no build step for CLI)
 - ~3x faster than Node (critical for simulations)
 - Built-in test runner, bundler
 
 **Why React/Tailwind over PixiJS?**
+
 - **Scientific Aesthetic**: Matches the look of a research tool/dashboard better than a game engine
 - **Rapid Development**: Faster to build UI controls, logs, and data visualization
 - **Accessibility**: Standard DOM elements are easier to inspect and debug
@@ -467,4 +499,4 @@ interface CardInstance {
 
 **End of Specification**
 
-*Next Steps: See `architecture.md` for technical implementation details and `roadmap.md` for development timeline.*
+_Next Steps: See `architecture.md` for technical implementation details and `roadmap.md` for development timeline._

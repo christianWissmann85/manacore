@@ -23,7 +23,8 @@
  * - Primal Clay: Choice on ETB (3/3, 2/2 flying, or 1/6 wall)
  */
 
-import type { GameState, PlayerId } from '../state/GameState';
+import type { GameState } from '../state/GameState';
+import type { PlayerId } from '../state/Zone';
 import type { CardInstance } from '../state/CardInstance';
 import { CardLoader } from '../cards/CardLoader';
 import { isCreature } from '../cards/CardTemplate';
@@ -49,7 +50,7 @@ export function getCreatureSubtypes(typeLine: string): string[] {
   if (dashIndex === -1) return [];
 
   const subtypePart = typeLine.slice(dashIndex + 1).trim();
-  return subtypePart.split(/\s+/).filter(s => s.length > 0);
+  return subtypePart.split(/\s+/).filter((s) => s.length > 0);
 }
 
 /**
@@ -57,7 +58,7 @@ export function getCreatureSubtypes(typeLine: string): string[] {
  */
 export function hasCreatureSubtype(typeLine: string, subtype: string): boolean {
   const subtypes = getCreatureSubtypes(typeLine);
-  return subtypes.some(s => s.toLowerCase() === subtype.toLowerCase());
+  return subtypes.some((s) => s.toLowerCase() === subtype.toLowerCase());
 }
 
 /**
@@ -76,7 +77,7 @@ function getCardColors(template: { colors?: string[] }): string[] {
  * Checks basic land types (Plains, Island, Swamp, Mountain, Forest)
  */
 function countLandsOfType(state: GameState, controller: PlayerId, landType: string): number {
-  const player = state.players[controller];
+  const player = state.players[controller as keyof typeof state.players];
   let count = 0;
 
   for (const card of player.battlefield) {
@@ -99,7 +100,7 @@ function countLandsOfType(state: GameState, controller: PlayerId, landType: stri
 export function calculateVariablePT(
   state: GameState,
   card: CardInstance,
-  template: { name: string; power?: string; toughness?: string }
+  template: { name: string; power?: string; toughness?: string },
 ): { power: number; toughness: number } | null {
   // Only process creatures with * in power or toughness
   if (template.power !== '*' && template.toughness !== '*') {
@@ -109,43 +110,36 @@ export function calculateVariablePT(
   const controller = card.controller;
 
   switch (template.name) {
-    case 'Maro':
+    case 'Maro': {
       // "Maro's power and toughness are each equal to the number of cards in your hand."
-      {
-        const cardsInHand = state.players[controller].hand.length;
-        return { power: cardsInHand, toughness: cardsInHand };
-      }
+      const cardsInHand = state.players[controller].hand.length;
+      return { power: cardsInHand, toughness: cardsInHand };
+    }
 
-    case 'Nightmare':
+    case 'Nightmare': {
       // "Nightmare's power and toughness are each equal to the number of Swamps you control."
-      {
-        const swampCount = countLandsOfType(state, controller, 'Swamp');
-        return { power: swampCount, toughness: swampCount };
-      }
+      const swampCount = countLandsOfType(state, controller, 'Swamp');
+      return { power: swampCount, toughness: swampCount };
+    }
 
-    case 'Uktabi Wildcats':
+    case 'Uktabi Wildcats': {
       // "Uktabi Wildcats's power and toughness are each equal to the number of Forests you control."
-      {
-        const forestCount = countLandsOfType(state, controller, 'Forest');
-        return { power: forestCount, toughness: forestCount };
-      }
+      const forestCount = countLandsOfType(state, controller, 'Forest');
+      return { power: forestCount, toughness: forestCount };
+    }
 
-    case 'Primal Clay':
-      // "As Primal Clay enters the battlefield, it becomes your choice of..."
-      // The choice is stored on the card instance when it enters
-      // Default to 3/3 if no choice has been made
-      {
-        const choice = card.primalClayChoice || '3/3';
-        switch (choice) {
-          case '2/2 flying':
-            return { power: 2, toughness: 2 };
-          case '1/6 wall':
-            return { power: 1, toughness: 6 };
-          case '3/3':
-          default:
-            return { power: 3, toughness: 3 };
-        }
+    case 'Primal Clay': { // Default to 3/3 if no choice has been made // The choice is stored on the card instance when it enters // "As Primal Clay enters the battlefield, it becomes your choice of..."
+      const choice = card.primalClayChoice || '3/3';
+      switch (choice) {
+        case '2/2 flying':
+          return { power: 2, toughness: 2 };
+        case '1/6 wall':
+          return { power: 1, toughness: 6 };
+        case '3/3':
+        default:
+          return { power: 3, toughness: 3 };
       }
+    }
 
     default:
       // Unknown variable P/T creature - default to 0/0
@@ -160,7 +154,7 @@ export function calculateVariablePT(
 export function getLordBonuses(
   state: GameState,
   targetCard: CardInstance,
-  targetTemplate: { type_line: string; colors?: string[] }
+  targetTemplate: { type_line: string; colors?: string[] },
 ): LordBonus {
   let powerBonus = 0;
   let toughnessBonus = 0;
@@ -171,8 +165,9 @@ export function getLordBonuses(
   const targetController = targetCard.controller;
 
   // Check all permanents on battlefield for Lord effects
-  for (const playerId of ['player', 'opponent'] as PlayerId[]) {
-    const player = state.players[playerId];
+  const playerIds: PlayerId[] = ['player', 'opponent'];
+  for (const playerId of playerIds) {
+    const player = state.players[playerId as keyof typeof state.players];
 
     for (const permanent of player.battlefield) {
       // Skip the target card itself (Lords don't affect themselves)
@@ -188,7 +183,7 @@ export function getLordBonuses(
           targetCard,
           targetSubtypes,
           playerId,
-          permanent
+          permanent,
         );
         powerBonus += bonus.powerBonus;
         toughnessBonus += bonus.toughnessBonus;
@@ -202,7 +197,7 @@ export function getLordBonuses(
           targetCard,
           targetColors,
           playerId,
-          targetController
+          targetController,
         );
         powerBonus += bonus.powerBonus;
         toughnessBonus += bonus.toughnessBonus;
@@ -222,7 +217,7 @@ function checkLordCreature(
   targetCard: CardInstance,
   targetSubtypes: string[],
   lordController: PlayerId,
-  _lordCard: CardInstance
+  _lordCard: CardInstance,
 ): LordBonus {
   const result: LordBonus = { powerBonus: 0, toughnessBonus: 0, grantedKeywords: [] };
 
@@ -230,8 +225,7 @@ function checkLordCreature(
     case 'Goblin King':
       // "Other Goblins get +1/+1 and have mountainwalk."
       // Only affects controller's creatures
-      if (targetCard.controller === lordController &&
-          targetSubtypes.includes('Goblin')) {
+      if (targetCard.controller === lordController && targetSubtypes.includes('Goblin')) {
         result.powerBonus = 1;
         result.toughnessBonus = 1;
         result.grantedKeywords.push('Mountainwalk');
@@ -251,8 +245,7 @@ function checkLordCreature(
     case 'Zombie Master':
       // "Other Zombie creatures have swampwalk."
       // Also gives regeneration, but that's handled separately
-      if (targetCard.controller === lordController &&
-          targetSubtypes.includes('Zombie')) {
+      if (targetCard.controller === lordController && targetSubtypes.includes('Zombie')) {
         result.grantedKeywords.push('Swampwalk');
       }
       break;
@@ -269,7 +262,7 @@ function checkAnthemEnchantment(
   targetCard: CardInstance,
   targetColors: string[],
   enchantmentController: PlayerId,
-  targetController: PlayerId
+  targetController: PlayerId,
 ): LordBonus {
   const result: LordBonus = { powerBonus: 0, toughnessBonus: 0, grantedKeywords: [] };
 
@@ -311,7 +304,7 @@ function checkAnthemEnchantment(
       }
       break;
 
-    case 'Serra\'s Blessing':
+    case "Serra's Blessing":
       // "Creatures you control have vigilance."
       if (targetController === enchantmentController) {
         result.grantedKeywords.push('Vigilance');
@@ -329,7 +322,7 @@ function checkAnthemEnchantment(
 export function getEffectivePowerWithLords(
   state: GameState,
   card: CardInstance,
-  basePower: number
+  basePower: number,
 ): number {
   const template = CardLoader.getById(card.scryfallId);
 
@@ -369,7 +362,7 @@ export function getEffectivePowerWithLords(
 export function getEffectiveToughnessWithLords(
   state: GameState,
   card: CardInstance,
-  baseToughness: number
+  baseToughness: number,
 ): number {
   const template = CardLoader.getById(card.scryfallId);
 
@@ -408,7 +401,7 @@ export function getEffectiveToughnessWithLords(
 export function hasKeywordWithLords(
   state: GameState,
   card: CardInstance,
-  keyword: string
+  keyword: string,
 ): boolean {
   const template = CardLoader.getById(card.scryfallId);
   if (!template) return false;
@@ -442,10 +435,7 @@ export function hasKeywordWithLords(
 /**
  * Get all keywords for a creature (native + granted)
  */
-export function getAllKeywords(
-  state: GameState,
-  card: CardInstance
-): string[] {
+export function getAllKeywords(state: GameState, card: CardInstance): string[] {
   const template = CardLoader.getById(card.scryfallId);
   if (!template) return [];
 

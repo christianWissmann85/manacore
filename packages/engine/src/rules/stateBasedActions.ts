@@ -76,7 +76,8 @@ function checkCreatureDeath(state: GameState): boolean {
       if (!isCreature(template)) continue;
 
       // For variable P/T creatures (*/\*), baseToughness is 0 and the real value is calculated
-      const baseToughness = template.toughness === '*' ? 0 : parseInt(template.toughness || '0', 10);
+      const baseToughness =
+        template.toughness === '*' ? 0 : parseInt(template.toughness || '0', 10);
       const effectiveToughness = getEffectiveToughnessWithLords(state, creature, baseToughness);
 
       // SBA: Creature dies if damage >= toughness
@@ -116,7 +117,7 @@ function destroyCreature(
   player: { battlefield: CardInstance[]; graveyard: CardInstance[] },
   creature: CardInstance,
   index: number,
-  playerId: 'player' | 'opponent'
+  playerId: 'player' | 'opponent',
 ): void {
   // Remove from battlefield
   player.battlefield.splice(index, 1);
@@ -173,7 +174,7 @@ function checkUnattachedAuras(state: GameState): boolean {
       let enchantedCreatureExists = false;
       for (const pid of ['player', 'opponent'] as const) {
         const battlefieldHasIt = state.players[pid].battlefield.some(
-          c => c.instanceId === attachedToId
+          (c) => c.instanceId === attachedToId,
         );
         if (battlefieldHasIt) {
           enchantedCreatureExists = true;
@@ -198,7 +199,7 @@ function checkUnattachedAuras(state: GameState): boolean {
 function moveAuraToGraveyard(
   player: { battlefield: CardInstance[]; graveyard: CardInstance[] },
   aura: CardInstance,
-  index: number
+  index: number,
 ): void {
   player.battlefield.splice(index, 1);
   aura.zone = 'graveyard';

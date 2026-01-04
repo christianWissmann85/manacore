@@ -1,4 +1,5 @@
 # ManaCore 🔬
+
 **MTG Simulation Engine & AI Research Platform**
 
 > A high-fidelity, headless Magic: The Gathering rule engine designed for reinforcement learning, Monte Carlo Tree Search (MCTS) research, and meta-game analysis.
@@ -11,13 +12,14 @@
 
 ## 🎯 Project Mission
 
-ManaCore is a **technical research platform** built to study Game Theory and Artificial Intelligence within the complex environment of *Magic: The Gathering*.
+ManaCore is a **technical research platform** built to study Game Theory and Artificial Intelligence within the complex environment of _Magic: The Gathering_.
 
 Unlike consumer game clients, ManaCore focuses on:
-*   **Headless Simulation:** Running thousands of matches per second for agent training.
-*   **Determinism:** Seed-based RNG ensuring 100% reproducible scenarios for debugging.
-*   **Agent Architecture:** Modular interfaces for MCTS, Greedy, and Neural Network agents.
-*   **Data Visualization:** React-based dashboards for analyzing decision trees and game states.
+
+- **Headless Simulation:** Running thousands of matches per second for agent training.
+- **Determinism:** Seed-based RNG ensuring 100% reproducible scenarios for debugging.
+- **Agent Architecture:** Modular interfaces for MCTS, Greedy, and Neural Network agents.
+- **Data Visualization:** React-based dashboards for analyzing decision trees and game states.
 
 **This is not a commercial product or a way to play Magic: The Gathering for free.** It is a laboratory for experimenting with AI algorithms using TCG rules as the physics engine.
 
@@ -27,19 +29,20 @@ Unlike consumer game clients, ManaCore focuses on:
 
 The platform is structured as a Monorepo using **Bun**:
 
-| Package | Purpose | Tech Stack |
-|---------|---------|------------|
-| `@manacore/engine` | Pure logic rule engine (Zero UI dependencies) | TypeScript |
-| `@manacore/ai` | MCTS agents and evaluation functions | TypeScript |
-| `@manacore/web-client` | Visualization & Debug Dashboard | React, Tailwind |
-| `@manacore/cli-client` | Headless simulation runner | TypeScript |
-| `@manacore/data-scraper`| Local data fetching tool | Scryfall API |
+| Package                  | Purpose                                       | Tech Stack      |
+| ------------------------ | --------------------------------------------- | --------------- |
+| `@manacore/engine`       | Pure logic rule engine (Zero UI dependencies) | TypeScript      |
+| `@manacore/ai`           | MCTS agents and evaluation functions          | TypeScript      |
+| `@manacore/web-client`   | Visualization & Debug Dashboard               | React, Tailwind |
+| `@manacore/cli-client`   | Headless simulation runner                    | TypeScript      |
+| `@manacore/data-scraper` | Local data fetching tool                      | Scryfall API    |
 
 ---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - [Bun](https://bun.sh) (v1.0+)
 - Basic understanding of TypeScript
 
@@ -55,6 +58,7 @@ bun install
 ```
 
 ### Data Setup (BYO Data)
+
 ManaCore does **not** distribute copyrighted card assets. You must fetch card data locally for your own research use:
 
 ```bash
@@ -77,13 +81,17 @@ bun run cli play
 ## 🧪 Research Capabilities
 
 ### 1. Deterministic Replay
+
 Every simulation is initialized with a specific RNG seed. Researchers can capture a `SimulationReplay` JSON to perfectly reproduce edge cases or agent behaviors.
 
 ### 2. High-Frequency Training
+
 The engine is optimized for performance, capable of resolving complex board states in microseconds, enabling massive parallel training sessions.
 
 ### 3. Agent Lab
+
 Compare different AI architectures:
+
 - **RandomBot**: Baseline stochastic behavior.
 - **GreedyBot**: 1-ply material evaluation.
 - **MCTS-Bot**: UCT-based search (Coming Soon).

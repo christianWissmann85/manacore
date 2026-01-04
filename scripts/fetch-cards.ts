@@ -84,11 +84,14 @@ async function main() {
   console.log(`  • Images saved to: ${imagesDir}`);
 
   // Statistics
-  const cardsByType = cachedCards.reduce((acc, card) => {
-    const mainType = card.type_line.split('—')[0]?.trim().split(' ')[0] || 'Other';
-    acc[mainType] = (acc[mainType] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const cardsByType = cachedCards.reduce(
+    (acc, card) => {
+      const mainType = card.type_line.split('—')[0]?.trim().split(' ')[0] || 'Other';
+      acc[mainType] = (acc[mainType] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 
   console.log('\nCard Types:');
   for (const [type, count] of Object.entries(cardsByType).sort((a, b) => b[1] - a[1])) {

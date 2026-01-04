@@ -220,6 +220,7 @@ manacore/
 - Week 3: CLI client and RandomBot
 
 **Deliverables**:
+
 - ✅ Bun workspace monorepo
 - ✅ Card data scraper and loader
 - ✅ Basic game state management
@@ -240,6 +241,7 @@ manacore/
 - Week 11: **Card Library Expansion** ✅ (20-30 common 6th Edition cards)
 
 **Deliverables**:
+
 - ✅ Stack system with priority passing
 - ✅ Instant-speed vs sorcery-speed timing
 - ✅ Declare blockers step with Flying/Reach restrictions
@@ -256,8 +258,8 @@ manacore/
 
 **Goal**: "Every Card Works"
 
-- Week 1.5.1: **Infrastructure** ✅ 
-- Week 1.5.2: **Instants & Sorceries** ✅ 
+- Week 1.5.1: **Infrastructure** ✅
+- Week 1.5.2: **Instants & Sorceries** ✅
 - Week 1.5.3: **Creatures Part 1** ✅
 - Week 1.5.4: **Creatures Part 2** ✅
 - Week 1.5.5: **Auras & Enchantments** (22 auras + 34 enchantments)
@@ -290,6 +292,7 @@ manacore/
 - Week 26: **Replay System & Stats** (game replay, statistics dashboard, match history)
 
 **Key Deliverables**:
+
 - MCTS bot that beats RandomBot 90%+ of games
 - Evaluation function tuned through self-play
 - Game replay system for debugging AI decisions
@@ -341,6 +344,11 @@ bun <file>                    # NOT: node, ts-node
 # Testing
 bun test                      # NOT: jest, vitest
 
+# Full TypeScript compilation check (catches import/export issues, type errors)
+# and
+# ESLint with type-aware rules (catches code style, patterns, unsafe any usage)
+bun run check
+
 # Package management
 bun install                   # NOT: npm install, yarn
 bun add <package>
@@ -356,11 +364,11 @@ Prefer Bun's built-in APIs over npm packages:
 
 ```typescript
 // SQLite - Use bun:sqlite
-import { Database } from "bun:sqlite";
+import { Database } from 'bun:sqlite';
 // NOT: better-sqlite3
 
 // File I/O - Use Bun.file
-const file = Bun.file("data.json");
+const file = Bun.file('data.json');
 const text = await file.text();
 // NOT: node:fs readFile/writeFile
 
@@ -379,9 +387,9 @@ process.env.API_KEY;
 ### Testing
 
 ```typescript
-import { test, expect } from "bun:test";
+import { test, expect } from 'bun:test';
 
-test("creature takes damage", () => {
+test('creature takes damage', () => {
   const state = createTestGameState();
   const creature = state.players.player.battlefield[0]!;
 
@@ -394,6 +402,7 @@ test("creature takes damage", () => {
 ```
 
 Run tests:
+
 ```bash
 cd packages/engine
 bun test
@@ -431,10 +440,7 @@ No complex game loop - just reactive UI updates.
 
 ```typescript
 // Good
-export function validateAction(
-  state: GameState,
-  action: Action
-): string[] {
+export function validateAction(state: GameState, action: Action): string[] {
   const errors: string[] = [];
   // ...
   return errors;
@@ -467,7 +473,7 @@ All actions follow this pattern:
 
 ```typescript
 export interface SomeAction extends GameAction {
-  type: 'SOME_ACTION';  // UPPER_SNAKE_CASE
+  type: 'SOME_ACTION'; // UPPER_SNAKE_CASE
   payload: {
     // Action-specific data
     fieldName: string;
@@ -482,7 +488,7 @@ export interface SomeAction extends GameAction {
 ```typescript
 // ❌ BAD - mutates original state
 export function applyAction(state: GameState, action: Action): GameState {
-  state.turnCount++;  // WRONG!
+  state.turnCount++; // WRONG!
   return state;
 }
 
@@ -545,7 +551,7 @@ packages/engine/tests/
 ### Writing Tests
 
 ```typescript
-import { test, expect } from "bun:test";
+import { test, expect } from 'bun:test';
 import { createGameState, applyAction } from '@manacore/engine';
 
 test('playing a land adds it to battlefield', () => {
@@ -590,6 +596,7 @@ bun test combat.test.ts
 ### Adding a New Action Type
 
 1. **Define the action interface** in `packages/engine/src/actions/Action.ts`:
+
    ```typescript
    export interface NewAction extends GameAction {
      type: 'NEW_ACTION';
@@ -600,6 +607,7 @@ bun test combat.test.ts
    ```
 
 2. **Add to Action union**:
+
    ```typescript
    export type Action =
      | PlayLandAction
@@ -608,6 +616,7 @@ bun test combat.test.ts
    ```
 
 3. **Create validator** in `packages/engine/src/actions/validators.ts`:
+
    ```typescript
    function validateNewAction(state: GameState, action: NewAction): string[] {
      const errors: string[] = [];
@@ -617,12 +626,14 @@ bun test combat.test.ts
    ```
 
 4. **Add to validateAction switch**:
+
    ```typescript
    case 'NEW_ACTION':
      return validateNewAction(state, action);
    ```
 
 5. **Create reducer** in `packages/engine/src/actions/reducer.ts`:
+
    ```typescript
    function applyNewAction(state: GameState, action: NewAction): void {
      // Apply state changes
@@ -630,6 +641,7 @@ bun test combat.test.ts
    ```
 
 6. **Add to applyAction switch**:
+
    ```typescript
    case 'NEW_ACTION':
      applyNewAction(newState, action);
@@ -645,6 +657,7 @@ bun test combat.test.ts
 1. **Ensure card data exists** in `packages/engine/data/cards/6ed.json`
 
 2. **For keyword abilities**, check if helper exists in `packages/engine/src/cards/CardTemplate.ts`:
+
    ```typescript
    export function hasFlying(card: CardTemplate): boolean {
      return card.keywords?.includes('Flying') || false;
@@ -652,6 +665,7 @@ bun test combat.test.ts
    ```
 
 3. **For activated abilities**, add to `packages/engine/src/rules/activatedAbilities.ts`:
+
    ```typescript
    switch (template.name) {
      case 'Prodigal Sorcerer':
@@ -710,6 +724,7 @@ bun src/fetchCards.ts 6ed  # Fetch 6th Edition
 ### 1. Read Before Writing
 
 **ALWAYS** read existing code before making changes:
+
 ```typescript
 // Before adding a function, check if it exists
 // Before modifying a file, read it completely
@@ -718,6 +733,7 @@ bun src/fetchCards.ts 6ed  # Fetch 6th Edition
 ### 2. Validate Early
 
 Validation happens BEFORE state changes:
+
 ```typescript
 export function applyAction(state: GameState, action: Action): GameState {
   // ✅ Validate first
@@ -735,6 +751,7 @@ export function applyAction(state: GameState, action: Action): GameState {
 ### 3. Keep Engine Pure
 
 The `engine` package must have **ZERO** dependencies on UI:
+
 - No console.log in production code
 - No React, readline, or other UI libraries
 - Engine functions should be 100% testable headlessly
@@ -742,6 +759,7 @@ The `engine` package must have **ZERO** dependencies on UI:
 ### 4. Export Properly
 
 Update `packages/engine/src/index.ts` when adding new public APIs:
+
 ```typescript
 // Export types
 export type { NewType } from './path/to/module';
@@ -753,6 +771,7 @@ export { newFunction } from './path/to/module';
 ### 5. Document Complex Logic
 
 Add comments for Magic-specific rules:
+
 ```typescript
 // SBA: Creature dies if damage >= toughness (CR 704.5g)
 if (creature.damage >= toughness) {
@@ -763,6 +782,7 @@ if (creature.damage >= toughness) {
 ### 6. Use Type Guards
 
 For discriminated unions:
+
 ```typescript
 export function isPlayLandAction(action: Action): action is PlayLandAction {
   return action.type === 'PLAY_LAND';
@@ -776,6 +796,7 @@ export function isPlayLandAction(action: Action): action is PlayLandAction {
 ### Why Speed Matters
 
 ManaCore is designed for **AI training**, which requires:
+
 - Running 10,000+ games for evaluation
 - Simulating thousands of possible futures (MCTS)
 - Training neural networks with millions of game states
@@ -789,6 +810,7 @@ ManaCore is designed for **AI training**, which requires:
 5. **Profile Before Optimizing**: Use `console.time()` for bottlenecks
 
 Current Performance:
+
 - **1000+ games/second** in simulation mode
 - **<1ms per action** for typical moves
 - **<30ms for full game** (50 turns, 100 actions)
@@ -800,22 +822,25 @@ Current Performance:
 ### Common Issues
 
 **1. "Card not found" errors**
+
 ```typescript
 // Check if card data is loaded
-console.log(CardLoader.getByName('Mountain'));  // Should return template
+console.log(CardLoader.getByName('Mountain')); // Should return template
 ```
 
 **2. State mutation bugs**
+
 ```typescript
 // Verify you're cloning:
-const newState = structuredClone(state);  // Must be first line
+const newState = structuredClone(state); // Must be first line
 ```
 
 **3. Validation errors**
+
 ```typescript
 // Check validation messages:
 const errors = validateAction(state, action);
-console.log(errors);  // Shows why action is invalid
+console.log(errors); // Shows why action is invalid
 ```
 
 ### Useful Debug Commands
@@ -885,18 +910,18 @@ bun build src/index.ts                  # Build a file
 
 ### File Location Quick Reference
 
-| What | Where |
-|------|-------|
-| Game state types | `packages/engine/src/state/` |
-| Action definitions | `packages/engine/src/actions/Action.ts` |
-| Validators | `packages/engine/src/actions/validators.ts` |
-| Reducers | `packages/engine/src/actions/reducer.ts` |
-| Combat rules | `packages/engine/src/rules/combat.ts` |
-| Stack system | `packages/engine/src/rules/stack.ts` |
-| State-based actions | `packages/engine/src/rules/stateBasedActions.ts` |
-| Abilities | `packages/engine/src/rules/activatedAbilities.ts`, `triggers.ts` |
-| Card data | `packages/engine/data/cards/6ed.json` |
-| Tests | `packages/engine/tests/*.test.ts` |
-| CLI display | `packages/cli-client/src/display/board.ts` |
+| What                | Where                                                            |
+| ------------------- | ---------------------------------------------------------------- |
+| Game state types    | `packages/engine/src/state/`                                     |
+| Action definitions  | `packages/engine/src/actions/Action.ts`                          |
+| Validators          | `packages/engine/src/actions/validators.ts`                      |
+| Reducers            | `packages/engine/src/actions/reducer.ts`                         |
+| Combat rules        | `packages/engine/src/rules/combat.ts`                            |
+| Stack system        | `packages/engine/src/rules/stack.ts`                             |
+| State-based actions | `packages/engine/src/rules/stateBasedActions.ts`                 |
+| Abilities           | `packages/engine/src/rules/activatedAbilities.ts`, `triggers.ts` |
+| Card data           | `packages/engine/data/cards/6ed.json`                            |
+| Tests               | `packages/engine/tests/*.test.ts`                                |
+| CLI display         | `packages/cli-client/src/display/board.ts`                       |
 
 **Happy coding! 🎴✨**

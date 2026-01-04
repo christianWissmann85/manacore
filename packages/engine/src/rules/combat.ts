@@ -29,7 +29,7 @@ export function resolveCombatDamage(state: GameState): void {
   }
 
   // First Strike damage step
-  assignCombatDamage(state, true);  // onlyFirstStrike = true
+  assignCombatDamage(state, true); // onlyFirstStrike = true
   checkCreatureDeath(state);
 
   // Normal damage step
@@ -104,7 +104,7 @@ function assignCombatDamage(state: GameState, onlyFirstStrike: boolean): void {
     const blockerPower = getEffectivePowerWithLords(state, blocker, basePower);
 
     // Find the attacker being blocked
-    const attacker = activePlayer.battlefield.find(c => c.instanceId === blocker.blocking);
+    const attacker = activePlayer.battlefield.find((c) => c.instanceId === blocker.blocking);
     if (attacker) {
       attacker.damage += blockerPower;
     }
@@ -119,7 +119,7 @@ function assignDamageToBlockers(
   attacker: CardInstance,
   blockerIds: string[],
   totalDamage: number,
-  attackerTemplate: CardTemplate
+  attackerTemplate: CardTemplate,
 ): void {
   const defendingPlayerId = state.activePlayer === 'player' ? 'opponent' : 'player';
   const defendingPlayer = getPlayer(state, defendingPlayerId);
@@ -128,7 +128,7 @@ function assignDamageToBlockers(
 
   // Assign damage to each blocker in order
   for (const blockerId of blockerIds) {
-    const blocker = defendingPlayer.battlefield.find(c => c.instanceId === blockerId);
+    const blocker = defendingPlayer.battlefield.find((c) => c.instanceId === blockerId);
     if (!blocker) continue;
 
     const blockerTemplate = CardLoader.getById(blocker.scryfallId);

@@ -32,10 +32,12 @@ describe('Pump Spells', () => {
       const growthCard = createCardInstance(growth.id, 'player', 'hand');
       state.players.player.hand.push(growthCard);
 
-      const newState = castAndResolve(state, 'player', growthCard.instanceId, [bearsCard.instanceId]);
+      const newState = castAndResolve(state, 'player', growthCard.instanceId, [
+        bearsCard.instanceId,
+      ]);
 
       const pumpedCreature = newState.players.player.battlefield.find(
-        c => c.instanceId === bearsCard.instanceId
+        (c) => c.instanceId === bearsCard.instanceId,
       );
 
       expect(pumpedCreature).toBeDefined();
@@ -61,7 +63,7 @@ describe('Pump Spells', () => {
 
       // Confirm pump was applied
       let pumpedCreature = newState.players.player.battlefield.find(
-        c => c.instanceId === bearsCard.instanceId
+        (c) => c.instanceId === bearsCard.instanceId,
       );
       expect(pumpedCreature!.temporaryModifications.length).toBe(1);
 
@@ -74,7 +76,7 @@ describe('Pump Spells', () => {
 
       // Pump should be gone
       pumpedCreature = newState.players.player.battlefield.find(
-        c => c.instanceId === bearsCard.instanceId
+        (c) => c.instanceId === bearsCard.instanceId,
       );
       expect(pumpedCreature).toBeDefined();
       expect(pumpedCreature!.temporaryModifications.length).toBe(0);
@@ -105,7 +107,7 @@ describe('Pump Spells', () => {
 
       // Bears survives with 4 damage (5 toughness - 4 damage = 1 remaining)
       const creature = newState.players.player.battlefield.find(
-        c => c.instanceId === bearsCard.instanceId
+        (c) => c.instanceId === bearsCard.instanceId,
       );
       expect(creature).toBeDefined();
       expect(creature!.damage).toBe(4);
@@ -136,7 +138,7 @@ describe('Pump Spells', () => {
 
       // Verify creature has 2 damage and pump
       let creature = newState.players.player.battlefield.find(
-        c => c.instanceId === bearsCard.instanceId
+        (c) => c.instanceId === bearsCard.instanceId,
       );
       expect(creature).toBeDefined();
       expect(creature!.damage).toBe(2);
@@ -150,7 +152,7 @@ describe('Pump Spells', () => {
 
       // Creature survives because damage is also cleared at end of turn
       creature = newState.players.player.battlefield.find(
-        c => c.instanceId === bearsCard.instanceId
+        (c) => c.instanceId === bearsCard.instanceId,
       );
       expect(creature).toBeDefined();
       expect(creature!.temporaryModifications.length).toBe(0); // Pump gone

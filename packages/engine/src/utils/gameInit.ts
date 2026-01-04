@@ -58,19 +58,19 @@ export function createSimpleDeck(deckList: Array<{ name: string; count: number }
 export function initializeGame(
   playerDeck: CardTemplate[],
   opponentDeck: CardTemplate[],
-  seed?: number
+  seed?: number,
 ): GameState {
   // Shuffle decks
   const shuffledPlayerDeck = shuffle([...playerDeck], seed);
   const shuffledOpponentDeck = shuffle([...opponentDeck], seed ? seed + 1 : undefined);
 
   // Create card instances
-  const playerLibrary = shuffledPlayerDeck.map(card =>
-    createCardInstance(card.id, 'player', 'library')
+  const playerLibrary = shuffledPlayerDeck.map((card) =>
+    createCardInstance(card.id, 'player', 'library'),
   );
 
-  const opponentLibrary = shuffledOpponentDeck.map(card =>
-    createCardInstance(card.id, 'opponent', 'library')
+  const opponentLibrary = shuffledOpponentDeck.map((card) =>
+    createCardInstance(card.id, 'opponent', 'library'),
   );
 
   // Create game state
@@ -109,7 +109,7 @@ function drawCard(state: GameState, playerId: PlayerId): void {
 export function createVanillaDeck(): CardTemplate[] {
   return createSimpleDeck([
     { name: 'Forest', count: 20 },
-    { name: 'Grizzly Bears', count: 40 },  // 2/2 for 1G - very aggressive
+    { name: 'Grizzly Bears', count: 40 }, // 2/2 for 1G - very aggressive
   ]);
 }
 
@@ -126,11 +126,11 @@ export function createWhiteDeck(): CardTemplate[] {
     // Lands (24)
     { name: 'Plains', count: 24 },
     // Creatures (20)
-    { name: 'Archangel', count: 20 },      // 5/5 Flying Vigilance - finisher
+    { name: 'Archangel', count: 20 }, // 5/5 Flying Vigilance - finisher
     // Spells (16)
-    { name: 'Disenchant', count: 4 },      // Artifact/enchantment removal
-    { name: 'Pacifism', count: 4 },        // Creature removal (aura)
-    { name: 'Exile', count: 8 },           // Exile attacking creature + life gain
+    { name: 'Disenchant', count: 4 }, // Artifact/enchantment removal
+    { name: 'Pacifism', count: 4 }, // Creature removal (aura)
+    { name: 'Exile', count: 8 }, // Exile attacking creature + life gain
   ]);
 }
 
@@ -143,11 +143,11 @@ export function createBlueDeck(): CardTemplate[] {
     // Lands (24)
     { name: 'Island', count: 24 },
     // Creatures (20)
-    { name: 'Air Elemental', count: 10 },  // 4/4 Flying
-    { name: 'Fog Elemental', count: 10 },  // 4/4 Flying
+    { name: 'Air Elemental', count: 10 }, // 4/4 Flying
+    { name: 'Fog Elemental', count: 10 }, // 4/4 Flying
     // Spells (16)
-    { name: 'Counterspell', count: 8 },    // Counter target spell
-    { name: 'Unsummon', count: 8 },        // Bounce creature
+    { name: 'Counterspell', count: 8 }, // Counter target spell
+    { name: 'Unsummon', count: 8 }, // Bounce creature
   ]);
 }
 
@@ -161,10 +161,10 @@ export function createBlackDeck(): CardTemplate[] {
     { name: 'Swamp', count: 24 },
     // Creatures (20)
     { name: 'Abyssal Specter', count: 10 }, // 2/3 Flying, damage -> discard
-    { name: 'Gravedigger', count: 10 },     // 2/2 ETB return creature
+    { name: 'Gravedigger', count: 10 }, // 2/2 ETB return creature
     // Spells (16)
-    { name: 'Terror', count: 8 },           // Destroy nonblack nonartifact creature
-    { name: 'Coercion', count: 8 },         // Targeted discard
+    { name: 'Terror', count: 8 }, // Destroy nonblack nonartifact creature
+    { name: 'Coercion', count: 8 }, // Targeted discard
   ]);
 }
 
@@ -178,10 +178,10 @@ export function createRedDeck(): CardTemplate[] {
     { name: 'Mountain', count: 22 },
     // Creatures (18)
     { name: 'Balduvian Barbarians', count: 10 }, // 3/2 aggressive
-    { name: 'Anaba Shaman', count: 8 },          // 2/2 with tap for damage
+    { name: 'Anaba Shaman', count: 8 }, // 2/2 with tap for damage
     // Spells (20)
-    { name: 'Lightning Blast', count: 10 },      // 4 damage
-    { name: 'Shock', count: 10 },                // 2 damage
+    { name: 'Lightning Blast', count: 10 }, // 4 damage
+    { name: 'Shock', count: 10 }, // 2 damage
   ]);
 }
 
@@ -194,11 +194,11 @@ export function createGreenDeck(): CardTemplate[] {
     // Lands (20)
     { name: 'Forest', count: 20 },
     // Creatures (32)
-    { name: 'Llanowar Elves', count: 8 },      // Mana acceleration
-    { name: 'Birds of Paradise', count: 8 },   // Mana acceleration (any color)
-    { name: 'Grizzly Bears', count: 16 },      // 2/2 for 1G
+    { name: 'Llanowar Elves', count: 8 }, // Mana acceleration
+    { name: 'Birds of Paradise', count: 8 }, // Mana acceleration (any color)
+    { name: 'Grizzly Bears', count: 16 }, // 2/2 for 1G
     // Spells (8)
-    { name: 'Giant Growth', count: 8 },        // +3/+3 combat trick
+    { name: 'Giant Growth', count: 8 }, // +3/+3 combat trick
   ]);
 }
 

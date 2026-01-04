@@ -33,7 +33,7 @@ export type TriggerEvent =
  */
 export interface TriggeredAbility {
   id: string;
-  source: string;      // Card instance ID
+  source: string; // Card instance ID
   controller: PlayerId;
   event: TriggerEvent;
   effect: (state: GameState) => void;
@@ -74,7 +74,7 @@ export function registerTrigger(state: GameState, event: TriggerEvent): void {
       const player = state.players[playerId];
 
       // Find the dying creature in the graveyard
-      const dyingCreature = player.graveyard.find(c => c.instanceId === event.cardId);
+      const dyingCreature = player.graveyard.find((c) => c.instanceId === event.cardId);
       if (dyingCreature) {
         const triggers = getDeathTriggersForDyingCard(dyingCreature, event, state);
 
@@ -98,7 +98,7 @@ export function registerTrigger(state: GameState, event: TriggerEvent): void {
 function getTriggersForCard(
   card: CardInstance,
   event: TriggerEvent,
-  _state: GameState
+  _state: GameState,
 ): Array<(state: GameState) => void> {
   const template = CardLoader.getById(card.scryfallId);
   if (!template) return [];
@@ -113,7 +113,7 @@ function getTriggersForCard(
         triggers.push((triggerState: GameState) => {
           // Find first nonblack, nonartifact creature controlled by opponent
           const opponent = card.controller === 'player' ? 'opponent' : 'player';
-          const opponentCreatures = triggerState.players[opponent].battlefield.filter(c => {
+          const opponentCreatures = triggerState.players[opponent].battlefield.filter((c) => {
             const t = CardLoader.getById(c.scryfallId);
             if (!t || !isCreature(t)) return false;
             // Check if nonblack and nonartifact
@@ -145,7 +145,7 @@ function getTriggersForCard(
           const player = triggerState.players[card.controller];
 
           // Find creature cards in graveyard (excluding the Gravedigger itself if somehow there)
-          const creatureCards = player.graveyard.filter(c => {
+          const creatureCards = player.graveyard.filter((c) => {
             if (c.instanceId === card.instanceId) return false;
             const t = CardLoader.getById(c.scryfallId);
             return t && isCreature(t);
@@ -254,10 +254,15 @@ function getTriggersForCard(
         triggers.push((triggerState: GameState) => {
           // Find an artifact to destroy (opponent's first, then own)
           for (const playerId of ['opponent', 'player'] as const) {
-            const targetPlayerId = card.controller === 'player' ? playerId : (playerId === 'player' ? 'opponent' : 'player');
+            const targetPlayerId =
+              card.controller === 'player'
+                ? playerId
+                : playerId === 'player'
+                  ? 'opponent'
+                  : 'player';
             const targetPlayer = triggerState.players[targetPlayerId];
 
-            const artifact = targetPlayer.battlefield.find(c => {
+            const artifact = targetPlayer.battlefield.find((c) => {
               const t = CardLoader.getById(c.scryfallId);
               return t && t.type_line?.toLowerCase().includes('artifact');
             });
@@ -318,7 +323,7 @@ function getTriggersForCard(
           const player = triggerState.players[card.controller];
 
           // Find a creature card in hand to discard
-          const creatureCardIndex = player.hand.findIndex(c => {
+          const creatureCardIndex = player.hand.findIndex((c) => {
             const t = CardLoader.getById(c.scryfallId);
             return t && isCreature(t);
           });
@@ -330,7 +335,9 @@ function getTriggersForCard(
             player.graveyard.push(discardedCard);
           } else {
             // No creature card to discard - sacrifice Hidden Horror
-            const horrorIndex = player.battlefield.findIndex(c => c.instanceId === card.instanceId);
+            const horrorIndex = player.battlefield.findIndex(
+              (c) => c.instanceId === card.instanceId,
+            );
             if (horrorIndex !== -1) {
               const horror = player.battlefield.splice(horrorIndex, 1)[0]!;
               horror.zone = 'graveyard';
@@ -355,7 +362,7 @@ function getTriggersForCard(
       if (event.type === 'ENTERS_BATTLEFIELD' && event.cardId === card.instanceId) {
         triggers.push((triggerState: GameState) => {
           const player = triggerState.players[card.controller];
-          const primalClay = player.battlefield.find(c => c.instanceId === card.instanceId);
+          const primalClay = player.battlefield.find((c) => c.instanceId === card.instanceId);
 
           if (primalClay && !primalClay.primalClayChoice) {
             // Default to 3/3 for AI - in a real game, player would choose
@@ -367,7 +374,7 @@ function getTriggersForCard(
             const opponent = triggerState.players[opponentPlayerId];
 
             // Check for opponent flyers
-            const opponentHasFlyers = opponent.battlefield.some(c => {
+            const opponentHasFlyers = opponent.battlefield.some((c) => {
               const t = CardLoader.getById(c.scryfallId);
               return t && t.keywords?.includes('Flying');
             });
@@ -396,7 +403,7 @@ function getTriggersForCard(
           const player = triggerState.players[card.controller];
 
           // Find a Goblin card in library
-          const goblinIndex = player.library.findIndex(c => {
+          const goblinIndex = player.library.findIndex((c) => {
             const t = CardLoader.getById(c.scryfallId);
             return t && t.type_line?.includes('Goblin');
           });
@@ -435,7 +442,9 @@ function getTriggersForCard(
             player.graveyard.push(discardedCard);
           } else {
             // No cards to discard - sacrifice Balduvian Horde
-            const hordeIndex = player.battlefield.findIndex(c => c.instanceId === card.instanceId);
+            const hordeIndex = player.battlefield.findIndex(
+              (c) => c.instanceId === card.instanceId,
+            );
             if (hordeIndex !== -1) {
               const horde = player.battlefield.splice(hordeIndex, 1)[0]!;
               horde.zone = 'graveyard';
@@ -459,7 +468,7 @@ function getTriggersForCard(
           const player = triggerState.players[card.controller];
 
           // Find a creature to sacrifice (not the Kjeldoran Dead itself)
-          const creatureIndex = player.battlefield.findIndex(c => {
+          const creatureIndex = player.battlefield.findIndex((c) => {
             if (c.instanceId === card.instanceId) return false;
             const t = CardLoader.getById(c.scryfallId);
             return t && isCreature(t);
@@ -474,7 +483,7 @@ function getTriggersForCard(
             player.graveyard.push(creature);
           } else {
             // No other creature to sacrifice - must sacrifice Kjeldoran Dead
-            const deadIndex = player.battlefield.findIndex(c => c.instanceId === card.instanceId);
+            const deadIndex = player.battlefield.findIndex((c) => c.instanceId === card.instanceId);
             if (deadIndex !== -1) {
               const dead = player.battlefield.splice(deadIndex, 1)[0]!;
               dead.zone = 'graveyard';
@@ -500,7 +509,7 @@ function getTriggersForCard(
 function getDeathTriggersForDyingCard(
   card: CardInstance,
   event: TriggerEvent,
-  _state: GameState
+  _state: GameState,
 ): Array<(state: GameState) => void> {
   if (event.type !== 'DIES') return [];
 
@@ -517,7 +526,7 @@ function getDeathTriggersForDyingCard(
         const owner = triggerState.players[card.owner];
 
         // Find the zombie in graveyard
-        const index = owner.graveyard.findIndex(c => c.instanceId === card.instanceId);
+        const index = owner.graveyard.findIndex((c) => c.instanceId === card.instanceId);
         if (index !== -1) {
           const zombie = owner.graveyard.splice(index, 1)[0]!;
           zombie.zone = 'library';
@@ -548,7 +557,7 @@ function getDeathTriggersForDyingCard(
         // Remove all Serf tokens from battlefield
         for (const playerId of ['player', 'opponent'] as const) {
           const player = triggerState.players[playerId];
-          player.battlefield = player.battlefield.filter(c => {
+          player.battlefield = player.battlefield.filter((c) => {
             const t = CardLoader.getById(c.scryfallId);
             // Check if it's a Serf token (will use isToken flag when implemented)
             return !(t?.name === 'Serf');

@@ -69,7 +69,7 @@ describe('Card Data Integrity', () => {
 
   test('non-land cards have mana costs', () => {
     const allCards = CardLoader.getAllCards();
-    const nonLands = allCards.filter(c => !c.type_line.includes('Land'));
+    const nonLands = allCards.filter((c) => !c.type_line.includes('Land'));
 
     for (const card of nonLands) {
       expect(card.mana_cost).toBeDefined();

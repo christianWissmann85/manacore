@@ -14,13 +14,13 @@ import type { PlayerId } from '../state/Zone';
  * Token definition - describes a type of token that can be created
  */
 export interface TokenDefinition {
-  id: string;           // Unique token ID (e.g., "token_serf")
-  name: string;         // Display name (e.g., "Serf")
-  type_line: string;    // Type line (e.g., "Creature — Serf")
-  power: string;        // Base power
-  toughness: string;    // Base toughness
-  colors: string[];     // Colors (e.g., ["B"] for black, [] for colorless)
-  keywords?: string[];  // Keywords (e.g., ["Flying"])
+  id: string; // Unique token ID (e.g., "token_serf")
+  name: string; // Display name (e.g., "Serf")
+  type_line: string; // Type line (e.g., "Creature — Serf")
+  power: string; // Base power
+  toughness: string; // Base toughness
+  colors: string[]; // Colors (e.g., ["B"] for black, [] for colorless)
+  keywords?: string[]; // Keywords (e.g., ["Flying"])
 }
 
 /**
@@ -139,7 +139,7 @@ export function createToken(
   tokenType: string,
   owner: PlayerId,
   controller: PlayerId = owner,
-  createdBy?: string
+  createdBy?: string,
 ): CardInstance {
   const definition = getTokenDefinition(tokenType);
 
@@ -149,12 +149,12 @@ export function createToken(
 
   const token: CardInstance = {
     instanceId: `token_${Date.now()}_${tokenInstanceCounter++}`,
-    scryfallId: definition.id,  // Synthetic ID for token lookup
+    scryfallId: definition.id, // Synthetic ID for token lookup
     controller,
     owner,
     zone: 'battlefield',
     tapped: false,
-    summoningSick: true,  // Tokens have summoning sickness
+    summoningSick: true, // Tokens have summoning sickness
     damage: 0,
     counters: {},
     temporaryModifications: [],
@@ -183,7 +183,7 @@ export function createTokens(
   count: number,
   owner: PlayerId,
   controller: PlayerId = owner,
-  createdBy?: string
+  createdBy?: string,
 ): CardInstance[] {
   const tokens: CardInstance[] = [];
 
@@ -200,7 +200,7 @@ export function createTokens(
 export function putTokensOntoBattlefield(
   state: { players: Record<PlayerId, { battlefield: CardInstance[] }> },
   tokens: CardInstance[],
-  controller: PlayerId
+  controller: PlayerId,
 ): void {
   for (const token of tokens) {
     state.players[controller].battlefield.push(token);
@@ -214,7 +214,7 @@ export function putTokensOntoBattlefield(
 export function removeAllTokensOfType(
   state: { players: Record<PlayerId, { battlefield: CardInstance[]; graveyard: CardInstance[] }> },
   tokenType: string,
-  destination: 'exile' | 'graveyard' = 'exile'
+  destination: 'exile' | 'graveyard' = 'exile',
 ): CardInstance[] {
   const removedTokens: CardInstance[] = [];
 
@@ -250,7 +250,7 @@ export function removeAllTokensOfType(
  */
 export function removeTokensCreatedBy(
   state: { players: Record<PlayerId, { battlefield: CardInstance[] }> },
-  sourceId: string
+  sourceId: string,
 ): CardInstance[] {
   const removedTokens: CardInstance[] = [];
 

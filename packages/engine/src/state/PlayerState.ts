@@ -45,8 +45,8 @@ export interface PlayerState {
 
   // Game rules tracking
   landsPlayedThisTurn: number;
-  hasPassedPriority: boolean;       // Passed priority on current stack state
-  consecutivePasses: number;        // Track consecutive priority passes
+  hasPassedPriority: boolean; // Passed priority on current stack state
+  consecutivePasses: number; // Track consecutive priority passes
 }
 
 /**

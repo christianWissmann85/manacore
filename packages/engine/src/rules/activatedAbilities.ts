@@ -19,16 +19,22 @@ import type { PlayerId } from '../state/Zone';
 import { CardLoader } from '../cards/CardLoader';
 import { isLand } from '../cards/CardTemplate';
 import type { ManaColor } from '../utils/manaCosts';
-import { getLandManaColors, parseManaCost, canPayManaCost, payManaCost, addManaToPool } from '../utils/manaCosts';
+import {
+  getLandManaColors,
+  parseManaCost,
+  canPayManaCost,
+  payManaCost,
+  addManaToPool,
+} from '../utils/manaCosts';
 import type { TargetRequirement } from './targeting';
 
 /**
  * Activated ability definition
  */
 export interface ActivatedAbility {
-  id: string;           // Unique ID for this ability
-  name: string;         // Display name
-  cost: AbilityCost;    // What you pay to activate
+  id: string; // Unique ID for this ability
+  name: string; // Display name
+  cost: AbilityCost; // What you pay to activate
   effect: AbilityEffect; // What happens when it resolves
   isManaAbility: boolean; // Mana abilities don't use the stack
   targetRequirements?: TargetRequirement[]; // Targeting requirements (if ability targets)
@@ -39,10 +45,10 @@ export interface ActivatedAbility {
  * Cost to activate an ability
  */
 export interface AbilityCost {
-  tap?: boolean;        // Tap the permanent
-  mana?: string;        // Mana cost (e.g., "{2}{R}")
+  tap?: boolean; // Tap the permanent
+  mana?: string; // Mana cost (e.g., "{2}{R}")
   sacrifice?: SacrificeCost; // Sacrifice cost
-  life?: number;        // Pay life cost
+  life?: number; // Pay life cost
 }
 
 /**
@@ -50,9 +56,9 @@ export interface AbilityCost {
  */
 export interface SacrificeCost {
   type: 'self' | 'creature' | 'permanent' | 'artifact' | 'land';
-  count?: number;       // How many to sacrifice (default 1)
+  count?: number; // How many to sacrifice (default 1)
   restriction?: {
-    notSelf?: boolean;  // Can't sacrifice the source
+    notSelf?: boolean; // Can't sacrifice the source
     mustBeControlled?: boolean; // Must sacrifice your own
   };
 }
@@ -62,8 +68,8 @@ export interface SacrificeCost {
  */
 export interface AbilityEffect {
   type: 'DAMAGE' | 'DESTROY' | 'DRAW_CARD' | 'ADD_MANA' | 'REGENERATE' | 'CUSTOM';
-  amount?: number;      // For damage or mana amount
-  target?: string;      // Target instance ID
+  amount?: number; // For damage or mana amount
+  target?: string; // Target instance ID
   manaColors?: ManaColor[]; // For ADD_MANA: colors that can be added
   custom?: (state: GameState) => void;
 }
@@ -93,17 +99,21 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { tap: true },
         effect: { type: 'DAMAGE', amount: 1 },
         isManaAbility: false,
-        targetRequirements: [{
-          id: 'target_0',
-          count: 1,
-          targetType: 'any',
-          zone: 'battlefield',
-          restrictions: [],
-          optional: false,
-          description: 'any target',
-        }],
+        targetRequirements: [
+          {
+            id: 'target_0',
+            count: 1,
+            targetType: 'any',
+            zone: 'battlefield',
+            restrictions: [],
+            optional: false,
+            description: 'any target',
+          },
+        ],
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           if (source.summoningSick) return false;
@@ -137,7 +147,9 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         },
         isManaAbility: true,
         canActivate: (_state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = _state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = _state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           // Creatures have summoning sickness for tap abilities
@@ -155,25 +167,30 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { tap: true, mana: '{R}' },
         effect: { type: 'DAMAGE', amount: 1 },
         isManaAbility: false,
-        targetRequirements: [{
-          id: 'target_0',
-          count: 1,
-          targetType: 'any',
-          zone: 'battlefield',
-          restrictions: [],
-          optional: false,
-          description: 'any target',
-        }],
+        targetRequirements: [
+          {
+            id: 'target_0',
+            count: 1,
+            targetType: 'any',
+            zone: 'battlefield',
+            restrictions: [],
+            optional: false,
+            description: 'any target',
+          },
+        ],
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           if (source.summoningSick) return false;
 
           // Check if player can pay {R}
           const player = state.players[controller];
-          const totalRedMana = player.manaPool.red +
-            player.battlefield.filter(p => {
+          const totalRedMana =
+            player.manaPool.red +
+            player.battlefield.filter((p) => {
               if (p.tapped) return false;
               const t = CardLoader.getById(p.scryfallId);
               return t && (t.name === 'Mountain' || getLandManaColors(t.name).includes('R'));
@@ -200,7 +217,9 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         },
         isManaAbility: true, // Sacrifice for mana is a mana ability
         canActivate: (_state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = _state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = _state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           return source !== undefined;
         },
       });
@@ -221,7 +240,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         canActivate: (_state: GameState, _sourceId: string, controller: PlayerId) => {
           // Check if player has any creatures to sacrifice
           const player = _state.players[controller];
-          return player.battlefield.some(c => {
+          return player.battlefield.some((c) => {
             const t = CardLoader.getById(c.scryfallId);
             return t && t.type_line?.toLowerCase().includes('creature');
           });
@@ -241,7 +260,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
             // Find Fallen Angel and add +2/+1
             for (const playerId of ['player', 'opponent'] as const) {
               const fallenAngel = state.players[playerId].battlefield.find(
-                c => c.instanceId === card.instanceId
+                (c) => c.instanceId === card.instanceId,
               );
               if (fallenAngel) {
                 fallenAngel.temporaryModifications.push({
@@ -260,11 +279,13 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         canActivate: (_state: GameState, sourceId: string, controller: PlayerId) => {
           const player = _state.players[controller];
           // Must have another creature to sacrifice (not self)
-          return player.battlefield.filter(c => {
-            if (c.instanceId === sourceId) return false;
-            const t = CardLoader.getById(c.scryfallId);
-            return t && t.type_line?.toLowerCase().includes('creature');
-          }).length > 0;
+          return (
+            player.battlefield.filter((c) => {
+              if (c.instanceId === sourceId) return false;
+              const t = CardLoader.getById(c.scryfallId);
+              return t && t.type_line?.toLowerCase().includes('creature');
+            }).length > 0
+          );
         },
       });
       break;
@@ -277,23 +298,27 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { tap: true, mana: '{1}', sacrifice: { type: 'creature' } },
         effect: { type: 'DAMAGE', amount: 2 },
         isManaAbility: false,
-        targetRequirements: [{
-          id: 'target_0',
-          count: 1,
-          targetType: 'any',
-          zone: 'battlefield',
-          restrictions: [],
-          optional: false,
-          description: 'any target',
-        }],
+        targetRequirements: [
+          {
+            id: 'target_0',
+            count: 1,
+            targetType: 'any',
+            zone: 'battlefield',
+            restrictions: [],
+            optional: false,
+            description: 'any target',
+          },
+        ],
         canActivate: (_state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = _state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = _state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
 
           // Check if player has any creatures to sacrifice
           const player = _state.players[controller];
-          const hasCreature = player.battlefield.some(c => {
+          const hasCreature = player.battlefield.some((c) => {
             const t = CardLoader.getById(c.scryfallId);
             return t && t.type_line?.toLowerCase().includes('creature');
           });
@@ -325,12 +350,14 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         },
         isManaAbility: false,
         canActivate: (_state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = _state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = _state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
 
           const player = _state.players[controller];
-          const hasCreature = player.battlefield.some(c => {
+          const hasCreature = player.battlefield.some((c) => {
             const t = CardLoader.getById(c.scryfallId);
             return t && t.type_line?.toLowerCase().includes('creature');
           });
@@ -353,7 +380,9 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         },
         isManaAbility: true,
         canActivate: (_state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = _state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = _state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           return source !== undefined && !source.tapped;
         },
       });
@@ -368,7 +397,9 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         },
         isManaAbility: true,
         canActivate: (_state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = _state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = _state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           return source !== undefined && !source.tapped;
         },
       });
@@ -427,7 +458,9 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         },
         isManaAbility: true,
         canActivate: (_state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = _state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = _state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           return source !== undefined && !source.tapped;
         },
       });
@@ -493,17 +526,21 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
           },
         },
         isManaAbility: false,
-        targetRequirements: [{
-          id: 'target_0',
-          count: 1,
-          targetType: 'any',
-          zone: 'battlefield',
-          restrictions: [],
-          optional: false,
-          description: 'any target',
-        }],
+        targetRequirements: [
+          {
+            id: 'target_0',
+            count: 1,
+            targetType: 'any',
+            zone: 'battlefield',
+            restrictions: [],
+            optional: false,
+            description: 'any target',
+          },
+        ],
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           if (source.summoningSick) return false;
@@ -520,17 +557,21 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { tap: true },
         effect: { type: 'DAMAGE', amount: 2 },
         isManaAbility: false,
-        targetRequirements: [{
-          id: 'target_0',
-          count: 1,
-          targetType: 'creature',
-          zone: 'battlefield',
-          restrictions: ['attacking_or_blocking'],
-          optional: false,
-          description: 'target attacking or blocking creature',
-        }],
+        targetRequirements: [
+          {
+            id: 'target_0',
+            count: 1,
+            targetType: 'creature',
+            zone: 'battlefield',
+            restrictions: [{ type: 'combat', status: 'attacking_or_blocking' }],
+            optional: false,
+            description: 'target attacking or blocking creature',
+          },
+        ],
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           if (source.summoningSick) return false;
@@ -547,17 +588,21 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { tap: true },
         effect: { type: 'DAMAGE', amount: 1 },
         isManaAbility: false,
-        targetRequirements: [{
-          id: 'target_0',
-          count: 1,
-          targetType: 'creature',
-          zone: 'battlefield',
-          restrictions: ['attacking_or_blocking'],
-          optional: false,
-          description: 'target attacking or blocking creature',
-        }],
+        targetRequirements: [
+          {
+            id: 'target_0',
+            count: 1,
+            targetType: 'creature',
+            zone: 'battlefield',
+            restrictions: [{ type: 'combat', status: 'attacking_or_blocking' }],
+            optional: false,
+            description: 'target attacking or blocking creature',
+          },
+        ],
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           if (source.summoningSick) return false;
@@ -574,17 +619,24 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { tap: true },
         effect: { type: 'DAMAGE', amount: 4 },
         isManaAbility: false,
-        targetRequirements: [{
-          id: 'target_0',
-          count: 1,
-          targetType: 'creature',
-          zone: 'battlefield',
-          restrictions: ['attacking', 'flying'],
-          optional: false,
-          description: 'target attacking creature with flying',
-        }],
+        targetRequirements: [
+          {
+            id: 'target_0',
+            count: 1,
+            targetType: 'creature',
+            zone: 'battlefield',
+            restrictions: [
+              { type: 'combat', status: 'attacking' },
+              { type: 'keyword', keyword: 'flying' },
+            ],
+            optional: false,
+            description: 'target attacking creature with flying',
+          },
+        ],
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           if (source.summoningSick) return false;
@@ -601,22 +653,28 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { mana: '{1}{R}' },
         effect: { type: 'DAMAGE', amount: 1 },
         isManaAbility: false,
-        targetRequirements: [{
-          id: 'target_0',
-          count: 1,
-          targetType: 'any',
-          zone: 'battlefield',
-          restrictions: [],
-          optional: false,
-          description: 'any target',
-        }],
+        targetRequirements: [
+          {
+            id: 'target_0',
+            count: 1,
+            targetType: 'any',
+            zone: 'battlefield',
+            restrictions: [],
+            optional: false,
+            description: 'any target',
+          },
+        ],
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           // Check mana availability
           const player = state.players[controller];
-          const totalMana = player.manaPool.red + player.manaPool.colorless +
-            player.battlefield.filter(p => {
+          const totalMana =
+            player.manaPool.red +
+            player.manaPool.colorless +
+            player.battlefield.filter((p) => {
               if (p.tapped) return false;
               const t = CardLoader.getById(p.scryfallId);
               return t && isLand(t);
@@ -641,17 +699,21 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
           },
         },
         isManaAbility: false,
-        targetRequirements: [{
-          id: 'target_0',
-          count: 1,
-          targetType: 'creature',
-          zone: 'battlefield',
-          restrictions: ['attacking'],
-          optional: false,
-          description: 'target attacking creature',
-        }],
+        targetRequirements: [
+          {
+            id: 'target_0',
+            count: 1,
+            targetType: 'creature',
+            zone: 'battlefield',
+            restrictions: [{ type: 'combat', status: 'attacking' }],
+            optional: false,
+            description: 'target attacking creature',
+          },
+        ],
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           if (source.summoningSick) return false;
@@ -673,17 +735,21 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
           },
         },
         isManaAbility: false,
-        targetRequirements: [{
-          id: 'target_0',
-          count: 1,
-          targetType: 'creature',
-          zone: 'battlefield',
-          restrictions: [],
-          optional: false,
-          description: 'target creature',
-        }],
+        targetRequirements: [
+          {
+            id: 'target_0',
+            count: 1,
+            targetType: 'creature',
+            zone: 'battlefield',
+            restrictions: [],
+            optional: false,
+            description: 'target creature',
+          },
+        ],
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           if (source.summoningSick) return false;
@@ -705,17 +771,21 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
           },
         },
         isManaAbility: false,
-        targetRequirements: [{
-          id: 'target_0',
-          count: 1,
-          targetType: 'creature',
-          zone: 'battlefield',
-          restrictions: [],
-          optional: false,
-          description: 'target creature',
-        }],
+        targetRequirements: [
+          {
+            id: 'target_0',
+            count: 1,
+            targetType: 'creature',
+            zone: 'battlefield',
+            restrictions: [],
+            optional: false,
+            description: 'target creature',
+          },
+        ],
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           if (source.summoningSick) return false;
@@ -738,7 +808,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
             // Find and pump self
             for (const playerId of ['player', 'opponent'] as const) {
               const creature = state.players[playerId].battlefield.find(
-                c => c.instanceId === card.instanceId
+                (c) => c.instanceId === card.instanceId,
               );
               if (creature) {
                 creature.temporaryModifications.push({
@@ -755,12 +825,15 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         },
         isManaAbility: false,
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           // Check for red mana
           const player = state.players[controller];
-          const hasRed = player.manaPool.red >= 1 ||
-            player.battlefield.some(p => {
+          const hasRed =
+            player.manaPool.red >= 1 ||
+            player.battlefield.some((p) => {
               if (p.tapped) return false;
               const t = CardLoader.getById(p.scryfallId);
               return t && (t.name === 'Mountain' || getLandManaColors(t.name).includes('R'));
@@ -781,7 +854,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
           custom: (state: GameState) => {
             for (const playerId of ['player', 'opponent'] as const) {
               const creature = state.players[playerId].battlefield.find(
-                c => c.instanceId === card.instanceId
+                (c) => c.instanceId === card.instanceId,
               );
               if (creature) {
                 creature.temporaryModifications.push({
@@ -798,11 +871,14 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         },
         isManaAbility: false,
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           const player = state.players[controller];
-          const totalMana = Object.values(player.manaPool).reduce((a, b) => a + b, 0) +
-            player.battlefield.filter(p => {
+          const totalMana =
+            (Object.values(player.manaPool) as number[]).reduce((a, b) => a + b, 0) +
+            player.battlefield.filter((p) => {
               if (p.tapped) return false;
               const t = CardLoader.getById(p.scryfallId);
               return t && isLand(t);
@@ -823,7 +899,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
           custom: (state: GameState) => {
             for (const playerId of ['player', 'opponent'] as const) {
               const creature = state.players[playerId].battlefield.find(
-                c => c.instanceId === card.instanceId
+                (c) => c.instanceId === card.instanceId,
               );
               if (creature) {
                 creature.temporaryModifications.push({
@@ -840,7 +916,9 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         },
         isManaAbility: false,
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           return source !== undefined;
         },
       });
@@ -857,7 +935,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
           custom: (state: GameState) => {
             for (const playerId of ['player', 'opponent'] as const) {
               const creature = state.players[playerId].battlefield.find(
-                c => c.instanceId === card.instanceId
+                (c) => c.instanceId === card.instanceId,
               );
               if (creature) {
                 creature.temporaryModifications.push({
@@ -874,7 +952,9 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         },
         isManaAbility: false,
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           return source !== undefined;
         },
       });
@@ -891,7 +971,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
           custom: (state: GameState) => {
             for (const playerId of ['player', 'opponent'] as const) {
               const creature = state.players[playerId].battlefield.find(
-                c => c.instanceId === card.instanceId
+                (c) => c.instanceId === card.instanceId,
               );
               if (creature) {
                 creature.temporaryModifications.push({
@@ -908,7 +988,9 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         },
         isManaAbility: false,
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           return source !== undefined;
         },
       });
@@ -925,7 +1007,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
           custom: (state: GameState) => {
             for (const playerId of ['player', 'opponent'] as const) {
               const creature = state.players[playerId].battlefield.find(
-                c => c.instanceId === card.instanceId
+                (c) => c.instanceId === card.instanceId,
               );
               if (creature) {
                 creature.temporaryModifications.push({
@@ -942,11 +1024,13 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         },
         isManaAbility: false,
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           // Check if already activated this turn (by checking for existing pump from this source)
           const alreadyActivated = source.temporaryModifications.some(
-            m => m.source === card.instanceId && m.expiresAt === 'end_of_turn'
+            (m) => m.source === card.instanceId && m.expiresAt === 'end_of_turn',
           );
           return !alreadyActivated;
         },
@@ -968,17 +1052,21 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
           },
         },
         isManaAbility: false,
-        targetRequirements: [{
-          id: 'target_0',
-          count: 1,
-          targetType: 'permanent',
-          zone: 'battlefield',
-          restrictions: [],
-          optional: false,
-          description: 'target artifact, creature, or land',
-        }],
+        targetRequirements: [
+          {
+            id: 'target_0',
+            count: 1,
+            targetType: 'permanent',
+            zone: 'battlefield',
+            restrictions: [],
+            optional: false,
+            description: 'target artifact, creature, or land',
+          },
+        ],
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           if (source.summoningSick) return false;
@@ -1000,17 +1088,21 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
           },
         },
         isManaAbility: false,
-        targetRequirements: [{
-          id: 'target_0',
-          count: 1,
-          targetType: 'creature',
-          zone: 'battlefield',
-          restrictions: [],
-          optional: false,
-          description: 'target creature',
-        }],
+        targetRequirements: [
+          {
+            id: 'target_0',
+            count: 1,
+            targetType: 'creature',
+            zone: 'battlefield',
+            restrictions: [],
+            optional: false,
+            description: 'target creature',
+          },
+        ],
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           if (source.summoningSick) return false;
@@ -1032,17 +1124,21 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
           },
         },
         isManaAbility: false,
-        targetRequirements: [{
-          id: 'target_0',
-          count: 1,
-          targetType: 'creature',
-          zone: 'battlefield',
-          restrictions: [],
-          optional: false,
-          description: 'target creature',
-        }],
+        targetRequirements: [
+          {
+            id: 'target_0',
+            count: 1,
+            targetType: 'creature',
+            zone: 'battlefield',
+            restrictions: [],
+            optional: false,
+            description: 'target creature',
+          },
+        ],
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           if (source.summoningSick) return false;
@@ -1068,7 +1164,9 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         },
         isManaAbility: false,
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           return source !== undefined;
         },
       });
@@ -1087,17 +1185,21 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
           },
         },
         isManaAbility: false,
-        targetRequirements: [{
-          id: 'target_0',
-          count: 1,
-          targetType: 'creature',
-          zone: 'battlefield',
-          restrictions: [],
-          optional: false,
-          description: 'target creature',
-        }],
+        targetRequirements: [
+          {
+            id: 'target_0',
+            count: 1,
+            targetType: 'creature',
+            zone: 'battlefield',
+            restrictions: [],
+            optional: false,
+            description: 'target creature',
+          },
+        ],
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           return source !== undefined;
         },
       });
@@ -1118,17 +1220,21 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
           },
         },
         isManaAbility: false,
-        targetRequirements: [{
-          id: 'target_0',
-          count: 1,
-          targetType: 'any',
-          zone: 'battlefield',
-          restrictions: [],
-          optional: false,
-          description: 'any target',
-        }],
+        targetRequirements: [
+          {
+            id: 'target_0',
+            count: 1,
+            targetType: 'any',
+            zone: 'battlefield',
+            restrictions: [],
+            optional: false,
+            description: 'any target',
+          },
+        ],
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           if (source.summoningSick) return false;
@@ -1147,17 +1253,21 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { sacrifice: { type: 'self' } },
         effect: { type: 'DESTROY' },
         isManaAbility: false,
-        targetRequirements: [{
-          id: 'target_0',
-          count: 1,
-          targetType: 'creature',
-          zone: 'battlefield',
-          restrictions: ['black'],
-          optional: false,
-          description: 'target black creature',
-        }],
+        targetRequirements: [
+          {
+            id: 'target_0',
+            count: 1,
+            targetType: 'creature',
+            zone: 'battlefield',
+            restrictions: [{ type: 'color', color: 'B', negated: false }],
+            optional: false,
+            description: 'target black creature',
+          },
+        ],
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           return source !== undefined;
         },
       });
@@ -1183,7 +1293,9 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         },
         isManaAbility: false,
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           if (source.summoningSick) return false;
@@ -1215,10 +1327,12 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         },
         isManaAbility: false,
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           // Check if there's a red spell on stack
-          return state.stack.some(s => {
+          return state.stack.some((s) => {
             const t = CardLoader.getById(s.card.scryfallId);
             return t && t.colors?.includes('R');
           });
@@ -1239,17 +1353,21 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
           },
         },
         isManaAbility: false,
-        targetRequirements: [{
-          id: 'target_0',
-          count: 1,
-          targetType: 'creature',
-          zone: 'battlefield',
-          restrictions: [],
-          optional: false,
-          description: 'target creature',
-        }],
+        targetRequirements: [
+          {
+            id: 'target_0',
+            count: 1,
+            targetType: 'creature',
+            zone: 'battlefield',
+            restrictions: [],
+            optional: false,
+            description: 'target creature',
+          },
+        ],
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           return source !== undefined;
         },
       });
@@ -1263,17 +1381,21 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { tap: true, sacrifice: { type: 'self' } },
         effect: { type: 'DESTROY' },
         isManaAbility: false,
-        targetRequirements: [{
-          id: 'target_0',
-          count: 1,
-          targetType: 'creature',
-          zone: 'battlefield',
-          restrictions: ['wall'],
-          optional: false,
-          description: 'target Wall',
-        }],
+        targetRequirements: [
+          {
+            id: 'target_0',
+            count: 1,
+            targetType: 'creature',
+            zone: 'battlefield',
+            restrictions: [{ type: 'subtype', subtype: 'Wall' }],
+            optional: false,
+            description: 'target Wall',
+          },
+        ],
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           if (source.summoningSick) return false;
@@ -1293,7 +1415,9 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         effect: { type: 'REGENERATE' },
         isManaAbility: false,
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           const player = state.players[controller];
           return player.life >= 1; // Need life to pay
@@ -1315,7 +1439,9 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         },
         isManaAbility: false,
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           const player = state.players[controller];
           return player.life > 1;
@@ -1338,17 +1464,21 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
           },
         },
         isManaAbility: false,
-        targetRequirements: [{
-          id: 'target_0',
-          count: 1,
-          targetType: 'creature',
-          zone: 'battlefield',
-          restrictions: [],
-          optional: false,
-          description: 'target creature',
-        }],
+        targetRequirements: [
+          {
+            id: 'target_0',
+            count: 1,
+            targetType: 'creature',
+            zone: 'battlefield',
+            restrictions: [],
+            optional: false,
+            description: 'target creature',
+          },
+        ],
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           if (source.summoningSick) return false;
@@ -1362,7 +1492,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
       abilities.push({
         id: `${card.instanceId}_sac_buff`,
         name: '{T}, Sacrifice Swamp: Creature +1/+1',
-        cost: { tap: true, sacrifice: { type: 'land', subtype: 'Swamp' } },
+        cost: { tap: true, sacrifice: { type: 'land' } },
         effect: {
           type: 'CUSTOM',
           custom: (_state: GameState) => {
@@ -1370,22 +1500,26 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
           },
         },
         isManaAbility: false,
-        targetRequirements: [{
-          id: 'target_0',
-          count: 1,
-          targetType: 'creature',
-          zone: 'battlefield',
-          restrictions: [],
-          optional: false,
-          description: 'target creature',
-        }],
+        targetRequirements: [
+          {
+            id: 'target_0',
+            count: 1,
+            targetType: 'creature',
+            zone: 'battlefield',
+            restrictions: [],
+            optional: false,
+            description: 'target creature',
+          },
+        ],
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           if (source.summoningSick) return false;
           // Check for swamp to sacrifice
-          const hasSwamp = state.players[controller].battlefield.some(p => {
+          const hasSwamp = state.players[controller].battlefield.some((p) => {
             const t = CardLoader.getById(p.scryfallId);
             return t && t.name === 'Swamp';
           });
@@ -1408,7 +1542,9 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         },
         isManaAbility: false,
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           if (source.summoningSick) return false;
@@ -1439,14 +1575,16 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         },
         isManaAbility: false,
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           if (source.summoningSick) return false;
           const player = state.players[controller];
           if (player.life <= 1) return false;
           // Check for black spell on stack
-          return state.stack.some(s => {
+          return state.stack.some((s) => {
             const t = CardLoader.getById(s.card.scryfallId);
             return t && t.colors?.includes('B');
           });
@@ -1476,13 +1614,15 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         },
         isManaAbility: false,
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           if (source.summoningSick) return false;
           const player = state.players[controller];
           if (player.life <= 1) return false;
-          return state.stack.some(s => {
+          return state.stack.some((s) => {
             const t = CardLoader.getById(s.card.scryfallId);
             return t && t.colors?.includes('W');
           });
@@ -1504,7 +1644,9 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         },
         isManaAbility: false,
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           if (source.summoningSick) return false;
@@ -1524,12 +1666,14 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         effect: { type: 'DRAW_CARD', amount: 3 }, // Discard handled separately
         isManaAbility: false,
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           if (source.summoningSick) return false;
           // Check for 2 lands to sacrifice
-          const landCount = state.players[controller].battlefield.filter(p => {
+          const landCount = state.players[controller].battlefield.filter((p) => {
             const t = CardLoader.getById(p.scryfallId);
             return t && isLand(t);
           }).length;
@@ -1551,17 +1695,21 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
           },
         },
         isManaAbility: false,
-        targetRequirements: [{
-          id: 'target_0',
-          count: 1,
-          targetType: 'creature',
-          zone: 'battlefield',
-          restrictions: [],
-          optional: false,
-          description: 'target creature',
-        }],
+        targetRequirements: [
+          {
+            id: 'target_0',
+            count: 1,
+            targetType: 'creature',
+            zone: 'battlefield',
+            restrictions: [],
+            optional: false,
+            description: 'target creature',
+          },
+        ],
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           if (source.summoningSick) return false;
@@ -1600,7 +1748,9 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         effect: { type: 'REGENERATE' },
         isManaAbility: false,
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
 
           // Check if player can pay {B}
@@ -1620,7 +1770,9 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         effect: { type: 'REGENERATE' },
         isManaAbility: false,
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
 
           const player = state.players[controller];
@@ -1639,7 +1791,9 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         effect: { type: 'REGENERATE' },
         isManaAbility: false,
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
 
           const player = state.players[controller];
@@ -1658,7 +1812,9 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         effect: { type: 'REGENERATE' },
         isManaAbility: false,
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
 
           const player = state.players[controller];
@@ -1683,7 +1839,9 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         effect: { type: 'REGENERATE' },
         isManaAbility: false,
         canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
 
           const player = state.players[controller];
@@ -1691,7 +1849,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
           if (!canPayManaCost(player.manaPool, cost)) return false;
 
           // Check if player has a Forest to sacrifice
-          const hasForest = player.battlefield.some(p => {
+          const hasForest = player.battlefield.some((p) => {
             if (p.instanceId === sourceId) return false;
             const t = CardLoader.getById(p.scryfallId);
             return t && t.type_line?.toLowerCase().includes('forest');
@@ -1730,7 +1888,10 @@ const LANDS_WITH_CUSTOM_ABILITIES = new Set([
 /**
  * Get mana abilities for a land card
  */
-function getManaAbilitiesForLand(card: CardInstance, template: { type_line: string; oracle_text?: string; name: string }): ActivatedAbility[] {
+function getManaAbilitiesForLand(
+  card: CardInstance,
+  template: { type_line: string; oracle_text?: string; name: string },
+): ActivatedAbility[] {
   // Skip generic parsing for lands with custom implementations
   if (LANDS_WITH_CUSTOM_ABILITIES.has(template.name)) {
     return [];
@@ -1754,7 +1915,9 @@ function getManaAbilitiesForLand(card: CardInstance, template: { type_line: stri
       },
       isManaAbility: true,
       canActivate: (_state: GameState, sourceId: string, controller: PlayerId) => {
-        const source = _state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+        const source = _state.players[controller].battlefield.find(
+          (c) => c.instanceId === sourceId,
+        );
         if (!source) return false;
         if (source.tapped) return false;
         // Lands don't have summoning sickness for mana abilities
@@ -1778,7 +1941,10 @@ function getManaAbilitiesForLand(card: CardInstance, template: { type_line: stri
  * - "{T}: Add {W} or {U}."
  * - "{T}: Add {G}{G}."
  */
-function parseManaAbilitiesFromOracleText(card: CardInstance, oracleText: string): ActivatedAbility[] {
+function parseManaAbilitiesFromOracleText(
+  card: CardInstance,
+  oracleText: string,
+): ActivatedAbility[] {
   const abilities: ActivatedAbility[] = [];
 
   // Pattern: "{T}: Add {X}" or "{T}: Add {X} or {Y}"
@@ -1801,7 +1967,9 @@ function parseManaAbilitiesFromOracleText(card: CardInstance, oracleText: string
         },
         isManaAbility: true,
         canActivate: (_state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = _state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          const source = _state.players[controller].battlefield.find(
+            (c) => c.instanceId === sourceId,
+          );
           if (!source) return false;
           if (source.tapped) return false;
           return true;
@@ -1811,7 +1979,11 @@ function parseManaAbilitiesFromOracleText(card: CardInstance, oracleText: string
   }
 
   // If no mana abilities found via pattern, check for simple colorless producers
-  if (abilities.length === 0 && oracleText.includes('{T}') && oracleText.toLowerCase().includes('add')) {
+  if (
+    abilities.length === 0 &&
+    oracleText.includes('{T}') &&
+    oracleText.toLowerCase().includes('add')
+  ) {
     // Default to colorless if we can't parse
     abilities.push({
       id: `${card.instanceId}_tap_mana`,
@@ -1824,7 +1996,9 @@ function parseManaAbilitiesFromOracleText(card: CardInstance, oracleText: string
       },
       isManaAbility: true,
       canActivate: (_state: GameState, sourceId: string, controller: PlayerId) => {
-        const source = _state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+        const source = _state.players[controller].battlefield.find(
+          (c) => c.instanceId === sourceId,
+        );
         if (!source) return false;
         if (source.tapped) return false;
         return true;
@@ -1868,7 +2042,7 @@ function createCreatureManaAbility(card: CardInstance, colors: ManaColor[]): Act
     },
     isManaAbility: true,
     canActivate: (_state: GameState, sourceId: string, controller: PlayerId) => {
-      const source = _state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+      const source = _state.players[controller].battlefield.find((c) => c.instanceId === sourceId);
       if (!source) return false;
       if (source.tapped) return false;
       // Creatures DO have summoning sickness for tap abilities
@@ -1901,7 +2075,9 @@ function createPainLandAbilities(card: CardInstance, colors: ManaColor[]): Activ
       },
       isManaAbility: true,
       canActivate: (_state: GameState, sourceId: string, controller: PlayerId) => {
-        const source = _state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+        const source = _state.players[controller].battlefield.find(
+          (c) => c.instanceId === sourceId,
+        );
         return source !== undefined && !source.tapped;
       },
     },
@@ -1917,7 +2093,9 @@ function createPainLandAbilities(card: CardInstance, colors: ManaColor[]): Activ
       },
       isManaAbility: true,
       canActivate: (_state: GameState, sourceId: string, controller: PlayerId) => {
-        const source = _state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+        const source = _state.players[controller].battlefield.find(
+          (c) => c.instanceId === sourceId,
+        );
         return source !== undefined && !source.tapped;
       },
     },
@@ -1947,7 +2125,9 @@ function createSacrificeLandAbilities(card: CardInstance, color: ManaColor): Act
       },
       isManaAbility: true,
       canActivate: (_state: GameState, sourceId: string, controller: PlayerId) => {
-        const source = _state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+        const source = _state.players[controller].battlefield.find(
+          (c) => c.instanceId === sourceId,
+        );
         return source !== undefined && !source.tapped;
       },
     },
@@ -1963,7 +2143,9 @@ function createSacrificeLandAbilities(card: CardInstance, color: ManaColor): Act
       },
       isManaAbility: true,
       canActivate: (_state: GameState, sourceId: string, controller: PlayerId) => {
-        const source = _state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+        const source = _state.players[controller].battlefield.find(
+          (c) => c.instanceId === sourceId,
+        );
         return source !== undefined && !source.tapped;
       },
     },
@@ -1988,7 +2170,7 @@ export function payCosts(
   state: GameState,
   sourceId: string,
   cost: AbilityCost,
-  sacrificeTargetId?: string  // For non-self sacrifice, which creature to sacrifice
+  sacrificeTargetId?: string, // For non-self sacrifice, which creature to sacrifice
 ): boolean {
   const controller = findCardController(state, sourceId);
   if (!controller) return false;
@@ -2026,7 +2208,13 @@ export function payCosts(
 
   // Pay sacrifice cost
   if (cost.sacrifice) {
-    const sacrificed = paySacrificeCost(state, controller, cost.sacrifice, sourceId, sacrificeTargetId);
+    const sacrificed = paySacrificeCost(
+      state,
+      controller,
+      cost.sacrifice,
+      sourceId,
+      sacrificeTargetId,
+    );
     if (!sacrificed) return false;
   }
 
@@ -2048,13 +2236,13 @@ function paySacrificeCost(
   controller: PlayerId,
   sacCost: SacrificeCost,
   sourceId: string,
-  targetId?: string
+  targetId?: string,
 ): boolean {
   const player = state.players[controller];
 
   if (sacCost.type === 'self') {
     // Sacrifice the source of the ability
-    const sourceIndex = player.battlefield.findIndex(c => c.instanceId === sourceId);
+    const sourceIndex = player.battlefield.findIndex((c) => c.instanceId === sourceId);
     if (sourceIndex === -1) return false;
 
     const source = player.battlefield[sourceIndex]!;
@@ -2082,7 +2270,7 @@ function paySacrificeCost(
   // Non-self sacrifice: need a target to sacrifice
   if (!targetId) {
     // Auto-select a valid sacrifice target (first matching creature)
-    const validTargets = player.battlefield.filter(c => {
+    const validTargets = player.battlefield.filter((c) => {
       // Skip the source if notSelf restriction
       if (sacCost.restriction?.notSelf && c.instanceId === sourceId) return false;
 
@@ -2108,7 +2296,7 @@ function paySacrificeCost(
   }
 
   // Sacrifice the target
-  const targetIndex = player.battlefield.findIndex(c => c.instanceId === targetId);
+  const targetIndex = player.battlefield.findIndex((c) => c.instanceId === targetId);
   if (targetIndex === -1) return false;
 
   const target = player.battlefield[targetIndex]!;
@@ -2138,7 +2326,7 @@ export function applyAbilityEffect(
   effect: AbilityEffect,
   controller?: PlayerId,
   manaColorChoice?: ManaColor,
-  sourceId?: string
+  sourceId?: string,
 ): void {
   switch (effect.type) {
     case 'DAMAGE':
@@ -2155,7 +2343,7 @@ export function applyAbilityEffect(
         state.players[controller].manaPool = addManaToPool(
           state.players[controller].manaPool,
           color,
-          amount
+          amount,
         );
       }
       break;
@@ -2165,7 +2353,7 @@ export function applyAbilityEffect(
       // This protects it from the next destruction effect this turn
       if (sourceId && controller) {
         const creature = state.players[controller].battlefield.find(
-          c => c.instanceId === sourceId
+          (c) => c.instanceId === sourceId,
         );
         if (creature) {
           creature.regenerationShields = (creature.regenerationShields || 0) + 1;
@@ -2196,7 +2384,7 @@ function applyDamageToTarget(state: GameState, targetId: string, amount: number)
   // Otherwise, target is a creature
   for (const playerId of ['player', 'opponent'] as const) {
     const player = state.players[playerId];
-    const creature = player.battlefield.find(c => c.instanceId === targetId);
+    const creature = player.battlefield.find((c) => c.instanceId === targetId);
 
     if (creature) {
       creature.damage += amount;
@@ -2213,7 +2401,7 @@ function findCardController(state: GameState, cardId: string): PlayerId | null {
     const player = state.players[playerId];
 
     for (const zone of [player.battlefield, player.hand, player.graveyard, player.library]) {
-      if (zone.find(c => c.instanceId === cardId)) {
+      if (zone.find((c) => c.instanceId === cardId)) {
         return playerId;
       }
     }
@@ -2230,7 +2418,7 @@ function findCard(state: GameState, cardId: string): CardInstance | null {
     const player = state.players[playerId];
 
     for (const zone of [player.battlefield, player.hand, player.graveyard, player.library]) {
-      const card = zone.find(c => c.instanceId === cardId);
+      const card = zone.find((c) => c.instanceId === cardId);
       if (card) return card;
     }
   }
