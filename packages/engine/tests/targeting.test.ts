@@ -136,23 +136,18 @@ describe('Target Validation', () => {
 
   test('rejects black creature for "nonblack creature" requirement', () => {
     const mountain = CardLoader.getByName('Mountain');
-    const vampire = CardLoader.getByName('Sengir Vampire');
-
-    if (!vampire) {
-      console.log('Sengir Vampire not found, skipping test');
-      return;
-    }
+    const specter = CardLoader.getByName('Abyssal Specter'); // Black creature in 6th Edition
 
     const playerLibrary = [createCardInstance(mountain!.id, 'player', 'library')];
     const opponentLibrary = [createCardInstance(mountain!.id, 'opponent', 'library')];
     const state = createGameState(playerLibrary, opponentLibrary);
 
     // Add black creature
-    const vampireCard = createCardInstance(vampire.id, 'opponent', 'battlefield');
-    state.players.opponent.battlefield.push(vampireCard);
+    const specterCard = createCardInstance(specter!.id, 'opponent', 'battlefield');
+    state.players.opponent.battlefield.push(specterCard);
 
     const requirements = parseTargetRequirements('Destroy target nonblack creature.');
-    const errors = validateTargets(state, [vampireCard.instanceId], requirements, 'player');
+    const errors = validateTargets(state, [specterCard.instanceId], requirements, 'player');
 
     expect(errors.length).toBeGreaterThan(0);
     expect(errors[0]).toContain('black');
@@ -334,20 +329,15 @@ describe('Spell Fizzle', () => {
 
 describe('Legal Actions with Targets', () => {
   test('generates targeted spell actions', () => {
-    const bolt = CardLoader.getByName('Lightning Bolt');
+    const shock = CardLoader.getByName('Shock'); // 6th Edition equivalent of Lightning Bolt
     const mountain = CardLoader.getByName('Mountain');
 
-    if (!bolt) {
-      console.log('Lightning Bolt not found, skipping test');
-      return;
-    }
-
-    const boltCard = createCardInstance(bolt.id, 'player', 'hand');
+    const shockCard = createCardInstance(shock!.id, 'player', 'hand');
     const playerLibrary = [createCardInstance(mountain!.id, 'player', 'library')];
     const opponentLibrary = [createCardInstance(mountain!.id, 'opponent', 'library')];
 
     let state = createGameState(playerLibrary, opponentLibrary);
-    state.players.player.hand.push(boltCard);
+    state.players.player.hand.push(shockCard);
 
     // Add mana source
     const mountainCard = createCardInstance(mountain!.id, 'player', 'battlefield');
@@ -358,40 +348,35 @@ describe('Legal Actions with Targets', () => {
 
     state.phase = 'main1';
 
-    // Get legal actions - should include Lightning Bolt targeting both players
+    // Get legal actions - should include Shock targeting both players
     const actions = getLegalActions(state, 'player');
 
-    // Find cast actions for Lightning Bolt
-    const boltActions = actions.filter(
-      a => a.type === 'CAST_SPELL' && (a as CastSpellAction).payload.cardInstanceId === boltCard.instanceId
+    // Find cast actions for Shock
+    const shockActions = actions.filter(
+      a => a.type === 'CAST_SPELL' && (a as CastSpellAction).payload.cardInstanceId === shockCard.instanceId
     ) as CastSpellAction[];
 
-    expect(boltActions.length).toBeGreaterThan(0);
+    expect(shockActions.length).toBeGreaterThan(0);
 
     // Should have one action for targeting player and one for opponent
-    const targetsPlayer = boltActions.some(a => a.payload.targets?.includes('player'));
-    const targetsOpponent = boltActions.some(a => a.payload.targets?.includes('opponent'));
+    const targetsPlayer = shockActions.some(a => a.payload.targets?.includes('player'));
+    const targetsOpponent = shockActions.some(a => a.payload.targets?.includes('opponent'));
 
     expect(targetsPlayer).toBe(true);
     expect(targetsOpponent).toBe(true);
   });
 
   test('describeAction shows target names', () => {
-    const bolt = CardLoader.getByName('Lightning Bolt');
+    const shock = CardLoader.getByName('Shock'); // 6th Edition equivalent of Lightning Bolt
     const mountain = CardLoader.getByName('Mountain');
     const bear = CardLoader.getByName('Grizzly Bears');
 
-    if (!bolt) {
-      console.log('Lightning Bolt not found, skipping test');
-      return;
-    }
-
-    const boltCard = createCardInstance(bolt.id, 'player', 'hand');
+    const shockCard = createCardInstance(shock!.id, 'player', 'hand');
     const playerLibrary = [createCardInstance(mountain!.id, 'player', 'library')];
     const opponentLibrary = [createCardInstance(mountain!.id, 'opponent', 'library')];
 
     let state = createGameState(playerLibrary, opponentLibrary);
-    state.players.player.hand.push(boltCard);
+    state.players.player.hand.push(shockCard);
 
     // Add a creature target
     const bearCard = createCardInstance(bear!.id, 'opponent', 'battlefield');
@@ -401,13 +386,13 @@ describe('Legal Actions with Targets', () => {
       type: 'CAST_SPELL',
       playerId: 'player',
       payload: {
-        cardInstanceId: boltCard.instanceId,
+        cardInstanceId: shockCard.instanceId,
         targets: [bearCard.instanceId],
       },
     };
 
     const description = describeAction(action, state);
-    expect(description).toContain('Lightning Bolt');
+    expect(description).toContain('Shock');
     expect(description).toContain('targeting');
     expect(description).toContain('Grizzly Bears');
   });

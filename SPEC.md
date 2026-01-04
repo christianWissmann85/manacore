@@ -2,27 +2,27 @@
 
 **Version:** 1.0.0  
 **Last Updated:** January 3, 2026  
-**Project Type:** Digital MTG Implementation + AI Research Platform  
-**Primary Tech Stack:** TypeScript, Bun, PixiJS  
+**Project Type:** MTG Game Engine & AI Research Platform  
+**Primary Tech Stack:** TypeScript, Bun, React, Tailwind CSS  
 
 ---
 
 ## 1. Project Vision
 
-ManaCore is a **playable Magic: The Gathering digital implementation** with an **AI research platform** for studying game theory, deck building, and strategy optimization through simulation.
+ManaCore is a **high-fidelity Magic: The Gathering simulation engine** and **AI research platform** for studying game theory, deck building, and strategy optimization through massive parallel simulation.
 
 ### 1.1 Primary Goals
 
-1. **Playable Game**: Fun MTG experience with AI opponents
-2. **AI Research**: MCTS-driven gameplay that discovers optimal strategies
+1. **Simulation Engine**: Precise implementation of MTG rules for AI agents
+2. **AI Research**: MCTS-driven agents that discover optimal strategies
 3. **ML Applications**: Tournament simulation, deck evolution, and meta-game analysis
-4. **Educational**: Learn AI/ML techniques through a real-world game engine
+4. **Educational**: Learn AI/ML techniques through a complex environment
 
 ### 1.2 Core Philosophy
 
 - **Code-First**: Game logic in pure TypeScript, data-driven card definitions
-- **Simulation-Heavy**: Headless engine can run 1000+ games/second
-- **Incremental Complexity**: Ship working game early, add features iteratively
+- **Simulation-Heavy**: Headless engine can run 1000+ simulations/second
+- **Incremental Complexity**: Ship working rules early, add mechanics iteratively
 - **Research-Oriented**: Every design decision supports AI experimentation
 
 ---
@@ -31,7 +31,7 @@ ManaCore is a **playable Magic: The Gathering digital implementation** with an *
 
 ### 2.1 Card Pool: 6th Edition Core Set
 
-We will implement a **curated subset** of Magic: The Gathering's 6th Edition Core Set, chosen for:
+We will implement a **curated subset** of Magic: The Gathering's 6th Edition Core Set to serve as our research environment. We chose 6th Edition for:
 - Mechanical clarity (avoid complex layer interactions)
 - Strategic depth (support multiple archetypes)
 - AI tractability (cards the MCTS can reason about)
@@ -106,46 +106,38 @@ All card data must be stored locally to support:
 - Fast lookups (no API latency)
 - Consistent game state (no network failures mid-game)
 
-**Required Fields from Scryfall:**
-- Card name, mana cost, type line
-- Oracle text (official current wording)
-- Power/toughness (creatures)
-- Artwork (high-res image URL)
-- Flavor text
-- Set code + collector number
-- Color identity
-- Rulings (for complex interactions)
+### 3.4 Determinism & Reproducibility (Scientific Integrity)
 
-**NOT Needed:**
-- Pricing data
-- Legality in other formats
-- Foil availability
-- Market trends
+To ensure scientific validity, ManaCore is built for 100% deterministic simulation:
+- **Seed-Based RNG**: Every simulation is initialized with a single `rngSeed`. Given the same seed and action sequence, the game state will always evolve identically.
+- **Action Recording**: All agent decisions are recorded in a sequential `actionLog`.
+- **Scenario Replay**: Researchers can export a `SimulationReplay` (Seed + ActionLog) to recreate and analyze specific agent behaviors or edge-case bugs.
+- **Pure Logic**: The engine is isolated from system time or external state, ensuring results are consistent across different hardware.
 
 ---
 
-## 4. User Experience
+## 4. Research Interfaces
 
-### 4.1 Play Modes
+### 4.1 Simulation Modes
 
-**Single Player**
-- Play against AI (Easy/Medium/Hard/Expert)
-- Choose from pre-built decks or build custom
-- View game statistics after match
+**Interactive Debugging (Human-in-the-loop)**
+- Manually control one side against an AI agent
+- Test specific scenarios and edge cases
+- View step-by-step state changes
 
-**AI vs AI (Research Mode)**
-- Watch two AIs play
+**Batch Simulation (Headless)**
+- Run Agent vs Agent matches in background
 - Visualize MCTS decision trees
-- Pause/step through game
+- Pause/step through simulation
 - Export game logs for analysis
 
-**Deck Builder**
+**Deck Lab**
 - Browse available cards (filter by color, type, CMC)
-- Build 60-card decks
+- Construct test decks for agents
 - See mana curve visualization
 - Validate deck (minimum size, legal cards)
 
-### 4.2 UI Zones (Based on MTG Layout)
+### 4.2 UI Zones (Visualization Layout)
 
 ```
 ┌─────────────────────────────────────────┐
@@ -465,10 +457,11 @@ interface CardInstance {
 - ~3x faster than Node (critical for simulations)
 - Built-in test runner, bundler
 
-**Why PixiJS over React/Canvas?**
-- High-performance 2D rendering (WebGL)
-- Great for card game UIs (sprite batching)
-- Active community, good docs
+**Why React/Tailwind over PixiJS?**
+- **Scientific Aesthetic**: Matches the look of a research tool/dashboard better than a game engine
+- **Rapid Development**: Faster to build UI controls, logs, and data visualization
+- **Accessibility**: Standard DOM elements are easier to inspect and debug
+- **Reduced Complexity**: No game loop or manual hit-testing required
 
 ---
 

@@ -160,3 +160,73 @@ export function hasProtectionFromColor(card: CardTemplate, color: 'W' | 'U' | 'B
   };
   return oracleText.includes(`protection from ${colorNames[color]}`);
 }
+
+/**
+ * Check if a creature has Defender (cannot attack)
+ * Note: Walls have Defender by default in modern rules
+ */
+export function hasDefender(card: CardTemplate): boolean {
+  // Check for Defender keyword
+  if (hasKeyword(card, 'Defender')) {
+    return true;
+  }
+  // In 6th Edition, Walls have "can't attack" in their rules text
+  // Modern cards use Defender keyword, but older Walls may not have it
+  if (card.type_line.includes('Wall')) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Check if a creature has Fear
+ * (Can only be blocked by artifact creatures and/or black creatures)
+ */
+export function hasFear(card: CardTemplate): boolean {
+  return hasKeyword(card, 'Fear');
+}
+
+/**
+ * Check if a creature has Intimidate
+ * (Can only be blocked by artifact creatures and/or creatures that share a color)
+ */
+export function hasIntimidate(card: CardTemplate): boolean {
+  return hasKeyword(card, 'Intimidate');
+}
+
+/**
+ * Landwalk abilities - creature can't be blocked if defending player controls that land type
+ */
+export function hasSwampwalk(card: CardTemplate): boolean {
+  return hasKeyword(card, 'Swampwalk');
+}
+
+export function hasIslandwalk(card: CardTemplate): boolean {
+  return hasKeyword(card, 'Islandwalk');
+}
+
+export function hasForestwalk(card: CardTemplate): boolean {
+  return hasKeyword(card, 'Forestwalk');
+}
+
+export function hasMountainwalk(card: CardTemplate): boolean {
+  return hasKeyword(card, 'Mountainwalk');
+}
+
+export function hasPlainswalk(card: CardTemplate): boolean {
+  return hasKeyword(card, 'Plainswalk');
+}
+
+/**
+ * Check if a creature has any landwalk ability
+ * Returns the land types it can walk through, or empty array if none
+ */
+export function getLandwalkTypes(card: CardTemplate): string[] {
+  const types: string[] = [];
+  if (hasSwampwalk(card)) types.push('Swamp');
+  if (hasIslandwalk(card)) types.push('Island');
+  if (hasForestwalk(card)) types.push('Forest');
+  if (hasMountainwalk(card)) types.push('Mountain');
+  if (hasPlainswalk(card)) types.push('Plains');
+  return types;
+}

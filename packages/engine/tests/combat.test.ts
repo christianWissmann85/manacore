@@ -101,18 +101,13 @@ describe('Combat System', () => {
   });
 
   test('Vigilance - attacking does not tap creature', () => {
-    const serraAngel = CardLoader.getByName('Serra Angel'); // 4/4 Flying, Vigilance
+    const archangel = CardLoader.getByName('Archangel'); // 5/5 Flying, Vigilance (6th Edition)
 
-    if (!serraAngel) {
-      console.log('Serra Angel not in card pool, skipping test');
-      return;
-    }
-
-    const angel = createCardInstance(serraAngel.id, 'player', 'battlefield');
+    const angel = createCardInstance(archangel!.id, 'player', 'battlefield');
     angel.summoningSick = false;
 
-    const playerLibrary = [createCardInstance(serraAngel.id, 'player', 'library')];
-    const opponentLibrary = [createCardInstance(serraAngel.id, 'opponent', 'library')];
+    const playerLibrary = [createCardInstance(archangel!.id, 'player', 'library')];
+    const opponentLibrary = [createCardInstance(archangel!.id, 'opponent', 'library')];
 
     let state = createGameState(playerLibrary, opponentLibrary);
     getPlayer(state, 'player').battlefield.push(angel);
@@ -126,7 +121,7 @@ describe('Combat System', () => {
       payload: { attackers: [angel.instanceId] },
     } as DeclareAttackersAction);
 
-    // Serra Angel has Vigilance, so it should not be tapped
+    // Archangel has Vigilance, so it should not be tapped
     const angelAfter = getPlayer(state, 'player').battlefield.find(
       c => c.instanceId === angel.instanceId
     );

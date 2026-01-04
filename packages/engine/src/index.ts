@@ -62,6 +62,16 @@ export {
   hasHexproof as hasHexproofTemplate,
   hasShroud as hasShroudTemplate,
   hasProtectionFromColor,
+  // Phase 1.5.3: New keywords
+  hasDefender,
+  hasFear,
+  hasIntimidate,
+  hasSwampwalk,
+  hasIslandwalk,
+  hasForestwalk,
+  hasMountainwalk,
+  hasPlainswalk,
+  getLandwalkTypes,
 } from './cards/CardTemplate';
 
 // Token exports (Phase 1.5.1)
@@ -109,6 +119,48 @@ export { getLegalActions, describeAction } from './actions/getLegalActions';
 // Rules exports
 export type { ActivatedAbility, AbilityCost, AbilityEffect, SacrificeCost } from './rules/activatedAbilities';
 export { getActivatedAbilities, payCosts } from './rules/activatedAbilities';
+
+// Effect helpers (Week 1.5.2)
+export {
+  // Mass destruction
+  destroyAllMatching,
+  destroyAllCreatures,
+  destroyAllLands,
+  destroyAllArtifacts,
+  destroyAllEnchantments,
+  destroyAllCreaturesOfColor,
+  destroyAllLandsOfType,
+  destroyAllNonEnchantments,
+  // Untap/tap effects
+  untapAllMatching,
+  untapAllLands,
+  untapAllCreatures,
+  tapAllMatching,
+  tapAllNonFlyingCreatures,
+  // Library search (tutors)
+  searchLibrary,
+  shuffleLibrary,
+  // Graveyard recursion
+  returnFromGraveyard,
+  returnCreatureFromGraveyard,
+  returnSpellFromGraveyard,
+  // Team pump
+  applyTeamPump,
+  // Mass damage
+  dealDamageToAll,
+  dealDamageToNonFlyers,
+  // Card manipulation
+  putCardsOnTopOfLibrary,
+  discardThenDraw,
+  drawThenPutBack,
+  // Life manipulation
+  drainLife,
+  drawCardsPayLife,
+  // Conditional destruction
+  destroyCreatureIf,
+  destroyIfDamaged,
+  destroyIfPowerFourOrGreater,
+} from './rules/effects';
 
 // Targeting exports
 export type {

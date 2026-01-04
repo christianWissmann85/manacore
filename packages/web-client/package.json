@@ -1,6 +1,7 @@
 {
   "name": "@manacore/web-client",
   "version": "0.0.1",
+  "description": "AI Visualization Dashboard & Debugger",
   "type": "module",
   "private": true,
   "scripts": {

@@ -1,6 +1,7 @@
 {
   "name": "manacore",
   "version": "0.0.1",
+  "description": "MTG Game Engine & AI Research Platform",
   "private": true,
   "type": "module",
   "workspaces": ["packages/*"],

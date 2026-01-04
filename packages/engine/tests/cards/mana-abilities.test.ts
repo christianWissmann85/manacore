@@ -115,6 +115,150 @@ describe('Mana Dorks', () => {
       expect(manaAbility!.effect.manaColors).toContain('G');
     });
   });
+
+  describe('Blood Pet', () => {
+    test('card exists with correct stats', () => {
+      const card = CardLoader.getByName('Blood Pet');
+      expect(card).toBeDefined();
+      expect(card?.power).toBe('1');
+      expect(card?.toughness).toBe('1');
+      expect(card?.oracle_text).toContain('Sacrifice this creature: Add {B}');
+    });
+
+    test('has sacrifice ability for black mana', () => {
+      const pet = CardLoader.getByName('Blood Pet')!;
+      const state = setupGameWithMana({ B: 1 });
+
+      const petCard = createCardInstance(pet.id, 'player', 'battlefield');
+      state.players.player.battlefield.push(petCard);
+
+      const abilities = getActivatedAbilities(petCard, state);
+      const manaAbility = abilities.find(a => a.isManaAbility);
+
+      expect(manaAbility).toBeDefined();
+      expect(manaAbility!.name).toBe('Sacrifice: Add {B}');
+      expect(manaAbility!.effect.manaColors).toContain('B');
+      expect(manaAbility!.cost.sacrifice?.type).toBe('self');
+    });
+
+    test('can sacrifice even when summoning sick (no tap cost)', () => {
+      const pet = CardLoader.getByName('Blood Pet')!;
+      const state = setupGameWithMana({ B: 1 });
+
+      const petCard = createCardInstance(pet.id, 'player', 'battlefield');
+      petCard.summoningSick = true; // Just entered
+      state.players.player.battlefield.push(petCard);
+
+      const abilities = getActivatedAbilities(petCard, state);
+      const manaAbility = abilities.find(a => a.isManaAbility);
+
+      expect(manaAbility).toBeDefined();
+      // Sacrifice doesn't require tap, so summoning sickness doesn't matter
+      expect(manaAbility!.canActivate(state, petCard.instanceId, 'player')).toBe(true);
+    });
+
+    test('activating sacrifices the creature and adds black mana', () => {
+      const pet = CardLoader.getByName('Blood Pet')!;
+      const state = setupGameWithMana({ B: 1 });
+
+      // Clear mana pool first
+      state.players.player.manaPool = { white: 0, blue: 0, black: 0, red: 0, green: 0, colorless: 0 };
+
+      const petCard = createCardInstance(pet.id, 'player', 'battlefield');
+      state.players.player.battlefield.push(petCard);
+
+      const abilities = getActivatedAbilities(petCard, state);
+      const manaAbility = abilities.find(a => a.isManaAbility)!;
+
+      const newState = applyAction(state, {
+        type: 'ACTIVATE_ABILITY',
+        playerId: 'player',
+        payload: {
+          sourceId: petCard.instanceId,
+          abilityId: manaAbility.id,
+          manaColorChoice: 'B',
+        },
+      } as ActivateAbilityAction);
+
+      // Should have 1 black mana in pool
+      expect(newState.players.player.manaPool.black).toBe(1);
+
+      // Blood Pet should be in graveyard
+      expect(newState.players.player.battlefield.find(c => c.instanceId === petCard.instanceId)).toBeUndefined();
+      expect(newState.players.player.graveyard.find(c => c.instanceId === petCard.instanceId)).toBeDefined();
+    });
+  });
+
+  describe('Fyndhorn Elder', () => {
+    test('card exists with correct stats', () => {
+      const card = CardLoader.getByName('Fyndhorn Elder');
+      expect(card).toBeDefined();
+      expect(card?.power).toBe('1');
+      expect(card?.toughness).toBe('1');
+      expect(card?.oracle_text).toContain('{T}: Add {G}{G}');
+    });
+
+    test('has tap ability for {G}{G} (2 green mana)', () => {
+      const elder = CardLoader.getByName('Fyndhorn Elder')!;
+      const state = setupGameWithMana({ G: 1 });
+
+      const elderCard = createCardInstance(elder.id, 'player', 'battlefield');
+      elderCard.summoningSick = false;
+      state.players.player.battlefield.push(elderCard);
+
+      const abilities = getActivatedAbilities(elderCard, state);
+      const manaAbility = abilities.find(a => a.isManaAbility);
+
+      expect(manaAbility).toBeDefined();
+      expect(manaAbility!.name).toBe('Tap: Add {G}{G}');
+      expect(manaAbility!.effect.manaColors).toContain('G');
+      expect(manaAbility!.effect.amount).toBe(2); // Produces 2 mana, not 1
+      expect(manaAbility!.cost.tap).toBe(true);
+    });
+
+    test('cannot tap when summoning sick', () => {
+      const elder = CardLoader.getByName('Fyndhorn Elder')!;
+      const state = setupGameWithMana({ G: 1 });
+
+      const elderCard = createCardInstance(elder.id, 'player', 'battlefield');
+      elderCard.summoningSick = true;
+      state.players.player.battlefield.push(elderCard);
+
+      const abilities = getActivatedAbilities(elderCard, state);
+      const manaAbility = abilities.find(a => a.isManaAbility);
+
+      expect(manaAbility).toBeDefined();
+      expect(manaAbility!.canActivate(state, elderCard.instanceId, 'player')).toBe(false);
+    });
+
+    test('activating adds 2 green mana to pool', () => {
+      const elder = CardLoader.getByName('Fyndhorn Elder')!;
+      const state = setupGameWithMana({ G: 1 });
+
+      // Clear mana pool first
+      state.players.player.manaPool = { white: 0, blue: 0, black: 0, red: 0, green: 0, colorless: 0 };
+
+      const elderCard = createCardInstance(elder.id, 'player', 'battlefield');
+      elderCard.summoningSick = false;
+      state.players.player.battlefield.push(elderCard);
+
+      const abilities = getActivatedAbilities(elderCard, state);
+      const manaAbility = abilities.find(a => a.isManaAbility)!;
+
+      const newState = applyAction(state, {
+        type: 'ACTIVATE_ABILITY',
+        playerId: 'player',
+        payload: {
+          sourceId: elderCard.instanceId,
+          abilityId: manaAbility.id,
+          manaColorChoice: 'G',
+        },
+      } as ActivateAbilityAction);
+
+      // Should have 2 green mana in pool
+      expect(newState.players.player.manaPool.green).toBe(2);
+    });
+  });
 });
 
 describe('Mana Ability Activation', () => {

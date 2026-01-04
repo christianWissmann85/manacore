@@ -8,7 +8,7 @@ import type { GameState } from '../state/GameState';
 import type { Action, PlayLandAction, CastSpellAction, DeclareAttackersAction, DeclareBlockersAction, ActivateAbilityAction, SacrificePermanentAction } from './Action';
 import { getPlayer, findCard } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
-import { isLand, isCreature, isInstant, isSorcery, hasFlying, hasReach, isAura } from '../cards/CardTemplate';
+import { isLand, isCreature, isInstant, isSorcery, hasFlying, hasReach, isAura, hasDefender, hasFear, getLandwalkTypes, isArtifact } from '../cards/CardTemplate';
 import type { CardInstance } from '../state/CardInstance';
 import { getActivatedAbilities } from '../rules/activatedAbilities';
 import type { PlayerId } from '../state/Zone';
@@ -282,6 +282,11 @@ function validateDeclareAttackers(state: GameState, action: DeclareAttackersActi
     if (template && !isCreature(template)) {
       errors.push(`${attackerId} is not a creature`);
     }
+
+    // Check if creature has Defender (can't attack)
+    if (template && hasDefender(template)) {
+      errors.push(`${attackerId} has Defender and cannot attack`);
+    }
   }
 
   return errors;
@@ -356,6 +361,34 @@ function validateDeclareBlockers(state: GameState, action: DeclareBlockersAction
       if (hasFlying(attackerTemplate)) {
         if (!hasFlying(blockerTemplate) && !hasReach(blockerTemplate)) {
           errors.push(`${block.blockerId} cannot block ${block.attackerId} (Flying)`);
+        }
+      }
+
+      // Landwalk restriction: Can't be blocked if defending player controls that land type
+      const landwalkTypes = getLandwalkTypes(attackerTemplate);
+      if (landwalkTypes.length > 0) {
+        const defendingPlayerState = getPlayer(state, action.playerId);
+        for (const landType of landwalkTypes) {
+          // Check if defending player controls a land of that type
+          const hasMatchingLand = defendingPlayerState.battlefield.some(permanent => {
+            const permTemplate = CardLoader.getById(permanent.scryfallId);
+            if (!permTemplate) return false;
+            // Check if it's the matching basic land type or has the subtype
+            return permTemplate.type_line.includes(landType);
+          });
+          if (hasMatchingLand) {
+            errors.push(`${block.blockerId} cannot block ${block.attackerId} (${landType}walk)`);
+            break; // One landwalk being active is enough
+          }
+        }
+      }
+
+      // Fear restriction: Can only be blocked by artifact creatures and/or black creatures
+      if (hasFear(attackerTemplate)) {
+        const isBlackCreature = blockerTemplate.colors?.includes('B') ?? false;
+        const isArtifactCreature = isArtifact(blockerTemplate) && isCreature(blockerTemplate);
+        if (!isBlackCreature && !isArtifactCreature) {
+          errors.push(`${block.blockerId} cannot block ${block.attackerId} (Fear)`);
         }
       }
     }

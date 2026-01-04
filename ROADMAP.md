@@ -384,20 +384,20 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 ### Week 1.5.2: Instants & Sorceries
 
 **Instant Tasks (38 cards):**
-- [ ] Damage spells: Volcanic Geyser, Inferno, Vertigo
-- [ ] Counter variants: Power Sink, Remove Soul, Memory Lapse, Spell Blast
-- [ ] Tutors: Enlightened, Mystical, Vampiric, Worldly
-- [ ] Damage prevention: Fog, Healing Salve, Remedy, Reverse Damage
-- [ ] Utility: Boomerang, Early Harvest, Flash, Mana Short, Vitalize
+- [x] Damage spells: Volcanic Geyser, Inferno, Vertigo
+- [x] Counter variants: Power Sink, Remove Soul, Memory Lapse, Spell Blast
+- [x] Tutors: Enlightened, Mystical, Vampiric, Worldly
+- [x] Damage prevention: Fog, Healing Salve, Remedy, Reverse Damage
+- [x] Utility: Boomerang, Early Harvest, Flash, Mana Short, Vitalize
 
 **Sorcery Tasks (53 cards):**
-- [ ] X-cost damage: Blaze, Earthquake, Hurricane
-- [ ] Board wipes: Wrath of God, Jokulhaups, Shatterstorm, Tranquility
-- [ ] Land destruction: Armageddon, Stone Rain, Flashfires, Pillage
-- [ ] Card draw: Ancestral Memories, Dream Cache, Inspiration
-- [ ] Graveyard: Raise Dead, Elven Cache, Hammer of Bogardan
-- [ ] Ramp: Rampant Growth, Untamed Wilds, Summer Bloom
-- [ ] Discard: Mind Warp, Stupor, Painful Memories
+- [x] X-cost damage: Blaze, Earthquake, Hurricane
+- [x] Board wipes: Wrath of God, Jokulhaups, Shatterstorm, Tranquility
+- [x] Land destruction: Armageddon, Stone Rain, Flashfires, Pillage
+- [x] Card draw: Ancestral Memories, Dream Cache, Inspiration
+- [x] Graveyard: Raise Dead, Elven Cache, Hammer of Bogardan
+- [x] Ramp: Rampant Growth, Untamed Wilds, Summer Bloom
+- [x] Discard: Mind Warp, Stupor, Painful Memories
 
 **Success Criteria:**
 - ✅ All 38 instants implemented
@@ -409,21 +409,21 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 **Focus: Vanilla, Keywords, and Simple Abilities**
 
 **Vanilla/Keyword Creatures (~40):**
-- [ ] All vanilla creatures verified working
-- [ ] All keyword-only creatures verified (Flying, First Strike, etc.)
-- [ ] Landwalk keywords: Swampwalk, Forestwalk, Islandwalk, Mountainwalk
+- [x] All vanilla creatures verified working
+- [x] All keyword-only creatures verified (Flying, First Strike, etc.)
+- [x] Landwalk keywords: Swampwalk, Forestwalk, Islandwalk, Mountainwalk
 
 **Mana Dorks (~8):**
-- [ ] Fyndhorn Elder ({T}: Add {G}{G})
-- [ ] Blood Pet (Sac: Add {B})
-- [ ] Implement remaining mana-producing creatures
+- [x] Fyndhorn Elder ({T}: Add {G}{G})
+- [x] Blood Pet (Sac: Add {B})
+- [x] Implement remaining mana-producing creatures
 
 **Simple ETB Creatures (~10):**
-- [ ] Venerable Monk (ETB: Gain 2 life)
-- [ ] Staunch Defenders (ETB: Gain 4 life)
-- [ ] Uktabi Orangutan (ETB: Destroy artifact)
-- [ ] Sage Owl (ETB: Look at top 4, rearrange)
-- [ ] Hidden Horror (ETB: Discard creature)
+- [x] Venerable Monk (ETB: Gain 2 life)
+- [x] Staunch Defenders (ETB: Gain 4 life)
+- [x] Uktabi Orangutan (ETB: Destroy artifact)
+- [x] Sage Owl (ETB: Look at top 4, rearrange)
+- [x] Hidden Horror (ETB: Discard creature)
 
 **Success Criteria:**
 - ✅ 65 creatures working
@@ -612,25 +612,37 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 
 **Deliverable:** Full 6th Edition card pool playable!
 
+### Week 1.5.8 (Adcanced Testing and Deckbuilding)
+- [ ] Create more Test Decks
+- [ ] Thoroughly test each Deck with AutBots
+- [ ] Observe any Issues or Errors
+
 ---
 
 ## Phase 1.6: Complex Card Mechanics (Weeks 19-20)
 
-**Theme:** "The Last 10%"
+**Theme:** "The Last 5%"
 
 ### Goals
-- Implement remaining complex cards deferred from Phase 1.5
+- Implement remaining 17 complex cards deferred from Phase 1.5
 - Add specialized mechanics for unusual effects
 - Complete 100% of 6th Edition
 
-### Deferred Card Categories
+### Deferred Card Categories (17 cards)
 
-**Control-Changing Effects (~5 cards):**
+**Target Redirection & Extra Turns (~3 cards):**
+- Deflection (change target of spell)
+- Final Fortune (extra turn, then lose)
+- Flash (instant-speed creature deployment)
+
+**Control-Changing Effects (~4 cards):**
 - Abduction (steal creature, return on death)
-- Conquer (steal land)
+- Conquer (steal land - Aura)
+- Desertion (counter spell, steal permanent)
 - Juxtapose (exchange creatures)
 
-**Replacement Effects (~3 cards):**
+**Replacement Effects (~4 cards):**
+- Diminishing Returns (complex draw replacement)
 - Forbidden Crypt (graveyard replacement)
 - Teferi's Puzzle Box (draw replacement)
 - Zur's Weirding (draw denial)
@@ -638,9 +650,9 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 **Type/Color Changing (~3 cards):**
 - Celestial Dawn (all colors become white)
 - Living Lands (forests become creatures)
-- Phantasmal Terrain (change land type)
+- Phantasmal Terrain (change land type - Aura)
 
-**Complex Interactions (~5 cards):**
+**Complex Interactions (~3 cards):**
 - Doomsday (build 5-card library)
 - Illicit Auction (life bidding)
 - Polymorph (creature transformation)
@@ -739,70 +751,59 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 
 ---
 
-## Phase 3: Polished Game Experience (Weeks 27-32)
+## Phase 3: Advanced Visualization (Weeks 27-32)
 
-**Theme:** "Ship a Real Game"
+**Theme:** "The Research Dashboard"
 
 ### Goals
-- Full web UI with animations
-- Deck builder
-- Multiple AI difficulty levels
-- Sound effects
-- Tutorial/Help system
+- Full web visualization dashboard
+- Deck construction lab
+- Multiple AI Agent configurations
+- Audio feedback for events
+- Interactive documentation
 
-### Week 27: Basic Web UI
+### Week 27: Basic Web Dashboard
 
 **Tasks:**
-- [ ] Set up Vite + PixiJS project
-- [ ] Load card images from `packages/web-client/public/assets/cards/`
-- [ ] Render battlefield zones
-- [ ] Implement drag-and-drop for playing cards
-- [ ] Add click-to-target for spells
-- [ ] Connect UI to engine (same action system)
+- [ ] Set up Vite + React + Tailwind project
+- [ ] Implement `useGameState` hook to connect to engine
+- [ ] Create `Card` component with Tailwind styling
+- [ ] Create `Battlefield` grid layout
+- [ ] Implement basic click-to-play actions
+- [ ] Add "Inspector Panel" for viewing card JSON data
 
 **Success Criteria:**
-- ✅ Can play a full game in the browser
-- ✅ UI updates when game state changes
-- ✅ Card artwork loads correctly
-- ✅ Smooth at 60 FPS
+- ✅ Dashboard renders game state via React
+- ✅ Responsive grid layout works
+- ✅ Can play a full game via UI controls
+- ✅ Clean, scientific aesthetic (Dark mode, monospace fonts)
 
-**Deliverable:** Playable web game (basic, but functional)
+**Deliverable:** Interactive research dashboard
 
-### Week 28-29: UI Polish
+### Week 28-29: Visualization Polish
 
 **Tasks:**
-- [ ] Add animations:
-  - Card sliding between zones
-  - Attack animations (card moves forward)
-  - Damage numbers (floating text)
-  - Spell effects (particle effects)
-- [ ] Add sound effects:
-  - Card play sound
-  - Attack sound
-  - Damage sound
-  - Win/lose music
-- [ ] Improve visual feedback:
-  - Highlight valid targets
-  - Show mana cost on hover
-  - Glow effect for playable cards
+- [ ] Add Framer Motion for simple state transitions
+- [ ] Implement "Log View" with filterable action history
+- [ ] Add "Mana Pool" visualization with charts
+- [ ] Add "Targeting Mode" (click source -> click target)
+- [ ] Implement keyboard shortcuts for common actions (Space to pass)
 
 **Assets Needed:**
-- Card play SFX
-- Attack SFX
-- Win/lose music
-- Particle sprites
+- Icons (Lucide React)
+- Tailwind Config (Custom colors)
 
-### Week 30-31: Deck Builder
+### Week 30-31: Deck Lab
 
 **Tasks:**
-- [ ] Build deck builder UI:
+- [ ] Build deck construction UI:
   - Browse all available cards
   - Filter by color, type, CMC
-  - Add/remove cards from deck
+  - Configure Agent decks
   - View mana curve chart
   - Validate deck (60 cards minimum)
-- [ ] Save/load custom decks
-- [ ] Create 5-10 pre-built decks:
+- [ ] Save/load test configurations
+- [ ] Create 5-10 standard test decks:
   - Red Aggro
   - Blue Control
   - Green Midrange
@@ -810,36 +811,35 @@ Pacifism (1W) - Enchant creature, it can't attack or block
   - Black Disruption
 
 **Success Criteria:**
-- ✅ User can build a 60-card deck in <5 minutes
-- ✅ Deck validation prevents illegal decks
-- ✅ Mana curve visualization helps deck building
+- ✅ User can configure test decks quickly
+- ✅ Deck validation prevents illegal states
+- ✅ Mana curve visualization aids analysis
 
-### Week 32: AI Difficulty Tuning & Final Polish
+### Week 32: AI Configuration & Final Polish
 
 **Tasks:**
-- [ ] Tune AI difficulty levels:
-  - Easy: RandomBot (random legal moves)
-  - Medium: GreedyBot (1-ply lookahead)
-  - Hard: MCTS-500 (500 iterations)
+- [ ] Tune AI Agent profiles:
+  - Baseline: RandomBot (random legal moves)
+  - Heuristic: GreedyBot (1-ply lookahead)
+  - Strong: MCTS-500 (500 iterations)
   - Expert: MCTS-2000 (2000 iterations)
-- [ ] Test with playtesters (get real humans to play!)
-- [ ] Adjust evaluation function based on feedback
+- [ ] Test with researchers/developers
+- [ ] Adjust evaluation function based on logs
 
-**Target Win Rates (for average player):**
-- Easy: 90% player win rate
-- Medium: 70% player win rate
-- Hard: 50% player win rate
-- Expert: 30% player win rate
+**Target Win Rates (vs Baseline):**
+- Heuristic: 90% win rate
+- Strong: 95% win rate
+- Expert: 99% win rate
 
 **Additional Tasks:**
-- [ ] Tutorial for new players
-- [ ] Help system (rules reference)
-- [ ] Settings menu (sound, animation speed)
-- [ ] Bug fixes from playtesting
+- [ ] Interactive guide for new users
+- [ ] Rules reference integration
+- [ ] Settings (visualization speed, debug mode)
+- [ ] Bug fixes from stress testing
 - [ ] Performance optimization
-- [ ] Write user documentation
+- [ ] Write technical documentation
 
-**Deliverable:** 🚀 **PUBLIC RELEASE v1.0**
+**Deliverable:** 🔬 **RESEARCH PLATFORM v1.0**
 
 ---
 
@@ -1147,9 +1147,9 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
    - 4-player Commander-style
    - Requires major architecture changes
 
-4. **Mobile App** (Phase 9)
-   - React Native port
-   - Touch-friendly UI
+4. **Remote Dashboard** (Phase 9)
+   - React Native mobile dashboard
+   - Monitor simulations remotely
 
 5. **Card Design Tool** (Phase 10)
    - Generate new cards

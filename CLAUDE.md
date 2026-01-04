@@ -1,8 +1,8 @@
 # ManaCore - Project Guide
 
-> **Magic: The Gathering Digital Implementation with AI**
+> **MTG Game Engine & AI Research Platform**
 >
-> A headless game engine designed for high-speed AI training (1000+ games/second) with multiple client interfaces.
+> A headless simulation engine designed for high-speed AI training (1000+ games/second) with advanced visualization tools.
 
 ---
 
@@ -22,29 +22,29 @@
 
 ## Project Overview
 
-ManaCore is a digital implementation of Magic: The Gathering, designed from the ground up to support AI development and training. The project prioritizes:
+ManaCore is a high-fidelity implementation of Magic: The Gathering rules, built specifically for AI research. The project prioritizes:
 
-1. **Performance**: Pure TypeScript game engine runs headless at 1000+ games/second
-2. **Correctness**: Faithful implementation of Magic rules with comprehensive validation
-3. **Modularity**: Clean separation between engine, AI, and UI layers
-4. **Phased Development**: Incremental feature rollout following a structured roadmap
+1. **Performance**: Pure TypeScript engine runs headless at 1000+ simulations/second
+2. **Correctness**: Faithful implementation of Magic rules for accurate agent training
+3. **Modularity**: Clean separation between engine, AI, and visualization layers
+4. **Research-First**: Tools for MCTS visualization, deck evolution, and meta-game analysis
 
 ### Key Features
 
 - ✅ Complete game state management with immutable updates
-- ✅ Action-reducer architecture for deterministic game logic
+- ✅ Action-reducer architecture for deterministic simulation
 - ✅ LIFO stack system for spells and abilities
 - ✅ Combat system with Flying, First Strike, Trample, Vigilance, Reach
 - ✅ State-based actions (creature death, player loss, etc.)
 - ✅ Triggered abilities (ETB, death triggers)
 - ✅ Activated abilities (tap abilities, etc.)
 - ✅ Card data pipeline from Scryfall API
-- ✅ CLI client for human vs bot play
-- ✅ RandomBot AI for testing
+- ✅ CLI tool for agent debugging
+- ✅ RandomBot AI for baseline testing
 - ✅ Mana system and spell costs
 - ⚙️ Full card abilities and interactions (in progress)
 - ⚙️ Advanced AI agents (in progress)
-- 🔜 Web client with React
+- 🔜 Research dashboard with React + Tailwind
 
 ---
 
@@ -256,13 +256,14 @@ manacore/
 
 **Goal**: "Every Card Works"
 
-- Week 1.5.1: **Infrastructure** ✅ (death triggers, sacrifice, X-costs, tokens, all lands)
-- Week 1.5.2: **Instants & Sorceries** (38 instants + 53 sorceries)
-- Week 1.5.3: **Creatures Part 1** (vanilla, keywords, ETB, mana dorks)
+- Week 1.5.1: **Infrastructure** ✅ 
+- Week 1.5.2: **Instants & Sorceries** ✅ 
+- Week 1.5.3: **Creatures Part 1** ✅
 - Week 1.5.4: **Creatures Part 2** (activated abilities, lords, complex triggers)
 - Week 1.5.5: **Auras & Enchantments** (22 auras + 34 enchantments)
 - Week 1.5.6: **Artifacts** (41 artifacts)
 - Week 1.5.7: **Integration Testing** (1000-game simulation, documentation)
+- Week 1.5.8: **Adcanced Testing and Deckbuilding**
 
 **Deliverable**: 302+ cards (90% of 6th Edition) fully playable
 
@@ -293,16 +294,16 @@ manacore/
 - Evaluation function tuned through self-play
 - Game replay system for debugging AI decisions
 
-### 🔜 Phase 3: Polished Game Experience (Weeks 27-32)
+### 🔜 Phase 3: Interactive Visualization (Weeks 27-32)
 
-**Goal**: "Ship a Real Game" 🚀
+**Goal**: "Advanced Research Dashboard" 🔬
 
-- Week 27: **Basic Web UI** (Vite + PixiJS, card rendering, drag-and-drop)
-- Week 28-29: **UI Polish** (animations, sound effects, visual feedback)
-- Week 30-31: **Deck Builder** (browse cards, build decks, mana curve visualization)
-- Week 32: **Final Polish** (AI difficulty, tutorial, help system, bug fixes)
+- Week 27: **Basic Web Dashboard** (Vite + PixiJS, state visualization, debug controls)
+- Week 28-29: **Visualization Polish** (action history, decision tree rendering)
+- Week 30-31: **Deck Lab** (browse cards, build test decks, mana curve analytics)
+- Week 32: **Final Polish** (Agent config, interactive tutorial, documentation)
 
-**Deliverable**: 🎮 **PUBLIC RELEASE v1.0**
+**Deliverable**: 🔬 **RESEARCH PLATFORM v1.0**
 
 ### 🔜 Phase 4: AI Research Tools (Weeks 33-38)
 
@@ -398,37 +399,24 @@ cd packages/engine
 bun test
 ```
 
-### Frontend (Future)
+### Frontend (Visualization)
 
-When implementing the web client, use Bun's HTML imports:
+We use a standard React stack for the research dashboard:
 
 ```typescript
-// server.ts
-import index from "./index.html";
+// App.tsx
+import { Card } from './components/Card';
 
-Bun.serve({
-  routes: {
-    "/": index,
-    "/api/game": {
-      GET: (req) => Response.json(gameState),
-    },
-  },
-  development: {
-    hmr: true,
-  },
-});
+export function Battlefield({ cards }) {
+  return (
+    <div className="grid grid-cols-6 gap-2">
+      {cards.map(card => <Card key={card.id} data={card} />)}
+    </div>
+  );
+}
 ```
 
-```html
-<!-- index.html -->
-<html>
-  <body>
-    <script type="module" src="./app.tsx"></script>
-  </body>
-</html>
-```
-
-No bundler needed - Bun handles React/TypeScript automatically.
+No complex game loop - just reactive UI updates.
 
 ---
 

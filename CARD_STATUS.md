@@ -2,24 +2,27 @@
 
 **Last Updated:** January 4, 2026
 **Total Cards:** 335
-**Implemented:** 45 (~13%)
-**Target:** 302 (90%) by end of Phase 1.5
+**Implemented:** 126 (~38%)
+**Deferred to Phase 1.6:** 17 (~5%)
+**Target:** 318 (95%) by end of Phase 1.5
 
 ---
 
 ## Summary by Category
 
-| Category | Total | Implemented | Remaining | Phase 1.5 Target |
-|----------|-------|-------------|-----------|------------------|
-| Basic Land | 5 | 5 | 0 | 5 (100%) |
-| Land | 12 | 12 | 0 | 12 (100%) |
-| Creature | 130 | 10 | 120 | 117 (90%) |
-| Instant | 38 | 14 | 24 | 34 (90%) |
-| Sorcery | 53 | 9 | 44 | 48 (90%) |
-| Aura | 22 | 1 | 21 | 20 (90%) |
-| Enchantment | 34 | 0 | 34 | 31 (90%) |
-| Artifact | 41 | 0 | 41 | 37 (90%) |
-| **Total** | **335** | **45** | **290** | **302 (90%)** |
+| Category | Total | Implemented | Deferred | Remaining | Phase 1.5 Target |
+|----------|-------|-------------|----------|-----------|------------------|
+| Basic Land | 5 | 5 | 0 | 0 | 5 ✅ |
+| Land | 12 | 12 | 0 | 0 | 12 ✅ |
+| Creature | 130 | 17 | 1 | 112 | 129 (99%) |
+| Instant | 38 | 34 | 4 | 0 | 34 ✅ |
+| Sorcery | 53 | 47 | 6 | 0 | 47 ✅ |
+| Aura | 22 | 1 | 1 | 20 | 21 (95%) |
+| Enchantment | 34 | 0 | 4 | 30 | 30 (88%) |
+| Artifact | 41 | 0 | 1 | 40 | 40 (98%) |
+| **Total** | **335** | **126** | **17** | **192** | **318 (95%)** |
+
+*Note: 17 cards deferred to Phase 1.6 due to complex mechanics*
 
 ---
 
@@ -79,22 +82,29 @@
 
 ---
 
-## Creatures (10/130 Complete)
+## Creatures (17/130 Complete)
 
 ### Implemented Creatures
 
 | Card | Status | P/T | Keywords | Abilities |
 |------|--------|-----|----------|-----------|
 | Abyssal Specter | ✅ | 2/3 | Flying | Damage trigger: discard |
+| Air Elemental | ✅ | 4/4 | Flying | Keywords only |
 | Anaba Shaman | ✅ | 2/2 | | {R},{T}: 1 damage |
 | Birds of Paradise | ✅ | 0/1 | Flying | {T}: Add any color |
+| Blood Pet | ✅ | 1/1 | | Sac: Add {B} |
 | Elvish Mystic | ✅ | 1/1 | | {T}: Add {G} |
+| Fyndhorn Elder | ✅ | 1/1 | | {T}: Add {G}{G} |
 | Fyndhorn Elves | ✅ | 1/1 | | {T}: Add {G} |
 | Gravedigger | ✅ | 2/2 | | ETB: Return creature |
 | Grizzly Bears | ✅ | 2/2 | | Vanilla |
+| Hidden Horror | ✅ | 4/4 | | ETB: Discard creature or sac |
 | Llanowar Elves | ✅ | 1/1 | | {T}: Add {G} |
 | Prodigal Sorcerer | ✅ | 1/1 | | {T}: 1 damage |
-| Air Elemental | ✅ | 4/4 | Flying | Keywords only |
+| Sage Owl | ✅ | 1/1 | Flying | ETB: Look at top 4, rearrange |
+| Staunch Defenders | ✅ | 3/4 | | ETB: Gain 4 life |
+| Uktabi Orangutan | ✅ | 2/2 | | ETB: Destroy artifact |
+| Venerable Monk | ✅ | 2/2 | | ETB: Gain 2 life |
 
 ### Not Yet Implemented
 
@@ -108,7 +118,7 @@
 | Balduvian Barbarians | ❌ | 3/2 | | Vanilla |
 | Balduvian Horde | ❌ | 5/5 | | ETB: Discard/sacrifice |
 | Blighted Shaman | ❌ | 1/1 | | {T},{Sac}: -1/-1 |
-| Blood Pet | ❌ | 1/1 | | Sac: Add {B} |
+| ~~Blood Pet~~ | ✅ | 1/1 | | Sac: Add {B} (moved to Implemented) |
 | Bog Imp | ❌ | 1/1 | Flying | Keywords only |
 | Bog Rats | ❌ | 1/1 | | Can't be blocked by Walls |
 | Bog Wraith | ❌ | 3/3 | Swampwalk | Keywords only |
@@ -134,7 +144,7 @@
 | Flame Spirit | ❌ | 2/3 | | {R}: +1/+0 |
 | Fog Elemental | ❌ | 4/4 | Flying | Attacks → sacrifice unless {U} |
 | Fyndhorn Brownie | ❌ | 1/1 | | {2}{G},{T}: Untap creature |
-| Fyndhorn Elder | ❌ | 1/1 | | {T}: Add {G}{G} |
+| ~~Fyndhorn Elder~~ | ✅ | 1/1 | | {T}: Add {G}{G} (moved to Implemented) |
 | Giant Spider | ❌ | 2/4 | Reach | Keywords only |
 | Glacial Wall | ❌ | 0/7 | Defender | Keywords only |
 | Goblin Digging Team | ❌ | 1/1 | | {T},{Sac}: Destroy wall |
@@ -146,7 +156,7 @@
 | Gravebane Zombie | ❌ | 3/2 | | Dies: Put on library |
 | Harmattan Efreet | ❌ | 2/2 | Flying | {1}{U}{U}: Creature gains flying |
 | Heavy Ballista | ❌ | 2/3 | | {T}: 2 damage to attacker/blocker |
-| Hidden Horror | ❌ | 4/4 | | ETB: Discard creature |
+| ~~Hidden Horror~~ | ✅ | 4/4 | | ETB: Discard creature (moved to Implemented) |
 | Horned Turtle | ❌ | 1/4 | | Vanilla |
 | Hulking Cyclops | ❌ | 5/5 | | Can't block |
 | Infantry Veteran | ❌ | 1/1 | | {T}: +1/+1 to attacker |
@@ -184,7 +194,7 @@
 | Resistance Fighter | ❌ | 1/1 | | Sac: Prevent damage |
 | River Boa | ❌ | 2/1 | Islandwalk | {G}: Regenerate |
 | Sabretooth Tiger | ❌ | 2/1 | First Strike | Keywords only |
-| Sage Owl | ❌ | 1/1 | Flying | ETB: Look at top 4, rearrange |
+| ~~Sage Owl~~ | ✅ | 1/1 | Flying | ETB: Look at top 4, rearrange (moved to Implemented) |
 | Samite Healer | ❌ | 1/1 | | {T}: Prevent 1 damage |
 | Scaled Wurm | ❌ | 7/6 | | Vanilla |
 | Scathe Zombies | ❌ | 2/2 | | Vanilla |
@@ -197,7 +207,7 @@
 | Spitting Drake | ❌ | 2/2 | Flying | {R}: +1/+0 |
 | Stalking Tiger | ❌ | 3/3 | | Must be blocked by 2+ |
 | Standing Troops | ❌ | 1/4 | Vigilance | Keywords only |
-| Staunch Defenders | ❌ | 3/4 | | ETB: Gain 4 life |
+| ~~Staunch Defenders~~ | ✅ | 3/4 | | ETB: Gain 4 life (moved to Implemented) |
 | Storm Crow | ❌ | 1/2 | Flying | Keywords only |
 | Stromgald Cabal | ❌ | 2/2 | | {T}, pay life: Counter white |
 | Sunweb | ❌ | 5/6 | Defender, Flying | Can't block small |
@@ -205,11 +215,11 @@
 | Thicket Basilisk | ❌ | 2/4 | | Deathtouch-like |
 | Trained Armodon | ❌ | 3/3 | | Vanilla |
 | Tundra Wolves | ❌ | 1/1 | First Strike | Keywords only |
-| Uktabi Orangutan | ❌ | 2/2 | | ETB: Destroy artifact |
+| ~~Uktabi Orangutan~~ | ✅ | 2/2 | | ETB: Destroy artifact (moved to Implemented) |
 | Uktabi Wildcats | ❌ | */* | | P/T = Forests, sac forest: regenerate |
 | Unseen Walker | ❌ | 1/1 | Forestwalk | {1}{G}: Creature gains forestwalk |
 | Unyaro Griffin | ❌ | 2/2 | Flying | Sac: Counter red |
-| Venerable Monk | ❌ | 2/2 | | ETB: Gain 2 life |
+| ~~Venerable Monk~~ | ✅ | 2/2 | | ETB: Gain 2 life (moved to Implemented) |
 | Verduran Enchantress | ❌ | 0/2 | | Draw on enchantment cast |
 | Viashino Warrior | ❌ | 4/2 | | Vanilla |
 | Vodalian Soldiers | ❌ | 1/2 | | Vanilla |
@@ -225,123 +235,122 @@
 
 ---
 
-## Instants (12/38 Complete)
+## Instants (34/38 Complete)
 
 ### Implemented Instants
 
-| Card | Status | Cost | Effect |
-|------|--------|------|--------|
-| Counterspell | ✅ | {U}{U} | Counter target spell |
-| Disenchant | ✅ | {1}{W} | Destroy artifact/enchantment |
-| Exile | ✅ | {2}{W} | Exile attacking creature, gain life |
-| Giant Growth | ✅ | {G} | +3/+3 until EOT |
-| Howl from Beyond | ✅ | {X}{B} | +X/+0 until EOT |
-| Lightning Blast | ✅ | {3}{R} | 4 damage to any target |
-| Power Sink | ✅ | {X}{U} | Counter unless pay X |
-| Shock | ✅ | {R} | 2 damage to any target |
-| Spell Blast | ✅ | {X}{U} | Counter CMC X spell |
-| Terror | ✅ | {1}{B} | Destroy nonblack creature |
-| Unsummon | ✅ | {U} | Return creature to hand |
-| Volcanic Geyser | ✅ | {X}{R}{R} | X damage to any target |
-| Fog | ✅ | {G} | Prevent all combat damage | Week 1.5.1 |
-| Healing Salve | ✅ | {W} | Gain 3 life or prevent 3 | Week 1.5.1 (life mode) |
-
-### Not Yet Implemented
-
 | Card | Status | Cost | Effect | Notes |
 |------|--------|------|--------|-------|
-| Boil | ❌ | {3}{R} | Destroy all Islands | Land destruction |
-| Boomerang | ❌ | {U}{U} | Return permanent to hand | Needs permanent bounce |
-| Deflection | ❌ | {3}{U} | Change target of spell | Target redirection |
-| Desertion | ❌ | {3}{U}{U} | Counter spell, steal permanent | Complex counter |
-| Early Harvest | ❌ | {1}{G}{G} | Untap your lands | Untap mechanic |
-| Enlightened Tutor | ❌ | {W} | Search for artifact/enchantment | Tutor mechanic |
-| Fatal Blow | ❌ | {B} | Destroy damaged creature | Conditional destroy |
-| Final Fortune | ❌ | {R}{R} | Extra turn, then lose | Extra turn |
-| Flash | ❌ | {1}{U} | Flash in creature from hand | Flash mechanic |
-| Inferno | ❌ | {5}{R}{R} | 6 damage to all creatures/players | Board damage |
-| Inspiration | ❌ | {3}{U} | Draw 2 cards | Card draw |
-| Mana Short | ❌ | {2}{U} | Tap lands, empty mana pool | Mana denial |
-| Memory Lapse | ❌ | {1}{U} | Counter, put on top of library | Counter variant |
-| Mystical Tutor | ❌ | {U} | Search for instant/sorcery | Tutor mechanic |
-| Remedy | ❌ | {1}{W} | Prevent 5 damage to creature | Damage prevention |
-| Remove Soul | ❌ | {1}{U} | Counter creature spell | Counter variant |
-| Reprisal | ❌ | {1}{W} | Destroy 4+ power creature | Conditional destroy |
-| Reverse Damage | ❌ | {1}{W}{W} | Prevent damage, gain life | Damage prevention |
-| Shatter | ❌ | {1}{R} | Destroy artifact | Simple destroy |
-| Vampiric Tutor | ❌ | {B} | Search for any card | Tutor mechanic |
-| Vertigo | ❌ | {R} | 2 damage to flyer | Conditional damage |
-| Vitalize | ❌ | {G} | Untap your creatures | Untap mechanic |
-| Warrior's Honor | ❌ | {2}{W} | Your creatures +1/+1 | Team pump |
-| Worldly Tutor | ❌ | {G} | Search for creature | Tutor mechanic |
+| Boil | ✅ | {3}{R} | Destroy all Islands | Week 1.5.2 |
+| Boomerang | ✅ | {U}{U} | Return permanent to hand | Week 1.5.2 |
+| Counterspell | ✅ | {U}{U} | Counter target spell | |
+| Disenchant | ✅ | {1}{W} | Destroy artifact/enchantment | |
+| Early Harvest | ✅ | {1}{G}{G} | Untap all basic lands you control | Week 1.5.2 |
+| Enlightened Tutor | ✅ | {W} | Search for artifact/enchantment | Week 1.5.2 |
+| Exile | ✅ | {2}{W} | Exile attacking creature, gain life | |
+| Fatal Blow | ✅ | {B} | Destroy damaged creature | Week 1.5.2 |
+| Fog | ✅ | {G} | Prevent all combat damage | Week 1.5.1 |
+| Giant Growth | ✅ | {G} | +3/+3 until EOT | |
+| Healing Salve | ✅ | {W} | Gain 3 life or prevent 3 | Week 1.5.1 |
+| Howl from Beyond | ✅ | {X}{B} | +X/+0 until EOT | |
+| Inferno | ✅ | {5}{R}{R} | 6 damage to all creatures/players | Week 1.5.2 |
+| Inspiration | ✅ | {3}{U} | Draw 2 cards | Week 1.5.2 |
+| Lightning Blast | ✅ | {3}{R} | 4 damage to any target | |
+| Mana Short | ✅ | {2}{U} | Tap lands, empty mana pool | Week 1.5.2 |
+| Memory Lapse | ✅ | {1}{U} | Counter, put on top of library | Week 1.5.2 |
+| Mystical Tutor | ✅ | {U} | Search for instant/sorcery | Week 1.5.2 |
+| Power Sink | ✅ | {X}{U} | Counter unless pay X | |
+| Remedy | ✅ | {1}{W} | Prevent 5 damage to creature | Week 1.5.2 |
+| Remove Soul | ✅ | {1}{U} | Counter creature spell | Week 1.5.2 |
+| Reprisal | ✅ | {1}{W} | Destroy 4+ power creature | Week 1.5.2 |
+| Reverse Damage | ✅ | {1}{W}{W} | Prevent damage, gain life | Week 1.5.2 |
+| Shatter | ✅ | {1}{R} | Destroy artifact | Week 1.5.2 |
+| Shock | ✅ | {R} | 2 damage to any target | |
+| Spell Blast | ✅ | {X}{U} | Counter CMC X spell | |
+| Terror | ✅ | {1}{B} | Destroy nonblack creature | |
+| Unsummon | ✅ | {U} | Return creature to hand | |
+| Vampiric Tutor | ✅ | {B} | Search for any card | Week 1.5.2 |
+| Vertigo | ✅ | {R} | 2 damage to flyer | Week 1.5.2 |
+| Vitalize | ✅ | {G} | Untap your creatures | Week 1.5.2 |
+| Volcanic Geyser | ✅ | {X}{R}{R} | X damage to any target | |
+| Warrior's Honor | ✅ | {2}{W} | Your creatures +1/+1 | Week 1.5.2 |
+| Worldly Tutor | ✅ | {G} | Search for creature | Week 1.5.2 |
+
+### Deferred to Phase 1.6
+
+| Card | Status | Cost | Effect | Reason |
+|------|--------|------|--------|--------|
+| Deflection | 🕐 | {3}{U} | Change target of spell | Target redirection |
+| Desertion | 🕐 | {3}{U}{U} | Counter spell, steal permanent | Control change |
+| Final Fortune | 🕐 | {R}{R} | Extra turn, then lose | Extra turns |
+| Flash | 🕐 | {1}{U} | Flash in creature from hand | Flash mechanic |
 
 ---
 
-## Sorceries (9/53 Complete)
+## Sorceries (47/53 Complete)
 
 ### Implemented Sorceries
 
-| Card | Status | Cost | Effect |
-|------|--------|------|--------|
-| Blaze | ✅ | {X}{R} | X damage to any target |
-| Coercion | ✅ | {2}{B} | Target player discards (you choose) |
-| Earthquake | ✅ | {X}{R} | X damage to non-flyers and players |
-| Hurricane | ✅ | {X}{G} | X damage to flyers and players |
-| Lightning Blast | ✅ | {3}{R} | 4 damage to any target |
-| Mind Warp | ✅ | {X}{3}{B} | Target discards X cards |
-| Prosperity | ✅ | {X}{U} | All players draw X cards |
-| Recall | ✅ | {X}{X}{U} | Return X cards from graveyard |
-| Stream of Life | ✅ | {X}{G} | Target gains X life |
-
-### Not Yet Implemented
-
 | Card | Status | Cost | Effect | Notes |
 |------|--------|------|--------|-------|
-| Agonizing Memories | ❌ | {2}{B}{B} | Put 2 cards on top of library | Library manipulation |
-| Ancestral Memories | ❌ | {2}{U}{U}{U} | Look at 7, keep 2 | Card selection |
-| Armageddon | ❌ | {3}{W} | Destroy all lands | Mass land destroy |
-| Ashen Powder | ❌ | {2}{B}{B} | Return creature from any graveyard | Graveyard steal |
-| Creeping Mold | ❌ | {2}{G}{G} | Destroy artifact/enchantment/land | Modal destroy |
-| Diminishing Returns | ❌ | {2}{U}{U} | Exile hand+grave, draw 7, exile top 10 | Complex draw |
-| Doomsday | ❌ | {B}{B}{B} | Build 5-card library | Complex setup |
-| Dream Cache | ❌ | {2}{U} | Draw 3, put 2 back | Card filtering |
-| Dry Spell | ❌ | {1}{B} | 1 damage to creatures and players | Board damage |
-| Elven Cache | ❌ | {2}{G}{G} | Return 2 cards from graveyard | Graveyard recursion |
-| Fallow Earth | ❌ | {2}{G} | Put land on top of library | Land bounce |
-| Fit of Rage | ❌ | {1}{R} | +3/+3 and first strike until EOT | Pump spell |
-| Flashfires | ❌ | {3}{R} | Destroy all Plains | Land destruction |
-| Forget | ❌ | {U}{U} | Discard 2, draw 2 | Discard/draw |
-| Hammer of Bogardan | ❌ | {1}{R}{R} | 3 damage, recursion | Graveyard return |
-| Icatian Town | ❌ | {5}{W} | Create 4 Citizen tokens | Token generation |
-| Illicit Auction | ❌ | {3}{R}{R} | Bid life for creature control | Complex bidding |
-| Infernal Contract | ❌ | {B}{B}{B} | Draw 4, lose half life | Life payment draw |
-| Jokulhaups | ❌ | {4}{R}{R} | Destroy all non-enchantment | Mass destroy |
-| Juxtapose | ❌ | {3}{U} | Exchange creatures | Control exchange |
-| Library of Lat-Nam | ❌ | {4}{U} | Opponent chooses: draw 3 or tutor | Punisher spell |
-| Nature's Resurgence | ❌ | {2}{G}{G} | Return all creatures from graveyards | Mass recursion |
-| Painful Memories | ❌ | {1}{B} | Put card from hand on library | Library manipulation |
-| Perish | ❌ | {2}{B} | Destroy all green creatures | Color hoser |
-| Pillage | ❌ | {1}{R}{R} | Destroy artifact or land | Modal destroy |
-| Polymorph | ❌ | {3}{U} | Transform creature | Transform mechanic |
-| Psychic Transfer | ❌ | {4}{U} | Exchange life totals partially | Life exchange |
-| Pyrotechnics | ❌ | {4}{R} | 4 damage divided | Divided damage |
-| Raise Dead | ❌ | {B} | Return creature to hand | Simple recursion |
-| Rampant Growth | ❌ | {1}{G} | Search for basic land | Land ramp |
-| Relearn | ❌ | {1}{U}{U} | Return instant/sorcery | Graveyard recursion |
-| Relentless Assault | ❌ | {2}{R}{R} | Extra combat phase | Extra combat |
-| Shatterstorm | ❌ | {2}{R}{R} | Destroy all artifacts | Mass destroy |
-| Spitting Earth | ❌ | {1}{R} | Damage = Mountains | Mountain count |
-| Stone Rain | ❌ | {2}{R} | Destroy land | Land destruction |
-| Stupor | ❌ | {2}{B} | Discard 2 (1 random, 1 choice) | Mixed discard |
-| Summer Bloom | ❌ | {1}{G} | Play 3 additional lands | Extra land drops |
-| Syphon Soul | ❌ | {2}{B} | 2 damage to opponents, gain that life | Drain |
-| Tariff | ❌ | {1}{W} | Each player sacrifices creature | Forced sacrifice |
-| Tidal Surge | ❌ | {1}{U} | Tap all non-flyers | Mass tap |
-| Tranquility | ❌ | {2}{G} | Destroy all enchantments | Mass enchant destroy |
-| Tremor | ❌ | {R} | 1 damage to non-flyers | Board damage |
-| Untamed Wilds | ❌ | {2}{G} | Search for basic land to battlefield | Land ramp |
-| Waiting in the Weeds | ❌ | {1}{G}{G} | Create Cat tokens | Token generation |
-| Wrath of God | ❌ | {2}{W}{W} | Destroy all creatures | Board wipe |
+| Agonizing Memories | ✅ | {2}{B}{B} | Put 2 cards on top of library | Week 1.5.2 |
+| Ancestral Memories | ✅ | {2}{U}{U}{U} | Look at 7, keep 2 | Week 1.5.2 |
+| Armageddon | ✅ | {3}{W} | Destroy all lands | Week 1.5.2 |
+| Ashen Powder | ✅ | {2}{B}{B} | Return creature from any graveyard | Week 1.5.2 |
+| Blaze | ✅ | {X}{R} | X damage to any target | |
+| Coercion | ✅ | {2}{B} | Target player discards (you choose) | |
+| Creeping Mold | ✅ | {2}{G}{G} | Destroy artifact/enchantment/land | Week 1.5.2 |
+| Dream Cache | ✅ | {2}{U} | Draw 3, put 2 back | Week 1.5.2 |
+| Dry Spell | ✅ | {1}{B} | 1 damage to creatures and players | Week 1.5.2 |
+| Earthquake | ✅ | {X}{R} | X damage to non-flyers and players | |
+| Elven Cache | ✅ | {2}{G}{G} | Return 2 cards from graveyard | Week 1.5.2 |
+| Fallow Earth | ✅ | {2}{G} | Put land on top of library | Week 1.5.2 |
+| Fit of Rage | ✅ | {1}{R} | +3/+3 and first strike until EOT | Week 1.5.2 |
+| Flashfires | ✅ | {3}{R} | Destroy all Plains | Week 1.5.2 |
+| Forget | ✅ | {U}{U} | Discard 2, draw 2 | Week 1.5.2 |
+| Hammer of Bogardan | ✅ | {1}{R}{R} | 3 damage, recursion | Week 1.5.2 |
+| Hurricane | ✅ | {X}{G} | X damage to flyers and players | |
+| Icatian Town | ✅ | {5}{W} | Create 4 Citizen tokens | Week 1.5.2 |
+| Infernal Contract | ✅ | {B}{B}{B} | Draw 4, lose half life | Week 1.5.2 |
+| Jokulhaups | ✅ | {4}{R}{R} | Destroy all non-enchantment | Week 1.5.2 |
+| Library of Lat-Nam | ✅ | {4}{U} | Opponent chooses: draw 3 or tutor | Week 1.5.2 |
+| Lightning Blast | ✅ | {3}{R} | 4 damage to any target | |
+| Mind Warp | ✅ | {X}{3}{B} | Target discards X cards | |
+| Nature's Resurgence | ✅ | {2}{G}{G} | Return all creatures from graveyards | Week 1.5.2 |
+| Painful Memories | ✅ | {1}{B} | Put card from hand on library | Week 1.5.2 |
+| Perish | ✅ | {2}{B} | Destroy all green creatures | Week 1.5.2 |
+| Pillage | ✅ | {1}{R}{R} | Destroy artifact or land | Week 1.5.2 |
+| Prosperity | ✅ | {X}{U} | All players draw X cards | |
+| Pyrotechnics | ✅ | {4}{R} | 4 damage divided | Week 1.5.2 |
+| Raise Dead | ✅ | {B} | Return creature to hand | Week 1.5.2 |
+| Rampant Growth | ✅ | {1}{G} | Search for basic land | Week 1.5.2 |
+| Recall | ✅ | {X}{X}{U} | Return X cards from graveyard | |
+| Relearn | ✅ | {1}{U}{U} | Return instant/sorcery | Week 1.5.2 |
+| Shatterstorm | ✅ | {2}{R}{R} | Destroy all artifacts | Week 1.5.2 |
+| Spitting Earth | ✅ | {1}{R} | Damage = Mountains | Week 1.5.2 |
+| Stone Rain | ✅ | {2}{R} | Destroy land | Week 1.5.2 |
+| Stream of Life | ✅ | {X}{G} | Target gains X life | |
+| Stupor | ✅ | {2}{B} | Discard 2 (1 random, 1 choice) | Week 1.5.2 |
+| Summer Bloom | ✅ | {1}{G} | Play 3 additional lands | Week 1.5.2 |
+| Syphon Soul | ✅ | {2}{B} | 2 damage to opponents, gain that life | Week 1.5.2 |
+| Tariff | ✅ | {1}{W} | Each player sacrifices creature | Week 1.5.2 |
+| Tidal Surge | ✅ | {1}{U} | Tap all non-flyers | Week 1.5.2 |
+| Tranquility | ✅ | {2}{G} | Destroy all enchantments | Week 1.5.2 |
+| Tremor | ✅ | {R} | 1 damage to non-flyers | Week 1.5.2 |
+| Untamed Wilds | ✅ | {2}{G} | Search for basic land to battlefield | Week 1.5.2 |
+| Waiting in the Weeds | ✅ | {1}{G}{G} | Create Cat tokens | Week 1.5.2 |
+| Wrath of God | ✅ | {2}{W}{W} | Destroy all creatures | Week 1.5.2 |
+
+### Deferred to Phase 1.6
+
+| Card | Status | Cost | Effect | Reason |
+|------|--------|------|--------|--------|
+| Diminishing Returns | 🕐 | {2}{U}{U} | Exile hand+grave, draw 7, exile top 10 | Complex replacement |
+| Doomsday | 🕐 | {B}{B}{B} | Build 5-card library | Library building |
+| Illicit Auction | 🕐 | {3}{R}{R} | Bid life for creature control | Bidding mechanic |
+| Juxtapose | 🕐 | {3}{U} | Exchange creatures | Control exchange |
+| Polymorph | 🕐 | {3}{U} | Transform creature | Transformation |
+| Psychic Transfer | 🕐 | {4}{U} | Exchange life totals partially | Life exchange |
 
 ---
 
@@ -478,8 +487,12 @@ These cards require complex mechanics that will be addressed after Phase 1.5:
 |------|----------|--------|
 | Abduction | Aura | Control change + complex triggers |
 | Celestial Dawn | Enchantment | Color/type changing |
-| Control Magic | (Not in 6ed) | - |
+| Deflection | Instant | Target redirection system |
+| Desertion | Instant | Counter + control change combo |
+| Diminishing Returns | Sorcery | Complex exile/draw replacement |
 | Doomsday | Sorcery | Library building |
+| Final Fortune | Instant | Extra turn system |
+| Flash | Instant | Non-standard creature deployment |
 | Forbidden Crypt | Enchantment | Replacement effects |
 | Illicit Auction | Sorcery | Bidding mechanic |
 | Juxtapose | Sorcery | Permanent exchange |
@@ -490,7 +503,7 @@ These cards require complex mechanics that will be addressed after Phase 1.5:
 | Teferi's Puzzle Box | Artifact | Draw replacement |
 | Zur's Weirding | Enchantment | Replacement effect |
 
-*(List will be finalized during Phase 1.5.7)*
+**Total Deferred:** 17 cards (~5% of 6th Edition)
 
 ---
 
@@ -508,14 +521,20 @@ These cards require complex mechanics that will be addressed after Phase 1.5:
 | Regeneration | ❌ | Needed for ~10 cards |
 | X-cost spells | ✅ | Earthquake, Hurricane, Blaze, etc. (Week 1.5.1) |
 | Token generation | ✅ | Full framework: createToken(), 7 token types (Week 1.5.1) |
-| Damage prevention | 🚧 | Fog + Healing Salve working, COPs pending |
+| Damage prevention | ✅ | Fog, Healing Salve, Remedy, Reverse Damage (Week 1.5.2) |
 | Life gain/loss | ✅ | Stream of Life, life payment costs (Week 1.5.1) |
-| Tutors | ❌ | Needed for ~6 cards |
-| Extra turns/combats | ❌ | Needed for ~3 cards |
-| Control changing | ❌ | Needed for ~5 cards |
-| Land type changing | ❌ | Needed for ~5 cards |
+| Tutors (simplified) | ✅ | First-match search: Vampiric, Mystical, Worldly, Enlightened (Week 1.5.2) |
+| Mass effects | ✅ | destroyAllOfType, untapPermanents, dealDamageToAll (Week 1.5.2) |
+| Team pump | ✅ | applyTeamPump until EOT (Week 1.5.2) |
+| Counter variants | ✅ | Memory Lapse, Remove Soul (Week 1.5.2) |
+| Graveyard recursion | ✅ | returnFromGraveyard, Raise Dead, Ashen Powder (Week 1.5.2) |
+| Extra turns/combats | 🕐 | Deferred to Phase 1.6 |
+| Control changing | 🕐 | Deferred to Phase 1.6 |
+| Land type changing | 🕐 | Deferred to Phase 1.6 |
 | Cost modification | ❌ | Needed for ~5 cards |
-| Landwalk | ❌ | Needed for ~10 cards |
+| Landwalk | ✅ | All landwalk types (Week 1.5.3) |
+| Fear/Intimidate | ✅ | Evasion keywords (Week 1.5.3) |
+| Defender | ✅ | Attack prevention (Week 1.5.3) |
 | Protection | 🚧 | Partial |
 | Lords/Anthems | ❌ | Needed for ~8 cards |
 
@@ -523,7 +542,7 @@ These cards require complex mechanics that will be addressed after Phase 1.5:
 
 ## Weekly Progress
 
-### Week 1.5.1 (Infrastructure)
+### Week 1.5.1 (Infrastructure) ✅ COMPLETE
 - [x] Death triggers (wired in stateBasedActions.ts)
 - [x] Sacrifice mechanics (SACRIFICE_PERMANENT action + ability costs)
 - [x] X-cost handling (11 spells: Earthquake, Hurricane, Blaze, etc.)
@@ -538,16 +557,27 @@ These cards require complex mechanics that will be addressed after Phase 1.5:
   - Healing Salve: life gain mode implemented (3 life)
   - COPs deferred to Phase 1.5.5 (activated ability enchantments)
 
-### Week 1.5.2 (Spells)
-- [ ] All Instants implemented
-- [ ] All Sorceries implemented
-- [ ] 100-game stability test
+### Week 1.5.2 (Spells) ✅ COMPLETE
+- [x] All Instants implemented (34/38, 4 deferred)
+- [x] All Sorceries implemented (47/53, 6 deferred)
+- [x] 100-game simulation: 0 errors
+- [x] 333 unit tests passing
+- [x] Helper functions in effects.ts:
+  - destroyAllOfType, destroyAllCreaturesOfColor
+  - untapAllLands, untapAllCreatures
+  - searchLibrary with filter support
+  - returnFromGraveyard, returnCreatureFromGraveyard
+  - applyTeamPump, dealDamageToAll
+  - drainLife, drawCardsPayLife
 
-### Week 1.5.3 (Creatures Part 1)
-- [ ] Vanilla/keyword creatures
-- [ ] Mana dorks
-- [ ] ETB creatures
-- [ ] 100-game stability test
+### Week 1.5.3 (Creatures Part 1) 🚧 IN PROGRESS
+- [x] Keyword systems: Defender, Fear, Intimidate, Landwalk (all types)
+- [x] Mana dorks: Fyndhorn Elder ({T}: Add {G}{G}), Blood Pet (verified)
+- [x] ETB creatures: Venerable Monk (+2 life), Staunch Defenders (+4 life), Uktabi Orangutan (destroy artifact), Sage Owl (look at top 4), Hidden Horror (discard or sacrifice)
+- [x] 100-game stability test: 0 errors
+- [x] 372 unit tests passing
+- [ ] Remaining vanilla/keyword creatures (Week 1.5.4)
+- [ ] Remaining activated ability creatures (Week 1.5.4)
 
 ### Week 1.5.4 (Creatures Part 2)
 - [ ] Activated ability creatures
@@ -573,6 +603,11 @@ These cards require complex mechanics that will be addressed after Phase 1.5:
 - [ ] Deferred list finalized
 - [ ] Documentation updated
 
+### Week 1.5.8 (Adcanced Testing and Deckbuilding)
+- [ ] Create more Test Decks
+- [ ] Thoroughly test each Deck with AutBots
+- [ ] Observe any Issues or Errors
+
 ---
 
-*This document is auto-generated and manually updated as implementation progresses.*
+*This document is manually updated as implementation progresses.*

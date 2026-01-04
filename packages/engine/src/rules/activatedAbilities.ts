@@ -124,6 +124,29 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
       abilities.push(createCreatureManaAbility(card, ['W', 'U', 'B', 'R', 'G']));
       break;
 
+    case 'Fyndhorn Elder':
+      // "{T}: Add {G}{G}."
+      abilities.push({
+        id: `${card.instanceId}_tap_mana`,
+        name: 'Tap: Add {G}{G}',
+        cost: { tap: true },
+        effect: {
+          type: 'ADD_MANA',
+          amount: 2,
+          manaColors: ['G'],
+        },
+        isManaAbility: true,
+        canActivate: (_state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = _state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          // Creatures have summoning sickness for tap abilities
+          if (source.summoningSick) return false;
+          return true;
+        },
+      });
+      break;
+
     case 'Anaba Shaman':
       // "{R}, {T}: Anaba Shaman deals 1 damage to any target"
       abilities.push({

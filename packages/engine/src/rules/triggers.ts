@@ -222,6 +222,127 @@ function getTriggersForCard(
       }
       break;
 
+    // ========================================
+    // ETB LIFE GAIN CREATURES (Phase 1.5.3)
+    // ========================================
+
+    case 'Venerable Monk':
+      // "When Venerable Monk enters the battlefield, you gain 2 life."
+      if (event.type === 'ENTERS_BATTLEFIELD' && event.cardId === card.instanceId) {
+        triggers.push((triggerState: GameState) => {
+          triggerState.players[card.controller].life += 2;
+        });
+      }
+      break;
+
+    case 'Staunch Defenders':
+      // "When Staunch Defenders enters the battlefield, you gain 4 life."
+      if (event.type === 'ENTERS_BATTLEFIELD' && event.cardId === card.instanceId) {
+        triggers.push((triggerState: GameState) => {
+          triggerState.players[card.controller].life += 4;
+        });
+      }
+      break;
+
+    // ========================================
+    // ETB DESTROY ARTIFACT (Phase 1.5.3)
+    // ========================================
+
+    case 'Uktabi Orangutan':
+      // "When Uktabi Orangutan enters the battlefield, destroy target artifact."
+      if (event.type === 'ENTERS_BATTLEFIELD' && event.cardId === card.instanceId) {
+        triggers.push((triggerState: GameState) => {
+          // Find an artifact to destroy (opponent's first, then own)
+          for (const playerId of ['opponent', 'player'] as const) {
+            const targetPlayerId = card.controller === 'player' ? playerId : (playerId === 'player' ? 'opponent' : 'player');
+            const targetPlayer = triggerState.players[targetPlayerId];
+
+            const artifact = targetPlayer.battlefield.find(c => {
+              const t = CardLoader.getById(c.scryfallId);
+              return t && t.type_line?.toLowerCase().includes('artifact');
+            });
+
+            if (artifact) {
+              const index = targetPlayer.battlefield.indexOf(artifact);
+              if (index !== -1) {
+                targetPlayer.battlefield.splice(index, 1);
+                artifact.zone = 'graveyard';
+                artifact.damage = 0;
+                artifact.tapped = false;
+                targetPlayer.graveyard.push(artifact);
+              }
+              break;
+            }
+          }
+        });
+      }
+      break;
+
+    // ========================================
+    // ETB SCRY / LIBRARY MANIPULATION (Phase 1.5.3)
+    // ========================================
+
+    case 'Sage Owl':
+      // "When Sage Owl enters the battlefield, look at the top four cards of your library, then put them back in any order."
+      if (event.type === 'ENTERS_BATTLEFIELD' && event.cardId === card.instanceId) {
+        triggers.push((triggerState: GameState) => {
+          const player = triggerState.players[card.controller];
+
+          // Get top 4 cards (or fewer if library is small)
+          const topCards = player.library.slice(0, 4);
+
+          // In a real implementation with player interaction, they would choose the order
+          // For now, we'll just shuffle these top 4 cards randomly (simulating a non-optimal reorder)
+          // This is a simplification - a smart AI would want to order these optimally
+          for (let i = topCards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [topCards[i], topCards[j]] = [topCards[j]!, topCards[i]!];
+          }
+
+          // Put them back on top
+          for (let i = 0; i < topCards.length; i++) {
+            player.library[i] = topCards[i]!;
+          }
+        });
+      }
+      break;
+
+    // ========================================
+    // ETB DISCARD (Phase 1.5.3)
+    // ========================================
+
+    case 'Hidden Horror':
+      // "When Hidden Horror enters the battlefield, sacrifice it unless you discard a creature card."
+      if (event.type === 'ENTERS_BATTLEFIELD' && event.cardId === card.instanceId) {
+        triggers.push((triggerState: GameState) => {
+          const player = triggerState.players[card.controller];
+
+          // Find a creature card in hand to discard
+          const creatureCardIndex = player.hand.findIndex(c => {
+            const t = CardLoader.getById(c.scryfallId);
+            return t && isCreature(t);
+          });
+
+          if (creatureCardIndex !== -1) {
+            // Discard the creature card
+            const discardedCard = player.hand.splice(creatureCardIndex, 1)[0]!;
+            discardedCard.zone = 'graveyard';
+            player.graveyard.push(discardedCard);
+          } else {
+            // No creature card to discard - sacrifice Hidden Horror
+            const horrorIndex = player.battlefield.findIndex(c => c.instanceId === card.instanceId);
+            if (horrorIndex !== -1) {
+              const horror = player.battlefield.splice(horrorIndex, 1)[0]!;
+              horror.zone = 'graveyard';
+              horror.damage = 0;
+              horror.tapped = false;
+              player.graveyard.push(horror);
+            }
+          }
+        });
+      }
+      break;
+
     // Add more cards with triggers here
   }
 

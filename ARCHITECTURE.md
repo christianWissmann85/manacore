@@ -9,10 +9,10 @@
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                     WEB CLIENT                          │
+│                 VISUALIZATION DASHBOARD                 │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
-│  │  PixiJS      │  │   UI State   │  │  User Input  │ │
-│  │  Renderer    │  │   Manager    │  │   Handler    │ │
+│  │    React     │  │   Zustand    │  │  Tailwind    │ │
+│  │  Components  │  │    Store     │  │    CSS       │ │
 │  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘ │
 │         │                 │                 │          │
 │         └─────────────────┴─────────────────┘          │
@@ -125,44 +125,39 @@ mana-core/
 │   │   └── tests/
 │   │       └── mcts.test.ts
 │   │
-│   ├── cli-client/                 # TERMINAL UI
+│   ├── cli-client/                 # CLI TOOL
 │   │   ├── package.json
 │   │   ├── tsconfig.json
 │   │   ├── src/
 │   │   │   ├── index.ts           # Main entry
 │   │   │   ├── commands/
-│   │   │   │   ├── play.ts        # Play a game
+│   │   │   │   ├── play.ts        # Interactive mode
 │   │   │   │   └── sim.ts         # Run simulations
 │   │   │   └── display/
 │   │   │       ├── board.ts       # ASCII art renderer
 │   │   │       └── log.ts         # Pretty printing
 │   │   └── README.md
 │   │
-│   ├── web-client/                 # PIXI.JS UI
+│   ├── web-client/                 # VISUALIZATION DASHBOARD
 │   │   ├── package.json
 │   │   ├── tsconfig.json
 │   │   ├── vite.config.ts         # Vite bundler
 │   │   ├── index.html
+│   │   ├── postcss.config.js      # Tailwind config
+│   │   ├── tailwind.config.js
 │   │   ├── src/
-│   │   │   ├── main.ts            # Entry point
-│   │   │   ├── app/
-│   │   │   │   └── App.ts         # Main app class
-│   │   │   ├── scenes/
-│   │   │   │   ├── GameScene.ts
-│   │   │   │   └── MenuScene.ts
-│   │   │   ├── renderers/
-│   │   │   │   ├── CardRenderer.ts
-│   │   │   │   ├── BoardRenderer.ts
-│   │   │   │   └── StackRenderer.ts
-│   │   │   ├── input/
-│   │   │   │   ├── InputHandler.ts
-│   │   │   │   └── DragDrop.ts
-│   │   │   └── ui/
-│   │   │       ├── Button.ts
-│   │   │       └── Panel.ts
+│   │   │   ├── main.tsx           # Entry point
+│   │   │   ├── App.tsx            # Main layout
+│   │   │   ├── components/
+│   │   │   │   ├── Card.tsx       # Card component
+│   │   │   │   ├── Zone.tsx       # Battlefield/Hand zones
+│   │   │   │   └── ManaPool.tsx
+│   │   │   ├── hooks/
+│   │   │   │   └── useGame.ts     # Game state hook
+│   │   │   └── styles/
+│   │   │       └── index.css      # Global styles
 │   │   └── public/
 │   │       └── assets/
-│   │           └── sounds/
 │   │
 │   ├── research/                   # AI RESEARCH TOOLS (Phase 4+)
 │   │   ├── package.json
@@ -730,79 +725,80 @@ function shuffle<T>(array: T[], seed: number): void {
 
 ---
 
-## 6. Web Client Architecture
+## 6. Visualization Architecture
 
-### 6.1 PixiJS Application Structure
+### 6.1 React Component Structure
 
-```typescript
-// packages/web-client/src/app/App.ts
+We use a standard React component tree to render the game state. This provides a "Scientific Dashboard" look rather than a game engine look.
 
-import * as PIXI from 'pixi.js';
-import { GameScene } from '../scenes/GameScene';
+```tsx
+// packages/web-client/src/App.tsx
 
-export class App {
-  private app: PIXI.Application;
-  private currentScene: GameScene;
+import { useGameState } from './hooks/useGameState';
+import { Battlefield } from './components/Battlefield';
+import { AgentPanel } from './components/AgentPanel';
 
-  async initialize() {
-    this.app = new PIXI.Application();
-    await this.app.init({
-      width: 1280,
-      height: 720,
-      backgroundColor: 0x1a1a2e,
-      antialias: true,
-    });
+export function App() {
+  const state = useGameState();
 
-    document.body.appendChild(this.app.canvas);
+  return (
+    <div className="flex h-screen bg-gray-900 text-white font-mono">
+      {/* Main Game Area */}
+      <main className="flex-1 flex flex-col p-4">
+        <OpponentZone player={state.players.opponent} />
+        <Battlefield />
+        <PlayerZone player={state.players.player} />
+      </main>
 
-    this.currentScene = new GameScene(this.app);
-    await this.currentScene.load();
-    
-    this.app.ticker.add(() => this.update());
-  }
-
-  update() {
-    this.currentScene.update(this.app.ticker.deltaMS);
-  }
+      {/* Research Sidebar */}
+      <aside className="w-96 border-l border-gray-700 p-4 bg-gray-800">
+        <AgentPanel stats={state.aiStats} />
+        <ActionLog history={state.actionLog} />
+      </aside>
+    </div>
+  );
 }
 ```
 
-### 6.2 Card Rendering
+### 6.2 Card Component
 
-```typescript
-// packages/web-client/src/renderers/CardRenderer.ts
+Cards are rendered as DOM elements, allowing easy CSS styling and debugging.
 
-import * as PIXI from 'pixi.js';
+```tsx
+// packages/web-client/src/components/Card.tsx
+
+import clsx from 'clsx';
 import type { CardInstance } from '@manacore/engine';
 
-export class CardRenderer extends PIXI.Container {
-  private cardData: CardInstance;
-  private sprite: PIXI.Sprite;
-  private overlay: PIXI.Graphics;
+interface CardProps {
+  data: CardInstance;
+  onClick?: () => void;
+}
 
-  constructor(cardData: CardInstance) {
-    super();
-    this.cardData = cardData;
-    
-    // Load card image from Scryfall
-    const texture = PIXI.Texture.from(cardData.imageUrl);
-    this.sprite = new PIXI.Sprite(texture);
-    this.addChild(this.sprite);
-    
-    // Add tap overlay if tapped
-    if (cardData.tapped) {
-      this.rotation = Math.PI / 2;
+export function Card({ data, onClick }: CardProps) {
+  // Dynamic styling based on state
+  const classes = clsx(
+    "relative w-32 h-44 rounded-lg shadow-md transition-all duration-200",
+    {
+      "ring-2 ring-yellow-400": data.canPlay,     // Highlight playable
+      "rotate-90": data.tapped,                   // Tapped state
+      "hover:scale-105 z-10": !data.tapped,       // Hover effect
     }
-    
-    // Add interactivity
-    this.eventMode = 'static';
-    this.cursor = 'pointer';
-    this.on('pointerdown', this.onDragStart);
-  }
+  );
 
-  private onDragStart(event: PIXI.FederatedPointerEvent) {
-    // Drag/drop logic
-  }
+  return (
+    <div className={classes} onClick={onClick}>
+      <img 
+        src={`/assets/cards/${data.scryfallId}.jpg`} 
+        alt={data.name}
+        className="w-full h-full object-cover rounded-lg"
+      />
+      {/* Data Overlay for Debugging */}
+      <div className="absolute top-0 right-0 bg-black/50 text-xs px-1">
+        ID: {data.instanceId.slice(0, 4)}
+      </div>
+    </div>
+  );
 }
 ```
 
@@ -827,12 +823,12 @@ const newState = { ...state };
 - **Early Termination**: Stop search when one move is clearly best
 - **Parallel MCTS**: Run multiple searches concurrently (Phase 5)
 
-### 7.3 Rendering Optimizations
+### 7.3 Visualization Optimizations
 
-- **Sprite Batching**: Group cards by texture
-- **Object Pooling**: Reuse card renderers
-- **Lazy Loading**: Only load visible card images
-- **Culling**: Don't render off-screen objects
+- **React Memo**: Prevent re-rendering cards that haven't changed
+- **Virtualization**: Use `react-window` for large log lists
+- **CSS Transforms**: Use hardware-accelerated transforms for animations
+- **Selector Optimization**: Select minimal state slices in Zustand
 
 ---
 
@@ -865,19 +861,25 @@ Run full games between bots to catch edge cases:
 bun test:integration
 ```
 
-### 8.3 Replay System
+### 8.3 Simulation Replay System
 
-Save game states to reproduce bugs:
+To support scientific peer review and debugging, the platform can reproduce any simulation:
 
 ```json
 {
-  "seed": 12345,
-  "actions": [
+  "simulation_metadata": {
+    "version": "0.0.1",
+    "seed": 12345,
+    "timestamp": "2026-01-04T12:00:00Z"
+  },
+  "agent_log": [
     {"type": "PLAY_LAND", "playerId": "player", "payload": {...}},
     {"type": "CAST_SPELL", "playerId": "player", "payload": {...}}
   ]
 }
 ```
+
+This JSON allows researchers to perfectly reconstruct the state at any point in the timeline.
 
 ---
 

@@ -45,19 +45,19 @@ async function main() {
 
     case 'help':
     default:
-      console.log('🎮 ManaCore CLI Client\n');
+      console.log('🔬 ManaCore Research CLI\n');
       console.log('Commands:');
-      console.log('  play               Play against RandomBot');
-      console.log('  simulate [count]   Run bot vs bot simulations (default: 100 games)');
+      console.log('  play               Start interactive debug session (Human vs Agent)');
+      console.log('  simulate [count]   Run batch agent simulations (default: 100 iterations)');
       console.log('  sim [count]        Alias for simulate');
       console.log('  help               Show this help message');
       console.log('');
       console.log('Options:');
-      console.log('  --verbose, -v      Show detailed output (for simulate)');
+      console.log('  --verbose, -v      Show detailed simulation logs');
       console.log('');
       console.log('Examples:');
       console.log('  bun run src/index.ts play');
-      console.log('  bun run src/index.ts simulate 100');
+      console.log('  bun run src/index.ts simulate 1000');
       console.log('  bun run src/index.ts sim 10 --verbose');
       break;
   }
