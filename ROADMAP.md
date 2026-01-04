@@ -436,31 +436,31 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 **Focus: Activated Abilities and Complex Triggers**
 
 **Activated Abilities (~25):**
-- [ ] Tap to deal damage: Orcish Artillery, Heavy Ballista
-- [ ] Tap to buff: Infantry Veteran, Wyluli Wolf
-- [ ] Tap to tap/untap: Elder Druid, Fyndhorn Brownie
-- [ ] Pump abilities: Flame Spirit, Dragon Engine, Pearl Dragon
-- [ ] Regeneration: Drudge Skeletons, River Boa, Gorilla Chieftain
+- [x] Tap to deal damage: Orcish Artillery, Heavy Ballista
+- [x] Tap to buff: Infantry Veteran, Wyluli Wolf
+- [x] Tap to tap/untap: Elder Druid, Fyndhorn Brownie
+- [x] Pump abilities: Flame Spirit, Dragon Engine, Pearl Dragon
+- [x] Regeneration: Drudge Skeletons, River Boa, Gorilla Chieftain
 
 **Damage Triggers (~5):**
-- [ ] Hypnotic Specter (random discard on damage - note: not in 6ed, skip)
-- [ ] Sibilant Spirit (opponent draws on attack)
+- [x] Hypnotic Specter (random discard on damage - note: not in 6ed, skip)
+- [x] Sibilant Spirit (opponent draws on attack)
 
 **Death/Leave Triggers (~5):**
-- [ ] Gravebane Zombie (dies: put on library)
-- [ ] Necrosavant (pay from graveyard: return)
+- [x] Gravebane Zombie (dies: put on library)
+- [x] Necrosavant (pay from graveyard: return)
 
 **Lords/Anthems (~5):**
-- [ ] Goblin King (Goblins get +1/+1 and mountainwalk)
-- [ ] Lord of Atlantis (Merfolk get +1/+1 and islandwalk)
-- [ ] Zombie Master (Zombies get regeneration and swampwalk)
+- [x] Goblin King (Goblins get +1/+1 and mountainwalk)
+- [x] Lord of Atlantis (Merfolk get +1/+1 and islandwalk)
+- [x] Zombie Master (Zombies get regeneration and swampwalk)
 
 **Complex Creatures (~10):**
-- [ ] Maro (P/T = cards in hand)
-- [ ] Nightmare (P/T = Swamps)
-- [ ] Uktabi Wildcats (P/T = Forests)
-- [ ] Phantom Warrior (can't be blocked)
-- [ ] Thicket Basilisk (deathtouch-like)
+- [x] Maro (P/T = cards in hand)
+- [x] Nightmare (P/T = Swamps)
+- [x] Uktabi Wildcats (P/T = Forests)
+- [x] Phantom Warrior (can't be blocked)
+- [x] Thicket Basilisk (deathtouch-like)
 
 **Success Criteria:**
 - ✅ All 130 creatures implemented
@@ -771,6 +771,8 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 - [ ] Create `Battlefield` grid layout
 - [ ] Implement basic click-to-play actions
 - [ ] Add "Inspector Panel" for viewing card JSON data
+- [ ] Use fetched Image Data from `packages/web-client/public/assets/cards/` folder
+  - Implement Placeholder if Data is not present
 
 **Success Criteria:**
 - ✅ Dashboard renders game state via React
@@ -1030,101 +1032,6 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 
 ---
 
-## Milestones & Checkpoints
-
-### Checkpoint 1: End of Phase 0 (Week 3)
-**Demo:** Run `bun cli play --deck vanilla-red --opponent random`
-**Outcome:** You can play a simple game in terminal
-
-### Checkpoint 2: End of Phase 1 (Week 11)
-**Demo:** Play real Magic with mana costs, targeting, and 20+ cards
-**Outcome:** Game feels like Magic, not just generic card game
-
-### Checkpoint 3: End of Phase 1.5 (Week 18)
-**Demo:** Run 1000 games with full 6th Edition card pool (90%)
-**Outcome:** 302+ cards working, all game mechanics complete
-
-### Checkpoint 4: End of Phase 1.6 (Week 20)
-**Demo:** All 335 cards from 6th Edition playable
-**Outcome:** 100% card coverage achieved
-
-### Checkpoint 5: End of Phase 2 (Week 26)
-**Demo:** MCTS-Bot vs GreedyBot (MCTS wins 70%+)
-**Outcome:** AI is legitimately challenging
-
-### Checkpoint 6: End of Phase 3 (Week 32)
-**Demo:** 🎮 PUBLIC RELEASE - Full game on GitHub
-**Outcome:** People can actually play and have fun
-
-### Checkpoint 7: End of Phase 4 (Week 38)
-**Demo:** Run 10,000 game tournament overnight
-**Outcome:** Discover which deck is strongest in meta
-
-### Checkpoint 8: Phase 5+ (Ongoing)
-**Demo:** GA evolves a winning deck from scratch
-**Outcome:** AI designs decks better than humans
-
----
-
-## Risk Management
-
-### High-Risk Items
-
-**Risk 1: Rules complexity spirals out of control**
-- **Mitigation:** Strict phase gating, curate card pool carefully
-- **Fallback:** Skip complex cards (we don't need every 6th Ed card)
-
-**Risk 2: MCTS is too slow for good play**
-- **Mitigation:** Profile early, optimize hot paths, use Bun
-- **Fallback:** Use shallower search, better heuristics
-
-**Risk 3: Hidden info makes MCTS ineffective**
-- **Mitigation:** Implement determinization, test thoroughly
-- **Fallback:** Use imperfect info algorithms (ISMCTS)
-
-**Risk 4: UI work takes forever**
-- **Mitigation:** Keep Phase 1-2 UI minimal, polish in Phase 3
-- **Fallback:** Ship CLI version first, web version later
-
-### Medium-Risk Items
-
-**Risk 5: Playtesting reveals unfun gameplay**
-- **Mitigation:** Get feedback early (Phase 1), iterate quickly
-- **Fallback:** Adjust card pool, AI difficulty
-
-**Risk 6: Deck builder is confusing**
-- **Mitigation:** Copy existing UIs (MTG Arena, Hearthstone)
-- **Fallback:** Provide pre-built decks only
-
-### Low-Risk Items
-
-**Risk 7: Genetic algorithm doesn't converge**
-- **Mitigation:** This is research, failure is acceptable
-- **Outcome:** Learn from it, publish results
-
----
-
-## Success Metrics
-
-### Phase 0-3 (Game Development)
-- ✅ Game runs at 60 FPS
-- ✅ No crashes in 100+ consecutive games
-- ✅ Players can learn rules in <15 minutes
-- ✅ Average match length: 10-20 minutes
-- ✅ AI difficulty feels distinct (Easy → Expert)
-
-### Phase 4 (Research Tools)
-- ✅ Can simulate 10,000 games in <12 hours
-- ✅ Metrics are actionable (inform deck building)
-- ✅ MCTS visualization helps understand decisions
-
-### Phase 5 (Machine Learning)
-- ✅ NN evaluation is faster than rollout
-- ✅ NN-MCTS beats baseline by 10%+
-- ✅ GA discovers known archetypes
-- ✅ GA discovers 1+ novel competitive deck
-
----
 
 ## Maintenance & Future Work
 
@@ -1142,18 +1049,6 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 2. **Draft Mode** (Phase 7)
    - AI-powered draft simulator
    - Learn draft archetypes
-
-3. **Multiplayer** (Phase 8)
-   - 4-player Commander-style
-   - Requires major architecture changes
-
-4. **Remote Dashboard** (Phase 9)
-   - React Native mobile dashboard
-   - Monitor simulations remotely
-
-5. **Card Design Tool** (Phase 10)
-   - Generate new cards
-   - Test balance via simulation
 
 ---
 

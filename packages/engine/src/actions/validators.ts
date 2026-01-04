@@ -8,7 +8,7 @@ import type { GameState } from '../state/GameState';
 import type { Action, PlayLandAction, CastSpellAction, DeclareAttackersAction, DeclareBlockersAction, ActivateAbilityAction, SacrificePermanentAction } from './Action';
 import { getPlayer, findCard } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
-import { isLand, isCreature, isInstant, isSorcery, hasFlying, hasReach, isAura, hasDefender, hasFear, getLandwalkTypes, isArtifact } from '../cards/CardTemplate';
+import { isLand, isCreature, isInstant, isSorcery, hasFlying, hasReach, isAura, hasDefender, hasFear, hasIntimidate, hasMenace, getLandwalkTypes, isArtifact } from '../cards/CardTemplate';
 import type { CardInstance } from '../state/CardInstance';
 import { getActivatedAbilities } from '../rules/activatedAbilities';
 import type { PlayerId } from '../state/Zone';
@@ -390,6 +390,41 @@ function validateDeclareBlockers(state: GameState, action: DeclareBlockersAction
         if (!isBlackCreature && !isArtifactCreature) {
           errors.push(`${block.blockerId} cannot block ${block.attackerId} (Fear)`);
         }
+      }
+
+      // Intimidate restriction: Can only be blocked by artifact creatures and/or creatures that share a color
+      if (hasIntimidate(attackerTemplate)) {
+        const isArtifactCreature = isArtifact(blockerTemplate) && isCreature(blockerTemplate);
+        const attackerColors = attackerTemplate.colors || [];
+        const blockerColors = blockerTemplate.colors || [];
+        const sharesColor = attackerColors.some(c => blockerColors.includes(c));
+        if (!isArtifactCreature && !sharesColor) {
+          errors.push(`${block.blockerId} cannot block ${block.attackerId} (Intimidate)`);
+        }
+      }
+    }
+  }
+
+  // Menace restriction: Must be blocked by two or more creatures
+  // We need to count how many blockers are assigned to each attacker with Menace
+  if (action.payload.blocks.length > 0) {
+    const menaceBlockerCounts: Map<string, number> = new Map();
+
+    for (const block of action.payload.blocks) {
+      const attacker = findCard(state, block.attackerId);
+      if (!attacker) continue;
+
+      const attackerTemplate = CardLoader.getById(attacker.scryfallId);
+      if (attackerTemplate && hasMenace(attackerTemplate)) {
+        const count = menaceBlockerCounts.get(block.attackerId) || 0;
+        menaceBlockerCounts.set(block.attackerId, count + 1);
+      }
+    }
+
+    // Check that each Menace creature is blocked by 2+ creatures
+    for (const [attackerId, blockerCount] of menaceBlockerCounts) {
+      if (blockerCount === 1) {
+        errors.push(`${attackerId} has Menace - must be blocked by two or more creatures`);
       }
     }
   }

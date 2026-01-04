@@ -273,6 +273,14 @@ function applyEndTurn(state: GameState, _action: EndTurnAction): void {
     clearTemporaryModifications(permanent, 'end_of_turn');
   }
 
+  // 3.5. Clear regeneration shields (expire at end of turn)
+  for (const permanent of currentPlayer.battlefield) {
+    permanent.regenerationShields = undefined;
+  }
+  for (const permanent of opponent.battlefield) {
+    permanent.regenerationShields = undefined;
+  }
+
   // 4. Empty mana pools for both players
   state.players.player.manaPool = createEmptyManaPool();
   state.players.opponent.manaPool = createEmptyManaPool();
@@ -445,11 +453,11 @@ function applyActivateAbility(state: GameState, action: ActivateAbilityAction): 
   if (ability.isManaAbility) {
     // Get the color choice for multi-color mana abilities
     const manaColorChoice = action.payload.manaColorChoice as ManaColor | undefined;
-    applyAbilityEffect(state, ability.effect, action.playerId, manaColorChoice);
+    applyAbilityEffect(state, ability.effect, action.playerId, manaColorChoice, action.payload.sourceId);
   } else {
     // Non-mana abilities: For now, apply immediately
     // TODO Phase 2+: Put on stack for non-mana abilities
-    applyAbilityEffect(state, ability.effect, action.playerId);
+    applyAbilityEffect(state, ability.effect, action.playerId, undefined, action.payload.sourceId);
   }
 }
 

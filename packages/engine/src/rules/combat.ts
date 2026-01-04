@@ -11,12 +11,12 @@
 
 import type { GameState } from '../state/GameState';
 import type { CardInstance } from '../state/CardInstance';
-import { getEffectivePower, getEffectiveToughness } from '../state/CardInstance';
 import type { CardTemplate } from '../cards/CardTemplate';
 import { getPlayer } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
 import { hasFirstStrike, hasDoubleStrike, hasTrample } from '../cards/CardTemplate';
 import { registerTrigger } from './triggers';
+import { getEffectivePowerWithLords, getEffectiveToughnessWithLords } from './lords';
 
 /**
  * Resolve all combat damage for the current combat
@@ -60,7 +60,7 @@ function assignCombatDamage(state: GameState, onlyFirstStrike: boolean): void {
     if (!onlyFirstStrike && hasFirst && !hasDouble) continue; // Already dealt damage
 
     const basePower = parseInt(attackerTemplate.power || '0', 10);
-    const attackerPower = getEffectivePower(attacker, basePower);
+    const attackerPower = getEffectivePowerWithLords(state, attacker, basePower);
 
     // Check if blocked
     if (attacker.blockedBy && attacker.blockedBy.length > 0) {
@@ -101,7 +101,7 @@ function assignCombatDamage(state: GameState, onlyFirstStrike: boolean): void {
     if (!onlyFirstStrike && hasFirst && !hasDouble) continue;
 
     const basePower = parseInt(blockerTemplate.power || '0', 10);
-    const blockerPower = getEffectivePower(blocker, basePower);
+    const blockerPower = getEffectivePowerWithLords(state, blocker, basePower);
 
     // Find the attacker being blocked
     const attacker = activePlayer.battlefield.find(c => c.instanceId === blocker.blocking);
@@ -135,7 +135,7 @@ function assignDamageToBlockers(
     if (!blockerTemplate) continue;
 
     const baseToughness = parseInt(blockerTemplate.toughness || '0', 10);
-    const blockerToughness = getEffectiveToughness(blocker, baseToughness);
+    const blockerToughness = getEffectiveToughnessWithLords(state, blocker, baseToughness);
     const lethalDamage = Math.max(0, blockerToughness - blocker.damage);
 
     // Assign at least lethal damage to this blocker
@@ -172,7 +172,7 @@ function checkCreatureDeath(state: GameState): void {
 
       if (template) {
         const baseToughness = parseInt(template.toughness || '0', 10);
-        const effectiveToughness = getEffectiveToughness(creature, baseToughness);
+        const effectiveToughness = getEffectiveToughnessWithLords(state, creature, baseToughness);
 
         // Creature dies if damage >= toughness
         if (creature.damage >= effectiveToughness) {

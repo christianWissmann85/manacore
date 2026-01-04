@@ -31,6 +31,9 @@ coverage/
 packages/web-client/public/assets/cards/*.jpg
 packages/web-client/public/assets/cards/*.png
 
+# Proprietary Files
+packages/engine/data/cards/6ed.json
+
 # Keep the directory structure
 !packages/web-client/public/assets/cards/.gitkeep
 

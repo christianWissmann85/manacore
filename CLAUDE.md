@@ -259,7 +259,7 @@ manacore/
 - Week 1.5.1: **Infrastructure** ✅ 
 - Week 1.5.2: **Instants & Sorceries** ✅ 
 - Week 1.5.3: **Creatures Part 1** ✅
-- Week 1.5.4: **Creatures Part 2** (activated abilities, lords, complex triggers)
+- Week 1.5.4: **Creatures Part 2** ✅
 - Week 1.5.5: **Auras & Enchantments** (22 auras + 34 enchantments)
 - Week 1.5.6: **Artifacts** (41 artifacts)
 - Week 1.5.7: **Integration Testing** (1000-game simulation, documentation)

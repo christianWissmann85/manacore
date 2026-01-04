@@ -343,6 +343,150 @@ function getTriggersForCard(
       }
       break;
 
+    // ========================================
+    // PRIMAL CLAY - ETB CHOICE (Phase 1.5.4)
+    // ========================================
+
+    case 'Primal Clay':
+      // "As Primal Clay enters, it becomes your choice of a 3/3 artifact creature,
+      //  a 2/2 artifact creature with flying, or a 1/6 Wall artifact creature with defender."
+      // Note: This is technically a replacement effect, not a trigger, but we handle it here for simplicity.
+      // For AI simulation, we default to the most versatile choice (3/3) unless the card already has a choice set.
+      if (event.type === 'ENTERS_BATTLEFIELD' && event.cardId === card.instanceId) {
+        triggers.push((triggerState: GameState) => {
+          const player = triggerState.players[card.controller];
+          const primalClay = player.battlefield.find(c => c.instanceId === card.instanceId);
+
+          if (primalClay && !primalClay.primalClayChoice) {
+            // Default to 3/3 for AI - in a real game, player would choose
+            // AI heuristic: choose based on game state
+            // - If we need defense, choose 1/6 wall
+            // - If opponent has flyers, choose 2/2 flying
+            // - Otherwise, 3/3 is the most versatile
+            const opponentPlayerId = card.controller === 'player' ? 'opponent' : 'player';
+            const opponent = triggerState.players[opponentPlayerId];
+
+            // Check for opponent flyers
+            const opponentHasFlyers = opponent.battlefield.some(c => {
+              const t = CardLoader.getById(c.scryfallId);
+              return t && t.keywords?.includes('Flying');
+            });
+
+            // Simple AI: if opponent has flyers and we need blockers, choose 2/2 flying
+            // Otherwise default to 3/3
+            if (opponentHasFlyers && player.life < 10) {
+              primalClay.primalClayChoice = '2/2 flying';
+            } else {
+              primalClay.primalClayChoice = '3/3';
+            }
+          }
+        });
+      }
+      break;
+
+    // ========================================
+    // GOBLIN MATRON - ETB TUTOR (Phase 1.5.4)
+    // ========================================
+
+    case 'Goblin Matron':
+      // "When Goblin Matron enters the battlefield, you may search your library for a Goblin card,
+      //  reveal that card, put it into your hand, then shuffle."
+      if (event.type === 'ENTERS_BATTLEFIELD' && event.cardId === card.instanceId) {
+        triggers.push((triggerState: GameState) => {
+          const player = triggerState.players[card.controller];
+
+          // Find a Goblin card in library
+          const goblinIndex = player.library.findIndex(c => {
+            const t = CardLoader.getById(c.scryfallId);
+            return t && t.type_line?.includes('Goblin');
+          });
+
+          if (goblinIndex !== -1) {
+            // Move goblin to hand
+            const goblin = player.library.splice(goblinIndex, 1)[0]!;
+            goblin.zone = 'hand';
+            player.hand.push(goblin);
+
+            // Shuffle library
+            for (let i = player.library.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [player.library[i], player.library[j]] = [player.library[j]!, player.library[i]!];
+            }
+          }
+        });
+      }
+      break;
+
+    // ========================================
+    // BALDUVIAN HORDE - ETB DISCARD (Phase 1.5.4)
+    // ========================================
+
+    case 'Balduvian Horde':
+      // "When Balduvian Horde enters the battlefield, sacrifice it unless you discard a card at random."
+      if (event.type === 'ENTERS_BATTLEFIELD' && event.cardId === card.instanceId) {
+        triggers.push((triggerState: GameState) => {
+          const player = triggerState.players[card.controller];
+
+          if (player.hand.length > 0) {
+            // Discard a random card
+            const randomIndex = Math.floor(Math.random() * player.hand.length);
+            const discardedCard = player.hand.splice(randomIndex, 1)[0]!;
+            discardedCard.zone = 'graveyard';
+            player.graveyard.push(discardedCard);
+          } else {
+            // No cards to discard - sacrifice Balduvian Horde
+            const hordeIndex = player.battlefield.findIndex(c => c.instanceId === card.instanceId);
+            if (hordeIndex !== -1) {
+              const horde = player.battlefield.splice(hordeIndex, 1)[0]!;
+              horde.zone = 'graveyard';
+              horde.damage = 0;
+              horde.tapped = false;
+              player.graveyard.push(horde);
+            }
+          }
+        });
+      }
+      break;
+
+    // ========================================
+    // KJELDORAN DEAD - ETB SACRIFICE (Phase 1.5.4)
+    // ========================================
+
+    case 'Kjeldoran Dead':
+      // "When Kjeldoran Dead enters the battlefield, sacrifice a creature."
+      if (event.type === 'ENTERS_BATTLEFIELD' && event.cardId === card.instanceId) {
+        triggers.push((triggerState: GameState) => {
+          const player = triggerState.players[card.controller];
+
+          // Find a creature to sacrifice (not the Kjeldoran Dead itself)
+          const creatureIndex = player.battlefield.findIndex(c => {
+            if (c.instanceId === card.instanceId) return false;
+            const t = CardLoader.getById(c.scryfallId);
+            return t && isCreature(t);
+          });
+
+          if (creatureIndex !== -1) {
+            // Sacrifice the creature
+            const creature = player.battlefield.splice(creatureIndex, 1)[0]!;
+            creature.zone = 'graveyard';
+            creature.damage = 0;
+            creature.tapped = false;
+            player.graveyard.push(creature);
+          } else {
+            // No other creature to sacrifice - must sacrifice Kjeldoran Dead
+            const deadIndex = player.battlefield.findIndex(c => c.instanceId === card.instanceId);
+            if (deadIndex !== -1) {
+              const dead = player.battlefield.splice(deadIndex, 1)[0]!;
+              dead.zone = 'graveyard';
+              dead.damage = 0;
+              dead.tapped = false;
+              player.graveyard.push(dead);
+            }
+          }
+        });
+      }
+      break;
+
     // Add more cards with triggers here
   }
 

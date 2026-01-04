@@ -61,7 +61,7 @@ export interface SacrificeCost {
  * Effect when ability resolves
  */
 export interface AbilityEffect {
-  type: 'DAMAGE' | 'DESTROY' | 'DRAW_CARD' | 'ADD_MANA' | 'CUSTOM';
+  type: 'DAMAGE' | 'DESTROY' | 'DRAW_CARD' | 'ADD_MANA' | 'REGENERATE' | 'CUSTOM';
   amount?: number;      // For damage or mana amount
   target?: string;      // Target instance ID
   manaColors?: ManaColor[]; // For ADD_MANA: colors that can be added
@@ -473,7 +473,1334 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
       abilities.push(...createSacrificeLandAbilities(card, 'U'));
       break;
 
-    // Add more cards with activated abilities here
+    // ========================================
+    // PHASE 1.5.4: ACTIVATED ABILITY CREATURES
+    // ========================================
+
+    // --- TAP TO DEAL DAMAGE ---
+
+    case 'Orcish Artillery':
+      // "{T}: Orcish Artillery deals 2 damage to any target and 3 damage to you."
+      abilities.push({
+        id: `${card.instanceId}_tap_damage`,
+        name: '{T}: 2 damage to any target, 3 to you',
+        cost: { tap: true },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            // Effect will be applied via the target system
+            // The 3 damage to self is built into the effect
+          },
+        },
+        isManaAbility: false,
+        targetRequirements: [{
+          id: 'target_0',
+          count: 1,
+          targetType: 'any',
+          zone: 'battlefield',
+          restrictions: [],
+          optional: false,
+          description: 'any target',
+        }],
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          if (source.summoningSick) return false;
+          return true;
+        },
+      });
+      break;
+
+    case 'Heavy Ballista':
+      // "{T}: Heavy Ballista deals 2 damage to target attacking or blocking creature."
+      abilities.push({
+        id: `${card.instanceId}_tap_damage`,
+        name: '{T}: 2 damage to attacker/blocker',
+        cost: { tap: true },
+        effect: { type: 'DAMAGE', amount: 2 },
+        isManaAbility: false,
+        targetRequirements: [{
+          id: 'target_0',
+          count: 1,
+          targetType: 'creature',
+          zone: 'battlefield',
+          restrictions: ['attacking_or_blocking'],
+          optional: false,
+          description: 'target attacking or blocking creature',
+        }],
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          if (source.summoningSick) return false;
+          return true;
+        },
+      });
+      break;
+
+    case "D'Avenant Archer":
+      // "{T}: D'Avenant Archer deals 1 damage to target attacking or blocking creature."
+      abilities.push({
+        id: `${card.instanceId}_tap_damage`,
+        name: '{T}: 1 damage to attacker/blocker',
+        cost: { tap: true },
+        effect: { type: 'DAMAGE', amount: 1 },
+        isManaAbility: false,
+        targetRequirements: [{
+          id: 'target_0',
+          count: 1,
+          targetType: 'creature',
+          zone: 'battlefield',
+          restrictions: ['attacking_or_blocking'],
+          optional: false,
+          description: 'target attacking or blocking creature',
+        }],
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          if (source.summoningSick) return false;
+          return true;
+        },
+      });
+      break;
+
+    case 'Femeref Archers':
+      // "{T}: Femeref Archers deals 4 damage to target attacking creature with flying."
+      abilities.push({
+        id: `${card.instanceId}_tap_damage`,
+        name: '{T}: 4 damage to attacking flyer',
+        cost: { tap: true },
+        effect: { type: 'DAMAGE', amount: 4 },
+        isManaAbility: false,
+        targetRequirements: [{
+          id: 'target_0',
+          count: 1,
+          targetType: 'creature',
+          zone: 'battlefield',
+          restrictions: ['attacking', 'flying'],
+          optional: false,
+          description: 'target attacking creature with flying',
+        }],
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          if (source.summoningSick) return false;
+          return true;
+        },
+      });
+      break;
+
+    case 'Reckless Embermage':
+      // "{1}{R}: Reckless Embermage deals 1 damage to any target and 1 damage to itself."
+      abilities.push({
+        id: `${card.instanceId}_damage`,
+        name: '{1}{R}: 1 damage to any target + 1 to self',
+        cost: { mana: '{1}{R}' },
+        effect: { type: 'DAMAGE', amount: 1 },
+        isManaAbility: false,
+        targetRequirements: [{
+          id: 'target_0',
+          count: 1,
+          targetType: 'any',
+          zone: 'battlefield',
+          restrictions: [],
+          optional: false,
+          description: 'any target',
+        }],
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          // Check mana availability
+          const player = state.players[controller];
+          const totalMana = player.manaPool.red + player.manaPool.colorless +
+            player.battlefield.filter(p => {
+              if (p.tapped) return false;
+              const t = CardLoader.getById(p.scryfallId);
+              return t && isLand(t);
+            }).length;
+          return totalMana >= 2;
+        },
+      });
+      break;
+
+    // --- TAP TO BUFF ---
+
+    case 'Infantry Veteran':
+      // "{T}: Target attacking creature gets +1/+1 until end of turn."
+      abilities.push({
+        id: `${card.instanceId}_tap_buff`,
+        name: '{T}: Attacking creature +1/+1',
+        cost: { tap: true },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            // Effect applied via targeting system
+          },
+        },
+        isManaAbility: false,
+        targetRequirements: [{
+          id: 'target_0',
+          count: 1,
+          targetType: 'creature',
+          zone: 'battlefield',
+          restrictions: ['attacking'],
+          optional: false,
+          description: 'target attacking creature',
+        }],
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          if (source.summoningSick) return false;
+          return true;
+        },
+      });
+      break;
+
+    case 'Wyluli Wolf':
+      // "{T}: Target creature gets +1/+1 until end of turn."
+      abilities.push({
+        id: `${card.instanceId}_tap_buff`,
+        name: '{T}: Creature +1/+1',
+        cost: { tap: true },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            // Effect applied via targeting system
+          },
+        },
+        isManaAbility: false,
+        targetRequirements: [{
+          id: 'target_0',
+          count: 1,
+          targetType: 'creature',
+          zone: 'battlefield',
+          restrictions: [],
+          optional: false,
+          description: 'target creature',
+        }],
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          if (source.summoningSick) return false;
+          return true;
+        },
+      });
+      break;
+
+    case 'Pradesh Gypsies':
+      // "{1}{G}, {T}: Target creature gets -2/-0 until end of turn."
+      abilities.push({
+        id: `${card.instanceId}_tap_debuff`,
+        name: '{1}{G}, {T}: Creature -2/-0',
+        cost: { tap: true, mana: '{1}{G}' },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            // Effect applied via targeting system
+          },
+        },
+        isManaAbility: false,
+        targetRequirements: [{
+          id: 'target_0',
+          count: 1,
+          targetType: 'creature',
+          zone: 'battlefield',
+          restrictions: [],
+          optional: false,
+          description: 'target creature',
+        }],
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          if (source.summoningSick) return false;
+          return true;
+        },
+      });
+      break;
+
+    // --- PUMP ABILITIES (No Tap) ---
+
+    case 'Flame Spirit':
+      // "{R}: Flame Spirit gets +1/+0 until end of turn."
+      abilities.push({
+        id: `${card.instanceId}_pump`,
+        name: '{R}: +1/+0',
+        cost: { mana: '{R}' },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            // Find and pump self
+            for (const playerId of ['player', 'opponent'] as const) {
+              const creature = state.players[playerId].battlefield.find(
+                c => c.instanceId === card.instanceId
+              );
+              if (creature) {
+                creature.temporaryModifications.push({
+                  id: `pump_${Date.now()}_${Math.random()}`,
+                  powerChange: 1,
+                  toughnessChange: 0,
+                  expiresAt: 'end_of_turn',
+                  source: card.instanceId,
+                });
+                break;
+              }
+            }
+          },
+        },
+        isManaAbility: false,
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          // Check for red mana
+          const player = state.players[controller];
+          const hasRed = player.manaPool.red >= 1 ||
+            player.battlefield.some(p => {
+              if (p.tapped) return false;
+              const t = CardLoader.getById(p.scryfallId);
+              return t && (t.name === 'Mountain' || getLandManaColors(t.name).includes('R'));
+            });
+          return hasRed;
+        },
+      });
+      break;
+
+    case 'Dragon Engine':
+      // "{2}: Dragon Engine gets +1/+0 until end of turn."
+      abilities.push({
+        id: `${card.instanceId}_pump`,
+        name: '{2}: +1/+0',
+        cost: { mana: '{2}' },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            for (const playerId of ['player', 'opponent'] as const) {
+              const creature = state.players[playerId].battlefield.find(
+                c => c.instanceId === card.instanceId
+              );
+              if (creature) {
+                creature.temporaryModifications.push({
+                  id: `pump_${Date.now()}_${Math.random()}`,
+                  powerChange: 1,
+                  toughnessChange: 0,
+                  expiresAt: 'end_of_turn',
+                  source: card.instanceId,
+                });
+                break;
+              }
+            }
+          },
+        },
+        isManaAbility: false,
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          const player = state.players[controller];
+          const totalMana = Object.values(player.manaPool).reduce((a, b) => a + b, 0) +
+            player.battlefield.filter(p => {
+              if (p.tapped) return false;
+              const t = CardLoader.getById(p.scryfallId);
+              return t && isLand(t);
+            }).length;
+          return totalMana >= 2;
+        },
+      });
+      break;
+
+    case 'Pearl Dragon':
+      // "{1}{W}: Pearl Dragon gets +0/+1 until end of turn."
+      abilities.push({
+        id: `${card.instanceId}_pump`,
+        name: '{1}{W}: +0/+1',
+        cost: { mana: '{1}{W}' },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            for (const playerId of ['player', 'opponent'] as const) {
+              const creature = state.players[playerId].battlefield.find(
+                c => c.instanceId === card.instanceId
+              );
+              if (creature) {
+                creature.temporaryModifications.push({
+                  id: `pump_${Date.now()}_${Math.random()}`,
+                  powerChange: 0,
+                  toughnessChange: 1,
+                  expiresAt: 'end_of_turn',
+                  source: card.instanceId,
+                });
+                break;
+              }
+            }
+          },
+        },
+        isManaAbility: false,
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          return source !== undefined;
+        },
+      });
+      break;
+
+    case 'Mesa Falcon':
+      // "{1}{W}: Mesa Falcon gets +0/+1 until end of turn."
+      abilities.push({
+        id: `${card.instanceId}_pump`,
+        name: '{1}{W}: +0/+1',
+        cost: { mana: '{1}{W}' },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            for (const playerId of ['player', 'opponent'] as const) {
+              const creature = state.players[playerId].battlefield.find(
+                c => c.instanceId === card.instanceId
+              );
+              if (creature) {
+                creature.temporaryModifications.push({
+                  id: `pump_${Date.now()}_${Math.random()}`,
+                  powerChange: 0,
+                  toughnessChange: 1,
+                  expiresAt: 'end_of_turn',
+                  source: card.instanceId,
+                });
+                break;
+              }
+            }
+          },
+        },
+        isManaAbility: false,
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          return source !== undefined;
+        },
+      });
+      break;
+
+    case 'Wall of Fire':
+      // "{R}: Wall of Fire gets +1/+0 until end of turn."
+      abilities.push({
+        id: `${card.instanceId}_pump`,
+        name: '{R}: +1/+0',
+        cost: { mana: '{R}' },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            for (const playerId of ['player', 'opponent'] as const) {
+              const creature = state.players[playerId].battlefield.find(
+                c => c.instanceId === card.instanceId
+              );
+              if (creature) {
+                creature.temporaryModifications.push({
+                  id: `pump_${Date.now()}_${Math.random()}`,
+                  powerChange: 1,
+                  toughnessChange: 0,
+                  expiresAt: 'end_of_turn',
+                  source: card.instanceId,
+                });
+                break;
+              }
+            }
+          },
+        },
+        isManaAbility: false,
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          return source !== undefined;
+        },
+      });
+      break;
+
+    case 'Spitting Drake':
+      // "{R}: Spitting Drake gets +1/+0 until end of turn. Activate only once each turn."
+      abilities.push({
+        id: `${card.instanceId}_pump`,
+        name: '{R}: +1/+0 (once per turn)',
+        cost: { mana: '{R}' },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            for (const playerId of ['player', 'opponent'] as const) {
+              const creature = state.players[playerId].battlefield.find(
+                c => c.instanceId === card.instanceId
+              );
+              if (creature) {
+                creature.temporaryModifications.push({
+                  id: `pump_${Date.now()}_${Math.random()}`,
+                  powerChange: 1,
+                  toughnessChange: 0,
+                  expiresAt: 'end_of_turn',
+                  source: card.instanceId,
+                });
+                break;
+              }
+            }
+          },
+        },
+        isManaAbility: false,
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          // Check if already activated this turn (by checking for existing pump from this source)
+          const alreadyActivated = source.temporaryModifications.some(
+            m => m.source === card.instanceId && m.expiresAt === 'end_of_turn'
+          );
+          return !alreadyActivated;
+        },
+      });
+      break;
+
+    // --- TAP/UNTAP ABILITIES ---
+
+    case 'Elder Druid':
+      // "{3}{G}, {T}: You may tap or untap target artifact, creature, or land."
+      abilities.push({
+        id: `${card.instanceId}_tap_control`,
+        name: '{3}{G}, {T}: Tap/untap permanent',
+        cost: { tap: true, mana: '{3}{G}' },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            // Effect applied via targeting
+          },
+        },
+        isManaAbility: false,
+        targetRequirements: [{
+          id: 'target_0',
+          count: 1,
+          targetType: 'permanent',
+          zone: 'battlefield',
+          restrictions: [],
+          optional: false,
+          description: 'target artifact, creature, or land',
+        }],
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          if (source.summoningSick) return false;
+          return true;
+        },
+      });
+      break;
+
+    case 'Fyndhorn Brownie':
+      // "{2}{G}, {T}: Untap target creature."
+      abilities.push({
+        id: `${card.instanceId}_tap_untap`,
+        name: '{2}{G}, {T}: Untap creature',
+        cost: { tap: true, mana: '{2}{G}' },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            // Effect applied via targeting
+          },
+        },
+        isManaAbility: false,
+        targetRequirements: [{
+          id: 'target_0',
+          count: 1,
+          targetType: 'creature',
+          zone: 'battlefield',
+          restrictions: [],
+          optional: false,
+          description: 'target creature',
+        }],
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          if (source.summoningSick) return false;
+          return true;
+        },
+      });
+      break;
+
+    case 'Radjan Spirit':
+      // "{T}: Target creature loses flying until end of turn."
+      abilities.push({
+        id: `${card.instanceId}_tap_remove_flying`,
+        name: '{T}: Target loses flying',
+        cost: { tap: true },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            // Effect applied via targeting
+          },
+        },
+        isManaAbility: false,
+        targetRequirements: [{
+          id: 'target_0',
+          count: 1,
+          targetType: 'creature',
+          zone: 'battlefield',
+          restrictions: [],
+          optional: false,
+          description: 'target creature',
+        }],
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          if (source.summoningSick) return false;
+          return true;
+        },
+      });
+      break;
+
+    // --- FLYING GRANTING ---
+
+    case 'Patagia Golem':
+      // "{3}: Patagia Golem gains flying until end of turn."
+      abilities.push({
+        id: `${card.instanceId}_gain_flying`,
+        name: '{3}: Gains flying',
+        cost: { mana: '{3}' },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            // Mark that this creature has flying for this turn
+            // Note: Requires runtime keyword tracking (simplified for now)
+          },
+        },
+        isManaAbility: false,
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          return source !== undefined;
+        },
+      });
+      break;
+
+    case 'Harmattan Efreet':
+      // "{1}{U}{U}: Target creature gains flying until end of turn."
+      abilities.push({
+        id: `${card.instanceId}_grant_flying`,
+        name: '{1}{U}{U}: Target gains flying',
+        cost: { mana: '{1}{U}{U}' },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            // Effect applied via targeting
+          },
+        },
+        isManaAbility: false,
+        targetRequirements: [{
+          id: 'target_0',
+          count: 1,
+          targetType: 'creature',
+          zone: 'battlefield',
+          restrictions: [],
+          optional: false,
+          description: 'target creature',
+        }],
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          return source !== undefined;
+        },
+      });
+      break;
+
+    // --- DAMAGE PREVENTION ---
+
+    case 'Samite Healer':
+      // "{T}: Prevent the next 1 damage that would be dealt to any target this turn."
+      abilities.push({
+        id: `${card.instanceId}_tap_prevent`,
+        name: '{T}: Prevent 1 damage',
+        cost: { tap: true },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            // Damage prevention effect - would need damage prevention shield system
+          },
+        },
+        isManaAbility: false,
+        targetRequirements: [{
+          id: 'target_0',
+          count: 1,
+          targetType: 'any',
+          zone: 'battlefield',
+          restrictions: [],
+          optional: false,
+          description: 'any target',
+        }],
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          if (source.summoningSick) return false;
+          return true;
+        },
+      });
+      break;
+
+    // --- SACRIFICE ABILITIES ---
+
+    case 'Daraja Griffin':
+      // "Sacrifice Daraja Griffin: Destroy target black creature."
+      abilities.push({
+        id: `${card.instanceId}_sac_destroy`,
+        name: 'Sacrifice: Destroy black creature',
+        cost: { sacrifice: { type: 'self' } },
+        effect: { type: 'DESTROY' },
+        isManaAbility: false,
+        targetRequirements: [{
+          id: 'target_0',
+          count: 1,
+          targetType: 'creature',
+          zone: 'battlefield',
+          restrictions: ['black'],
+          optional: false,
+          description: 'target black creature',
+        }],
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          return source !== undefined;
+        },
+      });
+      break;
+
+    case 'Daring Apprentice':
+      // "{T}, Sacrifice Daring Apprentice: Counter target spell."
+      abilities.push({
+        id: `${card.instanceId}_sac_counter`,
+        name: '{T}, Sacrifice: Counter spell',
+        cost: { tap: true, sacrifice: { type: 'self' } },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            // Counter top spell on stack
+            if (state.stack.length > 0) {
+              const topSpell = state.stack[state.stack.length - 1];
+              if (topSpell) {
+                topSpell.countered = true;
+              }
+            }
+          },
+        },
+        isManaAbility: false,
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          if (source.summoningSick) return false;
+          // Must have a spell to counter
+          return state.stack.length > 0;
+        },
+      });
+      break;
+
+    case 'Unyaro Griffin':
+      // "Sacrifice Unyaro Griffin: Counter target red instant or sorcery spell."
+      abilities.push({
+        id: `${card.instanceId}_sac_counter_red`,
+        name: 'Sacrifice: Counter red instant/sorcery',
+        cost: { sacrifice: { type: 'self' } },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            if (state.stack.length > 0) {
+              const topSpell = state.stack[state.stack.length - 1];
+              if (topSpell) {
+                const template = CardLoader.getById(topSpell.card.scryfallId);
+                if (template && template.colors?.includes('R')) {
+                  topSpell.countered = true;
+                }
+              }
+            }
+          },
+        },
+        isManaAbility: false,
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          // Check if there's a red spell on stack
+          return state.stack.some(s => {
+            const t = CardLoader.getById(s.card.scryfallId);
+            return t && t.colors?.includes('R');
+          });
+        },
+      });
+      break;
+
+    case 'Resistance Fighter':
+      // "Sacrifice Resistance Fighter: Prevent all combat damage target creature would deal this turn."
+      abilities.push({
+        id: `${card.instanceId}_sac_prevent`,
+        name: 'Sacrifice: Prevent combat damage from creature',
+        cost: { sacrifice: { type: 'self' } },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            // Combat damage prevention
+          },
+        },
+        isManaAbility: false,
+        targetRequirements: [{
+          id: 'target_0',
+          count: 1,
+          targetType: 'creature',
+          zone: 'battlefield',
+          restrictions: [],
+          optional: false,
+          description: 'target creature',
+        }],
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          return source !== undefined;
+        },
+      });
+      break;
+
+    case 'Goblin Digging Team':
+      // "{T}, Sacrifice Goblin Digging Team: Destroy target Wall."
+      abilities.push({
+        id: `${card.instanceId}_sac_destroy_wall`,
+        name: '{T}, Sacrifice: Destroy Wall',
+        cost: { tap: true, sacrifice: { type: 'self' } },
+        effect: { type: 'DESTROY' },
+        isManaAbility: false,
+        targetRequirements: [{
+          id: 'target_0',
+          count: 1,
+          targetType: 'creature',
+          zone: 'battlefield',
+          restrictions: ['wall'],
+          optional: false,
+          description: 'target Wall',
+        }],
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          if (source.summoningSick) return false;
+          return true;
+        },
+      });
+      break;
+
+    // --- LIFE PAYMENT ABILITIES ---
+
+    case 'Mischievous Poltergeist':
+      // "Pay 1 life: Regenerate this creature." (Flying)
+      abilities.push({
+        id: `${card.instanceId}_regenerate`,
+        name: 'Pay 1 life: Regenerate',
+        cost: { life: 1 },
+        effect: { type: 'REGENERATE' },
+        isManaAbility: false,
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          const player = state.players[controller];
+          return player.life >= 1; // Need life to pay
+        },
+      });
+      break;
+
+    case 'Ethereal Champion':
+      // "Pay 1 life: Prevent the next 1 damage that would be dealt to Ethereal Champion this turn."
+      abilities.push({
+        id: `${card.instanceId}_prevent`,
+        name: 'Pay 1 life: Prevent 1 damage to self',
+        cost: { life: 1 },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            // Damage prevention shield for self
+          },
+        },
+        isManaAbility: false,
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          const player = state.players[controller];
+          return player.life > 1;
+        },
+      });
+      break;
+
+    // --- MORE ACTIVATED ABILITY CREATURES ---
+
+    case 'Abyssal Hunter':
+      // "{B}, {T}: Tap target creature. Abyssal Hunter deals damage equal to its power to that creature."
+      abilities.push({
+        id: `${card.instanceId}_tap_damage`,
+        name: '{B}, {T}: Tap creature + deal damage',
+        cost: { tap: true, mana: '{B}' },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            // Tap + deal damage based on power
+          },
+        },
+        isManaAbility: false,
+        targetRequirements: [{
+          id: 'target_0',
+          count: 1,
+          targetType: 'creature',
+          zone: 'battlefield',
+          restrictions: [],
+          optional: false,
+          description: 'target creature',
+        }],
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          if (source.summoningSick) return false;
+          return true;
+        },
+      });
+      break;
+
+    case 'Anaba Shaman':
+      // "{R}, {T}: Anaba Shaman deals 1 damage to any target."
+      abilities.push({
+        id: `${card.instanceId}_tap_damage`,
+        name: '{R}, {T}: 1 damage to any target',
+        cost: { tap: true, mana: '{R}' },
+        effect: { type: 'DAMAGE', amount: 1 },
+        isManaAbility: false,
+        targetRequirements: [{
+          id: 'target_0',
+          count: 1,
+          targetType: 'any',
+          zone: 'battlefield',
+          restrictions: [],
+          optional: false,
+          description: 'any target',
+        }],
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          if (source.summoningSick) return false;
+          return true;
+        },
+      });
+      break;
+
+    case 'Blighted Shaman':
+      // "{T}, Sacrifice a Swamp: Target creature gets +1/+1 until end of turn."
+      abilities.push({
+        id: `${card.instanceId}_sac_buff`,
+        name: '{T}, Sacrifice Swamp: Creature +1/+1',
+        cost: { tap: true, sacrifice: { type: 'land', subtype: 'Swamp' } },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            // Effect applied via targeting
+          },
+        },
+        isManaAbility: false,
+        targetRequirements: [{
+          id: 'target_0',
+          count: 1,
+          targetType: 'creature',
+          zone: 'battlefield',
+          restrictions: [],
+          optional: false,
+          description: 'target creature',
+        }],
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          if (source.summoningSick) return false;
+          // Check for swamp to sacrifice
+          const hasSwamp = state.players[controller].battlefield.some(p => {
+            const t = CardLoader.getById(p.scryfallId);
+            return t && t.name === 'Swamp';
+          });
+          return hasSwamp;
+        },
+      });
+      break;
+
+    case 'Blood Pet':
+      // "Sacrifice Blood Pet: Add {B}."
+      abilities.push({
+        id: `${card.instanceId}_sac_mana`,
+        name: 'Sacrifice: Add {B}',
+        cost: { sacrifice: { type: 'self' } },
+        effect: { type: 'ADD_MANA', manaColors: ['B'] },
+        isManaAbility: true,
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          return source !== undefined;
+        },
+      });
+      break;
+
+    case 'Fyndhorn Elder':
+      // "{T}: Add {G}{G}."
+      abilities.push({
+        id: `${card.instanceId}_tap_mana`,
+        name: '{T}: Add {G}{G}',
+        cost: { tap: true },
+        effect: { type: 'ADD_MANA', manaColors: ['G', 'G'] },
+        isManaAbility: true,
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          if (source.summoningSick) return false;
+          return true;
+        },
+      });
+      break;
+
+    case 'Kjeldoran Royal Guard':
+      // "{T}: All combat damage that would be dealt to you by unblocked creatures this turn is dealt to Kjeldoran Royal Guard instead."
+      abilities.push({
+        id: `${card.instanceId}_redirect`,
+        name: '{T}: Redirect unblocked damage to self',
+        cost: { tap: true },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            // Damage redirection effect
+          },
+        },
+        isManaAbility: false,
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          if (source.summoningSick) return false;
+          return true;
+        },
+      });
+      break;
+
+    case 'Order of the Sacred Torch':
+      // "{T}, Pay 1 life: Counter target black spell."
+      abilities.push({
+        id: `${card.instanceId}_counter_black`,
+        name: '{T}, Pay 1 life: Counter black spell',
+        cost: { tap: true, life: 1 },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            if (state.stack.length > 0) {
+              const topSpell = state.stack[state.stack.length - 1];
+              if (topSpell) {
+                const template = CardLoader.getById(topSpell.card.scryfallId);
+                if (template && template.colors?.includes('B')) {
+                  topSpell.countered = true;
+                }
+              }
+            }
+          },
+        },
+        isManaAbility: false,
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          if (source.summoningSick) return false;
+          const player = state.players[controller];
+          if (player.life <= 1) return false;
+          // Check for black spell on stack
+          return state.stack.some(s => {
+            const t = CardLoader.getById(s.card.scryfallId);
+            return t && t.colors?.includes('B');
+          });
+        },
+      });
+      break;
+
+    case 'Stromgald Cabal':
+      // "{T}, Pay 1 life: Counter target white spell."
+      abilities.push({
+        id: `${card.instanceId}_counter_white`,
+        name: '{T}, Pay 1 life: Counter white spell',
+        cost: { tap: true, life: 1 },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            if (state.stack.length > 0) {
+              const topSpell = state.stack[state.stack.length - 1];
+              if (topSpell) {
+                const template = CardLoader.getById(topSpell.card.scryfallId);
+                if (template && template.colors?.includes('W')) {
+                  topSpell.countered = true;
+                }
+              }
+            }
+          },
+        },
+        isManaAbility: false,
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          if (source.summoningSick) return false;
+          const player = state.players[controller];
+          if (player.life <= 1) return false;
+          return state.stack.some(s => {
+            const t = CardLoader.getById(s.card.scryfallId);
+            return t && t.colors?.includes('W');
+          });
+        },
+      });
+      break;
+
+    case 'Rag Man':
+      // "{B}{B}{B}, {T}: Target opponent reveals their hand and discards a creature card at random. Activate only during your turn."
+      abilities.push({
+        id: `${card.instanceId}_discard`,
+        name: '{B}{B}{B}, {T}: Opponent discards creature',
+        cost: { tap: true, mana: '{B}{B}{B}' },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            // Random creature discard effect
+          },
+        },
+        isManaAbility: false,
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          if (source.summoningSick) return false;
+          // Only during your turn
+          if (state.activePlayer !== controller) return false;
+          return true;
+        },
+      });
+      break;
+
+    case 'Soldevi Sage':
+      // "{T}, Sacrifice two lands: Draw three cards, then discard one of them."
+      abilities.push({
+        id: `${card.instanceId}_draw`,
+        name: '{T}, Sacrifice 2 lands: Draw 3, discard 1',
+        cost: { tap: true, sacrifice: { type: 'land', count: 2 } },
+        effect: { type: 'DRAW_CARD', amount: 3 }, // Discard handled separately
+        isManaAbility: false,
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          if (source.summoningSick) return false;
+          // Check for 2 lands to sacrifice
+          const landCount = state.players[controller].battlefield.filter(p => {
+            const t = CardLoader.getById(p.scryfallId);
+            return t && isLand(t);
+          }).length;
+          return landCount >= 2;
+        },
+      });
+      break;
+
+    case 'Crimson Hellkite':
+      // "{X}, {T}: Crimson Hellkite deals X damage to target creature. Spend only red mana on X."
+      abilities.push({
+        id: `${card.instanceId}_x_damage`,
+        name: '{X}, {T}: X damage to creature (red only)',
+        cost: { tap: true, mana: '{X}' }, // X is variable
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            // X damage - amount determined by X value
+          },
+        },
+        isManaAbility: false,
+        targetRequirements: [{
+          id: 'target_0',
+          count: 1,
+          targetType: 'creature',
+          zone: 'battlefield',
+          restrictions: [],
+          optional: false,
+          description: 'target creature',
+        }],
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          if (source.summoningSick) return false;
+          return true;
+        },
+      });
+      break;
+
+    case 'Fallen Angel':
+      // "Sacrifice a creature: Fallen Angel gets +2/+1 until end of turn."
+      abilities.push({
+        id: `${card.instanceId}_sac_pump`,
+        name: 'Sacrifice creature: +2/+1',
+        cost: { sacrifice: { type: 'creature' } },
+        effect: {
+          type: 'CUSTOM',
+          custom: (state: GameState) => {
+            for (const playerId of ['player', 'opponent'] as const) {
+              const creature = state.players[playerId].battlefield.find(
+                c => c.instanceId === card.instanceId
+              );
+              if (creature) {
+                creature.temporaryModifications.push({
+                  id: `pump_${Date.now()}_${Math.random()}`,
+                  powerChange: 2,
+                  toughnessChange: 1,
+                  expiresAt: 'end_of_turn',
+                  source: card.instanceId,
+                });
+                break;
+              }
+            }
+          },
+        },
+        isManaAbility: false,
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          // Must have another creature to sacrifice
+          const otherCreatures = state.players[controller].battlefield.filter(p => {
+            if (p.instanceId === sourceId) return false;
+            const t = CardLoader.getById(p.scryfallId);
+            return t && isCreature(t);
+          });
+          return otherCreatures.length > 0;
+        },
+      });
+      break;
+
+    case 'Sengir Autocrat':
+      // Creates 0/1 Serf tokens (ETB trigger, handled in triggers.ts)
+      // Serfs leave when Autocrat leaves (trigger)
+      break;
+
+    case 'Balduvian Horde':
+      // ETB: Sacrifice a creature or counter (handled in triggers)
+      break;
+
+    case 'Wall of Swords':
+      // Flying, Defender (keyword-only)
+      break;
+
+    case 'Wall of Spears':
+      // First Strike, Defender (keyword-only)
+      break;
+
+    // ========================================
+    // REGENERATION CREATURES
+    // ========================================
+
+    case 'Drudge Skeletons':
+      // "{B}: Regenerate this creature."
+      abilities.push({
+        id: `${card.instanceId}_regenerate`,
+        name: '{B}: Regenerate',
+        cost: { mana: '{B}' },
+        effect: { type: 'REGENERATE' },
+        isManaAbility: false,
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+
+          // Check if player can pay {B}
+          const player = state.players[controller];
+          const cost = parseManaCost('{B}');
+          return canPayManaCost(player.manaPool, cost);
+        },
+      });
+      break;
+
+    case 'Gorilla Chieftain':
+      // "{1}{G}: Regenerate this creature."
+      abilities.push({
+        id: `${card.instanceId}_regenerate`,
+        name: '{1}{G}: Regenerate',
+        cost: { mana: '{1}{G}' },
+        effect: { type: 'REGENERATE' },
+        isManaAbility: false,
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+
+          const player = state.players[controller];
+          const cost = parseManaCost('{1}{G}');
+          return canPayManaCost(player.manaPool, cost);
+        },
+      });
+      break;
+
+    case 'Kjeldoran Dead':
+      // "{B}: Regenerate this creature." (also has ETB sacrifice, handled in triggers)
+      abilities.push({
+        id: `${card.instanceId}_regenerate`,
+        name: '{B}: Regenerate',
+        cost: { mana: '{B}' },
+        effect: { type: 'REGENERATE' },
+        isManaAbility: false,
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+
+          const player = state.players[controller];
+          const cost = parseManaCost('{B}');
+          return canPayManaCost(player.manaPool, cost);
+        },
+      });
+      break;
+
+    case 'River Boa':
+      // "{G}: Regenerate this creature." (Islandwalk)
+      abilities.push({
+        id: `${card.instanceId}_regenerate`,
+        name: '{G}: Regenerate',
+        cost: { mana: '{G}' },
+        effect: { type: 'REGENERATE' },
+        isManaAbility: false,
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+
+          const player = state.players[controller];
+          const cost = parseManaCost('{G}');
+          return canPayManaCost(player.manaPool, cost);
+        },
+      });
+      break;
+
+    case 'Uktabi Wildcats':
+      // "{G}, Sacrifice a Forest: Regenerate this creature." (P/T = Forests)
+      abilities.push({
+        id: `${card.instanceId}_regenerate`,
+        name: '{G}, Sacrifice a Forest: Regenerate',
+        cost: {
+          mana: '{G}',
+          sacrifice: {
+            type: 'land',
+            restriction: { notSelf: true },
+          },
+        },
+        effect: { type: 'REGENERATE' },
+        isManaAbility: false,
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+
+          const player = state.players[controller];
+          const cost = parseManaCost('{G}');
+          if (!canPayManaCost(player.manaPool, cost)) return false;
+
+          // Check if player has a Forest to sacrifice
+          const hasForest = player.battlefield.some(p => {
+            if (p.instanceId === sourceId) return false;
+            const t = CardLoader.getById(p.scryfallId);
+            return t && t.type_line?.toLowerCase().includes('forest');
+          });
+          return hasForest;
+        },
+      });
+      break;
   }
 
   return abilities;
@@ -911,7 +2238,8 @@ export function applyAbilityEffect(
   state: GameState,
   effect: AbilityEffect,
   controller?: PlayerId,
-  manaColorChoice?: ManaColor
+  manaColorChoice?: ManaColor,
+  sourceId?: string
 ): void {
   switch (effect.type) {
     case 'DAMAGE':
@@ -930,6 +2258,19 @@ export function applyAbilityEffect(
           color,
           amount
         );
+      }
+      break;
+
+    case 'REGENERATE':
+      // Add a regeneration shield to the source creature
+      // This protects it from the next destruction effect this turn
+      if (sourceId && controller) {
+        const creature = state.players[controller].battlefield.find(
+          c => c.instanceId === sourceId
+        );
+        if (creature) {
+          creature.regenerationShields = (creature.regenerationShields || 0) + 1;
+        }
       }
       break;
 

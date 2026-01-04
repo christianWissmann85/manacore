@@ -1,151 +1,105 @@
-# ManaCore
+# ManaCore 🔬
+**MTG Simulation Engine & AI Research Platform**
 
-**A playable Magic: The Gathering implementation with AI research platform**
+> A high-fidelity, headless Magic: The Gathering rule engine designed for reinforcement learning, Monte Carlo Tree Search (MCTS) research, and meta-game analysis.
 
-ManaCore is a digital MTG implementation (6th Edition card pool) built for:
-- Playing against AI opponents
-- AI research using Monte Carlo Tree Search (MCTS)
-- Tournament simulation and meta-game analysis
-- Future machine learning applications
-
-**Tech Stack:** TypeScript, Bun, PixiJS
+![License](https://img.shields.io/badge/license-MIT-blue)
+![Status](https://img.shields.io/badge/status-Research%20Preview-orange)
+![Simulation Speed](https://img.shields.io/badge/sim%20speed-1000%2B%20games%2Fsec-green)
 
 ---
 
-## Project Status
+## 🎯 Project Mission
 
-**Current Phase:** Phase 0 - Foundation (Week 1) ✅
+ManaCore is a **technical research platform** built to study Game Theory and Artificial Intelligence within the complex environment of *Magic: The Gathering*.
 
-### Completed
-- ✅ Monorepo structure initialized
-- ✅ Package workspaces configured
-- ✅ TypeScript setup complete
-- ✅ Git repository initialized
+Unlike consumer game clients, ManaCore focuses on:
+*   **Headless Simulation:** Running thousands of matches per second for agent training.
+*   **Determinism:** Seed-based RNG ensuring 100% reproducible scenarios for debugging.
+*   **Agent Architecture:** Modular interfaces for MCTS, Greedy, and Neural Network agents.
+*   **Data Visualization:** React-based dashboards for analyzing decision trees and game states.
 
-### Next Steps (Week 2-3)
-- Implement Scryfall card data scraper
-- Build core game engine
-- Create CLI client and RandomBot
+**This is not a commercial product or a way to play Magic: The Gathering for free.** It is a laboratory for experimenting with AI algorithms using TCG rules as the physics engine.
 
 ---
 
-## Monorepo Structure
+## 🏗️ Architecture
 
-```
-manacore/
-├── packages/
-│   ├── engine/          # Pure game logic (no UI dependencies)
-│   ├── ai/              # MCTS and bot implementations
-│   ├── cli-client/      # Terminal interface for testing
-│   ├── data-scraper/    # Scryfall API integration
-│   └── web-client/      # PixiJS UI (Phase 1+)
-├── scripts/             # Build and data fetching scripts
-└── docs/                # Documentation (spec, architecture, roadmap)
-```
+The platform is structured as a Monorepo using **Bun**:
+
+| Package | Purpose | Tech Stack |
+|---------|---------|------------|
+| `@manacore/engine` | Pure logic rule engine (Zero UI dependencies) | TypeScript |
+| `@manacore/ai` | MCTS agents and evaluation functions | TypeScript |
+| `@manacore/web-client` | Visualization & Debug Dashboard | React, Tailwind |
+| `@manacore/cli-client` | Headless simulation runner | TypeScript |
+| `@manacore/data-scraper`| Local data fetching tool | Scryfall API |
 
 ---
 
-## Getting Started
+## 🚀 Quick Start
 
-### Install Dependencies
+### Prerequisites
+- [Bun](https://bun.sh) (v1.0+)
+- Basic understanding of TypeScript
+
+### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/your-username/manacore.git
+cd manacore
+
+# Install dependencies
 bun install
 ```
 
-### Run Tests
+### Data Setup (BYO Data)
+ManaCore does **not** distribute copyrighted card assets. You must fetch card data locally for your own research use:
 
 ```bash
-bun test
-```
-
-### Fetch Card Data (Week 2+)
-
-```bash
+# Fetches card text/stats from Scryfall API (Rate-limited, polite scraper)
 bun run fetch-cards
 ```
 
-### Play a Game (Week 3+)
+### Running Simulations
 
 ```bash
-bun run cli
+# Run a batch simulation of RandomBot vs RandomBot
+bun run cli simulate 100
+
+# Start an interactive debug session
+bun run cli play
 ```
 
 ---
 
-## Documentation
+## 🧪 Research Capabilities
 
-- **[spec.md](./spec.md)** - Full project specification
-- **[architecture.md](./architecture.md)** - Technical implementation guide
-- **[roadmap.md](./roadmap.md)** - Development timeline
-- **[CLAUDE_CODE_HANDOFF.md](./CLAUDE_CODE_HANDOFF.md)** - Quick start guide
+### 1. Deterministic Replay
+Every simulation is initialized with a specific RNG seed. Researchers can capture a `SimulationReplay` JSON to perfectly reproduce edge cases or agent behaviors.
 
----
+### 2. High-Frequency Training
+The engine is optimized for performance, capable of resolving complex board states in microseconds, enabling massive parallel training sessions.
 
-## Development Timeline
-
-| Phase | Duration | Focus |
-|-------|----------|-------|
-| **Phase 0** | Weeks 1-3 | Foundation (setup, data, basic engine) |
-| **Phase 1** | Weeks 4-8 | Core MTG rules (Stack, combat, web UI) |
-| **Phase 2** | Weeks 9-14 | Smart AI (MCTS implementation) |
-| **Phase 3** | Weeks 15-20 | Polish & Public Release |
-| **Phase 4** | Weeks 21-26 | Research tools |
-| **Phase 5** | Weeks 27+ | Machine learning |
+### 3. Agent Lab
+Compare different AI architectures:
+- **RandomBot**: Baseline stochastic behavior.
+- **GreedyBot**: 1-ply material evaluation.
+- **MCTS-Bot**: UCT-based search (Coming Soon).
 
 ---
 
-## Architecture Principles
+## ⚖️ Legal Disclaimer
 
-1. **Separation of Concerns** - Engine has zero UI dependencies
-2. **Immutable State** - Pure functions enable fast cloning for AI
-3. **Data-Driven Cards** - All cards loaded from Scryfall JSON
-4. **Action-Based** - All game logic flows through reducers
-5. **Test-Driven** - 80%+ code coverage target
+**ManaCore is a non-commercial, open-source research project.**
 
----
-
-## Key Features
-
-### Phase 0 (Current)
-- Minimal viable game (vanilla creatures, basic lands)
-- Simplified combat (attacker chooses blocker)
-- Sorcery-speed spells only
-
-### Phase 1
-- The Stack (LIFO, priority passing)
-- Proper combat (declare blockers)
-- Keywords: Flying, First Strike, Trample
-- Instant-speed interaction
-
-### Phase 2+
-- MCTS AI with 1000+ iterations per move
-- Card advantage mechanics
-- Tournament simulation
-- Meta-game analysis
-
----
-
-## Resources
-
-- **Bun Docs:** https://bun.sh/docs
-- **Scryfall API:** https://scryfall.com/docs/api
-- **MTG Comprehensive Rules:** https://magic.wizards.com/en/rules
-
----
-
-## License
-
-MIT (Educational/Research purposes)
-
----
-
-## Legal Disclaimer
-
+**Wizards of the Coast Fan Content Policy:**
 ManaCore is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.
 
-The literal and graphical information presented on this site about Magic: The Gathering, including card images, the mana symbols, and Oracle text, is copyright Wizards of the Coast, LLC, a subsidiary of Hasbro, Inc. ManaCore is not produced by, endorsed by, supported by, or affiliated with Wizards of the Coast.
+**Asset Policy:**
+This repository **does not** contain or distribute card images or copyrighted text. All game data is fetched locally by the user via the Scryfall API and is stored on the user's machine for personal research purposes only.
 
 ---
 
-**Built with ❤️ and Bun**
+**Built with ❤️ for Science**

@@ -195,6 +195,14 @@ export function hasIntimidate(card: CardTemplate): boolean {
 }
 
 /**
+ * Check if a creature has Menace
+ * (Can only be blocked by two or more creatures)
+ */
+export function hasMenace(card: CardTemplate): boolean {
+  return hasKeyword(card, 'Menace');
+}
+
+/**
  * Landwalk abilities - creature can't be blocked if defending player controls that land type
  */
 export function hasSwampwalk(card: CardTemplate): boolean {

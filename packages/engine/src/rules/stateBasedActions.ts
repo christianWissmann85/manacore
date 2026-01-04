@@ -12,10 +12,10 @@
 
 import type { GameState } from '../state/GameState';
 import type { CardInstance } from '../state/CardInstance';
-import { getEffectiveToughness } from '../state/CardInstance';
 import { CardLoader } from '../cards/CardLoader';
 import { isCreature, isAura } from '../cards/CardTemplate';
 import { registerTrigger } from './triggers';
+import { getEffectiveToughnessWithLords } from './lords';
 
 /**
  * Check and perform all state-based actions
@@ -57,7 +57,7 @@ function checkPlayerDeath(state: GameState): boolean {
 
 /**
  * Check for creatures that should die
- * Returns true if any creatures died
+ * Returns true if any creatures died or regenerated
  */
 function checkCreatureDeath(state: GameState): boolean {
   let actionsPerformed = false;
@@ -75,38 +75,69 @@ function checkCreatureDeath(state: GameState): boolean {
       // Only check creature death for actual creatures
       if (!isCreature(template)) continue;
 
-      const baseToughness = parseInt(template.toughness || '0', 10);
-      const effectiveToughness = getEffectiveToughness(creature, baseToughness);
+      // For variable P/T creatures (*/\*), baseToughness is 0 and the real value is calculated
+      const baseToughness = template.toughness === '*' ? 0 : parseInt(template.toughness || '0', 10);
+      const effectiveToughness = getEffectiveToughnessWithLords(state, creature, baseToughness);
 
       // SBA: Creature dies if damage >= toughness
-      // SBA: Creature dies if toughness <= 0 (from effects)
-      if (creature.damage >= effectiveToughness || effectiveToughness <= 0) {
-        // Remove from battlefield
-        player.battlefield.splice(i, 1);
-
-        // Put in graveyard
-        creature.zone = 'graveyard';
-        creature.damage = 0;
-        creature.tapped = false;
-        creature.attacking = false;
-        creature.blocking = undefined;
-        creature.blockedBy = undefined;
-        player.graveyard.push(creature);
-
+      if (creature.damage >= effectiveToughness && effectiveToughness > 0) {
+        // Check for regeneration shields
+        if (creature.regenerationShields && creature.regenerationShields > 0) {
+          // Use regeneration shield instead of dying
+          creature.regenerationShields--;
+          creature.tapped = true;
+          creature.damage = 0;
+          creature.attacking = false;
+          creature.blocking = undefined;
+          creature.blockedBy = undefined;
+          actionsPerformed = true;
+        } else {
+          // No regeneration - creature dies
+          destroyCreature(state, player, creature, i, playerId);
+          actionsPerformed = true;
+        }
+      }
+      // SBA: Creature dies if toughness <= 0 (from effects) - regeneration doesn't prevent this
+      else if (effectiveToughness <= 0) {
+        destroyCreature(state, player, creature, i, playerId);
         actionsPerformed = true;
-
-        // Fire death triggers for this creature
-        registerTrigger(state, {
-          type: 'DIES',
-          cardId: creature.instanceId,
-          controller: playerId,
-          wasController: playerId,
-        });
       }
     }
   }
 
   return actionsPerformed;
+}
+
+/**
+ * Helper to destroy a creature (move to graveyard)
+ */
+function destroyCreature(
+  state: GameState,
+  player: { battlefield: CardInstance[]; graveyard: CardInstance[] },
+  creature: CardInstance,
+  index: number,
+  playerId: 'player' | 'opponent'
+): void {
+  // Remove from battlefield
+  player.battlefield.splice(index, 1);
+
+  // Put in graveyard
+  creature.zone = 'graveyard';
+  creature.damage = 0;
+  creature.tapped = false;
+  creature.attacking = false;
+  creature.blocking = undefined;
+  creature.blockedBy = undefined;
+  creature.regenerationShields = undefined;
+  player.graveyard.push(creature);
+
+  // Fire death triggers for this creature
+  registerTrigger(state, {
+    type: 'DIES',
+    cardId: creature.instanceId,
+    controller: playerId,
+    wasController: playerId,
+  });
 }
 
 /**

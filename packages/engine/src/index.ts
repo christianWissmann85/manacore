@@ -66,6 +66,7 @@ export {
   hasDefender,
   hasFear,
   hasIntimidate,
+  hasMenace,
   hasSwampwalk,
   hasIslandwalk,
   hasForestwalk,
@@ -119,6 +120,19 @@ export { getLegalActions, describeAction } from './actions/getLegalActions';
 // Rules exports
 export type { ActivatedAbility, AbilityCost, AbilityEffect, SacrificeCost } from './rules/activatedAbilities';
 export { getActivatedAbilities, payCosts } from './rules/activatedAbilities';
+
+// Lords system (Week 1.5.4)
+export {
+  getLordBonuses,
+  getEffectivePowerWithLords,
+  getEffectiveToughnessWithLords,
+  hasKeywordWithLords,
+  getAllKeywords,
+  getCreatureSubtypes,
+  hasCreatureSubtype,
+  // Variable P/T (Phase 1.5.4)
+  calculateVariablePT,
+} from './rules/lords';
 
 // Effect helpers (Week 1.5.2)
 export {

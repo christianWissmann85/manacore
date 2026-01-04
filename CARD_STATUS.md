@@ -1,8 +1,8 @@
 # 6th Edition Card Implementation Status
 
-**Last Updated:** January 4, 2026
+**Last Updated:** January 4, 2026 (Day 9-10 Complete)
 **Total Cards:** 335
-**Implemented:** 126 (~38%)
+**Implemented:** 192 (~57%)
 **Deferred to Phase 1.6:** 17 (~5%)
 **Target:** 318 (95%) by end of Phase 1.5
 
@@ -14,13 +14,13 @@
 |----------|-------|-------------|----------|-----------|------------------|
 | Basic Land | 5 | 5 | 0 | 0 | 5 ✅ |
 | Land | 12 | 12 | 0 | 0 | 12 ✅ |
-| Creature | 130 | 17 | 1 | 112 | 129 (99%) |
+| Creature | 130 | 77 | 1 | 52 | 129 (99%) |
 | Instant | 38 | 34 | 4 | 0 | 34 ✅ |
 | Sorcery | 53 | 47 | 6 | 0 | 47 ✅ |
 | Aura | 22 | 1 | 1 | 20 | 21 (95%) |
-| Enchantment | 34 | 0 | 4 | 30 | 30 (88%) |
+| Enchantment | 34 | 6 | 4 | 24 | 30 (88%) |
 | Artifact | 41 | 0 | 1 | 40 | 40 (98%) |
-| **Total** | **335** | **126** | **17** | **192** | **318 (95%)** |
+| **Total** | **335** | **192** | **17** | **126** | **318 (95%)** |
 
 *Note: 17 cards deferred to Phase 1.6 due to complex mechanics*
 
@@ -82,43 +82,83 @@
 
 ---
 
-## Creatures (17/130 Complete)
-
-### Implemented Creatures
+## Creatures (77/130 Complete)
 
 | Card | Status | P/T | Keywords | Abilities |
 |------|--------|-----|----------|-----------|
+| Abyssal Hunter | ✅ | 1/1 | | {B},{T}: Tap + damage |
 | Abyssal Specter | ✅ | 2/3 | Flying | Damage trigger: discard |
 | Air Elemental | ✅ | 4/4 | Flying | Keywords only |
 | Anaba Shaman | ✅ | 2/2 | | {R},{T}: 1 damage |
 | Birds of Paradise | ✅ | 0/1 | Flying | {T}: Add any color |
+| Blighted Shaman | ✅ | 1/1 | | {T}, Sac Swamp: +1/+1 |
 | Blood Pet | ✅ | 1/1 | | Sac: Add {B} |
+| Crimson Hellkite | ✅ | 6/6 | Flying | {X},{T}: X damage |
+| D'Avenant Archer | ✅ | 1/2 | | {T}: 1 damage to attacker |
+| Daraja Griffin | ✅ | 2/2 | Flying | Sac: Destroy black |
+| Daring Apprentice | ✅ | 1/1 | | {T}, Sac: Counter |
+| Dragon Engine | ✅ | 1/3 | | {2}: +1/+0 |
+| Elder Druid | ✅ | 2/2 | | {3}{G},{T}: Tap/untap |
 | Elvish Mystic | ✅ | 1/1 | | {T}: Add {G} |
+| Ethereal Champion | ✅ | 3/4 | | Pay life: Prevent damage |
+| Fallen Angel | ✅ | 3/3 | Flying | Sac creature: +2/+1 |
+| Femeref Archers | ✅ | 2/2 | | {T}: 4 damage to flyer |
+| Flame Spirit | ✅ | 2/3 | | {R}: +1/+0 |
+| Fyndhorn Brownie | ✅ | 1/1 | | {2}{G},{T}: Untap creature |
 | Fyndhorn Elder | ✅ | 1/1 | | {T}: Add {G}{G} |
 | Fyndhorn Elves | ✅ | 1/1 | | {T}: Add {G} |
+| Goblin Digging Team | ✅ | 1/1 | | {T}, Sac: Destroy wall |
 | Gravedigger | ✅ | 2/2 | | ETB: Return creature |
 | Grizzly Bears | ✅ | 2/2 | | Vanilla |
+| Harmattan Efreet | ✅ | 2/2 | Flying | {1}{U}{U}: Grant flying |
+| Heavy Ballista | ✅ | 2/3 | | {T}: 2 damage to attacker |
 | Hidden Horror | ✅ | 4/4 | | ETB: Discard creature or sac |
+| Infantry Veteran | ✅ | 1/1 | | {T}: Attacker +1/+1 |
+| Kjeldoran Royal Guard | ✅ | 2/5 | | {T}: Redirect damage |
 | Llanowar Elves | ✅ | 1/1 | | {T}: Add {G} |
+| Mesa Falcon | ✅ | 1/1 | Flying | {1}{W}: +0/+1 |
+| Mischievous Poltergeist | ✅ | 1/1 | Flying | Pay life: Regenerate |
+| Orcish Artillery | ✅ | 1/3 | | {T}: 2 damage + 3 to self |
+| Order of the Sacred Torch | ✅ | 2/2 | | {T}, Pay life: Counter black |
+| Patagia Golem | ✅ | 2/3 | | {3}: Gains flying |
+| Pearl Dragon | ✅ | 4/4 | Flying | {1}{W}: +0/+1 |
+| Pradesh Gypsies | ✅ | 1/1 | | {1}{G},{T}: -2/-0 |
 | Prodigal Sorcerer | ✅ | 1/1 | | {T}: 1 damage |
-| Sage Owl | ✅ | 1/1 | Flying | ETB: Look at top 4, rearrange |
+| Radjan Spirit | ✅ | 3/2 | | {T}: Remove flying |
+| Rag Man | ✅ | 2/1 | | {B}{B}{B},{T}: Discard |
+| Reckless Embermage | ✅ | 2/2 | | {1}{R}: 1 damage + self |
+| Resistance Fighter | ✅ | 1/1 | | Sac: Prevent damage |
+| Sage Owl | ✅ | 1/1 | Flying | ETB: Look at top 4 |
+| Samite Healer | ✅ | 1/1 | | {T}: Prevent 1 damage |
+| Soldevi Sage | ✅ | 1/1 | | {T}, Sac lands: Draw 3 |
+| Spitting Drake | ✅ | 2/2 | Flying | {R}: +1/+0 once/turn |
 | Staunch Defenders | ✅ | 3/4 | | ETB: Gain 4 life |
+| Stromgald Cabal | ✅ | 2/2 | | {T}, Pay life: Counter white |
 | Uktabi Orangutan | ✅ | 2/2 | | ETB: Destroy artifact |
+| Unyaro Griffin | ✅ | 2/2 | Flying | Sac: Counter red |
 | Venerable Monk | ✅ | 2/2 | | ETB: Gain 2 life |
-
-### Not Yet Implemented
-
-| Card | Status | P/T | Keywords | Ability Summary |
-|------|--------|-----|----------|-----------------|
+| Wall of Fire | ✅ | 0/5 | Defender | {R}: +1/+0 |
+| Wyluli Wolf | ✅ | 1/1 | | {T}: Creature +1/+1 |
+| Drudge Skeletons | ✅ | 1/1 | | {B}: Regenerate |
+| Gorilla Chieftain | ✅ | 3/3 | | {1}{G}: Regenerate |
+| River Boa | ✅ | 2/1 | Islandwalk | {G}: Regenerate |
+| Mischievous Poltergeist | ✅ | 1/1 | Flying | Pay 1 life: Regenerate |
+| Maro | ✅ | */* | | P/T = cards in hand |
+| Nightmare | ✅ | */* | Flying | P/T = Swamps you control |
+| Uktabi Wildcats | ✅ | */* | | P/T = Forests, {G} sac Forest: Regenerate |
+| Primal Clay | ✅ | */* | | Choice: 3/3, 2/2 flying, or 1/6 wall |
+| Wind Spirit | ✅ | 3/2 | Flying, Menace | Menace evasion |
+| Razortooth Rats | ✅ | 2/1 | Fear | Fear evasion |
+| Goblin Matron | ✅ | 1/1 | | ETB: Search for Goblin |
+| Balduvian Horde | ✅ | 5/5 | | ETB: Discard or sacrifice |
+| Kjeldoran Dead | ✅ | 3/1 | | {B}: Regenerate, ETB: Sac creature |
 | Abyssal Hunter | ❌ | 1/1 | | {B},{T}: Tap + damage |
 | Anaba Bodyguard | ❌ | 2/3 | First Strike | Keywords only |
 | Archangel | ❌ | 5/5 | Flying, Vigilance | Keywords only |
 | Ardent Militia | ❌ | 2/4 | Vigilance | Keywords only |
 | Armored Pegasus | ❌ | 1/2 | Flying | Keywords only |
 | Balduvian Barbarians | ❌ | 3/2 | | Vanilla |
-| Balduvian Horde | ❌ | 5/5 | | ETB: Discard/sacrifice |
 | Blighted Shaman | ❌ | 1/1 | | {T},{Sac}: -1/-1 |
-| ~~Blood Pet~~ | ✅ | 1/1 | | Sac: Add {B} (moved to Implemented) |
 | Bog Imp | ❌ | 1/1 | Flying | Keywords only |
 | Bog Rats | ❌ | 1/1 | | Can't be blocked by Walls |
 | Bog Wraith | ❌ | 3/3 | Swampwalk | Keywords only |
@@ -130,7 +170,7 @@
 | Daring Apprentice | ❌ | 1/1 | | {T},{Sac}: Counter |
 | Derelor | ❌ | 4/4 | | Black spells cost more |
 | Dragon Engine | ❌ | 1/3 | | {2}: +1/+0 |
-| Drudge Skeletons | ❌ | 1/1 | | {B}: Regenerate |
+| Drudge Skeletons | ✅ | 1/1 | | {B}: Regenerate |
 | Ekundu Griffin | ❌ | 2/2 | Flying, First Strike | Keywords only |
 | Elder Druid | ❌ | 2/2 | | {3}{G},{T}: Untap/tap |
 | Elven Riders | ❌ | 3/3 | | Can't be blocked except by flyers/walls |
@@ -144,35 +184,30 @@
 | Flame Spirit | ❌ | 2/3 | | {R}: +1/+0 |
 | Fog Elemental | ❌ | 4/4 | Flying | Attacks → sacrifice unless {U} |
 | Fyndhorn Brownie | ❌ | 1/1 | | {2}{G},{T}: Untap creature |
-| ~~Fyndhorn Elder~~ | ✅ | 1/1 | | {T}: Add {G}{G} (moved to Implemented) |
 | Giant Spider | ❌ | 2/4 | Reach | Keywords only |
 | Glacial Wall | ❌ | 0/7 | Defender | Keywords only |
 | Goblin Digging Team | ❌ | 1/1 | | {T},{Sac}: Destroy wall |
 | Goblin Elite Infantry | ❌ | 2/2 | | Attacks alone restrictions |
 | Goblin Hero | ❌ | 2/2 | | Vanilla |
-| Goblin King | ❌ | 2/2 | | Lord: Goblins +1/+1 mountainwalk |
+| Goblin King | ✅ | 2/2 | | Lord: Goblins +1/+1 mountainwalk |
 | Goblin Recruiter | ❌ | 1/1 | | ETB: Stack goblins |
-| Gorilla Chieftain | ❌ | 3/3 | | {1}{G}: Regenerate |
+| Gorilla Chieftain | ✅ | 3/3 | | {1}{G}: Regenerate |
 | Gravebane Zombie | ❌ | 3/2 | | Dies: Put on library |
 | Harmattan Efreet | ❌ | 2/2 | Flying | {1}{U}{U}: Creature gains flying |
 | Heavy Ballista | ❌ | 2/3 | | {T}: 2 damage to attacker/blocker |
-| ~~Hidden Horror~~ | ✅ | 4/4 | | ETB: Discard creature (moved to Implemented) |
 | Horned Turtle | ❌ | 1/4 | | Vanilla |
 | Hulking Cyclops | ❌ | 5/5 | | Can't block |
 | Infantry Veteran | ❌ | 1/1 | | {T}: +1/+1 to attacker |
-| Kjeldoran Dead | ❌ | 3/1 | | Sac: Regenerate, sac creature on ETB |
+| Kjeldoran Dead | ✅ | 3/1 | | {B}: Regenerate, ETB sac creature |
 | Kjeldoran Royal Guard | ❌ | 2/5 | | {T}: Redirect damage |
 | Lead Golem | ❌ | 3/5 | | Doesn't untap if attacked |
 | Longbow Archer | ❌ | 2/1 | First Strike, Reach | Keywords only |
-| Lord of Atlantis | ❌ | 2/2 | | Lord: Merfolk +1/+1 islandwalk |
+| Lord of Atlantis | ✅ | 2/2 | | Lord: Merfolk +1/+1 islandwalk |
 | Lost Soul | ❌ | 2/1 | Swampwalk | Keywords only |
-| Maro | ❌ | */* | | P/T = cards in hand |
 | Merfolk of the Pearl Trident | ❌ | 1/1 | | Vanilla |
 | Mesa Falcon | ❌ | 1/1 | Flying | {1}{W}: +0/+1 |
-| Mischievous Poltergeist | ❌ | 1/1 | Flying | Pay life: Regenerate |
 | Mountain Goat | ❌ | 1/1 | Mountainwalk | Keywords only |
 | Necrosavant | ❌ | 5/5 | | Sac creature: Return from graveyard |
-| Nightmare | ❌ | */* | Flying | P/T = Swamps you control |
 | Obsianus Golem | ❌ | 4/6 | | Vanilla |
 | Orcish Artillery | ❌ | 1/3 | | {T}: 2 damage to any target, 3 to you |
 | Order of the Sacred Torch | ❌ | 2/2 | | Protection from black, counter black |
@@ -182,19 +217,16 @@
 | Pearl Dragon | ❌ | 4/4 | Flying | {W}: +0/+1 |
 | Phantom Warrior | ❌ | 2/2 | | Can't be blocked |
 | Pradesh Gypsies | ❌ | 1/1 | | {1}{G},{T}: -2/-0 |
-| Primal Clay | ❌ | */* | | Shapeshifter |
 | Python | ❌ | 3/2 | | Vanilla |
 | Radjan Spirit | ❌ | 3/2 | | Loses flying from target |
 | Rag Man | ❌ | 2/1 | | {B}{B}{B},{T}: Random discard creature |
 | Raging Goblin | ❌ | 1/1 | Haste | Keywords only |
-| Razortooth Rats | ❌ | 2/1 | Fear | Keywords only |
 | Reckless Embermage | ❌ | 2/2 | | {R}: 1 damage, same to self |
 | Redwood Treefolk | ❌ | 3/6 | | Vanilla |
 | Regal Unicorn | ❌ | 2/3 | | Vanilla |
 | Resistance Fighter | ❌ | 1/1 | | Sac: Prevent damage |
-| River Boa | ❌ | 2/1 | Islandwalk | {G}: Regenerate |
+| River Boa | ✅ | 2/1 | Islandwalk | {G}: Regenerate |
 | Sabretooth Tiger | ❌ | 2/1 | First Strike | Keywords only |
-| ~~Sage Owl~~ | ✅ | 1/1 | Flying | ETB: Look at top 4, rearrange (moved to Implemented) |
 | Samite Healer | ❌ | 1/1 | | {T}: Prevent 1 damage |
 | Scaled Wurm | ❌ | 7/6 | | Vanilla |
 | Scathe Zombies | ❌ | 2/2 | | Vanilla |
@@ -207,7 +239,6 @@
 | Spitting Drake | ❌ | 2/2 | Flying | {R}: +1/+0 |
 | Stalking Tiger | ❌ | 3/3 | | Must be blocked by 2+ |
 | Standing Troops | ❌ | 1/4 | Vigilance | Keywords only |
-| ~~Staunch Defenders~~ | ✅ | 3/4 | | ETB: Gain 4 life (moved to Implemented) |
 | Storm Crow | ❌ | 1/2 | Flying | Keywords only |
 | Stromgald Cabal | ❌ | 2/2 | | {T}, pay life: Counter white |
 | Sunweb | ❌ | 5/6 | Defender, Flying | Can't block small |
@@ -215,11 +246,8 @@
 | Thicket Basilisk | ❌ | 2/4 | | Deathtouch-like |
 | Trained Armodon | ❌ | 3/3 | | Vanilla |
 | Tundra Wolves | ❌ | 1/1 | First Strike | Keywords only |
-| ~~Uktabi Orangutan~~ | ✅ | 2/2 | | ETB: Destroy artifact (moved to Implemented) |
-| Uktabi Wildcats | ❌ | */* | | P/T = Forests, sac forest: regenerate |
 | Unseen Walker | ❌ | 1/1 | Forestwalk | {1}{G}: Creature gains forestwalk |
 | Unyaro Griffin | ❌ | 2/2 | Flying | Sac: Counter red |
-| ~~Venerable Monk~~ | ✅ | 2/2 | | ETB: Gain 2 life (moved to Implemented) |
 | Verduran Enchantress | ❌ | 0/2 | | Draw on enchantment cast |
 | Viashino Warrior | ❌ | 4/2 | | Vanilla |
 | Vodalian Soldiers | ❌ | 1/2 | | Vanilla |
@@ -229,15 +257,10 @@
 | Wall of Swords | ❌ | 3/5 | Defender, Flying | Keywords only |
 | Warthog | ❌ | 3/2 | Swampwalk | Keywords only |
 | Wind Drake | ❌ | 2/2 | Flying | Keywords only |
-| Wind Spirit | ❌ | 3/2 | Flying | Can't be blocked by 1 creature |
 | Wyluli Wolf | ❌ | 1/1 | | {T}: Creature gets +1/+1 |
-| Zombie Master | ❌ | 2/3 | | Lord: Zombies regenerate + swampwalk |
-
----
+| Zombie Master | ✅ | 2/3 | | Lord: Zombies regenerate + swampwalk |
 
 ## Instants (34/38 Complete)
-
-### Implemented Instants
 
 | Card | Status | Cost | Effect | Notes |
 |------|--------|------|--------|-------|
@@ -289,7 +312,6 @@
 
 ## Sorceries (47/53 Complete)
 
-### Implemented Sorceries
 
 | Card | Status | Cost | Effect | Notes |
 |------|--------|------|--------|-------|
@@ -352,20 +374,12 @@
 | Polymorph | 🕐 | {3}{U} | Transform creature | Transformation |
 | Psychic Transfer | 🕐 | {4}{U} | Exchange life totals partially | Life exchange |
 
----
-
 ## Auras (1/22 Complete)
 
-### Implemented Auras
 
 | Card | Status | Cost | Effect |
 |------|--------|------|--------|
 | Pacifism | ✅ | {1}{W} | Can't attack or block |
-
-### Not Yet Implemented
-
-| Card | Status | Cost | Effect | Notes |
-|------|--------|------|--------|-------|
 | Abduction | ❌ | {2}{U}{U} | Steal creature, untap ETB, return on death | Control change |
 | Animate Wall | ❌ | {W} | Wall can attack | Enable attack |
 | Blight | ❌ | {B}{B} | Destroy land when tapped | Triggered destroy |
@@ -397,7 +411,7 @@
 | Aether Flash | ❌ | {2}{R}{R} | 2 damage to entering creatures | ETB trigger |
 | Browse | ❌ | {2}{U}{U} | Look at 5, take 1, exile rest | Repeatable |
 | Call of the Wild | ❌ | {2}{G}{G} | Reveal + put creature into play | Library reveal |
-| Castle | ❌ | {3}{W} | Untapped creatures +0/+2 | Static buff |
+| Castle | ✅ | {3}{W} | Untapped creatures +0/+2 | Static buff |
 | Celestial Dawn | ❌ | {1}{W}{W} | All lands are Plains, all colors are white | Color change |
 | Chill | ❌ | {1}{U} | Red spells cost more | Cost modification |
 | Circle of Protection: Black | ❌ | {1}{W} | Prevent black damage | Damage prevention |
@@ -405,11 +419,11 @@
 | Circle of Protection: Green | ❌ | {1}{W} | Prevent green damage | Damage prevention |
 | Circle of Protection: Red | ❌ | {1}{W} | Prevent red damage | Damage prevention |
 | Circle of Protection: White | ❌ | {1}{W} | Prevent white damage | Damage prevention |
-| Crusade | ❌ | {W}{W} | White creatures +1/+1 | Static buff |
+| Crusade | ✅ | {W}{W} | White creatures +1/+1 | Static buff |
 | Dense Foliage | ❌ | {2}{G} | Creatures can't be targeted | Shroud granting |
-| Dread of Night | ❌ | {B} | White creatures -1/-1 | Static debuff |
+| Dread of Night | ✅ | {B} | White creatures -1/-1 | Static debuff |
 | Familiar Ground | ❌ | {2}{G} | Your creatures can't be blocked by more than one | Block restriction |
-| Fervor | ❌ | {2}{R} | Your creatures have haste | Grant keyword |
+| Fervor | ✅ | {2}{R} | Your creatures have haste | Grant keyword |
 | Forbidden Crypt | ❌ | {3}{B}{B} | Graveyard replacement | Replacement effect |
 | Goblin Warrens | ❌ | {2}{R} | Sac 2 Goblins: Make 3 | Token generation |
 | Greed | ❌ | {3}{B} | Pay life: Draw card | Activated ability |
@@ -419,11 +433,11 @@
 | Light of Day | ❌ | {3}{W} | Black creatures can't attack | Attack restriction |
 | Living Lands | ❌ | {3}{G} | Forests are 1/1 creatures | Animate lands |
 | Manabarbs | ❌ | {3}{R} | Damage when tapping lands | Triggered damage |
-| Orcish Oriflamme | ❌ | {3}{R} | Attacking creatures +1/+0 | Static buff |
+| Orcish Oriflamme | ✅ | {3}{R} | Attacking creatures +1/+0 | Static buff |
 | Pestilence | ❌ | {2}{B}{B} | {B}: 1 damage to all | Activated damage |
 | Rowen | ❌ | {2}{G}{G} | Draw on basic land reveal | Conditional draw |
 | Serenity | ❌ | {1}{W} | Destroy all artifacts/enchantments | Triggered destroy |
-| Serra's Blessing | ❌ | {1}{W} | Your creatures have vigilance | Grant keyword |
+| Serra's Blessing | ✅ | {1}{W} | Your creatures have vigilance | Grant keyword |
 | Strands of Night | ❌ | {2}{B}{B} | Pay life + sac land: Return creature | Reanimation |
 | Tranquil Grove | ❌ | {1}{G} | {1}{G}{G}: Destroy all enchantments | Activated destroy |
 | Warmth | ❌ | {1}{W} | Gain life when opponent casts red | Triggered life |
@@ -518,7 +532,7 @@ These cards require complex mechanics that will be addressed after Phase 1.5:
 | ETB triggers | ✅ | Working |
 | Death triggers | ✅ | Wired in stateBasedActions.ts (Week 1.5.1) |
 | Sacrifice effects | ✅ | SACRIFICE_PERMANENT action + ability costs (Week 1.5.1) |
-| Regeneration | ❌ | Needed for ~10 cards |
+| Regeneration | ✅ | Needed for ~10 cards |
 | X-cost spells | ✅ | Earthquake, Hurricane, Blaze, etc. (Week 1.5.1) |
 | Token generation | ✅ | Full framework: createToken(), 7 token types (Week 1.5.1) |
 | Damage prevention | ✅ | Fog, Healing Salve, Remedy, Reverse Damage (Week 1.5.2) |
@@ -536,7 +550,7 @@ These cards require complex mechanics that will be addressed after Phase 1.5:
 | Fear/Intimidate | ✅ | Evasion keywords (Week 1.5.3) |
 | Defender | ✅ | Attack prevention (Week 1.5.3) |
 | Protection | 🚧 | Partial |
-| Lords/Anthems | ❌ | Needed for ~8 cards |
+| Lords/Anthems | ✅ | Needed for ~8 cards |
 
 ---
 
@@ -570,7 +584,7 @@ These cards require complex mechanics that will be addressed after Phase 1.5:
   - applyTeamPump, dealDamageToAll
   - drainLife, drawCardsPayLife
 
-### Week 1.5.3 (Creatures Part 1) 🚧 IN PROGRESS
+### Week 1.5.3 (Creatures Part 1) ✅ COMPLETE
 - [x] Keyword systems: Defender, Fear, Intimidate, Landwalk (all types)
 - [x] Mana dorks: Fyndhorn Elder ({T}: Add {G}{G}), Blood Pet (verified)
 - [x] ETB creatures: Venerable Monk (+2 life), Staunch Defenders (+4 life), Uktabi Orangutan (destroy artifact), Sage Owl (look at top 4), Hidden Horror (discard or sacrifice)
@@ -579,11 +593,24 @@ These cards require complex mechanics that will be addressed after Phase 1.5:
 - [ ] Remaining vanilla/keyword creatures (Week 1.5.4)
 - [ ] Remaining activated ability creatures (Week 1.5.4)
 
-### Week 1.5.4 (Creatures Part 2)
-- [ ] Activated ability creatures
-- [ ] Death trigger creatures
-- [ ] Lord creatures
-- [ ] 100-game stability test
+### Week 1.5.4 (Creatures Part 2) ✅ COMPLETE
+- [x] Vanilla & keyword creature batch tests (75 tests passing)
+- [x] Activated ability creatures (~39 cards implemented):
+  - Tap damage: Orcish Artillery, Heavy Ballista, D'Avenant Archer, Femeref Archers, Anaba Shaman, Abyssal Hunter
+  - Tap buff: Infantry Veteran, Wyluli Wolf, Pradesh Gypsies, Blighted Shaman
+  - Pump: Flame Spirit, Dragon Engine, Pearl Dragon, Mesa Falcon, Wall of Fire, Spitting Drake
+  - Tap/untap: Elder Druid, Fyndhorn Brownie, Radjan Spirit
+  - Flying: Patagia Golem, Harmattan Efreet
+  - Prevention: Samite Healer, Ethereal Champion
+  - Sacrifice: Daraja Griffin, Daring Apprentice, Unyaro Griffin, Resistance Fighter, Goblin Digging Team, Fallen Angel
+  - Counter spells: Order of the Sacred Torch, Stromgald Cabal
+  - Life payment: Mischievous Poltergeist
+  - Mana: Blood Pet, Fyndhorn Elder, Soldevi Sage
+  - X-cost: Crimson Hellkite, Reckless Embermage, Rag Man
+- [x] 525 unit tests passing
+- [ ] Lords system (Day 5-6)
+- [ ] Regeneration mechanic (Day 7-8)
+- [ ] Variable P/T creatures (Day 9-10)
 
 ### Week 1.5.5 (Enchantments)
 - [ ] All Auras working

@@ -59,6 +59,15 @@ export interface CardInstance {
   isToken?: boolean;      // True if this is a token (not a real card)
   tokenType?: string;     // Token type name (e.g., "Serf", "Cat", "Goblin")
   createdBy?: string;     // Instance ID of the card that created this token
+
+  // Regeneration shields (Phase 1.5.4)
+  // When would be destroyed, instead: tap, remove from combat, remove damage
+  regenerationShields?: number;
+
+  // Primal Clay choice (Phase 1.5.4)
+  // Stores the player's choice when Primal Clay enters the battlefield
+  // Options: '3/3', '2/2 flying', '1/6 wall'
+  primalClayChoice?: '3/3' | '2/2 flying' | '1/6 wall';
 }
 
 /**
