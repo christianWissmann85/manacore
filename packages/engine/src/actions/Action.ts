@@ -101,6 +101,18 @@ export interface UntapAction extends GameAction {
 }
 
 /**
+ * Activate an ability
+ */
+export interface ActivateAbilityAction extends GameAction {
+  type: 'ACTIVATE_ABILITY';
+  payload: {
+    sourceId: string;     // Card with the ability
+    abilityId: string;    // Which ability to activate
+    targets?: string[];   // Targets for the ability
+  };
+}
+
+/**
  * Union of all action types
  */
 export type Action =
@@ -111,7 +123,8 @@ export type Action =
   | PassPriorityAction
   | EndTurnAction
   | DrawCardAction
-  | UntapAction;
+  | UntapAction
+  | ActivateAbilityAction;
 
 /**
  * Type guard helpers

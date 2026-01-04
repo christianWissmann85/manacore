@@ -5,11 +5,12 @@
  */
 
 import type { GameState } from '../state/GameState';
-import type { Action, PlayLandAction, CastSpellAction, DeclareAttackersAction, DeclareBlockersAction, EndTurnAction, PassPriorityAction } from './Action';
+import type { Action, PlayLandAction, CastSpellAction, DeclareAttackersAction, DeclareBlockersAction, EndTurnAction, PassPriorityAction, ActivateAbilityAction } from './Action';
 import { getPlayer } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
 import { isLand, isCreature, isInstant, hasFlying, hasReach } from '../cards/CardTemplate';
 import { validateAction } from './validators';
+import { getActivatedAbilities } from '../rules/activatedAbilities';
 
 /**
  * Get all legal actions for a player
@@ -49,6 +50,7 @@ export function getLegalActions(state: GameState, playerId: 'player' | 'opponent
   // Phase 1+: Can cast instant-speed spells whenever you have priority
   if (state.priorityPlayer === playerId) {
     actions.push(...getLegalInstantCasts(state, playerId));
+    actions.push(...getLegalAbilityActivations(state, playerId));
   }
 
   // Sorcery-speed actions require it to be your turn
@@ -188,6 +190,81 @@ function getLegalInstantCasts(state: GameState, playerId: 'player' | 'opponent')
     // Validate before adding
     if (validateAction(state, action).length === 0) {
       actions.push(action);
+    }
+  }
+
+  return actions;
+}
+
+/**
+ * Get legal ability activations
+ * Phase 1+: Can activate abilities any time you have priority
+ */
+function getLegalAbilityActivations(state: GameState, playerId: 'player' | 'opponent'): ActivateAbilityAction[] {
+  const actions: ActivateAbilityAction[] = [];
+  const player = getPlayer(state, playerId);
+
+  // Check each permanent on the battlefield
+  for (const permanent of player.battlefield) {
+    const abilities = getActivatedAbilities(permanent, state);
+
+    for (const ability of abilities) {
+      // Check if this ability can be activated
+      if (!ability.canActivate(state, permanent.instanceId, playerId)) {
+        continue;
+      }
+
+      // For abilities that require targets, we need to generate actions for each valid target
+      // For now, simplify by generating actions for common targets (creatures + players)
+      const requiresTarget = ability.effect.type === 'DAMAGE' || ability.effect.type === 'DESTROY';
+
+      if (requiresTarget) {
+        // Generate action for each potential target
+        const targets: string[] = ['player', 'opponent'];
+
+        // Add all creatures as potential targets
+        for (const targetPlayerId of ['player', 'opponent'] as const) {
+          const targetPlayer = getPlayer(state, targetPlayerId);
+          for (const creature of targetPlayer.battlefield) {
+            const template = CardLoader.getById(creature.scryfallId);
+            if (template && isCreature(template)) {
+              targets.push(creature.instanceId);
+            }
+          }
+        }
+
+        for (const target of targets) {
+          const action: ActivateAbilityAction = {
+            type: 'ACTIVATE_ABILITY',
+            playerId,
+            payload: {
+              sourceId: permanent.instanceId,
+              abilityId: ability.id,
+              targets: [target],
+            },
+          };
+
+          // Validate before adding
+          if (validateAction(state, action).length === 0) {
+            actions.push(action);
+          }
+        }
+      } else {
+        // No targeting required
+        const action: ActivateAbilityAction = {
+          type: 'ACTIVATE_ABILITY',
+          playerId,
+          payload: {
+            sourceId: permanent.instanceId,
+            abilityId: ability.id,
+          },
+        };
+
+        // Validate before adding
+        if (validateAction(state, action).length === 0) {
+          actions.push(action);
+        }
+      }
     }
   }
 
@@ -364,6 +441,27 @@ export function describeAction(action: Action, state: GameState): string {
 
     case 'PASS_PRIORITY':
       return 'Pass priority';
+
+    case 'ACTIVATE_ABILITY': {
+      // Find the card with the ability
+      for (const playerId of ['player', 'opponent'] as const) {
+        const player = state.players[playerId];
+        const card = player.battlefield.find(c => c.instanceId === action.payload.sourceId);
+        if (card) {
+          const template = CardLoader.getById(card.scryfallId);
+          const abilities = getActivatedAbilities(card, state);
+          const ability = abilities.find(a => a.id === action.payload.abilityId);
+          if (ability && template) {
+            if (action.payload.targets && action.payload.targets.length > 0) {
+              const targetName = action.payload.targets[0];
+              return `${template.name}: ${ability.name} targeting ${targetName}`;
+            }
+            return `${template.name}: ${ability.name}`;
+          }
+        }
+      }
+      return 'Activate ability';
+    }
 
     default:
       return action.type;

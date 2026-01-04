@@ -6,9 +6,20 @@ import type {
   GameState,
   PlayerState,
   CardInstance,
-
+  CardTemplate,
 } from '@manacore/engine';
-import { CardLoader, getPlayer, getOpponent } from '@manacore/engine';
+import {
+  CardLoader,
+  getPlayer,
+  getOpponent,
+  hasFlying,
+  hasFirstStrike,
+  hasDoubleStrike,
+  hasTrample,
+  hasVigilance,
+  hasReach,
+  getActivatedAbilities,
+} from '@manacore/engine';
 
 /**
  * Render the complete game state to the console
@@ -39,7 +50,7 @@ export function renderGameState(state: GameState, viewingPlayer: 'player' | 'opp
   if (opponent.battlefield.length === 0) {
     lines.push('    (empty)');
   } else {
-    lines.push(...renderBattlefield(opponent.battlefield, '    '));
+    lines.push(...renderBattlefield(opponent.battlefield, '    ', state));
   }
   lines.push('');
 
@@ -49,7 +60,7 @@ export function renderGameState(state: GameState, viewingPlayer: 'player' | 'opp
   if (player.battlefield.length === 0) {
     lines.push('    (empty)');
   } else {
-    lines.push(...renderBattlefield(player.battlefield, '    '));
+    lines.push(...renderBattlefield(player.battlefield, '    ', state));
   }
   lines.push('');
 
@@ -116,7 +127,7 @@ function renderZoneSummary(player: PlayerState): string {
 /**
  * Render battlefield cards
  */
-function renderBattlefield(battlefield: CardInstance[], indent: string): string[] {
+function renderBattlefield(battlefield: CardInstance[], indent: string, state: GameState): string[] {
   const lines: string[] = [];
 
   // Group by type
@@ -148,7 +159,7 @@ function renderBattlefield(battlefield: CardInstance[], indent: string): string[
   // Render creatures
   if (creatures.length > 0) {
     for (const creature of creatures) {
-      lines.push(indent + renderCreature(creature));
+      lines.push(indent + renderCreature(creature, state));
     }
   }
 
@@ -165,9 +176,25 @@ function renderBattlefield(battlefield: CardInstance[], indent: string): string[
 }
 
 /**
+ * Get keyword abilities for a card
+ */
+function getKeywords(template: CardTemplate): string[] {
+  const keywords: string[] = [];
+
+  if (hasFlying(template)) keywords.push('Flying');
+  if (hasFirstStrike(template)) keywords.push('First Strike');
+  if (hasDoubleStrike(template)) keywords.push('Double Strike');
+  if (hasTrample(template)) keywords.push('Trample');
+  if (hasVigilance(template)) keywords.push('Vigilance');
+  if (hasReach(template)) keywords.push('Reach');
+
+  return keywords;
+}
+
+/**
  * Render a single creature
  */
-function renderCreature(creature: CardInstance): string {
+function renderCreature(creature: CardInstance, state: GameState): string {
   const template = CardLoader.getById(creature.scryfallId);
   if (!template) return 'Unknown creature';
 
@@ -181,7 +208,15 @@ function renderCreature(creature: CardInstance): string {
   if (creature.attacking) status += '[ATK] ';
   if (creature.blocking) status += '[BLK] ';
 
-  return `${status}${name} (${pt})${damage}`;
+  // Show keyword abilities
+  const keywords = getKeywords(template);
+  const keywordStr = keywords.length > 0 ? ` {${keywords.join(', ')}}` : '';
+
+  // Show activated abilities
+  const abilities = getActivatedAbilities(creature, state);
+  const abilityStr = abilities.length > 0 ? ` [${abilities.map(a => a.name).join(', ')}]` : '';
+
+  return `${status}${name} (${pt})${damage}${keywordStr}${abilityStr}`;
 }
 
 /**

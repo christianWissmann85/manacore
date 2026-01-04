@@ -46,6 +46,12 @@ export {
   isEnchantment,
   isArtifact,
   hasKeyword,
+  hasFlying,
+  hasFirstStrike,
+  hasDoubleStrike,
+  hasTrample,
+  hasVigilance,
+  hasReach,
 } from './cards/CardTemplate';
 
 // Action exports
@@ -72,6 +78,10 @@ export {
 export { validateAction } from './actions/validators';
 export { applyAction } from './actions/reducer';
 export { getLegalActions, describeAction } from './actions/getLegalActions';
+
+// Rules exports
+export type { ActivatedAbility, AbilityCost, AbilityEffect } from './rules/activatedAbilities';
+export { getActivatedAbilities } from './rules/activatedAbilities';
 
 // Utilities
 export {

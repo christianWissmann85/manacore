@@ -12,11 +12,11 @@
 | Phase | Duration | Focus | Shippable? |
 |-------|----------|-------|------------|
 | **Phase 0** | Weeks 1-3 | Foundation | ❌ CLI only |
-| **Phase 1** | Weeks 4-8 | Core MTG | ✅ Basic game |
-| **Phase 2** | Weeks 9-14 | Smart AI | ✅ Challenging AI |
-| **Phase 3** | Weeks 15-20 | Polish | ✅ **PUBLIC RELEASE** |
-| **Phase 4** | Weeks 21-26 | Research Tools | ✅ AI Lab |
-| **Phase 5** | Weeks 27+ | Machine Learning | ✅ Advanced AI |
+| **Phase 1** | Weeks 4-11 | Core MTG | ✅ Complete game |
+| **Phase 2** | Weeks 12-17 | Smart AI | ✅ Challenging AI |
+| **Phase 3** | Weeks 18-23 | Polish | ✅ **PUBLIC RELEASE** |
+| **Phase 4** | Weeks 24-29 | Research Tools | ✅ AI Lab |
+| **Phase 5** | Weeks 30+ | Machine Learning | ✅ Advanced AI |
 
 ---
 
@@ -105,7 +105,7 @@ HAND: [Lightning Bolt] [Grizzly Bears] [Mountain]
 
 ---
 
-## Phase 1: Core MTG Rules (Weeks 4-8)
+## Phase 1: Core MTG Rules (Weeks 4-11)
 
 **Theme:** "This Actually Feels Like Magic"
 
@@ -113,6 +113,9 @@ HAND: [Lightning Bolt] [Grizzly Bears] [Mountain]
 - Implement The Stack with priority
 - Add proper combat (declare blockers)
 - Support instant-speed interaction
+- **Implement mana system (CRITICAL!)**
+- **Add targeting system (CRITICAL!)**
+- **Expand card library to 20-30 working cards**
 - Build basic web UI
 
 ### Week 4-5: The Stack
@@ -221,9 +224,145 @@ Nekrataal (2BB) - 2/1, When ~ ETB: Destroy target nonblack creature
 
 **Deliverable:** Playable web game (basic, but functional)
 
+### Week 9: Mana System ⚠️ CRITICAL
+
+**Tasks:**
+- [ ] Implement mana pool system:
+  - `ManaPool` type with `{W, U, B, R, G, C}` counts
+  - Add mana to pool
+  - Remove mana from pool
+  - Empty pool at phase transitions
+- [ ] Add mana costs to all cards:
+  - Parse mana cost strings (e.g., `"{2}{R}{R}"`)
+  - Validate player can pay cost
+  - Deduct mana when casting spell
+- [ ] Implement mana abilities:
+  - "Tap: Add {R}" (basic lands)
+  - Auto-tapping for mana
+  - Color identity rules
+- [ ] Update validators to check mana costs
+- [ ] Update CLI/UI to show mana pools
+
+**New Cards:**
+```
+Dark Ritual (B) - Add {B}{B}{B}
+Llanowar Elves (G) - Creature, Tap: Add {G}
+Birds of Paradise (G) - Creature, Tap: Add one mana of any color
+```
+
+**Test Scenario:**
+```
+Player A has 3 Mountains
+Turn: Player A taps 2 Mountains for {R}{R}
+Action: Cast Shivan Dragon (4RR) - FAIL (need 4 more mana)
+Turn: Player A taps third Mountain
+Action: Cast Hill Giant (3R) - SUCCESS
+```
+
+**Success Criteria:**
+- ✅ Cannot cast spells without sufficient mana
+- ✅ Mana pool empties between phases
+- ✅ Color requirements enforced (can't cast {R}{R} with {U}{U})
+- ✅ Mana abilities work correctly
+
+**Why Critical:** The game is literally unplayable without mana costs - you can currently cast anything for free!
+
+### Week 10: Targeting System ⚠️ CRITICAL
+
+**Tasks:**
+- [ ] Implement target validation:
+  - Valid target types (creature, player, "any target")
+  - Legal targets (in play, controller restrictions)
+  - Protection/Hexproof/Shroud (if needed)
+- [ ] Add targeting to actions:
+  - `CastSpellAction.targets` array
+  - `ActivateAbilityAction.targets` array
+  - Target validation in validators
+- [ ] Implement "target" text parser:
+  - "Target creature" → filter battlefield for creatures
+  - "Target player" → return player list
+  - "Any target" → creatures + players
+- [ ] Update reducers to use targets:
+  - Apply effects to specified targets
+  - Handle illegal targets (fizzle spell)
+- [ ] Add targeting to UI:
+  - Click-to-target interface
+  - Highlight valid targets
+  - Cancel targeting
+
+**New Cards:**
+```
+Lightning Bolt (R) - Deal 3 damage to any target
+Giant Growth (G) - Target creature gets +3/+3 until EOT
+Terror (1B) - Destroy target nonblack creature
+Unsummon (U) - Return target creature to owner's hand
+```
+
+**Test Scenario:**
+```
+Player A casts Lightning Bolt
+Game: "Choose target (any target)"
+Player A: Clicks opponent's Grizzly Bears
+Stack: Lightning Bolt targeting Grizzly Bears
+[Resolves: Bears takes 3 damage, dies]
+```
+
+**Success Criteria:**
+- ✅ Can only target legal targets
+- ✅ Spell fizzles if target becomes illegal
+- ✅ UI clearly shows valid targets
+- ✅ Multi-target spells work (if needed)
+
+**Why Critical:** Most Magic cards target something - without this, we can only play vanilla creatures!
+
+### Week 11: Card Library Expansion
+
+**Tasks:**
+- [ ] Implement 20-30 common 6th Edition cards:
+  - **Creatures (10)**: Shivan Dragon, Serra Angel, Sengir Vampire, Mahamoti Djinn, etc.
+  - **Removal (5)**: Swords to Plowshares, Terror, Disenchant, Fireball, etc.
+  - **Card Draw (3)**: Ancestral Recall, Brainstorm, Jayemdae Tome
+  - **Pump/Combat Tricks (4)**: Giant Growth, Weakness, Holy Strength, Unholy Strength
+  - **Counterspells (2)**: Counterspell, Power Sink
+  - **Disruption (3)**: Mind Rot, Hymn to Tourach, Icy Manipulator
+  - **Enchantments (3)**: Pacifism, Weakness, Holy Strength
+- [ ] Test each card thoroughly
+- [ ] Add card-specific logic to:
+  - `activatedAbilities.ts` (for activated abilities)
+  - `triggers.ts` (for triggered abilities)
+  - `reducer.ts` (for special effects)
+- [ ] Create test decks for each color
+- [ ] Run 100+ games with expanded card pool
+
+**Card Categories:**
+```typescript
+// White: Removal, protection, weenie creatures
+Swords to Plowshares, Disenchant, Pacifism, White Knight, Serra Angel
+
+// Blue: Counterspells, card draw, flying
+Counterspell, Ancestral Recall, Brainstorm, Air Elemental, Mahamoti Djinn
+
+// Black: Removal, disruption, big creatures
+Terror, Mind Rot, Hypnotic Specter, Sengir Vampire, Necropotence
+
+// Red: Burn, haste, dragons
+Lightning Bolt, Fireball, Ball Lightning, Shivan Dragon, Goblin King
+
+// Green: Mana ramp, big creatures, pump
+Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
+```
+
+**Success Criteria:**
+- ✅ 20+ cards fully implemented and tested
+- ✅ Each color has viable cards
+- ✅ Can build functional mono-color decks
+- ✅ All cards work correctly in combination
+
+**Deliverable:** Complete playable Magic game with real cards and real mana costs!
+
 ---
 
-## Phase 2: Hidden Information & Smart AI (Weeks 9-14)
+## Phase 2: Hidden Information & Smart AI (Weeks 12-17)
 
 **Theme:** "The AI Gets Dangerous"
 
@@ -233,7 +372,7 @@ Nekrataal (2BB) - 2/1, When ~ ETB: Destroy target nonblack creature
 - Add card advantage mechanics
 - Build replay system for debugging
 
-### Week 9-10: MCTS Core
+### Week 12-13: MCTS Core
 
 **Tasks:**
 - [ ] Implement MCTS algorithm
@@ -249,7 +388,7 @@ Nekrataal (2BB) - 2/1, When ~ ETB: Destroy target nonblack creature
 - ✅ MCTS-Bot beats RandomBot 90%+ of games
 - ✅ MCTS-Bot beats GreedyBot 60%+ of games
 
-### Week 11: Evaluation Function
+### Week 14: Evaluation Function
 
 **Tasks:**
 - [ ] Implement board evaluation heuristic:
@@ -267,7 +406,7 @@ Nekrataal (2BB) - 2/1, When ~ ETB: Destroy target nonblack creature
 **Test:**
 Run 1000 games with different weight values, find optimal.
 
-### Week 12-13: Card Advantage & Disruption
+### Week 15-16: Card Advantage & Disruption
 
 **Tasks:**
 - [ ] Add card draw spells
@@ -289,7 +428,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 - ✅ AI uses removal at appropriate times
 - ✅ AI doesn't discard important cards
 
-### Week 14: Replay System & Stats
+### Week 17: Replay System & Stats
 
 **Tasks:**
 - [ ] Implement game replay (save actions + seed)
@@ -306,7 +445,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 
 ---
 
-## Phase 3: Polished Game Experience (Weeks 15-20)
+## Phase 3: Polished Game Experience (Weeks 18-23)
 
 **Theme:** "Ship a Real Game"
 
@@ -317,7 +456,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 - Sound effects
 - Tutorial/Help system
 
-### Week 15-16: UI Polish
+### Week 18-19: UI Polish
 
 **Tasks:**
 - [ ] Add animations:
@@ -341,7 +480,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 - Win/lose music
 - Particle sprites
 
-### Week 17-18: Deck Builder
+### Week 20-21: Deck Builder
 
 **Tasks:**
 - [ ] Build deck builder UI:
@@ -363,7 +502,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 - ✅ Deck validation prevents illegal decks
 - ✅ Mana curve visualization helps deck building
 
-### Week 19: AI Difficulty Tuning
+### Week 22: AI Difficulty Tuning
 
 **Tasks:**
 - [ ] Tune AI difficulty levels:
@@ -380,7 +519,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 - Hard: 50% player win rate
 - Expert: 30% player win rate
 
-### Week 20: Final Polish & Testing
+### Week 23: Final Polish & Testing
 
 **Tasks:**
 - [ ] Tutorial for new players
@@ -394,7 +533,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 
 ---
 
-## Phase 4: AI Research Tools (Weeks 21-26)
+## Phase 4: AI Research Tools (Weeks 24-29)
 
 **Theme:** "The AI Research Laboratory"
 
@@ -404,7 +543,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 - MCTS visualization
 - Meta-game analysis
 
-### Week 21-22: Tournament Simulator
+### Week 24-25: Tournament Simulator
 
 **Tasks:**
 - [ ] Implement Swiss-style tournament
@@ -427,7 +566,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
    Metric: Win% when card is in deck
 ```
 
-### Week 23-24: Deck Analytics
+### Week 26-27: Deck Analytics
 
 **Tasks:**
 - [ ] Implement deck scoring algorithms:
@@ -459,7 +598,7 @@ Weak Cards:
 Recommendation: Replace Goblin King with more removal
 ```
 
-### Week 25: MCTS Visualization
+### Week 28: MCTS Visualization
 
 **Tasks:**
 - [ ] Build decision tree visualizer
@@ -482,7 +621,7 @@ Recommendation: Replace Goblin King with more removal
       [End: 200] [Attack: 200] ...      [Target A]  [Target B]
 ```
 
-### Week 26: A/B Testing Framework
+### Week 29: A/B Testing Framework
 
 **Tasks:**
 - [ ] Compare different MCTS configurations:
@@ -510,7 +649,7 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 
 ---
 
-## Phase 5: Machine Learning (Weeks 27+)
+## Phase 5: Machine Learning (Weeks 30+)
 
 **Theme:** "Skynet Learns Magic"
 
@@ -520,7 +659,7 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 - Self-play training
 - Novel strategy discovery
 
-### Week 27-30: Neural Network Evaluation
+### Week 30-33: Neural Network Evaluation
 
 **Tasks:**
 - [ ] Collect training data (100,000+ games)
@@ -538,7 +677,7 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 - ✅ NN evaluation is faster than rollout
 - ✅ NN-MCTS beats Heuristic-MCTS by 10%+
 
-### Week 31-34: Genetic Algorithm Deck Builder
+### Week 34-37: Genetic Algorithm Deck Builder
 
 **Tasks:**
 - [ ] Implement GA framework:
@@ -562,7 +701,7 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 3. How many generations to converge?
 ```
 
-### Week 35+: Self-Play & AlphaZero
+### Week 38+: Self-Play & AlphaZero
 
 **Tasks:**
 - [ ] Implement self-play loop:
@@ -587,19 +726,19 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 **Demo:** Run `bun cli play --deck vanilla-red --opponent random`
 **Outcome:** You can play a simple game in terminal
 
-### Checkpoint 2: End of Phase 1 (Week 8)
-**Demo:** Open browser, play against AI with Stack mechanics
+### Checkpoint 2: End of Phase 1 (Week 11)
+**Demo:** Open browser, play real Magic with mana costs, targeting, and 20+ cards
 **Outcome:** Game feels like Magic, not just generic card game
 
-### Checkpoint 3: End of Phase 2 (Week 14)
+### Checkpoint 3: End of Phase 2 (Week 17)
 **Demo:** MCTS-Bot vs GreedyBot (MCTS wins 70%+)
 **Outcome:** AI is legitimately challenging
 
-### Checkpoint 4: End of Phase 3 (Week 20)
+### Checkpoint 4: End of Phase 3 (Week 23)
 **Demo:** 🎮 PUBLIC RELEASE - Full game on GitHub
 **Outcome:** People can actually play and have fun
 
-### Checkpoint 5: End of Phase 4 (Week 26)
+### Checkpoint 5: End of Phase 4 (Week 29)
 **Demo:** Run 10,000 game tournament overnight
 **Outcome:** Discover which deck is strongest in meta
 

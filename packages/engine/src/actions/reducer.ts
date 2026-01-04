@@ -6,13 +6,16 @@
  */
 
 import type { GameState } from '../state/GameState';
-import type { Action, PlayLandAction, CastSpellAction, DeclareAttackersAction, DeclareBlockersAction, EndTurnAction, PassPriorityAction } from './Action';
+import type { Action, PlayLandAction, CastSpellAction, DeclareAttackersAction, DeclareBlockersAction, EndTurnAction, PassPriorityAction, ActivateAbilityAction } from './Action';
 import { validateAction } from './validators';
 import { getPlayer } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
 import { hasVigilance } from '../cards/CardTemplate';
 import { pushToStack, resolveTopOfStack, canResolveStack, bothPlayersPassedPriority } from '../rules/stack';
 import { resolveCombatDamage, cleanupCombat } from '../rules/combat';
+import { checkStateBasedActions } from '../rules/stateBasedActions';
+import { registerTrigger, resolveTriggers } from '../rules/triggers';
+import { getActivatedAbilities, payCosts, applyAbilityEffect } from '../rules/activatedAbilities';
 
 /**
  * Apply an action to the game state
@@ -33,36 +36,69 @@ export function applyAction(state: GameState, action: Action): GameState {
   // Apply action based on type
   switch (action.type) {
     case 'PLAY_LAND':
-      return applyPlayLand(newState, action);
+      applyPlayLand(newState, action);
+      break;
     case 'CAST_SPELL':
-      return applyCastSpell(newState, action);
+      applyCastSpell(newState, action);
+      break;
     case 'DECLARE_ATTACKERS':
-      return applyDeclareAttackers(newState, action);
+      applyDeclareAttackers(newState, action);
+      break;
     case 'DECLARE_BLOCKERS':
-      return applyDeclareBlockers(newState, action);
+      applyDeclareBlockers(newState, action);
+      break;
     case 'END_TURN':
-      return applyEndTurn(newState, action);
+      applyEndTurn(newState, action);
+      break;
     case 'PASS_PRIORITY':
-      return applyPassPriority(newState, action);
+      applyPassPriority(newState, action);
+      break;
     case 'DRAW_CARD':
-      return applyDrawCard(newState, action);
+      applyDrawCard(newState, action);
+      break;
     case 'UNTAP':
-      return applyUntap(newState, action);
+      applyUntap(newState, action);
+      break;
+    case 'ACTIVATE_ABILITY':
+      applyActivateAbility(newState, action);
+      break;
     default:
-      return newState;
+      break;
   }
+
+  // Phase 1+: Check state-based actions and resolve triggers
+  // Loop until no more SBAs or triggers fire
+  let actionsPerformed = true;
+  while (actionsPerformed && !newState.gameOver) {
+    actionsPerformed = false;
+
+    // Check state-based actions
+    if (checkStateBasedActions(newState)) {
+      actionsPerformed = true;
+    }
+
+    // Resolve any triggered abilities
+    resolveTriggers(newState);
+
+    // Check SBAs again after triggers resolve
+    if (checkStateBasedActions(newState)) {
+      actionsPerformed = true;
+    }
+  }
+
+  return newState;
 }
 
 /**
  * Play a land from hand onto the battlefield
  */
-function applyPlayLand(state: GameState, action: PlayLandAction): GameState {
+function applyPlayLand(state: GameState, action: PlayLandAction): void {
   const player = getPlayer(state, action.playerId);
   const cardId = action.payload.cardInstanceId;
 
   // Find and remove from hand
   const cardIndex = player.hand.findIndex(c => c.instanceId === cardId);
-  if (cardIndex === -1) return state;
+  if (cardIndex === -1) return;
 
   const card = player.hand[cardIndex]!;
   player.hand.splice(cardIndex, 1);
@@ -75,20 +111,25 @@ function applyPlayLand(state: GameState, action: PlayLandAction): GameState {
   // Increment lands played this turn
   player.landsPlayedThisTurn++;
 
-  return state;
+  // Trigger ETB (lands don't typically have ETB triggers, but for completeness)
+  registerTrigger(state, {
+    type: 'ENTERS_BATTLEFIELD',
+    cardId: card.instanceId,
+    controller: action.playerId,
+  });
 }
 
 /**
  * Cast a spell from hand
  * Phase 1: Put spell on the stack
  */
-function applyCastSpell(state: GameState, action: CastSpellAction): GameState {
+function applyCastSpell(state: GameState, action: CastSpellAction): void {
   const player = getPlayer(state, action.playerId);
   const cardId = action.payload.cardInstanceId;
 
   // Find and remove from hand
   const cardIndex = player.hand.findIndex(c => c.instanceId === cardId);
-  if (cardIndex === -1) return state;
+  if (cardIndex === -1) return;
 
   const card = player.hand[cardIndex]!;
   player.hand.splice(cardIndex, 1);
@@ -98,15 +139,13 @@ function applyCastSpell(state: GameState, action: CastSpellAction): GameState {
 
   // Push to stack
   pushToStack(state, card, action.playerId, action.payload.targets || []);
-
-  return state;
 }
 
 /**
  * Declare attackers
  * Phase 1+: Move to declare_blockers step
  */
-function applyDeclareAttackers(state: GameState, action: DeclareAttackersAction): GameState {
+function applyDeclareAttackers(state: GameState, action: DeclareAttackersAction): void {
   const player = getPlayer(state, action.playerId);
 
   // Mark creatures as attacking and tap them (unless they have Vigilance)
@@ -129,15 +168,13 @@ function applyDeclareAttackers(state: GameState, action: DeclareAttackersAction)
 
   // Priority goes to defending player for blockers
   state.priorityPlayer = state.activePlayer === 'player' ? 'opponent' : 'player';
-
-  return state;
 }
 
 /**
  * Declare blockers
  * Phase 1+: Assign blockers to attackers, then resolve combat damage
  */
-function applyDeclareBlockers(state: GameState, action: DeclareBlockersAction): GameState {
+function applyDeclareBlockers(state: GameState, action: DeclareBlockersAction): void {
   // Assign each blocker to its attacker
   for (const block of action.payload.blocks) {
     const blocker = state.players[action.playerId].battlefield.find(
@@ -171,14 +208,12 @@ function applyDeclareBlockers(state: GameState, action: DeclareBlockersAction): 
 
   // Priority returns to active player
   state.priorityPlayer = state.activePlayer;
-
-  return state;
 }
 
 /**
  * End the turn
  */
-function applyEndTurn(state: GameState, _action: EndTurnAction): GameState {
+function applyEndTurn(state: GameState, _action: EndTurnAction): void {
   const currentPlayer = getPlayer(state, state.activePlayer);
 
   // Cleanup phase
@@ -211,14 +246,12 @@ function applyEndTurn(state: GameState, _action: EndTurnAction): GameState {
   for (const permanent of newActivePlayer.battlefield) {
     permanent.tapped = false;
   }
-
-  return state;
 }
 
 /**
  * Pass priority
  */
-function applyPassPriority(state: GameState, action: PassPriorityAction): GameState {
+function applyPassPriority(state: GameState, action: PassPriorityAction): void {
   const player = getPlayer(state, action.playerId);
   player.hasPassedPriority = true;
   player.consecutivePasses++;
@@ -232,7 +265,7 @@ function applyPassPriority(state: GameState, action: PassPriorityAction): GameSt
     state.players.opponent.hasPassedPriority = false;
     state.players.player.consecutivePasses = 0;
     state.players.opponent.consecutivePasses = 0;
-    return state;
+    return;
   }
 
   // Switch priority to opponent
@@ -254,14 +287,12 @@ function applyPassPriority(state: GameState, action: PassPriorityAction): GameSt
       state.players.opponent.consecutivePasses = 0;
     }
   }
-
-  return state;
 }
 
 /**
  * Draw a card
  */
-function applyDrawCard(state: GameState, action: Action): GameState {
+function applyDrawCard(state: GameState, action: Action): void {
   const player = getPlayer(state, action.playerId);
   const count = (action.payload as { count?: number }).count || 1;
 
@@ -276,19 +307,44 @@ function applyDrawCard(state: GameState, action: Action): GameState {
       state.winner = action.playerId === 'player' ? 'opponent' : 'player';
     }
   }
-
-  return state;
 }
 
 /**
  * Untap all permanents
  */
-function applyUntap(state: GameState, action: Action): GameState {
+function applyUntap(state: GameState, action: Action): void {
   const player = getPlayer(state, action.playerId);
 
   for (const permanent of player.battlefield) {
     permanent.tapped = false;
   }
+}
 
-  return state;
+/**
+ * Activate an ability
+ * Phase 1+: Pay costs and put ability on stack
+ */
+function applyActivateAbility(state: GameState, action: ActivateAbilityAction): void {
+  const player = getPlayer(state, action.playerId);
+
+  // Find the card with the ability
+  const card = player.battlefield.find(c => c.instanceId === action.payload.sourceId);
+  if (!card) return;
+
+  // Get all abilities for this card
+  const abilities = getActivatedAbilities(card, state);
+  const ability = abilities.find(a => a.id === action.payload.abilityId);
+  if (!ability) return;
+
+  // Pay costs (tap, mana, etc.)
+  if (!payCosts(state, action.payload.sourceId, ability.cost)) {
+    return; // Failed to pay costs
+  }
+
+  // Phase 0/1: Apply effect immediately
+  // TODO Phase 1+: Put on stack instead
+  if (action.payload.targets && action.payload.targets.length > 0) {
+    ability.effect.target = action.payload.targets[0];
+  }
+  applyAbilityEffect(state, ability.effect);
 }

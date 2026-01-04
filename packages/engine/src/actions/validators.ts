@@ -5,10 +5,11 @@
  */
 
 import type { GameState } from '../state/GameState';
-import type { Action, PlayLandAction, CastSpellAction, DeclareAttackersAction, DeclareBlockersAction } from './Action';
+import type { Action, PlayLandAction, CastSpellAction, DeclareAttackersAction, DeclareBlockersAction, ActivateAbilityAction } from './Action';
 import { getPlayer, findCard } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
 import { isLand, isCreature, isInstant, isSorcery, hasFlying, hasReach } from '../cards/CardTemplate';
+import { getActivatedAbilities } from '../rules/activatedAbilities';
 
 /**
  * Validate any action
@@ -23,6 +24,8 @@ export function validateAction(state: GameState, action: Action): string[] {
       return validateDeclareAttackers(state, action);
     case 'DECLARE_BLOCKERS':
       return validateDeclareBlockers(state, action);
+    case 'ACTIVATE_ABILITY':
+      return validateActivateAbility(state, action);
     default:
       return [];  // Other actions are always valid for now
   }
@@ -263,6 +266,50 @@ function validateDeclareBlockers(state: GameState, action: DeclareBlockersAction
         }
       }
     }
+  }
+
+  return errors;
+}
+
+/**
+ * Validate activating an ability
+ * Phase 1+: Activated abilities require priority and costs to be paid
+ */
+function validateActivateAbility(state: GameState, action: ActivateAbilityAction): string[] {
+  const errors: string[] = [];
+
+  // Check if player has priority
+  if (state.priorityPlayer !== action.playerId) {
+    errors.push('You do not have priority');
+  }
+
+  // Find the card with the ability
+  const card = findCard(state, action.payload.sourceId);
+  if (!card) {
+    errors.push('Card not found');
+    return errors;
+  }
+
+  if (card.zone !== 'battlefield') {
+    errors.push('Card must be on the battlefield');
+  }
+
+  if (card.controller !== action.playerId) {
+    errors.push('You do not control this card');
+  }
+
+  // Get all abilities for this card
+  const abilities = getActivatedAbilities(card, state);
+  const ability = abilities.find(a => a.id === action.payload.abilityId);
+
+  if (!ability) {
+    errors.push('Ability not found on card');
+    return errors;
+  }
+
+  // Check if ability can be activated
+  if (!ability.canActivate(state, action.payload.sourceId, action.playerId)) {
+    errors.push('Ability cannot be activated');
   }
 
   return errors;
