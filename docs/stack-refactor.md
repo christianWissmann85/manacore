@@ -706,12 +706,12 @@ describe('Migration parity', () => {
 
 ## Timeline - COMPLETED
 
-| Week | Phase              | Deliverables                      | Status      |
-| ---- | ------------------ | --------------------------------- | ----------- |
-| 1    | Infrastructure     | Registry system, types, tests     | ✅ DONE     |
-| 1-2  | Proof of Concept   | 10 cards migrated, validation     | ✅ DONE     |
-| 2-3  | Category Migration | Destruction, damage, tutors, etc. | ✅ DONE     |
-| 3-4  | Cleanup            | Remove old code, documentation    | ✅ DONE     |
+| Week | Phase              | Deliverables                      | Status  |
+| ---- | ------------------ | --------------------------------- | ------- |
+| 1    | Infrastructure     | Registry system, types, tests     | ✅ DONE |
+| 1-2  | Proof of Concept   | 10 cards migrated, validation     | ✅ DONE |
+| 2-3  | Category Migration | Destruction, damage, tutors, etc. | ✅ DONE |
+| 3-4  | Cleanup            | Remove old code, documentation    | ✅ DONE |
 
 **Completion Date**: January 4, 2026
 

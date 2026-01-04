@@ -83,7 +83,14 @@ mana-core/
 │   │   │   │   ├── combat.ts
 │   │   │   │   ├── stack.ts
 │   │   │   │   ├── state-based-actions.ts
-│   │   │   │   └── mana.ts
+│   │   │   │   ├── mana.ts
+│   │   │   │   └── targeting/          # Modular targeting system
+│   │   │   │       ├── index.ts        # Public API
+│   │   │   │       ├── types.ts        # Type definitions
+│   │   │   │       ├── parser/         # Oracle text parsing
+│   │   │   │       ├── validation/     # Target validation
+│   │   │   │       ├── generation/     # Legal target generation
+│   │   │   │       └── resolution/     # Fizzle checks
 │   │   │   ├── cards/
 │   │   │   │   ├── CardLoader.ts
 │   │   │   │   ├── CardTemplate.ts
@@ -605,9 +612,9 @@ packages/engine/src/spells/
 
 ```typescript
 interface SpellImplementation {
-  cardName: string;                                         // Must match CardTemplate.name exactly
-  resolve: (state: GameState, stackObj: StackObject) => void;  // Apply spell effects
-  shouldFizzle?: (state: GameState, stackObj: StackObject) => boolean;  // Custom fizzle logic
+  cardName: string; // Must match CardTemplate.name exactly
+  resolve: (state: GameState, stackObj: StackObject) => void; // Apply spell effects
+  shouldFizzle?: (state: GameState, stackObj: StackObject) => boolean; // Custom fizzle logic
 }
 ```
 
@@ -641,7 +648,9 @@ function applySpellEffects(state: GameState, stackObj: StackObject): void {
   }
   // Fall back to generic oracle text parsing
   const effect = parseSpellEffect(oracleText);
-  if (effect) { /* apply parsed effect */ }
+  if (effect) {
+    /* apply parsed effect */
+  }
 }
 ```
 
@@ -650,6 +659,7 @@ function applySpellEffects(state: GameState, stackObj: StackObject): void {
 **Effects Library (`rules/effects.ts`)**
 
 Reusable effect functions used by spell implementations:
+
 - `destroyPermanent()`, `destroyAllCreatures()`, `destroyAllLands()`
 - `applyDamage()`, `dealDamageToAll()`
 - `drawCards()`, `discardCards()`
@@ -659,15 +669,118 @@ Reusable effect functions used by spell implementations:
 **Token Creation (`rules/tokens.ts`)**
 
 Token creation for spells like Icatian Town:
+
 - `createTokens(state, controller, tokenType, count)`
 - `TOKEN_DEFINITIONS` - predefined token types (Citizen, Cat, Goblin, etc.)
 - `createCustomTokens()` - for non-standard tokens
 
 ---
 
-## 6. Engine Architecture
+## 6. Targeting System
 
-### 6.1 Immutable State Pattern
+The targeting system uses a **modular, pattern-based architecture** for parsing oracle text, validating targets, and generating legal target combinations.
+
+### 6.1 Architecture Overview
+
+```
+parseTargetRequirements(oracleText)
+         │
+         ▼
+┌─────────────────────┐
+│   Pattern Registry  │ ◄── TARGET_PATTERNS array (priority-ordered)
+│   (parser/patterns) │     ~50 patterns for creature, player, spell, etc.
+└─────────┬───────────┘
+          │
+          ▼
+┌─────────────────────┐
+│   Validation Layer  │ ◄── RESTRICTION_VALIDATORS registry
+│   (validation/)     │     Checks color, controller, combat status, etc.
+└─────────┬───────────┘
+          │
+          ▼
+┌─────────────────────┐
+│   Generation Layer  │ ◄── getLegalTargets(), getAllLegalTargetCombinations()
+│   (generation/)     │     Produces valid target options
+└─────────────────────┘
+```
+
+### 6.2 Directory Structure
+
+```
+packages/engine/src/rules/targeting/
+├── index.ts                    # Public API (barrel file)
+├── types.ts                    # TargetRequirement, TargetRestriction, etc.
+│
+├── parser/
+│   ├── index.ts               # parseTargetRequirements(), requiresTargets()
+│   └── patterns.ts            # TARGET_PATTERNS registry (~50 patterns)
+│
+├── validation/
+│   ├── index.ts               # validateTargets(), validateSingleTarget()
+│   ├── validators.ts          # RESTRICTION_VALIDATORS registry
+│   └── protection.ts          # Hexproof, shroud, protection checks
+│
+├── generation/
+│   └── index.ts               # getLegalTargets(), getAllLegalTargetCombinations()
+│
+└── resolution/
+    └── index.ts               # checkTargetsStillLegal(), shouldSpellFizzle()
+```
+
+### 6.3 Key Components
+
+**Pattern Registry (`parser/patterns.ts`)**
+
+- `TARGET_PATTERNS` array ordered by priority (higher = more specific)
+- Each pattern has: regex, priority, handler function
+- Priority guidelines: 100+ (most specific), 50-59 (generic patterns)
+- Example: "target nonartifact, nonblack creature" (priority 105) matches before "target creature" (priority 50)
+
+**Restriction Validators (`validation/validators.ts`)**
+
+- `RESTRICTION_VALIDATORS` map for O(1) lookup by restriction type
+- Each validator: `(card, restriction, state) => boolean`
+- Types: color, controller, combat, tapped, untapped, nonartifact, nonland, keyword, subtype
+
+**Protection Checks (`validation/protection.ts`)**
+
+- `hasHexproof()`, `hasShroud()`, `hasProtectionFrom()`
+- `getSourceColors()` - determines spell/ability colors
+- `hasProtectionFromSource()` - full protection check
+
+### 6.4 Adding New Patterns
+
+To add a new targeting pattern, add an entry to `TARGET_PATTERNS` in `parser/patterns.ts`:
+
+```typescript
+{
+  regex: /target attacking goblin/i,
+  priority: 95,
+  handler: (match, idx) =>
+    createRequirement(idx, 'creature', 'target attacking Goblin', {
+      restrictions: [
+        { type: 'combat', status: 'attacking' },
+        { type: 'subtype', subtype: 'Goblin' },
+      ],
+    }),
+}
+```
+
+### 6.5 Adding New Validators
+
+To add a new restriction type, add to `RESTRICTION_VALIDATORS` in `validation/validators.ts`:
+
+```typescript
+RESTRICTION_VALIDATORS.set('enchanted', (card, restriction, state) => {
+  return card.attachments?.some(a => isEnchantment(a)) ?? false;
+});
+```
+
+---
+
+## 7. Engine Architecture
+
+### 7.1 Immutable State Pattern
 
 The engine uses **pure functions** and **immutable data** to enable:
 
@@ -695,7 +808,7 @@ function playCard(state: GameState, cardId: string): GameState {
 }
 ```
 
-### 6.2 Action System
+### 7.2 Action System
 
 All game logic flows through the **reducer**:
 
@@ -726,7 +839,7 @@ export interface PlaySpellAction extends GameAction {
 }
 ```
 
-### 6.3 The Reducer
+### 7.3 The Reducer
 
 ```typescript
 // packages/engine/src/actions/reducer.ts
@@ -755,7 +868,7 @@ export function applyAction(state: GameState, action: GameAction): GameState {
 }
 ```
 
-### 6.4 Zone Management
+### 7.4 Zone Management
 
 ```typescript
 // packages/engine/src/state/Zone.ts
@@ -800,9 +913,9 @@ export class ZoneManager {
 
 ---
 
-## 7. AI Architecture
+## 8. AI Architecture
 
-### 7.1 MCTS Node Structure
+### 8.1 MCTS Node Structure
 
 ```typescript
 // packages/ai/src/search/Node.ts
@@ -849,7 +962,7 @@ export class MCTSNode {
 }
 ```
 
-### 7.2 UCB1 Selection
+### 8.2 UCB1 Selection
 
 ```typescript
 // packages/ai/src/search/UCB1.ts
@@ -874,7 +987,7 @@ function calculateUCB1(node: MCTSNode, parentVisits: number, c: number): number 
 }
 ```
 
-### 7.3 Determinization for Hidden Information
+### 8.3 Determinization for Hidden Information
 
 ```typescript
 // packages/ai/src/search/determinization.ts
@@ -911,9 +1024,9 @@ function shuffle<T>(array: T[], seed: number): void {
 
 ---
 
-## 8. Visualization Architecture
+## 9. Visualization Architecture
 
-### 8.1 React Component Structure
+### 9.1 React Component Structure
 
 We use a standard React component tree to render the game state. This provides a "Scientific Dashboard" look rather than a game engine look.
 
@@ -946,7 +1059,7 @@ export function App() {
 }
 ```
 
-### 8.2 Card Component
+### 9.2 Card Component
 
 Cards are rendered as DOM elements, allowing easy CSS styling and debugging.
 
@@ -987,9 +1100,9 @@ export function Card({ data, onClick }: CardProps) {
 
 ---
 
-## 9. Performance Optimizations
+## 10. Performance Optimizations
 
-### 9.1 Fast State Cloning
+### 10.1 Fast State Cloning
 
 ```typescript
 // Use structuredClone for deep cloning
@@ -999,14 +1112,14 @@ const newState = structuredClone(state);
 const newState = { ...state };
 ```
 
-### 9.2 MCTS Optimizations
+### 10.2 MCTS Optimizations
 
 - **Transposition Table**: Cache evaluated positions
 - **Move Ordering**: Try high-value moves first
 - **Early Termination**: Stop search when one move is clearly best
 - **Parallel MCTS**: Run multiple searches concurrently (Phase 5)
 
-### 9.3 Visualization Optimizations
+### 10.3 Visualization Optimizations
 
 - **React Memo**: Prevent re-rendering cards that haven't changed
 - **Virtualization**: Use `react-window` for large log lists
@@ -1015,9 +1128,9 @@ const newState = { ...state };
 
 ---
 
-## 10. Testing Strategy
+## 11. Testing Strategy
 
-### 10.1 Unit Tests
+### 11.1 Unit Tests
 
 ```typescript
 // packages/engine/tests/combat.test.ts
@@ -1036,7 +1149,7 @@ describe('Combat', () => {
 });
 ```
 
-### 10.2 Integration Tests
+### 11.2 Integration Tests
 
 Run full games between bots to catch edge cases:
 
@@ -1044,7 +1157,7 @@ Run full games between bots to catch edge cases:
 bun test:integration
 ```
 
-### 10.3 Simulation Replay System
+### 11.3 Simulation Replay System
 
 To support scientific peer review and debugging, the platform can reproduce any simulation:
 
@@ -1066,9 +1179,9 @@ This JSON allows researchers to perfectly reconstruct the state at any point in 
 
 ---
 
-## 11. Deployment
+## 12. Deployment
 
-### 11.1 CLI Tool
+### 12.1 CLI Tool
 
 ```bash
 # Install globally
@@ -1078,7 +1191,7 @@ bun install -g @manacore/cli
 manacore play --deck red-burn --opponent mcts
 ```
 
-### 11.2 Web Client
+### 12.2 Web Client
 
 ```bash
 # Build for production

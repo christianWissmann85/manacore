@@ -680,12 +680,6 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 
 **Deliverable:** Full 6th Edition card pool playable!
 
-### Week 1.5.8 (Adcanced Testing and Deckbuilding)
-
-- [ ] Create more Test Decks
-- [ ] Thoroughly test each Deck with AutBots
-- [ ] Observe any Issues or Errors
-
 ---
 
 ## Phase 1.6: Complex Card Mechanics (Weeks 19-20)
@@ -1136,12 +1130,6 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 - [ ] Compare to AlphaZero paper methodology
 - [ ] Measure improvement over time
 
-**Long-term Goal:**
-
-- Discover optimal play for our card pool
-- Generate new cards that are balanced
-- Build tournament-winning decks automatically
-
 ---
 
 ## Maintenance & Future Work
@@ -1153,15 +1141,6 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 - Performance optimization
 - User-requested features
 
-### Potential Expansions
-
-1. **Urza's Block** (Phase 6)
-   - Add 300+ new cards
-   - New mechanics (Cycling, Echo, Flashback)
-
-2. **Draft Mode** (Phase 7)
-   - AI-powered draft simulator
-   - Learn draft archetypes
 
 ---
 

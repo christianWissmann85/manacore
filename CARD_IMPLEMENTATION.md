@@ -8,22 +8,22 @@ This document explains how to add and implement cards in ManaCore.
 
 ## Quick Reference
 
-| Card Type           | Implementation Effort           | Location                        |
-| ------------------- | ------------------------------- | ------------------------------- |
-| Vanilla creatures   | None - already works            | -                               |
-| Keyword creatures   | None - already works            | -                               |
-| Basic lands         | None - already works            | -                               |
-| Mana dorks          | Low - use template              | `rules/abilities/sets/6ed/*.ts` |
-| Burn spells         | Low - add to spell registry     | `spells/categories/damage.ts`   |
+| Card Type           | Implementation Effort           | Location                           |
+| ------------------- | ------------------------------- | ---------------------------------- |
+| Vanilla creatures   | None - already works            | -                                  |
+| Keyword creatures   | None - already works            | -                                  |
+| Basic lands         | None - already works            | -                                  |
+| Mana dorks          | Low - use template              | `rules/abilities/sets/6ed/*.ts`    |
+| Burn spells         | Low - add to spell registry     | `spells/categories/damage.ts`      |
 | Removal spells      | Low - add to spell registry     | `spells/categories/destruction.ts` |
-| X-cost spells       | Medium - add to spell registry  | `spells/categories/xcost.ts`    |
-| Tutors              | Medium - add to spell registry  | `spells/categories/tutors.ts`   |
-| Card draw spells    | Low - add to spell registry     | `spells/categories/card-draw.ts`|
-| Activated abilities | Low-Medium - use templates      | `rules/abilities/sets/6ed/*.ts` |
-| Triggered abilities | Medium - add trigger            | `triggers.ts`                   |
-| Auras               | Medium - targeting + attachment | `reducer.ts`                    |
-| Counterspells       | Medium - add to spell registry  | `spells/categories/counters.ts` |
-| Complex cards       | High - custom logic             | Multiple files                  |
+| X-cost spells       | Medium - add to spell registry  | `spells/categories/xcost.ts`       |
+| Tutors              | Medium - add to spell registry  | `spells/categories/tutors.ts`      |
+| Card draw spells    | Low - add to spell registry     | `spells/categories/card-draw.ts`   |
+| Activated abilities | Low-Medium - use templates      | `rules/abilities/sets/6ed/*.ts`    |
+| Triggered abilities | Medium - add trigger            | `triggers.ts`                      |
+| Auras               | Medium - targeting + attachment | `reducer.ts`                       |
+| Counterspells       | Medium - add to spell registry  | `spells/categories/counters.ts`    |
+| Complex cards       | High - custom logic             | Multiple files                     |
 
 ---
 
@@ -157,18 +157,18 @@ resolveSpell() in stack.ts
 
 ### Category Files
 
-| Category File    | Spell Types                         | Example Cards                           |
-| ---------------- | ----------------------------------- | --------------------------------------- |
-| `damage.ts`      | AoE damage, conditional damage      | Dry Spell, Tremor, Inferno, Vertigo     |
-| `destruction.ts` | Mass/targeted destruction           | Wrath of God, Armageddon, Shatterstorm  |
-| `counters.ts`    | Counterspells                       | Memory Lapse, Remove Soul               |
-| `xcost.ts`       | X-cost spells, mana rituals         | Earthquake, Hurricane, Dark Ritual      |
-| `tutors.ts`      | Library search effects              | Enlightened, Mystical, Vampiric Tutor   |
-| `card-draw.ts`   | Draw/discard effects                | Inspiration, Ancestral Memories, Stupor |
-| `graveyard.ts`   | Graveyard recursion                 | Raise Dead, Elven Cache, Relearn        |
-| `untap.ts`       | Tap/untap effects                   | Early Harvest, Vitalize, Mana Short     |
-| `prevention.ts`  | Damage prevention, life gain        | Fog, Healing Salve, Remedy              |
-| `misc.ts`        | Tokens, bounce, other effects       | Boomerang, Icatian Town, Summer Bloom   |
+| Category File    | Spell Types                    | Example Cards                           |
+| ---------------- | ------------------------------ | --------------------------------------- |
+| `damage.ts`      | AoE damage, conditional damage | Dry Spell, Tremor, Inferno, Vertigo     |
+| `destruction.ts` | Mass/targeted destruction      | Wrath of God, Armageddon, Shatterstorm  |
+| `counters.ts`    | Counterspells                  | Memory Lapse, Remove Soul               |
+| `xcost.ts`       | X-cost spells, mana rituals    | Earthquake, Hurricane, Dark Ritual      |
+| `tutors.ts`      | Library search effects         | Enlightened, Mystical, Vampiric Tutor   |
+| `card-draw.ts`   | Draw/discard effects           | Inspiration, Ancestral Memories, Stupor |
+| `graveyard.ts`   | Graveyard recursion            | Raise Dead, Elven Cache, Relearn        |
+| `untap.ts`       | Tap/untap effects              | Early Harvest, Vitalize, Mana Short     |
+| `prevention.ts`  | Damage prevention, life gain   | Fog, Healing Salve, Remedy              |
+| `misc.ts`        | Tokens, bounce, other effects  | Boomerang, Icatian Town, Summer Bloom   |
 
 ### Implementing a New Spell
 
@@ -383,6 +383,7 @@ interface SpellImplementation {
 ```
 
 The `resolve` function receives:
+
 - `state`: The mutable GameState (modifications apply directly)
 - `stackObj`: Contains `targets[]`, `xValue`, `controller`, `card`, etc.
 
@@ -569,6 +570,80 @@ Each file exports a count constant (e.g., `PINGERS_COUNT`) for debugging.
 
 ---
 
+## Targeting System
+
+The targeting system uses a **modular, pattern-based architecture** located at `packages/engine/src/rules/targeting/`.
+
+### Directory Structure
+
+```
+targeting/
+├── index.ts                    # Public API (barrel file)
+├── types.ts                    # TargetRequirement, TargetRestriction, etc.
+├── parser/
+│   ├── index.ts               # parseTargetRequirements()
+│   └── patterns.ts            # TARGET_PATTERNS registry
+├── validation/
+│   ├── index.ts               # validateTargets()
+│   ├── validators.ts          # RESTRICTION_VALIDATORS registry
+│   └── protection.ts          # Hexproof, shroud, protection
+├── generation/
+│   └── index.ts               # getLegalTargets()
+└── resolution/
+    └── index.ts               # checkTargetsStillLegal()
+```
+
+### Adding New Targeting Patterns
+
+To support a new oracle text pattern, add an entry to `TARGET_PATTERNS` in `parser/patterns.ts`:
+
+```typescript
+// In packages/engine/src/rules/targeting/parser/patterns.ts
+
+{
+  regex: /target attacking goblin/i,
+  priority: 95,  // Higher = more specific, checked first
+  handler: (match, idx) =>
+    createRequirement(idx, 'creature', 'target attacking Goblin', {
+      restrictions: [
+        { type: 'combat', status: 'attacking' },
+        { type: 'subtype', subtype: 'Goblin' },
+      ],
+    }),
+}
+```
+
+**Priority Guidelines:**
+- 100+: Most specific (multiple restrictions)
+- 90-99: Two restrictions or specific subtypes
+- 80-89: Single specific restriction
+- 70-79: Spell/player patterns
+- 60-69: Simple type patterns
+- 50-59: Generic patterns (creature, permanent)
+
+### Adding New Restriction Validators
+
+To support a new restriction type, add to `RESTRICTION_VALIDATORS` in `validation/validators.ts`:
+
+```typescript
+// In packages/engine/src/rules/targeting/validation/validators.ts
+
+RESTRICTION_VALIDATORS.set('enchanted', (card, restriction, state) => {
+  return card.attachments?.some(a => isEnchantment(a)) ?? false;
+});
+```
+
+### Key Functions
+
+| Function | Location | Purpose |
+| -------- | -------- | ------- |
+| `parseTargetRequirements()` | `parser/index.ts` | Parse oracle text to TargetRequirement[] |
+| `validateTargets()` | `validation/index.ts` | Check if targets are legal |
+| `getLegalTargets()` | `generation/index.ts` | Get all legal targets for a requirement |
+| `checkTargetsStillLegal()` | `resolution/index.ts` | Fizzle check at resolution |
+
+---
+
 ## Keyword Reference
 
 These keywords work automatically (no implementation needed):
@@ -609,6 +684,13 @@ These keywords work automatically (no implementation needed):
 | `rules/abilities/types.ts`       | Ability type definitions           |
 | `rules/abilities/templates/*.ts` | Reusable ability templates         |
 | `rules/abilities/sets/6ed/*.ts`  | 6th Edition card abilities         |
+| **Targeting System**             |                                    |
+| `rules/targeting/index.ts`       | Targeting system entry point       |
+| `rules/targeting/types.ts`       | TargetRequirement, TargetRestriction |
+| `rules/targeting/parser/patterns.ts` | TARGET_PATTERNS registry       |
+| `rules/targeting/validation/validators.ts` | RESTRICTION_VALIDATORS   |
+| `rules/targeting/generation/`    | Legal target generation            |
+| `rules/targeting/resolution/`    | Fizzle checks                      |
 | **Helper Modules**               |                                    |
 | `rules/effects.ts`               | Reusable spell/ability effects     |
 | `rules/tokens.ts`                | Token creation helpers             |

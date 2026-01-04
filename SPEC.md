@@ -70,6 +70,7 @@ We will implement a **curated subset** of Magic: The Gathering's 6th Edition Cor
 - ✅ **Mana abilities** (Dark Ritual, mana acceleration)
 - ✅ **Registry-based abilities** (refactored for O(1) lookup)
 - ✅ **Registry-based spells** (stack.ts refactored: 1,760 lines to 437 lines)
+- ✅ **Modular targeting system** (pattern-based oracle text parsing)
 
 #### Phase 3+: Advanced
 

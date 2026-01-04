@@ -1,52 +1,8 @@
 # ManaCore - Project Guide
 
-> **MTG Game Engine & AI Research Platform**
->
-> A headless simulation engine designed for high-speed AI training (1000+ games/second) with advanced visualization tools.
-
----
-
-## Table of Contents
-
-- [Project Overview](#project-overview)
-- [Architecture](#architecture)
-- [Development Philosophy](#development-philosophy)
-- [Monorepo Structure](#monorepo-structure)
-- [Development Phases](#development-phases)
-- [Technical Stack](#technical-stack)
-- [Code Conventions](#code-conventions)
-- [Testing Strategy](#testing-strategy)
-- [Common Tasks](#common-tasks)
-
----
-
 ## Project Overview
 
 ManaCore is a high-fidelity implementation of Magic: The Gathering rules, built specifically for AI research. The project prioritizes:
-
-1. **Performance**: Pure TypeScript engine runs headless at 1000+ simulations/second
-2. **Correctness**: Faithful implementation of Magic rules for accurate agent training
-3. **Modularity**: Clean separation between engine, AI, and visualization layers
-4. **Research-First**: Tools for MCTS visualization, deck evolution, and meta-game analysis
-
-### Key Features
-
-- ✅ Complete game state management with immutable updates
-- ✅ Action-reducer architecture for deterministic simulation
-- ✅ LIFO stack system for spells and abilities
-- ✅ Combat system with Flying, First Strike, Trample, Vigilance, Reach
-- ✅ State-based actions (creature death, player loss, etc.)
-- ✅ Triggered abilities (ETB, death triggers)
-- ✅ Activated abilities (tap abilities, etc.)
-- ✅ Card data pipeline from Scryfall API
-- ✅ CLI tool for agent debugging
-- ✅ RandomBot AI for baseline testing
-- ✅ Mana system and spell costs
-- ⚙️ Full card abilities and interactions (in progress)
-- ⚙️ Advanced AI agents (in progress)
-- 🔜 Research dashboard with React + Tailwind
-
----
 
 ## Architecture
 
@@ -216,50 +172,11 @@ manacore/
 
 ## Development Phases
 
-### ✅ Phase 0: Foundation (Weeks 1-3) - COMPLETE
+### ✅ Phase 0: Foundation COMPLETE
 
-**Goal**: Basic game structure with vanilla creatures
+### ✅ Phase 1: Core MTG Rules COMPLETE
 
-- Week 1: Monorepo setup, card data pipeline
-- Week 2: Core game engine and types
-- Week 3: CLI client and RandomBot
-
-**Deliverables**:
-
-- ✅ Bun workspace monorepo
-- ✅ Card data scraper and loader
-- ✅ Basic game state management
-- ✅ Play lands, cast creatures, declare attackers
-- ✅ Simple combat (no blocking initially)
-- ✅ CLI for human vs bot
-- ✅ RandomBot AI
-
-### ✅ Phase 1: Core MTG Rules (Weeks 4-11) - COMPLETE
-
-**Goal**: "This Actually Feels Like Magic"
-
-- Week 4-5: **The Stack** ✅ (LIFO spell resolution, priority system, instant vs sorcery timing)
-- Week 6: **Proper Combat** ✅ (blockers, Flying, First Strike, Trample, Vigilance, Reach)
-- Week 7: **State-Based Actions & Triggers** ✅ (SBAs, ETB triggers, death triggers, activated abilities)
-- Week 9: **Mana System** ✅ (mana pools, paying costs, mana abilities)
-- Week 10: **Targeting System** ✅ (legal targets, target validation)
-- Week 11: **Card Library Expansion** ✅ (20-30 common 6th Edition cards)
-
-**Deliverables**:
-
-- ✅ Stack system with priority passing
-- ✅ Instant-speed vs sorcery-speed timing
-- ✅ Declare blockers step with Flying/Reach restrictions
-- ✅ First Strike, Double Strike, Trample combat damage
-- ✅ State-based actions (creature death, player loss)
-- ✅ Triggered abilities framework
-- ✅ Activated abilities framework
-- ✅ CLI displays abilities (keywords + activated)
-- ✅ Complete mana system with costs and payment
-- ✅ Targeting system for spells and abilities
-- ✅ 20-30 working cards (creatures, removal, draw, counterspells)
-
-### 🔄 Phase 1.5: Complete Card Library (Weeks 12-18) - NEXT
+### 🔄 Phase 1.5: Complete Card Library - NEXT
 
 **Goal**: "Every Card Works"
 
@@ -270,13 +187,12 @@ manacore/
 - Week 1.5.5: **Auras & Enchantments** (22 auras + 34 enchantments)
 - Week 1.5.6: **Artifacts** (41 artifacts)
 - Week 1.5.7: **Integration Testing** (1000-game simulation, documentation)
-- Week 1.5.8: **Adcanced Testing and Deckbuilding**
 
 **Deliverable**: 302+ cards (90% of 6th Edition) fully playable
 
 > **Tracking:** See [CARD_STATUS.md](./CARD_STATUS.md) for detailed implementation status. Always update the Tracker after Implementing a Task.
 
-### 🔜 Phase 1.6: Complex Card Mechanics (Weeks 19-20)
+### 🔜 Phase 1.6: Complex Card Mechanics 
 
 **Goal**: "The Last 10%"
 
@@ -287,7 +203,7 @@ manacore/
 
 **Deliverable**: 100% of 6th Edition (335 cards) complete
 
-### 🔜 Phase 2: Hidden Information & Smart AI (Weeks 21-26)
+### 🔜 Phase 2: Hidden Information & Smart AI 
 
 **Goal**: "The AI Gets Dangerous"
 
@@ -302,7 +218,7 @@ manacore/
 - Evaluation function tuned through self-play
 - Game replay system for debugging AI decisions
 
-### 🔜 Phase 3: Interactive Visualization (Weeks 27-32)
+### 🔜 Phase 3: Interactive Visualization 
 
 **Goal**: "Advanced Research Dashboard" 🔬
 
@@ -313,7 +229,7 @@ manacore/
 
 **Deliverable**: 🔬 **RESEARCH PLATFORM v1.0**
 
-### 🔜 Phase 4: AI Research Tools (Weeks 33-38)
+### 🔜 Phase 4: AI Research Tools 
 
 **Goal**: "The AI Research Laboratory"
 
@@ -324,7 +240,7 @@ manacore/
 
 **Deliverable**: Research platform for AI experimentation
 
-### 🔜 Phase 5: Machine Learning (Weeks 39+)
+### 🔜 Phase 5: Machine Learning
 
 **Goal**: "Skynet Learns Magic"
 
@@ -707,14 +623,42 @@ bun test combat.test.ts
 
    ```typescript
    // In abilities/sets/6ed/mana-creatures.ts
-   registerAbilities('Llanowar Elves', (card) => [
-     createTapForMana(card, ['G']),
-   ]);
+   registerAbilities('Llanowar Elves', (card) => [createTapForMana(card, ['G'])]);
    ```
 
 5. **For triggered abilities**, add to `packages/engine/src/rules/triggers.ts`
 
-6. **Write card-specific tests**
+6. **For new targeting patterns**, add to `packages/engine/src/rules/targeting/parser/patterns.ts`:
+
+   ```typescript
+   // Add to TARGET_PATTERNS array (priority determines specificity)
+   {
+     regex: /target tapped creature/i,
+     priority: 81,  // Higher = more specific, checked first
+     handler: (match, idx) =>
+       createRequirement(idx, 'creature', 'target tapped creature', {
+         restrictions: [{ type: 'tapped' }],
+       }),
+   },
+   ```
+
+7. **For new target restrictions**, add validator to `packages/engine/src/rules/targeting/validation/validators.ts`:
+
+   ```typescript
+   export function validateNewRestriction(...): string | null {
+     if (restriction.type !== 'newtype') return null;
+     // validation logic
+     return null; // or error string
+   }
+
+   // Register in RESTRICTION_VALIDATORS
+   export const RESTRICTION_VALIDATORS = {
+     // ...existing validators
+     newtype: validateNewRestriction,
+   };
+   ```
+
+8. **Write card-specific tests**
 
 ### Running a Simulation
 
@@ -940,25 +884,28 @@ bun build src/index.ts                  # Build a file
 
 ### File Location Quick Reference
 
-| What                | Where                                                            |
-| ------------------- | ---------------------------------------------------------------- |
-| Game state types    | `packages/engine/src/state/`                                     |
-| Action definitions  | `packages/engine/src/actions/Action.ts`                          |
-| Validators          | `packages/engine/src/actions/validators.ts`                      |
-| Reducers            | `packages/engine/src/actions/reducer.ts`                         |
-| Combat rules        | `packages/engine/src/rules/combat.ts`                            |
-| Stack system        | `packages/engine/src/rules/stack.ts`                             |
-| Spell registry      | `packages/engine/src/spells/` (O(1) lookup for 70 spells)        |
-| Spell categories    | `packages/engine/src/spells/categories/*.ts`                     |
-| Ability registry    | `packages/engine/src/rules/abilities/` (O(1) lookup)             |
-| Ability templates   | `packages/engine/src/rules/abilities/templates/*.ts`             |
-| Effect helpers      | `packages/engine/src/rules/effects.ts`                           |
-| Token helpers       | `packages/engine/src/rules/tokens.ts`                            |
-| Triggers            | `packages/engine/src/rules/triggers.ts`                          |
-| State-based actions | `packages/engine/src/rules/stateBasedActions.ts`                 |
-| Legacy abilities    | `packages/engine/src/rules/activatedAbilities.ts` (fallback)     |
-| Card data           | `packages/engine/data/cards/6ed.json`                            |
-| Tests               | `packages/engine/tests/*.test.ts`                                |
-| CLI display         | `packages/cli-client/src/display/board.ts`                       |
+| What                | Where                                                        |
+| ------------------- | ------------------------------------------------------------ |
+| Game state types    | `packages/engine/src/state/`                                 |
+| Action definitions  | `packages/engine/src/actions/Action.ts`                      |
+| Validators          | `packages/engine/src/actions/validators.ts`                  |
+| Reducers            | `packages/engine/src/actions/reducer.ts`                     |
+| Combat rules        | `packages/engine/src/rules/combat.ts`                        |
+| Stack system        | `packages/engine/src/rules/stack.ts`                         |
+| Targeting system    | `packages/engine/src/rules/targeting/` (modular)             |
+| Target patterns     | `packages/engine/src/rules/targeting/parser/patterns.ts`     |
+| Target validators   | `packages/engine/src/rules/targeting/validation/validators.ts` |
+| Spell registry      | `packages/engine/src/spells/` (O(1) lookup for 70 spells)    |
+| Spell categories    | `packages/engine/src/spells/categories/*.ts`                 |
+| Ability registry    | `packages/engine/src/rules/abilities/` (O(1) lookup)         |
+| Ability templates   | `packages/engine/src/rules/abilities/templates/*.ts`         |
+| Effect helpers      | `packages/engine/src/rules/effects.ts`                       |
+| Token helpers       | `packages/engine/src/rules/tokens.ts`                        |
+| Triggers            | `packages/engine/src/rules/triggers.ts`                      |
+| State-based actions | `packages/engine/src/rules/stateBasedActions.ts`             |
+| Legacy abilities    | `packages/engine/src/rules/activatedAbilities.ts` (fallback) |
+| Card data           | `packages/engine/data/cards/6ed.json`                        |
+| Tests               | `packages/engine/tests/*.test.ts`                            |
+| CLI display         | `packages/cli-client/src/display/board.ts`                   |
 
 **Happy coding! 🎴✨**
