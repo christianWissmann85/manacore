@@ -259,7 +259,7 @@ async function runSingleGame(
 /**
  * Print simulation results
  */
-export function printResults(results: SimulationResults, playerName: string, opponentName: string): void {
+export function printResults(results: SimulationResults, _playerName: string, _opponentName: string): void {
   console.log('\n' + '═'.repeat(60));
   console.log('  SIMULATION RESULTS');
   console.log('═'.repeat(60));

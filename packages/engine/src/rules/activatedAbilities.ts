@@ -487,7 +487,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { tap: true },
         effect: {
           type: 'CUSTOM',
-          custom: (state: GameState) => {
+          custom: (_state: GameState) => {
             // Effect will be applied via the target system
             // The 3 damage to self is built into the effect
           },
@@ -636,7 +636,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { tap: true },
         effect: {
           type: 'CUSTOM',
-          custom: (state: GameState) => {
+          custom: (_state: GameState) => {
             // Effect applied via targeting system
           },
         },
@@ -668,7 +668,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { tap: true },
         effect: {
           type: 'CUSTOM',
-          custom: (state: GameState) => {
+          custom: (_state: GameState) => {
             // Effect applied via targeting system
           },
         },
@@ -700,7 +700,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { tap: true, mana: '{1}{G}' },
         effect: {
           type: 'CUSTOM',
-          custom: (state: GameState) => {
+          custom: (_state: GameState) => {
             // Effect applied via targeting system
           },
         },
@@ -963,7 +963,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { tap: true, mana: '{3}{G}' },
         effect: {
           type: 'CUSTOM',
-          custom: (state: GameState) => {
+          custom: (_state: GameState) => {
             // Effect applied via targeting
           },
         },
@@ -995,7 +995,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { tap: true, mana: '{2}{G}' },
         effect: {
           type: 'CUSTOM',
-          custom: (state: GameState) => {
+          custom: (_state: GameState) => {
             // Effect applied via targeting
           },
         },
@@ -1027,7 +1027,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { tap: true },
         effect: {
           type: 'CUSTOM',
-          custom: (state: GameState) => {
+          custom: (_state: GameState) => {
             // Effect applied via targeting
           },
         },
@@ -1061,7 +1061,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { mana: '{3}' },
         effect: {
           type: 'CUSTOM',
-          custom: (state: GameState) => {
+          custom: (_state: GameState) => {
             // Mark that this creature has flying for this turn
             // Note: Requires runtime keyword tracking (simplified for now)
           },
@@ -1082,7 +1082,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { mana: '{1}{U}{U}' },
         effect: {
           type: 'CUSTOM',
-          custom: (state: GameState) => {
+          custom: (_state: GameState) => {
             // Effect applied via targeting
           },
         },
@@ -1113,7 +1113,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { tap: true },
         effect: {
           type: 'CUSTOM',
-          custom: (state: GameState) => {
+          custom: (_state: GameState) => {
             // Damage prevention effect - would need damage prevention shield system
           },
         },
@@ -1234,7 +1234,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { sacrifice: { type: 'self' } },
         effect: {
           type: 'CUSTOM',
-          custom: (state: GameState) => {
+          custom: (_state: GameState) => {
             // Combat damage prevention
           },
         },
@@ -1309,7 +1309,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { life: 1 },
         effect: {
           type: 'CUSTOM',
-          custom: (state: GameState) => {
+          custom: (_state: GameState) => {
             // Damage prevention shield for self
           },
         },
@@ -1333,7 +1333,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { tap: true, mana: '{B}' },
         effect: {
           type: 'CUSTOM',
-          custom: (state: GameState) => {
+          custom: (_state: GameState) => {
             // Tap + deal damage based on power
           },
         },
@@ -1357,33 +1357,6 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
       });
       break;
 
-    case 'Anaba Shaman':
-      // "{R}, {T}: Anaba Shaman deals 1 damage to any target."
-      abilities.push({
-        id: `${card.instanceId}_tap_damage`,
-        name: '{R}, {T}: 1 damage to any target',
-        cost: { tap: true, mana: '{R}' },
-        effect: { type: 'DAMAGE', amount: 1 },
-        isManaAbility: false,
-        targetRequirements: [{
-          id: 'target_0',
-          count: 1,
-          targetType: 'any',
-          zone: 'battlefield',
-          restrictions: [],
-          optional: false,
-          description: 'any target',
-        }],
-        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
-          if (!source) return false;
-          if (source.tapped) return false;
-          if (source.summoningSick) return false;
-          return true;
-        },
-      });
-      break;
-
     case 'Blighted Shaman':
       // "{T}, Sacrifice a Swamp: Target creature gets +1/+1 until end of turn."
       abilities.push({
@@ -1392,7 +1365,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { tap: true, sacrifice: { type: 'land', subtype: 'Swamp' } },
         effect: {
           type: 'CUSTOM',
-          custom: (state: GameState) => {
+          custom: (_state: GameState) => {
             // Effect applied via targeting
           },
         },
@@ -1421,39 +1394,6 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
       });
       break;
 
-    case 'Blood Pet':
-      // "Sacrifice Blood Pet: Add {B}."
-      abilities.push({
-        id: `${card.instanceId}_sac_mana`,
-        name: 'Sacrifice: Add {B}',
-        cost: { sacrifice: { type: 'self' } },
-        effect: { type: 'ADD_MANA', manaColors: ['B'] },
-        isManaAbility: true,
-        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
-          return source !== undefined;
-        },
-      });
-      break;
-
-    case 'Fyndhorn Elder':
-      // "{T}: Add {G}{G}."
-      abilities.push({
-        id: `${card.instanceId}_tap_mana`,
-        name: '{T}: Add {G}{G}',
-        cost: { tap: true },
-        effect: { type: 'ADD_MANA', manaColors: ['G', 'G'] },
-        isManaAbility: true,
-        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
-          if (!source) return false;
-          if (source.tapped) return false;
-          if (source.summoningSick) return false;
-          return true;
-        },
-      });
-      break;
-
     case 'Kjeldoran Royal Guard':
       // "{T}: All combat damage that would be dealt to you by unblocked creatures this turn is dealt to Kjeldoran Royal Guard instead."
       abilities.push({
@@ -1462,7 +1402,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { tap: true },
         effect: {
           type: 'CUSTOM',
-          custom: (state: GameState) => {
+          custom: (_state: GameState) => {
             // Damage redirection effect
           },
         },
@@ -1558,7 +1498,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { tap: true, mana: '{B}{B}{B}' },
         effect: {
           type: 'CUSTOM',
-          custom: (state: GameState) => {
+          custom: (_state: GameState) => {
             // Random creature discard effect
           },
         },
@@ -1606,7 +1546,7 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
         cost: { tap: true, mana: '{X}' }, // X is variable
         effect: {
           type: 'CUSTOM',
-          custom: (state: GameState) => {
+          custom: (_state: GameState) => {
             // X damage - amount determined by X value
           },
         },
@@ -1626,47 +1566,6 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
           if (source.tapped) return false;
           if (source.summoningSick) return false;
           return true;
-        },
-      });
-      break;
-
-    case 'Fallen Angel':
-      // "Sacrifice a creature: Fallen Angel gets +2/+1 until end of turn."
-      abilities.push({
-        id: `${card.instanceId}_sac_pump`,
-        name: 'Sacrifice creature: +2/+1',
-        cost: { sacrifice: { type: 'creature' } },
-        effect: {
-          type: 'CUSTOM',
-          custom: (state: GameState) => {
-            for (const playerId of ['player', 'opponent'] as const) {
-              const creature = state.players[playerId].battlefield.find(
-                c => c.instanceId === card.instanceId
-              );
-              if (creature) {
-                creature.temporaryModifications.push({
-                  id: `pump_${Date.now()}_${Math.random()}`,
-                  powerChange: 2,
-                  toughnessChange: 1,
-                  expiresAt: 'end_of_turn',
-                  source: card.instanceId,
-                });
-                break;
-              }
-            }
-          },
-        },
-        isManaAbility: false,
-        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
-          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
-          if (!source) return false;
-          // Must have another creature to sacrifice
-          const otherCreatures = state.players[controller].battlefield.filter(p => {
-            if (p.instanceId === sourceId) return false;
-            const t = CardLoader.getById(p.scryfallId);
-            return t && isCreature(t);
-          });
-          return otherCreatures.length > 0;
         },
       });
       break;

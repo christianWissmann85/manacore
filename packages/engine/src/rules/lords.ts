@@ -222,7 +222,7 @@ function checkLordCreature(
   targetCard: CardInstance,
   targetSubtypes: string[],
   lordController: PlayerId,
-  lordCard: CardInstance
+  _lordCard: CardInstance
 ): LordBonus {
   const result: LordBonus = { powerBonus: 0, toughnessBonus: 0, grantedKeywords: [] };
 

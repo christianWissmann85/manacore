@@ -45,7 +45,7 @@ export class CardLoader {
    * Load token definitions into the cache
    */
   private static loadTokenDefinitions(): void {
-    for (const [key, tokenDef] of Object.entries(TOKEN_REGISTRY)) {
+    for (const [, tokenDef] of Object.entries(TOKEN_REGISTRY)) {
       const template = this.tokenToTemplate(tokenDef);
       this.cache.set(tokenDef.id, template);
       this.nameIndex.set(tokenDef.name.toLowerCase(), template);

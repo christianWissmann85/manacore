@@ -8,7 +8,7 @@ import type { GameState } from '../state/GameState';
 import type { Action, PlayLandAction, CastSpellAction, DeclareAttackersAction, DeclareBlockersAction, ActivateAbilityAction, SacrificePermanentAction } from './Action';
 import { getPlayer, findCard } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
-import { isLand, isCreature, isInstant, isSorcery, hasFlying, hasReach, isAura, hasDefender, hasFear, hasIntimidate, hasMenace, getLandwalkTypes, isArtifact } from '../cards/CardTemplate';
+import { isLand, isCreature, isInstant, isSorcery, hasFlying, hasReach, hasDefender, hasFear, hasIntimidate, hasMenace, getLandwalkTypes, isArtifact } from '../cards/CardTemplate';
 import type { CardInstance } from '../state/CardInstance';
 import { getActivatedAbilities } from '../rules/activatedAbilities';
 import type { PlayerId } from '../state/Zone';

@@ -12,7 +12,7 @@ import type { GameState, StackObject } from '../state/GameState';
 import type { CardInstance } from '../state/CardInstance';
 import { addTemporaryModification, getEffectiveToughness } from '../state/CardInstance';
 import type { PlayerId } from '../state/Zone';
-import { getPlayer, findCard } from '../state/GameState';
+import { getPlayer } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
 import { isInstant, isSorcery, isCreature, isEnchantment, isAura, isArtifact, hasFlying } from '../cards/CardTemplate';
 import {
@@ -35,7 +35,6 @@ import {
   tapAllNonFlyingCreatures,
   // Library search (tutors)
   searchLibrary,
-  shuffleLibrary,
   // Graveyard recursion
   returnCreatureFromGraveyard,
   returnSpellFromGraveyard,

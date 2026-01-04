@@ -14,7 +14,6 @@ import { getActivatedAbilities } from '../rules/activatedAbilities';
 import {
   parseTargetRequirements,
   getAllLegalTargetCombinations,
-  requiresTargets,
 } from '../rules/targeting';
 
 /**

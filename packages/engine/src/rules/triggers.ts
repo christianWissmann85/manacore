@@ -98,7 +98,7 @@ export function registerTrigger(state: GameState, event: TriggerEvent): void {
 function getTriggersForCard(
   card: CardInstance,
   event: TriggerEvent,
-  state: GameState
+  _state: GameState
 ): Array<(state: GameState) => void> {
   const template = CardLoader.getById(card.scryfallId);
   if (!template) return [];
@@ -500,7 +500,7 @@ function getTriggersForCard(
 function getDeathTriggersForDyingCard(
   card: CardInstance,
   event: TriggerEvent,
-  state: GameState
+  _state: GameState
 ): Array<(state: GameState) => void> {
   if (event.type !== 'DIES') return [];
 

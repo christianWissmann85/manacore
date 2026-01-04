@@ -16,7 +16,7 @@ import type { CardInstance } from '../state/CardInstance';
 import type { PlayerId, Zone } from '../state/Zone';
 import type { CardTemplate } from '../cards/CardTemplate';
 import { CardLoader } from '../cards/CardLoader';
-import { findCard, getPlayer, getOpponent } from '../state/GameState';
+import { findCard } from '../state/GameState';
 import {
   isCreature,
   isArtifact,
@@ -507,8 +507,6 @@ export function validateSingleTarget(
   controller: PlayerId,
   sourceCard?: CardInstance
 ): string[] {
-  const errors: string[] = [];
-
   // === Player Targets ===
   if (targetId === 'player' || targetId === 'opponent') {
     // Check if requirement allows player targets

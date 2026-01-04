@@ -405,7 +405,7 @@ export function returnFromGraveyard(
         player.hand.push(card);
         break;
 
-      case 'battlefield':
+      case 'battlefield': {
         card.zone = 'battlefield';
         card.controller = playerId;
         const template = CardLoader.getById(card.scryfallId);
@@ -421,6 +421,7 @@ export function returnFromGraveyard(
           controller: playerId,
         });
         break;
+      }
 
       case 'top_of_library':
         card.zone = 'library';
