@@ -7,6 +7,17 @@
 
 import type { Zone, PlayerId, CounterType } from './Zone';
 
+/**
+ * Temporary power/toughness modification (until end of turn)
+ */
+export interface TemporaryModification {
+  id: string;
+  powerChange: number;
+  toughnessChange: number;
+  expiresAt: 'end_of_turn' | 'end_of_combat';
+  source: string;  // Instance ID of the source (for tracking)
+}
+
 export interface CardInstance {
   // Unique ID for this specific instance in this game
   instanceId: string;
@@ -31,8 +42,12 @@ export interface CardInstance {
   // Modifications (Phase 1+)
   counters: Partial<Record<CounterType, number>>;
 
+  // Temporary modifications (pump spells, combat tricks)
+  temporaryModifications: TemporaryModification[];
+
   // Attachments (Phase 2+)
-  attachments: string[];  // Instance IDs of Auras/Equipment
+  attachments: string[];  // Instance IDs of Auras/Equipment attached to this
+  attachedTo?: string;    // Instance ID of permanent this is attached to (for Auras)
 
   // Combat state
   attacking?: boolean;
@@ -58,8 +73,80 @@ export function createCardInstance(
     summoningSick: zone === 'battlefield',
     damage: 0,
     counters: {},
+    temporaryModifications: [],
     attachments: [],
   };
+}
+
+/**
+ * Get effective power of a creature (base + counters + temporary mods)
+ */
+export function getEffectivePower(card: CardInstance, basePower: number): number {
+  let power = basePower;
+
+  // Add +1/+1 counters (each adds 1 power)
+  power += card.counters['+1/+1'] ?? 0;
+
+  // Subtract -1/-1 counters
+  power -= card.counters['-1/-1'] ?? 0;
+
+  // Add temporary modifications
+  for (const mod of card.temporaryModifications) {
+    power += mod.powerChange;
+  }
+
+  return power;
+}
+
+/**
+ * Get effective toughness of a creature (base + counters + temporary mods)
+ */
+export function getEffectiveToughness(card: CardInstance, baseToughness: number): number {
+  let toughness = baseToughness;
+
+  // Add +1/+1 counters (each adds 1 toughness)
+  toughness += card.counters['+1/+1'] ?? 0;
+
+  // Subtract -1/-1 counters
+  toughness -= card.counters['-1/-1'] ?? 0;
+
+  // Add temporary modifications
+  for (const mod of card.temporaryModifications) {
+    toughness += mod.toughnessChange;
+  }
+
+  return toughness;
+}
+
+/**
+ * Add a temporary modification to a card (until end of turn)
+ */
+export function addTemporaryModification(
+  card: CardInstance,
+  powerChange: number,
+  toughnessChange: number,
+  expiresAt: 'end_of_turn' | 'end_of_combat',
+  sourceId: string
+): void {
+  card.temporaryModifications.push({
+    id: `mod_${Date.now()}_${Math.random()}`,
+    powerChange,
+    toughnessChange,
+    expiresAt,
+    source: sourceId,
+  });
+}
+
+/**
+ * Clear temporary modifications that expire at a given time
+ */
+export function clearTemporaryModifications(
+  card: CardInstance,
+  expiresAt: 'end_of_turn' | 'end_of_combat'
+): void {
+  card.temporaryModifications = card.temporaryModifications.filter(
+    mod => mod.expiresAt !== expiresAt
+  );
 }
 
 /**

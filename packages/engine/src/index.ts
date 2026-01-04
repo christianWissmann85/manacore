@@ -31,8 +31,13 @@ export {
   createEmptyManaPool,
 } from './state/PlayerState';
 
+export type { TemporaryModification } from './state/CardInstance';
 export {
   createCardInstance,
+  getEffectivePower,
+  getEffectiveToughness,
+  addTemporaryModification,
+  clearTemporaryModifications,
 } from './state/CardInstance';
 
 // Card exports
@@ -44,6 +49,7 @@ export {
   isInstant,
   isSorcery,
   isEnchantment,
+  isAura,
   isArtifact,
   hasKeyword,
   hasFlying,
@@ -116,6 +122,16 @@ export {
   createSimpleDeck,
   initializeGame,
   createVanillaDeck,
+  // Week 11: Mono-colored test decks
+  createWhiteDeck,
+  createBlueDeck,
+  createBlackDeck,
+  createRedDeck,
+  createGreenDeck,
+  getRandomTestDeck,
+  getTestDeck,
+  TEST_DECKS,
+  type DeckColor,
 } from './utils/gameInit';
 
 // Mana utilities

@@ -8,7 +8,8 @@ import type { GameState } from '../state/GameState';
 import type { Action, PlayLandAction, CastSpellAction, DeclareAttackersAction, DeclareBlockersAction, ActivateAbilityAction } from './Action';
 import { getPlayer, findCard } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
-import { isLand, isCreature, isInstant, isSorcery, hasFlying, hasReach } from '../cards/CardTemplate';
+import { isLand, isCreature, isInstant, isSorcery, hasFlying, hasReach, isAura } from '../cards/CardTemplate';
+import type { CardInstance } from '../state/CardInstance';
 import { getActivatedAbilities } from '../rules/activatedAbilities';
 import type { PlayerId } from '../state/Zone';
 import type { ManaPool } from '../state/PlayerState';
@@ -18,6 +19,36 @@ import {
   validateTargets,
   getRequiredTargetCount,
 } from '../rules/targeting';
+
+/**
+ * Check if a creature is prevented from attacking or blocking by an aura
+ * (e.g., Pacifism: "Enchanted creature can't attack or block")
+ */
+function isPreventedFromCombat(state: GameState, creature: CardInstance): boolean {
+  if (!creature.attachments || creature.attachments.length === 0) {
+    return false;
+  }
+
+  // Check each attachment
+  for (const attachmentId of creature.attachments) {
+    // Find the aura on any player's battlefield
+    for (const playerId of ['player', 'opponent'] as const) {
+      const aura = state.players[playerId].battlefield.find(c => c.instanceId === attachmentId);
+      if (aura) {
+        const auraTemplate = CardLoader.getById(aura.scryfallId);
+        if (auraTemplate?.oracle_text) {
+          const text = auraTemplate.oracle_text.toLowerCase();
+          // Check for "can't attack" or "can't attack or block"
+          if (text.includes("can't attack") || text.includes("cannot attack")) {
+            return true;
+          }
+        }
+      }
+    }
+  }
+
+  return false;
+}
 
 /**
  * Validate any action
@@ -239,6 +270,11 @@ function validateDeclareAttackers(state: GameState, action: DeclareAttackersActi
       errors.push(`${attackerId} has summoning sickness`);
     }
 
+    // Check if creature is prevented from attacking by an aura (e.g., Pacifism)
+    if (isPreventedFromCombat(state, attacker)) {
+      errors.push(`${attackerId} can't attack`);
+    }
+
     // Check if it's a creature
     const template = CardLoader.getById(attacker.scryfallId);
     if (template && !isCreature(template)) {
@@ -290,6 +326,11 @@ function validateDeclareBlockers(state: GameState, action: DeclareBlockersAction
 
     if (blocker.tapped) {
       errors.push(`Blocker ${block.blockerId} is tapped`);
+    }
+
+    // Check if creature is prevented from blocking by an aura (e.g., Pacifism)
+    if (isPreventedFromCombat(state, blocker)) {
+      errors.push(`Blocker ${block.blockerId} can't block`);
     }
 
     const blockerTemplate = CardLoader.getById(blocker.scryfallId);

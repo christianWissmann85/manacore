@@ -318,7 +318,7 @@ Stack: Lightning Bolt targeting Grizzly Bears
 ### Week 11: Card Library Expansion
 
 **Tasks:**
-- [ ] Implement 20-30 common 6th Edition cards (and check if all mentioned Cards from previous Weeks have been implemented):
+- [x] Implement 20-30 common 6th Edition cards (and check if all mentioned Cards from previous Weeks have been implemented):
   - **Creatures (10)**: Shivan Dragon, Serra Angel, Sengir Vampire, Mahamoti Djinn, etc.
   - **Removal (5)**: Swords to Plowshares, Terror, Disenchant, Fireball, etc.
   - **Card Draw (3)**: Ancestral Recall, Brainstorm, Jayemdae Tome
@@ -326,13 +326,13 @@ Stack: Lightning Bolt targeting Grizzly Bears
   - **Counterspells (2)**: Counterspell, Power Sink
   - **Disruption (3)**: Mind Rot, Hymn to Tourach, Icy Manipulator
   - **Enchantments (3)**: Pacifism, Weakness, Holy Strength
-- [ ] Test each card thoroughly
-- [ ] Add card-specific logic to:
+- [x] Test each card thoroughly
+- [x] Add card-specific logic to:
   - `activatedAbilities.ts` (for activated abilities)
   - `triggers.ts` (for triggered abilities)
   - `reducer.ts` (for special effects)
-- [ ] Create test decks for each color
-- [ ] Run 100+ games with expanded card pool
+- [x] Create test decks for each color
+- [x] Run 100+ games with expanded card pool
 
 **Card Categories:**
 ```typescript

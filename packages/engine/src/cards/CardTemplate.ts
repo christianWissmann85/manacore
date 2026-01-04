@@ -61,6 +61,13 @@ export function isEnchantment(card: CardTemplate): boolean {
 }
 
 /**
+ * Check if a card is an Aura (enchantment that attaches to something)
+ */
+export function isAura(card: CardTemplate): boolean {
+  return card.type_line.includes('Aura');
+}
+
+/**
  * Check if a card is an artifact
  */
 export function isArtifact(card: CardTemplate): boolean {

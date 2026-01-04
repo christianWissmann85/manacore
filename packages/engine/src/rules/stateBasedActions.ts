@@ -11,8 +11,10 @@
  */
 
 import type { GameState } from '../state/GameState';
+import type { CardInstance } from '../state/CardInstance';
+import { getEffectiveToughness } from '../state/CardInstance';
 import { CardLoader } from '../cards/CardLoader';
-import { isCreature } from '../cards/CardTemplate';
+import { isCreature, isAura } from '../cards/CardTemplate';
 
 /**
  * Check and perform all state-based actions
@@ -26,6 +28,9 @@ export function checkStateBasedActions(state: GameState): boolean {
 
   // Check for creature death
   actionsPerformed = checkCreatureDeath(state) || actionsPerformed;
+
+  // Check for unattached auras
+  actionsPerformed = checkUnattachedAuras(state) || actionsPerformed;
 
   return actionsPerformed;
 }
@@ -69,11 +74,12 @@ function checkCreatureDeath(state: GameState): boolean {
       // Only check creature death for actual creatures
       if (!isCreature(template)) continue;
 
-      const toughness = parseInt(template.toughness || '0', 10);
+      const baseToughness = parseInt(template.toughness || '0', 10);
+      const effectiveToughness = getEffectiveToughness(creature, baseToughness);
 
       // SBA: Creature dies if damage >= toughness
       // SBA: Creature dies if toughness <= 0 (from effects)
-      if (creature.damage >= toughness || toughness <= 0) {
+      if (creature.damage >= effectiveToughness || effectiveToughness <= 0) {
         // Remove from battlefield
         player.battlefield.splice(i, 1);
 
@@ -94,4 +100,70 @@ function checkCreatureDeath(state: GameState): boolean {
   }
 
   return actionsPerformed;
+}
+
+/**
+ * Check for auras that are no longer attached to a valid permanent
+ * Returns true if any auras went to graveyard
+ */
+function checkUnattachedAuras(state: GameState): boolean {
+  let actionsPerformed = false;
+
+  for (const playerId of ['player', 'opponent'] as const) {
+    const player = state.players[playerId];
+
+    // Check each permanent on battlefield (iterate backwards for safe removal)
+    for (let i = player.battlefield.length - 1; i >= 0; i--) {
+      const permanent = player.battlefield[i]!;
+      const template = CardLoader.getById(permanent.scryfallId);
+
+      if (!template) continue;
+
+      // Only check auras
+      if (!isAura(template)) continue;
+
+      // Check if aura is attached to something that's still on the battlefield
+      const attachedToId = permanent.attachedTo;
+      if (!attachedToId) {
+        // Aura has no attachment - shouldn't happen, but handle it
+        moveAuraToGraveyard(player, permanent, i);
+        actionsPerformed = true;
+        continue;
+      }
+
+      // Find the enchanted permanent
+      let enchantedCreatureExists = false;
+      for (const pid of ['player', 'opponent'] as const) {
+        const battlefieldHasIt = state.players[pid].battlefield.some(
+          c => c.instanceId === attachedToId
+        );
+        if (battlefieldHasIt) {
+          enchantedCreatureExists = true;
+          break;
+        }
+      }
+
+      if (!enchantedCreatureExists) {
+        // Enchanted creature is gone - aura goes to graveyard
+        moveAuraToGraveyard(player, permanent, i);
+        actionsPerformed = true;
+      }
+    }
+  }
+
+  return actionsPerformed;
+}
+
+/**
+ * Helper to move an aura to graveyard
+ */
+function moveAuraToGraveyard(
+  player: { battlefield: CardInstance[]; graveyard: CardInstance[] },
+  aura: CardInstance,
+  index: number
+): void {
+  player.battlefield.splice(index, 1);
+  aura.zone = 'graveyard';
+  aura.attachedTo = undefined;
+  player.graveyard.push(aura);
 }

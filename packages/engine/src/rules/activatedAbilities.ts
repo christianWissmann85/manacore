@@ -110,6 +110,42 @@ export function getActivatedAbilities(card: CardInstance, _state: GameState): Ac
       abilities.push(createCreatureManaAbility(card, ['W', 'U', 'B', 'R', 'G']));
       break;
 
+    case 'Anaba Shaman':
+      // "{R}, {T}: Anaba Shaman deals 1 damage to any target"
+      abilities.push({
+        id: `${card.instanceId}_tap_damage`,
+        name: '{R}, Tap: Deal 1 damage to any target',
+        cost: { tap: true, mana: '{R}' },
+        effect: { type: 'DAMAGE', amount: 1 },
+        isManaAbility: false,
+        targetRequirements: [{
+          id: 'target_0',
+          count: 1,
+          targetType: 'any',
+          zone: 'battlefield',
+          restrictions: [],
+          optional: false,
+          description: 'any target',
+        }],
+        canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+          const source = state.players[controller].battlefield.find(c => c.instanceId === sourceId);
+          if (!source) return false;
+          if (source.tapped) return false;
+          if (source.summoningSick) return false;
+
+          // Check if player can pay {R}
+          const player = state.players[controller];
+          const totalRedMana = player.manaPool.red +
+            player.battlefield.filter(p => {
+              if (p.tapped) return false;
+              const t = CardLoader.getById(p.scryfallId);
+              return t && (t.name === 'Mountain' || getLandManaColors(t.name).includes('R'));
+            }).length;
+          return totalRedMana >= 1;
+        },
+      });
+      break;
+
     // Add more cards with activated abilities here
   }
 

@@ -10,14 +10,16 @@
 
 import type { GameState, StackObject } from '../state/GameState';
 import type { CardInstance } from '../state/CardInstance';
+import { addTemporaryModification, getEffectiveToughness } from '../state/CardInstance';
 import type { PlayerId } from '../state/Zone';
 import { getPlayer, findCard } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
-import { isInstant, isSorcery, isCreature, isEnchantment } from '../cards/CardTemplate';
+import { isInstant, isSorcery, isCreature, isEnchantment, isAura } from '../cards/CardTemplate';
 import {
   parseTargetRequirements,
   shouldSpellFizzle,
 } from './targeting';
+import { registerTrigger } from './triggers';
 
 /**
  * Add a spell to the stack
@@ -130,11 +132,46 @@ function resolveSpell(state: GameState, stackObj: StackObject): void {
     // Instants and sorceries go to graveyard
     card.zone = 'graveyard';
     controller.graveyard.push(card);
+  } else if (isAura(template)) {
+    // Auras attach to their target
+    const targetId = stackObj.targets[0];
+    if (targetId) {
+      const targetCreature = findPermanentByInstanceId(state, targetId);
+      if (targetCreature) {
+        // Attach aura to target
+        card.zone = 'battlefield';
+        card.attachedTo = targetId;
+        targetCreature.attachments.push(card.instanceId);
+        controller.battlefield.push(card);
+
+        // Register ETB trigger
+        registerTrigger(state, {
+          type: 'ENTERS_BATTLEFIELD',
+          cardId: card.instanceId,
+          controller: stackObj.controller,
+        });
+      } else {
+        // Target no longer valid - aura goes to graveyard
+        card.zone = 'graveyard';
+        controller.graveyard.push(card);
+      }
+    } else {
+      // No target - aura goes to graveyard (shouldn't happen with valid cast)
+      card.zone = 'graveyard';
+      controller.graveyard.push(card);
+    }
   } else {
-    // Permanents (creatures, enchantments, etc.) go to battlefield
+    // Other permanents (creatures, etc.) go to battlefield
     card.zone = 'battlefield';
     card.summoningSick = true;
     controller.battlefield.push(card);
+
+    // Register ETB trigger
+    registerTrigger(state, {
+      type: 'ENTERS_BATTLEFIELD',
+      cardId: card.instanceId,
+      controller: stackObj.controller,
+    });
   }
 }
 
@@ -142,7 +179,7 @@ function resolveSpell(state: GameState, stackObj: StackObject): void {
  * Spell effect types parsed from oracle text
  */
 interface SpellEffect {
-  type: 'damage' | 'destroy' | 'counter' | 'return_to_hand' | 'pump' | 'draw' | 'discard';
+  type: 'damage' | 'destroy' | 'counter' | 'return_to_hand' | 'pump' | 'draw' | 'discard' | 'exile_with_lifegain' | 'targeted_discard';
   amount?: number;
   powerBoost?: number;
   toughnessBoost?: number;
@@ -200,6 +237,16 @@ function parseSpellEffect(oracleText: string): SpellEffect | null {
     return { type: 'discard', amount };
   }
 
+  // Exile with life gain: "exile ... gain life equal to its toughness"
+  if (text.includes('exile') && text.includes('gain life') && text.includes('toughness')) {
+    return { type: 'exile_with_lifegain' };
+  }
+
+  // Targeted discard: "reveals their hand. You choose a card from it. That player discards that card"
+  if (text.includes('reveals') && text.includes('choose a card') && text.includes('discards that card')) {
+    return { type: 'targeted_discard' };
+  }
+
   return null;
 }
 
@@ -250,8 +297,17 @@ function applySpellEffects(state: GameState, stackObj: StackObject): void {
       }
 
       case 'pump': {
-        // TODO: Track temporary power/toughness modifiers
-        // For now, we'll skip this as it requires end-of-turn tracking
+        // Apply temporary power/toughness modification
+        const targetCard = findPermanentByInstanceId(state, targetId);
+        if (targetCard && effect.powerBoost !== undefined && effect.toughnessBoost !== undefined) {
+          addTemporaryModification(
+            targetCard,
+            effect.powerBoost,
+            effect.toughnessBoost,
+            'end_of_turn',
+            stackObj.card.instanceId
+          );
+        }
         break;
       }
 
@@ -266,6 +322,20 @@ function applySpellEffects(state: GameState, stackObj: StackObject): void {
         if (targetId === 'player' || targetId === 'opponent') {
           // Random discard for now
           discardCards(state, targetId, effect.amount || 1);
+        }
+        break;
+      }
+
+      case 'exile_with_lifegain': {
+        // Exile creature and gain life equal to its toughness
+        exileWithLifegain(state, targetId, stackObj.controller);
+        break;
+      }
+
+      case 'targeted_discard': {
+        // Target opponent discards a card (random for now)
+        if (targetId === 'player' || targetId === 'opponent') {
+          discardCards(state, targetId, 1);
         }
         break;
       }
@@ -338,6 +408,33 @@ function returnToHand(state: GameState, targetId: string): void {
 }
 
 /**
+ * Exile a creature and gain life equal to its toughness
+ */
+function exileWithLifegain(state: GameState, targetId: string, controller: PlayerId): void {
+  for (const playerId of ['player', 'opponent'] as const) {
+    const player = state.players[playerId];
+    const index = player.battlefield.findIndex(c => c.instanceId === targetId);
+
+    if (index !== -1) {
+      const creature = player.battlefield[index]!;
+      const template = CardLoader.getById(creature.scryfallId);
+
+      // Get toughness for life gain
+      const toughness = template?.toughness ? parseInt(template.toughness, 10) : 0;
+
+      // Exile the creature (for now, move to a new 'exile' zone represented by removing entirely)
+      player.battlefield.splice(index, 1);
+      creature.zone = 'exile' as 'graveyard'; // Note: exile zone not fully implemented, treating as special removal
+
+      // Gain life equal to toughness
+      state.players[controller].life += toughness;
+
+      return;
+    }
+  }
+}
+
+/**
  * Draw cards for a player
  */
 function drawCards(state: GameState, playerId: PlayerId, count: number): void {
@@ -393,11 +490,12 @@ function applyDamage(state: GameState, targetId: string, damage: number): void {
     if (creature) {
       creature.damage += damage;
 
-      // Check if creature should die
+      // Check if creature should die (using effective toughness for pump effects)
       const template = CardLoader.getById(creature.scryfallId);
       if (template?.toughness) {
-        const toughness = parseInt(template.toughness, 10);
-        if (creature.damage >= toughness) {
+        const baseToughness = parseInt(template.toughness, 10);
+        const effectiveToughness = getEffectiveToughness(creature, baseToughness);
+        if (creature.damage >= effectiveToughness) {
           // Creature dies
           const index = player.battlefield.indexOf(creature);
           player.battlefield.splice(index, 1);
@@ -408,6 +506,17 @@ function applyDamage(state: GameState, targetId: string, damage: number): void {
       break;
     }
   }
+}
+
+/**
+ * Find a permanent on any player's battlefield by instance ID
+ */
+function findPermanentByInstanceId(state: GameState, instanceId: string): CardInstance | null {
+  for (const playerId of ['player', 'opponent'] as const) {
+    const card = state.players[playerId].battlefield.find(c => c.instanceId === instanceId);
+    if (card) return card;
+  }
+  return null;
 }
 
 /**

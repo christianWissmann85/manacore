@@ -11,10 +11,12 @@
 
 import type { GameState } from '../state/GameState';
 import type { CardInstance } from '../state/CardInstance';
+import { getEffectivePower, getEffectiveToughness } from '../state/CardInstance';
 import type { CardTemplate } from '../cards/CardTemplate';
 import { getPlayer } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
 import { hasFirstStrike, hasDoubleStrike, hasTrample } from '../cards/CardTemplate';
+import { registerTrigger } from './triggers';
 
 /**
  * Resolve all combat damage for the current combat
@@ -51,7 +53,8 @@ function assignCombatDamage(state: GameState, onlyFirstStrike: boolean): void {
     if (onlyFirstStrike && !hasFirst && !hasDouble) continue;
     if (!onlyFirstStrike && hasFirst && !hasDouble) continue; // Already dealt damage
 
-    const attackerPower = parseInt(attackerTemplate.power || '0', 10);
+    const basePower = parseInt(attackerTemplate.power || '0', 10);
+    const attackerPower = getEffectivePower(attacker, basePower);
 
     // Check if blocked
     if (attacker.blockedBy && attacker.blockedBy.length > 0) {
@@ -60,6 +63,14 @@ function assignCombatDamage(state: GameState, onlyFirstStrike: boolean): void {
     } else {
       // Unblocked - damage goes to defending player
       defendingPlayer.life -= attackerPower;
+
+      // Register damage trigger for combat damage to player
+      registerTrigger(state, {
+        type: 'DEALS_DAMAGE',
+        sourceId: attacker.instanceId,
+        targetId: defendingPlayerId,
+        amount: attackerPower,
+      });
 
       // Check for game over
       if (defendingPlayer.life <= 0) {
@@ -83,7 +94,8 @@ function assignCombatDamage(state: GameState, onlyFirstStrike: boolean): void {
     if (onlyFirstStrike && !hasFirst && !hasDouble) continue;
     if (!onlyFirstStrike && hasFirst && !hasDouble) continue;
 
-    const blockerPower = parseInt(blockerTemplate.power || '0', 10);
+    const basePower = parseInt(blockerTemplate.power || '0', 10);
+    const blockerPower = getEffectivePower(blocker, basePower);
 
     // Find the attacker being blocked
     const attacker = activePlayer.battlefield.find(c => c.instanceId === blocker.blocking);
@@ -116,7 +128,8 @@ function assignDamageToBlockers(
     const blockerTemplate = CardLoader.getById(blocker.scryfallId);
     if (!blockerTemplate) continue;
 
-    const blockerToughness = parseInt(blockerTemplate.toughness || '0', 10);
+    const baseToughness = parseInt(blockerTemplate.toughness || '0', 10);
+    const blockerToughness = getEffectiveToughness(blocker, baseToughness);
     const lethalDamage = Math.max(0, blockerToughness - blocker.damage);
 
     // Assign at least lethal damage to this blocker
@@ -152,10 +165,11 @@ function checkCreatureDeath(state: GameState): void {
       const template = CardLoader.getById(creature.scryfallId);
 
       if (template) {
-        const toughness = parseInt(template.toughness || '0', 10);
+        const baseToughness = parseInt(template.toughness || '0', 10);
+        const effectiveToughness = getEffectiveToughness(creature, baseToughness);
 
         // Creature dies if damage >= toughness
-        if (creature.damage >= toughness) {
+        if (creature.damage >= effectiveToughness) {
           // Remove from battlefield
           player.battlefield.splice(i, 1);
 

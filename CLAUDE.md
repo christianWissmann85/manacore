@@ -43,7 +43,7 @@ ManaCore is a digital implementation of Magic: The Gathering, designed from the 
 - ✅ RandomBot AI for testing
 - ⚙️ Advanced AI agents (in progress)
 - 🔜 Web client with React
-- 🔜 Mana system and spell costs
+- ✅ Mana system and spell costs
 - 🔜 Full card abilities and interactions
 
 ---
@@ -237,7 +237,7 @@ manacore/
 - Week 7: **State-Based Actions & Triggers** ✅ (SBAs, ETB triggers, death triggers, activated abilities)
 - Week 8: **Basic Web UI** 🔜 (Vite + PixiJS, card rendering, drag-and-drop)
 - Week 9: **Mana System** ✅ (mana pools, paying costs, mana abilities)
-- Week 10: **Targeting System** ⚠️ **CRITICAL** (legal targets, target validation)
+- Week 10: **Targeting System** ✅ (legal targets, target validation)
 - Week 11: **Card Library Expansion** (implement 20-30 common 6th Edition cards)
 
 **Deliverables**:
@@ -252,7 +252,7 @@ manacore/
 - 🔜 Playable web game with card images and drag-and-drop
 - ✅ Complete mana system with costs and payment
 - ✅ Targeting system for spells and abilities
-- 🔜 **20-30 working cards (creatures, removal, draw, counterspells)**
+- ✅ 20-30 working cards (creatures, removal, draw, counterspells)
 
 ### 🔜 Phase 2: Hidden Information & Smart AI (Weeks 12-17)
 
@@ -846,32 +846,6 @@ bun tsc --noEmit
 
 ---
 
-## Additional Resources
-
-### Magic Rules Resources
-
-- [Comprehensive Rules](https://magic.wizards.com/en/rules)
-- [CR Search Tool](https://yawgatog.com/resources/magic-rules/)
-- [Judge Wiki](https://mtg.fandom.com/wiki/Magic_Judge_Wiki)
-
-### Scryfall API
-
-- [API Documentation](https://scryfall.com/docs/api)
-- [Card Objects](https://scryfall.com/docs/api/cards)
-- [Set Codes](https://scryfall.com/sets)
-
-### TypeScript
-
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html)
-- [Type Challenges](https://github.com/type-challenges/type-challenges)
-
-### Bun
-
-- [Bun Documentation](https://bun.sh/docs)
-- [Bun API Reference](https://bun.sh/docs/api)
-
----
-
 ## Quick Reference
 
 ### Commands Cheat Sheet
@@ -912,28 +886,5 @@ bun build src/index.ts                  # Build a file
 | Card data | `packages/engine/data/cards/6ed.json` |
 | Tests | `packages/engine/tests/*.test.ts` |
 | CLI display | `packages/cli-client/src/display/board.ts` |
-
----
-
-## Version History
-
-- **v0.0.1** 
-  - Foundation: Monorepo, card loader, basic engine, CLI, RandomBot
-  - The Stack: LIFO resolution, priority system, instant vs sorcery timing
-  - Combat: Blockers, Flying, First Strike, Trample, Vigilance, Reach
-  - Abilities: State-based actions, triggered abilities, activated abilities
-  - CLI: Display of keywords and activated abilities
-  - **Next**:
-    - Week 11 - Card Library Expansion (20-30 cards)
-    - Week 8 - Basic Web UI (Vite + PixiJS)
-
----
-
-## Contact & Support
-
-For questions, issues, or contributions:
-- Open an issue on GitHub
-- Review existing code for patterns
-- Check tests for usage examples
 
 **Happy coding! 🎴✨**

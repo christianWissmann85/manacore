@@ -3,13 +3,19 @@
  */
 
 import type { Bot } from '@manacore/ai';
-import type { PlayerId } from '@manacore/engine';
+import type { PlayerId, DeckColor } from '@manacore/engine';
 import {
   initializeGame,
-  createVanillaDeck,
+  getTestDeck,
   applyAction,
   getLegalActions,
 } from '@manacore/engine';
+
+const DECK_COLORS: DeckColor[] = ['white', 'blue', 'black', 'red', 'green'];
+
+function getRandomDeckColor(): DeckColor {
+  return DECK_COLORS[Math.floor(Math.random() * DECK_COLORS.length)]!;
+}
 
 export interface SimulationOptions {
   gameCount: number;
@@ -18,14 +24,43 @@ export interface SimulationOptions {
   seed?: number;
 }
 
+export interface DeckStats {
+  wins: number;
+  losses: number;
+  draws: number;
+  games: number;
+}
+
+export interface MatchupStats {
+  wins: number;
+  losses: number;
+  draws: number;
+}
+
 export interface SimulationResults {
   totalGames: number;
   playerWins: number;
   opponentWins: number;
   draws: number;
   averageTurns: number;
+  minTurns: number;
+  maxTurns: number;
   errors: number;
   gamesCompleted: number;
+  deckStats: Record<DeckColor, DeckStats>;
+  matchups: Record<string, MatchupStats>;
+}
+
+function createEmptyDeckStats(): DeckStats {
+  return { wins: 0, losses: 0, draws: 0, games: 0 };
+}
+
+function createEmptyMatchupStats(): MatchupStats {
+  return { wins: 0, losses: 0, draws: 0 };
+}
+
+function getMatchupKey(color1: DeckColor, color2: DeckColor): string {
+  return `${color1} vs ${color2}`;
 }
 
 /**
@@ -36,14 +71,28 @@ export async function runSimulation(
   opponentBot: Bot,
   options: SimulationOptions
 ): Promise<SimulationResults> {
+  const deckStats: Record<DeckColor, DeckStats> = {
+    white: createEmptyDeckStats(),
+    blue: createEmptyDeckStats(),
+    black: createEmptyDeckStats(),
+    red: createEmptyDeckStats(),
+    green: createEmptyDeckStats(),
+  };
+
+  const matchups: Record<string, MatchupStats> = {};
+
   const results: SimulationResults = {
     totalGames: options.gameCount,
     playerWins: 0,
     opponentWins: 0,
     draws: 0,
     averageTurns: 0,
+    minTurns: Infinity,
+    maxTurns: 0,
     errors: 0,
     gamesCompleted: 0,
+    deckStats,
+    matchups,
   };
 
   let totalTurns = 0;
@@ -65,13 +114,36 @@ export async function runSimulation(
 
       results.gamesCompleted++;
       totalTurns += gameResult.turns;
+      results.minTurns = Math.min(results.minTurns, gameResult.turns);
+      results.maxTurns = Math.max(results.maxTurns, gameResult.turns);
+
+      const { playerDeck, opponentDeck } = gameResult;
+      const matchupKey = getMatchupKey(playerDeck, opponentDeck);
+
+      // Initialize matchup if not exists
+      if (!matchups[matchupKey]) {
+        matchups[matchupKey] = createEmptyMatchupStats();
+      }
+
+      // Track deck games played
+      deckStats[playerDeck].games++;
+      deckStats[opponentDeck].games++;
 
       if (gameResult.winner === 'player') {
         results.playerWins++;
+        deckStats[playerDeck].wins++;
+        deckStats[opponentDeck].losses++;
+        matchups[matchupKey].wins++;
       } else if (gameResult.winner === 'opponent') {
         results.opponentWins++;
+        deckStats[playerDeck].losses++;
+        deckStats[opponentDeck].wins++;
+        matchups[matchupKey].losses++;
       } else {
         results.draws++;
+        deckStats[playerDeck].draws++;
+        deckStats[opponentDeck].draws++;
+        matchups[matchupKey].draws++;
       }
     } catch (error) {
       results.errors++;
@@ -85,7 +157,16 @@ export async function runSimulation(
     ? totalTurns / results.gamesCompleted
     : 0;
 
+  if (results.minTurns === Infinity) results.minTurns = 0;
+
   return results;
+}
+
+interface GameResult {
+  winner: PlayerId | null;
+  turns: number;
+  playerDeck: DeckColor;
+  opponentDeck: DeckColor;
 }
 
 /**
@@ -95,10 +176,12 @@ async function runSingleGame(
   playerBot: Bot,
   opponentBot: Bot,
   options: { maxTurns: number; verbose: boolean; seed?: number }
-): Promise<{ winner: PlayerId | null; turns: number }> {
-  // Create decks
-  const playerDeck = createVanillaDeck();
-  const opponentDeck = createVanillaDeck();
+): Promise<GameResult> {
+  // Create decks - each bot gets a random test deck
+  const playerDeckColor = getRandomDeckColor();
+  const opponentDeckColor = getRandomDeckColor();
+  const playerDeck = getTestDeck(playerDeckColor);
+  const opponentDeck = getTestDeck(opponentDeckColor);
 
   // Initialize game
   let state = initializeGame(playerDeck, opponentDeck, options.seed);
@@ -165,27 +248,80 @@ async function runSingleGame(
     // else it's a draw
   }
 
-  return { winner, turns: turnCount };
+  return {
+    winner,
+    turns: turnCount,
+    playerDeck: playerDeckColor,
+    opponentDeck: opponentDeckColor,
+  };
 }
 
 /**
  * Print simulation results
  */
 export function printResults(results: SimulationResults, playerName: string, opponentName: string): void {
-  console.log('\n' + '═'.repeat(80));
+  console.log('\n' + '═'.repeat(60));
   console.log('  SIMULATION RESULTS');
-  console.log('═'.repeat(80));
-  console.log(`Total Games:      ${results.totalGames}`);
-  console.log(`Completed:        ${results.gamesCompleted}`);
-  console.log(`Errors:           ${results.errors}`);
+  console.log('═'.repeat(60));
+  console.log(`Games: ${results.gamesCompleted}/${results.totalGames} | Errors: ${results.errors}`);
+  console.log(`Turns: ${results.minTurns}-${results.maxTurns} (avg ${results.averageTurns.toFixed(1)})`);
   console.log('');
-  console.log(`${playerName} wins:    ${results.playerWins} (${percentage(results.playerWins, results.gamesCompleted)}%)`);
-  console.log(`${opponentName} wins: ${results.opponentWins} (${percentage(results.opponentWins, results.gamesCompleted)}%)`);
-  console.log(`Draws:            ${results.draws} (${percentage(results.draws, results.gamesCompleted)}%)`);
+
+  // Overall wins
+  console.log('─'.repeat(60));
+  console.log('  OVERALL');
+  console.log('─'.repeat(60));
+  console.log(`P1 wins: ${results.playerWins} (${pct(results.playerWins, results.gamesCompleted)}) | P2 wins: ${results.opponentWins} (${pct(results.opponentWins, results.gamesCompleted)}) | Draws: ${results.draws} (${pct(results.draws, results.gamesCompleted)})`);
+
+  // Deck performance
   console.log('');
-  console.log(`Average Turns:    ${results.averageTurns.toFixed(1)}`);
-  console.log('═'.repeat(80));
-  console.log('');
+  console.log('─'.repeat(60));
+  console.log('  DECK PERFORMANCE');
+  console.log('─'.repeat(60));
+
+  const deckOrder: DeckColor[] = ['white', 'blue', 'black', 'red', 'green'];
+  const colorEmoji: Record<DeckColor, string> = {
+    white: '⬜', blue: '🟦', black: '⬛', red: '🟥', green: '🟩'
+  };
+
+  // Sort by win rate
+  const sortedDecks = deckOrder
+    .filter(color => results.deckStats[color].games > 0)
+    .sort((a, b) => {
+      const aRate = results.deckStats[a].wins / results.deckStats[a].games;
+      const bRate = results.deckStats[b].wins / results.deckStats[b].games;
+      return bRate - aRate;
+    });
+
+  for (const color of sortedDecks) {
+    const stats = results.deckStats[color];
+    const winRate = pct(stats.wins, stats.games);
+    const name = color.charAt(0).toUpperCase() + color.slice(1);
+    console.log(`${colorEmoji[color]} ${name.padEnd(6)} ${stats.wins}W-${stats.losses}L-${stats.draws}D (${winRate}) [${stats.games} games]`);
+  }
+
+  // Top matchups (if enough data)
+  const matchupEntries = Object.entries(results.matchups)
+    .filter(([_, stats]) => stats.wins + stats.losses + stats.draws >= 2)
+    .sort((a, b) => {
+      const aTotal = a[1].wins + a[1].losses + a[1].draws;
+      const bTotal = b[1].wins + b[1].losses + b[1].draws;
+      return bTotal - aTotal;
+    })
+    .slice(0, 5);
+
+  if (matchupEntries.length > 0) {
+    console.log('');
+    console.log('─'.repeat(60));
+    console.log('  TOP MATCHUPS (P1 perspective)');
+    console.log('─'.repeat(60));
+    for (const [matchup, stats] of matchupEntries) {
+      const total = stats.wins + stats.losses + stats.draws;
+      console.log(`${matchup}: ${stats.wins}W-${stats.losses}L-${stats.draws}D (${pct(stats.wins, total)}) [${total}x]`);
+    }
+  }
+
+  console.log('═'.repeat(60));
 
   if (results.errors > 0) {
     console.log(`⚠️  ${results.errors} games encountered errors`);
@@ -197,9 +333,9 @@ export function printResults(results: SimulationResults, playerName: string, opp
 }
 
 /**
- * Calculate percentage
+ * Calculate percentage with % suffix
  */
-function percentage(part: number, total: number): string {
-  if (total === 0) return '0.0';
-  return ((part / total) * 100).toFixed(1);
+function pct(part: number, total: number): string {
+  if (total === 0) return '0%';
+  return ((part / total) * 100).toFixed(0) + '%';
 }

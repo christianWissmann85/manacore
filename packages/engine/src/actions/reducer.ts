@@ -11,6 +11,7 @@ import { validateAction } from './validators';
 import { getPlayer } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
 import { hasVigilance } from '../cards/CardTemplate';
+import { clearTemporaryModifications } from '../state/CardInstance';
 import { pushToStack, resolveTopOfStack, canResolveStack, bothPlayersPassedPriority } from '../rules/stack';
 import { resolveCombatDamage, cleanupCombat } from '../rules/combat';
 import { checkStateBasedActions } from '../rules/stateBasedActions';
@@ -230,10 +231,14 @@ function applyDeclareBlockers(state: GameState, action: DeclareBlockersAction): 
  */
 function applyEndTurn(state: GameState, _action: EndTurnAction): void {
   const currentPlayer = getPlayer(state, state.activePlayer);
+  const opponent = getPlayer(state, state.activePlayer === 'player' ? 'opponent' : 'player');
 
   // Cleanup phase
   // 1. Remove damage from creatures
   for (const creature of currentPlayer.battlefield) {
+    creature.damage = 0;
+  }
+  for (const creature of opponent.battlefield) {
     creature.damage = 0;
   }
 
@@ -242,7 +247,13 @@ function applyEndTurn(state: GameState, _action: EndTurnAction): void {
     permanent.summoningSick = false;
   }
 
-  // 3. Clear "until end of turn" effects (Phase 1+)
+  // 3. Clear "until end of turn" effects for all permanents
+  for (const permanent of currentPlayer.battlefield) {
+    clearTemporaryModifications(permanent, 'end_of_turn');
+  }
+  for (const permanent of opponent.battlefield) {
+    clearTemporaryModifications(permanent, 'end_of_turn');
+  }
 
   // 4. Empty mana pools for both players
   state.players.player.manaPool = createEmptyManaPool();

@@ -112,3 +112,121 @@ export function createVanillaDeck(): CardTemplate[] {
     { name: 'Grizzly Bears', count: 40 },  // 2/2 for 1G - very aggressive
   ]);
 }
+
+// =============================================================================
+// MONO-COLORED TEST DECKS (Week 11)
+// =============================================================================
+
+/**
+ * White Test Deck
+ * Control/defensive strategy with removal and flying threats
+ */
+export function createWhiteDeck(): CardTemplate[] {
+  return createSimpleDeck([
+    // Lands (24)
+    { name: 'Plains', count: 24 },
+    // Creatures (20)
+    { name: 'Archangel', count: 20 },      // 5/5 Flying Vigilance - finisher
+    // Spells (16)
+    { name: 'Disenchant', count: 4 },      // Artifact/enchantment removal
+    { name: 'Pacifism', count: 4 },        // Creature removal (aura)
+    { name: 'Exile', count: 8 },           // Exile attacking creature + life gain
+  ]);
+}
+
+/**
+ * Blue Test Deck
+ * Control strategy with counterspells and flyers
+ */
+export function createBlueDeck(): CardTemplate[] {
+  return createSimpleDeck([
+    // Lands (24)
+    { name: 'Island', count: 24 },
+    // Creatures (20)
+    { name: 'Air Elemental', count: 10 },  // 4/4 Flying
+    { name: 'Fog Elemental', count: 10 },  // 4/4 Flying
+    // Spells (16)
+    { name: 'Counterspell', count: 8 },    // Counter target spell
+    { name: 'Unsummon', count: 8 },        // Bounce creature
+  ]);
+}
+
+/**
+ * Black Test Deck
+ * Discard and removal with evasive threats
+ */
+export function createBlackDeck(): CardTemplate[] {
+  return createSimpleDeck([
+    // Lands (24)
+    { name: 'Swamp', count: 24 },
+    // Creatures (20)
+    { name: 'Abyssal Specter', count: 10 }, // 2/3 Flying, damage -> discard
+    { name: 'Gravedigger', count: 10 },     // 2/2 ETB return creature
+    // Spells (16)
+    { name: 'Terror', count: 8 },           // Destroy nonblack nonartifact creature
+    { name: 'Coercion', count: 8 },         // Targeted discard
+  ]);
+}
+
+/**
+ * Red Test Deck
+ * Aggressive burn strategy with direct damage
+ */
+export function createRedDeck(): CardTemplate[] {
+  return createSimpleDeck([
+    // Lands (22)
+    { name: 'Mountain', count: 22 },
+    // Creatures (18)
+    { name: 'Balduvian Barbarians', count: 10 }, // 3/2 aggressive
+    { name: 'Anaba Shaman', count: 8 },          // 2/2 with tap for damage
+    // Spells (20)
+    { name: 'Lightning Blast', count: 10 },      // 4 damage
+    { name: 'Shock', count: 10 },                // 2 damage
+  ]);
+}
+
+/**
+ * Green Test Deck
+ * Aggressive creature strategy with mana acceleration
+ */
+export function createGreenDeck(): CardTemplate[] {
+  return createSimpleDeck([
+    // Lands (20)
+    { name: 'Forest', count: 20 },
+    // Creatures (32)
+    { name: 'Llanowar Elves', count: 8 },      // Mana acceleration
+    { name: 'Birds of Paradise', count: 8 },   // Mana acceleration (any color)
+    { name: 'Grizzly Bears', count: 16 },      // 2/2 for 1G
+    // Spells (8)
+    { name: 'Giant Growth', count: 8 },        // +3/+3 combat trick
+  ]);
+}
+
+/**
+ * All available test decks
+ */
+export type DeckColor = 'white' | 'blue' | 'black' | 'red' | 'green';
+
+export const TEST_DECKS: Record<DeckColor, () => CardTemplate[]> = {
+  white: createWhiteDeck,
+  blue: createBlueDeck,
+  black: createBlackDeck,
+  red: createRedDeck,
+  green: createGreenDeck,
+};
+
+/**
+ * Get a random test deck
+ */
+export function getRandomTestDeck(): CardTemplate[] {
+  const colors: DeckColor[] = ['white', 'blue', 'black', 'red', 'green'];
+  const randomColor = colors[Math.floor(Math.random() * colors.length)]!;
+  return TEST_DECKS[randomColor]();
+}
+
+/**
+ * Get a specific test deck by color
+ */
+export function getTestDeck(color: DeckColor): CardTemplate[] {
+  return TEST_DECKS[color]();
+}

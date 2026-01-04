@@ -104,7 +104,18 @@ export function parseTargetRequirements(oracleText: string): TargetRequirement[]
   if (!oracleText) return [];
 
   const requirements: TargetRequirement[] = [];
-  const text = oracleText.toLowerCase();
+
+  // Filter out triggered ability text - these have their own targeting
+  // Triggered abilities start with "When", "Whenever", or "At"
+  const sentences = oracleText.split(/[.\n]/);
+  const spellText = sentences
+    .filter(s => {
+      const trimmed = s.trim().toLowerCase();
+      return !trimmed.startsWith('when') && !trimmed.startsWith('at ');
+    })
+    .join('. ');
+
+  const text = spellText.toLowerCase();
   let requirementIndex = 0;
 
   // Pattern: "any target" (creature or player)
@@ -195,6 +206,22 @@ export function parseTargetRequirements(oracleText: string): TargetRequirement[]
       restrictions: [{ type: 'combat', status: 'attacking_or_blocking' }],
       optional: false,
       description: 'target attacking or blocking creature',
+    });
+  }
+
+  // Pattern: "target nonwhite attacking creature" (Exile)
+  else if (/target nonwhite attacking creature/.test(text)) {
+    requirements.push({
+      id: `target_${requirementIndex++}`,
+      count: 1,
+      targetType: 'creature',
+      zone: 'battlefield',
+      restrictions: [
+        { type: 'color', color: 'W', negated: true },
+        { type: 'combat', status: 'attacking' },
+      ],
+      optional: false,
+      description: 'target nonwhite attacking creature',
     });
   }
 

@@ -86,6 +86,52 @@ function getTriggersForCard(
       }
       break;
 
+    case 'Gravedigger':
+      // "When Gravedigger enters the battlefield, you may return target creature card from your graveyard to your hand."
+      if (event.type === 'ENTERS_BATTLEFIELD' && event.cardId === card.instanceId) {
+        triggers.push((state: GameState) => {
+          const player = state.players[card.controller];
+
+          // Find creature cards in graveyard
+          const creatureCards = player.graveyard.filter(c => {
+            const t = CardLoader.getById(c.scryfallId);
+            return t && t.type_line?.toLowerCase().includes('creature');
+          });
+
+          if (creatureCards.length > 0) {
+            // Return the first creature (in real game, player would choose target)
+            const creatureToReturn = creatureCards[0]!;
+            const index = player.graveyard.indexOf(creatureToReturn);
+            player.graveyard.splice(index, 1);
+
+            creatureToReturn.zone = 'hand';
+            creatureToReturn.damage = 0;
+            creatureToReturn.tapped = false;
+            creatureToReturn.summoningSick = false;
+            player.hand.push(creatureToReturn);
+          }
+        });
+      }
+      break;
+
+    case 'Abyssal Specter':
+      // "Whenever Abyssal Specter deals damage to a player, that player discards a card at random."
+      if (event.type === 'DEALS_DAMAGE' && event.sourceId === card.instanceId) {
+        triggers.push((state: GameState) => {
+          const targetPlayerId = event.targetId as 'player' | 'opponent';
+          const targetPlayer = state.players[targetPlayerId];
+
+          // Discard a random card
+          if (targetPlayer.hand.length > 0) {
+            const randomIndex = Math.floor(Math.random() * targetPlayer.hand.length);
+            const discardedCard = targetPlayer.hand.splice(randomIndex, 1)[0]!;
+            discardedCard.zone = 'graveyard';
+            targetPlayer.graveyard.push(discardedCard);
+          }
+        });
+      }
+      break;
+
     // Add more cards with triggers here
   }
 
