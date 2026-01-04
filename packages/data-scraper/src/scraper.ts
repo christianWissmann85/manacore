@@ -32,11 +32,11 @@ export class ScryfallScraper {
 
       const response = await fetch(url);
       if (!response.ok) {
-        const error: ScryfallError = await response.json();
+        const error = await response.json() as ScryfallError;
         throw new Error(`Scryfall API error: ${error.details}`);
       }
 
-      const data: ScryfallListResponse = await response.json();
+      const data = await response.json() as ScryfallListResponse;
       allCards.push(...data.data);
 
       console.log(`  ✓ Fetched ${data.data.length} cards (${allCards.length}/${data.total_cards} total)`);
@@ -63,7 +63,7 @@ export class ScryfallScraper {
       return [];
     }
 
-    const data: RulingsResponse = await response.json();
+    const data = await response.json() as RulingsResponse;
     await this.delay(this.delayMs);
     return data.data;
   }
