@@ -96,11 +96,11 @@ export const TUNED_COEFFICIENTS: EvaluationCoefficients = {
  * Aggressive weights - prioritize damage and board control
  */
 export const AGGRESSIVE_WEIGHTS: EvaluationWeights = {
-  life: 0.25,
-  board: 0.5,
-  cards: 0.05,
-  mana: 0.1,
-  tempo: 0.1,
+  life: 0.2933,
+  board: 0.4811,
+  cards: 0.0861,
+  mana: 0.0930,
+  tempo: 0.0465,
 };
 
 /**
