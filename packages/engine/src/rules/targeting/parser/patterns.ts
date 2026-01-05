@@ -425,6 +425,30 @@ export const TARGET_PATTERNS: TargetPattern[] = [
     handler: (match, idx) => createRequirement(idx, 'land', 'target land', {}),
   },
 
+  // "enchant creature" (Auras)
+  {
+    regex: /enchant creature/i,
+    priority: 60,
+    handler: (match, idx) => createRequirement(idx, 'creature', 'enchant creature', {}),
+  },
+
+  // "enchant wall" (Animate Wall)
+  {
+    regex: /enchant wall/i,
+    priority: 60,
+    handler: (match, idx) =>
+      createRequirement(idx, 'creature', 'enchant wall', {
+        restrictions: [{ type: 'subtype', subtype: 'Wall' }],
+      }),
+  },
+
+  // "enchant land" (Wild Growth)
+  {
+    regex: /enchant land/i,
+    priority: 60,
+    handler: (match, idx) => createRequirement(idx, 'land', 'enchant land', {}),
+  },
+
   // =========================================================================
   // GENERIC PATTERNS (Priority 50-59)
   // =========================================================================
