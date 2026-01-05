@@ -1,20 +1,23 @@
 # 6th Edition Card Implementation Status
 
-**Last Updated:** January 5, 2026 (Phase 1.5.6 - 300 CARD MILESTONE!)
+**Last Updated:** January 5, 2026 (Phase 1.5 Complete - ML Research Ready!)
 **Total Cards:** 335
 **Implemented:** 300 (~90%)
-**Deferred:** 35 (~6%)
+**Out of Scope:** 35 (~10%)
 
 ---
 
 ## Status Legend
 
-| Symbol | Meaning                                 |
-| ------ | --------------------------------------- |
-| ✅     | Complete - fully implemented and tested |
-| 🚧     | In Progress - partially implemented     |
-| ❌     | Not Started                             |
-| 🕐     | Deferred to Phase 1.6 (complex)         |
+| Symbol | Meaning                                         |
+| ------ | ----------------------------------------------- |
+| ✅     | Complete - fully implemented and tested         |
+| 🚧     | In Progress - partially implemented             |
+| ❌     | Not Started - simple card, could be added later |
+| ⛔     | Out of Scope - too complex for ML research      |
+
+> **Note:** Cards marked ⛔ require complex mechanics (extra turns, control change, etc.)
+> that are not essential for ML/AI research. These will NOT be implemented.
 
 ---
 
@@ -115,7 +118,7 @@
 | Primal Clay                  | ✅     | _/_ |                      | Choice: 3/3, 2/2 flying, or 1/6 wall      |
 | Wind Spirit                  | ✅     | 3/2 | Flying, Menace       | Menace evasion                            |
 | Razortooth Rats              | ✅     | 2/1 | Fear                 | Fear evasion                              |
-| Goblin Matron                | ✅     | 1/1 |                      | ETB: Search for Goblin                    |
+| Goblin Recruiter             | ⛔     | 1/1 |                      | ETB: Stack goblins (complex)              |
 | Balduvian Horde              | ✅     | 5/5 |                      | ETB: Discard or sacrifice                 |
 | Kjeldoran Dead               | ✅     | 3/1 |                      | {B}: Regenerate, ETB: Sac creature        |
 | Anaba Bodyguard              | ✅     | 2/3 | First Strike         | Keywords only                             |
@@ -226,14 +229,14 @@
 | Warrior's Honor   | ✅     | {2}{W}    | Your creatures +1/+1                | Week 1.5.2 |
 | Worldly Tutor     | ✅     | {G}       | Search for creature                 | Week 1.5.2 |
 
-### Deferred to Phase 1.6
+### Out of Scope (Complex Mechanics)
 
 | Card          | Status | Cost      | Effect                         | Reason             |
 | ------------- | ------ | --------- | ------------------------------ | ------------------ |
-| Deflection    | 🕐     | {3}{U}    | Change target of spell         | Target redirection |
-| Desertion     | 🕐     | {3}{U}{U} | Counter spell, steal permanent | Control change     |
-| Final Fortune | 🕐     | {R}{R}    | Extra turn, then lose          | Extra turns        |
-| Flash         | 🕐     | {1}{U}    | Flash in creature from hand    | Flash mechanic     |
+| Deflection    | ⛔     | {3}{U}    | Change target of spell         | Target redirection |
+| Desertion     | ⛔     | {3}{U}{U} | Counter spell, steal permanent | Control change     |
+| Final Fortune | ⛔     | {R}{R}    | Extra turn, then lose          | Extra turns        |
+| Flash         | ⛔     | {1}{U}    | Flash in creature from hand    | Flash mechanic     |
 
 ---
 
@@ -289,27 +292,27 @@
 | Waiting in the Weeds | ✅     | {1}{G}{G}    | Create Cat tokens                     | Week 1.5.2 |
 | Wrath of God         | ✅     | {2}{W}{W}    | Destroy all creatures                 | Week 1.5.2 |
 
-### Deferred to Phase 1.6
+### Out of Scope (Complex Mechanics)
 
 | Card                | Status | Cost      | Effect                                 | Reason              |
 | ------------------- | ------ | --------- | -------------------------------------- | ------------------- |
-| Diminishing Returns | 🕐     | {2}{U}{U} | Exile hand+grave, draw 7, exile top 10 | Complex replacement |
-| Doomsday            | 🕐     | {B}{B}{B} | Build 5-card library                   | Library building    |
-| Illicit Auction     | 🕐     | {3}{R}{R} | Bid life for creature control          | Bidding mechanic    |
-| Juxtapose           | 🕐     | {3}{U}    | Exchange creatures                     | Control exchange    |
-| Polymorph           | 🕐     | {3}{U}    | Transform creature                     | Transformation      |
-| Psychic Transfer    | 🕐     | {4}{U}    | Exchange life totals partially         | Life exchange       |
+| Diminishing Returns | ⛔     | {2}{U}{U} | Exile hand+grave, draw 7, exile top 10 | Complex replacement |
+| Doomsday            | ⛔     | {B}{B}{B} | Build 5-card library                   | Library building    |
+| Illicit Auction     | ⛔     | {3}{R}{R} | Bid life for creature control          | Bidding mechanic    |
+| Juxtapose           | ⛔     | {3}{U}    | Exchange creatures                     | Control exchange    |
+| Polymorph           | ⛔     | {3}{U}    | Transform creature                     | Transformation      |
+| Psychic Transfer    | ⛔     | {4}{U}    | Exchange life totals partially         | Life exchange       |
 
 ## Auras
 
 | Card                  | Status | Cost      | Effect                                     | Notes                   |
 | --------------------- | ------ | --------- | ------------------------------------------ | ----------------------- |
 | Pacifism              | ✅     | {1}{W}    | Can't attack or block                      | Combat restriction      |
-| Abduction             | 🕐     | {2}{U}{U} | Steal creature, untap ETB, return on death | Control change          |
+| Abduction             | ⛔     | {2}{U}{U} | Steal creature, untap ETB, return on death | Control change          |
 | Animate Wall          | ✅     | {W}       | Wall can attack                            | Enable attack           |
 | Blight                | ✅     | {B}{B}    | Destroy land when tapped                   | Triggered destroy       |
 | Burrowing             | ✅     | {R}       | Mountainwalk                               | Grant keyword           |
-| Conquer               | 🕐     | {3}{R}{R} | Control enchanted land                     | Control change          |
+| Conquer               | ⛔     | {3}{R}{R} | Control enchanted land                     | Control change          |
 | Divine Transformation | ✅     | {2}{W}{W} | +3/+3                                      | Stat buff               |
 | Enfeeblement          | ✅     | {B}{B}    | -2/-2                                      | Stat debuff             |
 | Fear                  | ✅     | {B}{B}    | Fear (can't be blocked except by...)       | Grant keyword           |
@@ -321,7 +324,7 @@
 | Hero's Resolve        | ✅     | {1}{W}    | +1/+5                                      | Stat buff               |
 | Leshrac's Rite        | ✅     | {B}       | Swampwalk                                  | Grant keyword           |
 | Lure                  | ✅     | {1}{G}{G} | Must be blocked by all                     | Block requirement       |
-| Phantasmal Terrain    | 🕐     | {U}{U}    | Change land type                           | Type change (deferred)  |
+| Phantasmal Terrain    | ⛔     | {U}{U}    | Change land type                           | Type change (deferred)  |
 | Psychic Venom         | ✅     | {1}{U}    | 2 damage when tapped                       | Triggered damage        |
 | Regeneration          | ✅     | {1}{G}    | {G}: Regenerate                            | Grant activated ability |
 | Spirit Link           | ✅     | {W}       | Lifelink-like                              | Damage trigger          |
@@ -334,10 +337,10 @@
 | Card                        | Status | Cost      | Effect                                           | Notes              |
 | --------------------------- | ------ | --------- | ------------------------------------------------ | ------------------ |
 | Aether Flash                | ✅     | {2}{R}{R} | 2 damage to entering creatures                   | ETB trigger        |
-| Browse                      | 🕐     | {2}{U}{U} | Look at 5, take 1, exile rest                    | Library reveal     |
-| Call of the Wild            | 🕐     | {2}{G}{G} | Reveal + put creature into play                  | Library reveal     |
+| Browse                      | ⛔     | {2}{U}{U} | Look at 5, take 1, exile rest                    | Library reveal     |
+| Call of the Wild            | ⛔     | {2}{G}{G} | Reveal + put creature into play                  | Library reveal     |
 | Castle                      | ✅     | {3}{W}    | Untapped creatures +0/+2                         | Static buff        |
-| Celestial Dawn              | 🕐     | {1}{W}{W} | All lands are Plains, all colors are white       | Color change       |
+| Celestial Dawn              | ⛔     | {1}{W}{W} | All lands are Plains, all colors are white       | Color change       |
 | Chill                       | ❌     | {1}{U}    | Red spells cost more                             | Cost modification  |
 | Circle of Protection: Black | ✅     | {1}{W}    | Prevent black damage                             | Damage prevention  |
 | Circle of Protection: Blue  | ✅     | {1}{W}    | Prevent blue damage                              | Damage prevention  |
@@ -349,14 +352,14 @@
 | Dread of Night              | ✅     | {B}       | White creatures -1/-1                            | Static debuff      |
 | Familiar Ground             | ✅     | {2}{G}    | Your creatures can't be blocked by more than one | Validator check    |
 | Fervor                      | ✅     | {2}{R}    | Your creatures have haste                        | Grant keyword      |
-| Forbidden Crypt             | 🕐     | {3}{B}{B} | Graveyard replacement                            | Replacement effect |
+| Forbidden Crypt             | ⛔     | {3}{B}{B} | Graveyard replacement                            | Replacement effect |
 | Goblin Warrens              | ✅     | {2}{R}    | Sac 2 Goblins: Make 3                            | Token generation   |
 | Greed                       | ✅     | {3}{B}    | Pay life: Draw card                              | Activated ability  |
 | Hecatomb                    | ✅     | {1}{B}{B} | Sac creatures: Damage                            | Complex sacrifice  |
 | Insight                     | ✅     | {2}{U}    | Draw when opponent casts green                   | SPELL_CAST trigger |
 | Kismet                      | ✅     | {3}{W}    | Opponent's stuff enters tapped                   | Static effect      |
 | Light of Day                | ✅     | {3}{W}    | Black creatures can't attack                     | Attack restriction |
-| Living Lands                | 🕐     | {3}{G}    | Forests are 1/1 creatures                        | Animate lands      |
+| Living Lands                | ⛔     | {3}{G}    | Forests are 1/1 creatures                        | Animate lands      |
 | Manabarbs                   | ✅     | {3}{R}    | Damage when tapping lands                        | Triggered damage   |
 | Orcish Oriflamme            | ✅     | {3}{R}    | Attacking creatures +1/+0                        | Static buff        |
 | Pestilence                  | ✅     | {2}{B}{B} | {B}: 1 damage to all                             | Activated damage   |
@@ -366,7 +369,7 @@
 | Strands of Night            | ✅     | {2}{B}{B} | Pay life + sac land: Return creature             | Reanimation        |
 | Tranquil Grove              | ✅     | {1}{G}    | {1}{G}{G}: Destroy all enchantments              | Activated destroy  |
 | Warmth                      | ✅     | {1}{W}    | Gain 2 life when opponent casts red              | SPELL_CAST trigger |
-| Zur's Weirding              | 🕐     | {3}{U}    | Reveal draws, pay life to deny                   | Replacement effect |
+| Zur's Weirding              | ⛔     | {3}{U}    | Reveal draws, pay life to deny                   | Replacement effect |
 
 ---
 
@@ -389,7 +392,7 @@
 | Flying Carpet         | ✅     | {4}  | {2},{T}: Creature gains flying           | Grant ability      |
 | Fountain of Youth     | ✅     | {0}  | {2},{T}: Gain 1 life                     | Life gain          |
 | Glasses of Urza       | ✅     | {1}  | Look at opponent's hand                  | Information only   |
-| Grinning Totem        | 🕐     | {4}  | Search opponent's library, play or exile | Complex mechanics  |
+| Grinning Totem        | ⛔     | {4}  | Search opponent's library, play or exile | Complex mechanics  |
 | Howling Mine          | ❌     | {2}  | All players draw extra                   | Draw step hook     |
 | Iron Star             | ✅     | {1}  | On red spell cast: Gain 1 life           | SPELL_CAST trigger |
 | Ivory Cup             | ✅     | {1}  | On white spell cast: Gain 1 life         | SPELL_CAST trigger |
@@ -401,7 +404,7 @@
 | Meekstone             | ✅     | {1}  | Creatures 3+ power don't untap           | Untap prevention   |
 | Millstone             | ✅     | {2}  | {2},{T}: Mill 2                          | Mill               |
 | Moss Diamond          | ✅     | {2}  | Enters tapped, {T}: Add {G}              | Mana rock          |
-| Mystic Compass        | 🕐     | {2}  | {1},{T}: Land becomes basic type         | Type change        |
+| Mystic Compass        | ⛔     | {2}  | {1},{T}: Land becomes basic type         | Type change        |
 | Pentagram of the Ages | ✅     | {4}  | {4},{T}: Prevent next damage             | Prevention shield  |
 | Phyrexian Vault       | ✅     | {3}  | {2},{T},{Sac creature}: Draw             | Sacrifice draw     |
 | Rod of Ruin           | ✅     | {4}  | {3},{T}: 1 damage                        | Activated damage   |
@@ -410,7 +413,7 @@
 | Snake Basket          | ✅     | {4}  | {X}, Sac: X 1/1 Snake tokens             | X-cost tokens      |
 | Soul Net              | ✅     | {1}  | Pay when creature dies: Gain 1 life      | Death trigger      |
 | Storm Cauldron        | ❌     | {5}  | Lands bounce, extra land drop            | Land bounce        |
-| Teferi's Puzzle Box   | 🕐     | {4}  | Draw step replacement                    | Replacement effect |
+| Teferi's Puzzle Box   | ⛔     | {4}  | Draw step replacement                    | Replacement effect |
 | The Hive              | ✅     | {5}  | {5},{T}: Create Wasp token               | Token generation   |
 | Throne of Bone        | ✅     | {1}  | On black spell cast: Gain 1 life         | SPELL_CAST trigger |
 | Wand of Denial        | ❌     | {2}  | {T}: Look at top, exile non-land         | Library exile      |
@@ -439,9 +442,9 @@
 | Team pump           | ✅     | applyTeamPump until EOT (Week 1.5.2)                                      |
 | Counter variants    | ✅     | Memory Lapse, Remove Soul (Week 1.5.2)                                    |
 | Graveyard recursion | ✅     | returnFromGraveyard, Raise Dead, Ashen Powder (Week 1.5.2)                |
-| Extra turns/combats | 🕐     | Deferred to Phase 1.6                                                     |
-| Control changing    | 🕐     | Deferred to Phase 1.6                                                     |
-| Land type changing  | 🕐     | Deferred to Phase 1.6                                                     |
+| Extra turns/combats | ⛔     | Out of Scope (complex mechanics)                                          |
+| Control changing    | ⛔     | Out of Scope (complex mechanics)                                          |
+| Land type changing  | ⛔     | Out of Scope (complex mechanics)                                          |
 | Cost modification   | ❌     | Needed for ~5 cards                                                       |
 | Landwalk            | ✅     | All landwalk types (Week 1.5.3)                                           |
 | Fear/Intimidate     | ✅     | Evasion keywords (Week 1.5.3)                                             |

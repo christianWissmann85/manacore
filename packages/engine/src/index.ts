@@ -206,16 +206,43 @@ export {
   createSimpleDeck,
   initializeGame,
   createVanillaDeck,
-  // Week 11: Mono-colored test decks
+  // Mono-colored test decks
   createWhiteDeck,
   createBlueDeck,
   createBlackDeck,
   createRedDeck,
   createGreenDeck,
+  // Phase 1.5: Two-color test decks
+  createAzoriusDeck,
+  createOrzhovDeck,
+  createBorosDeck,
+  createSelesnyaDeck,
+  createDimirDeck,
+  createIzzetDeck,
+  createSimicDeck,
+  createRakdosDeck,
+  createGolgariDeck,
+  createGruulDeck,
+  // Phase 1.5: Special coverage decks
+  createArtifactDeck,
+  createColorHateDeck,
+  createArtifactsDeck2,
+  createSpellsDeck,
+  createCreaturesDeck,
+  // Deck registries
   getRandomTestDeck,
+  getRandomMonoDeck,
   getTestDeck,
+  getDeckDisplayName,
   TEST_DECKS,
+  MONO_DECKS,
+  TWO_COLOR_DECKS,
+  SPECIAL_DECKS,
+  ALL_TEST_DECKS,
   type DeckColor,
+  type TwoColorDeck,
+  type SpecialDeck,
+  type AllDeckTypes,
 } from './utils/gameInit';
 
 // Mana utilities

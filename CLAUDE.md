@@ -4,6 +4,12 @@
 
 ManaCore is a high-fidelity implementation of Magic: The Gathering rules, built specifically for AI research. The project prioritizes:
 
+- **Correctness**: Faithful MTG rules implementation
+- **Performance**: 1,000+ games/second for AI training
+- **Simplicity**: Pure functions, immutable state, zero UI dependencies
+
+---
+
 ## Architecture
 
 ### Design Principles
@@ -24,7 +30,7 @@ Action → Validator → Reducer → New State
 - **Actions**: Typed commands representing player choices (PLAY_LAND, CAST_SPELL, etc.)
 - **Validators**: Pure functions that check if actions are legal
 - **Reducers**: Pure functions that apply actions to produce new state
-- **State-Based Actions**: Automatic game rules checked after every action
+- **getLegalActions()**: Returns all valid actions for current player (critical for AI)
 
 ### Package Architecture
 
@@ -42,130 +48,20 @@ Action → Validator → Reducer → New State
 │  ┌─────────────────────────────────────┐
 │  │          AI Package                 │
 │  │  ┌──────────┐  ┌──────────────┐   │
-│  │  │ Bot      │  │  Advanced    │   │
-│  │  │ Interface│  │  AI Agents   │   │
+│  │  │ Bot      │  │  MCTS/       │   │
+│  │  │ Interface│  │  Evaluation  │   │
 │  │  └──────────┘  └──────────────┘   │
 │  └────────────────┬────────────────────┘
 │                   │
 │                   ▼
 │  ┌─────────────────────────────────────────────────┐
-│  │            Engine Package                       │
+│  │            Engine Package (STABLE)              │
 │  │  ┌────────────┐  ┌────────────┐  ┌──────────┐ │
 │  │  │   State    │  │  Actions   │  │  Rules   │ │
 │  │  │ Management │  │ & Reducers │  │  Engine  │ │
 │  │  └────────────┘  └────────────┘  └──────────┘ │
-│  │  ┌────────────┐  ┌────────────┐               │
-│  │  │   Cards    │  │   Utils    │               │
-│  │  │   Loader   │  │            │               │
-│  │  └────────────┘  └────────────┘               │
 │  └─────────────────────────────────────────────────┘
-│
-│  ┌─────────────────────────────────────┐
-│  │         Data Layer                  │
-│  │   packages/engine/data/cards/       │
-│  │   - 6ed.json (6th Edition cards)    │
-│  └─────────────────────────────────────┘
 └──────────────────────────────────────────
-```
-
----
-
-## Development Philosophy
-
-### Incremental Implementation
-
-ManaCore follows a **phased development approach**, implementing Magic rules incrementally to maintain correctness at each stage:
-
-- **Phase 0**: Foundation (vanilla creatures, basic combat)
-- **Phase 1**: Core systems (stack, priority, combat mechanics, abilities)
-- **Phase 2**: Advanced rules (instant-speed interactions, complex triggers)
-- **Phase 3**: Full card pool and interactions
-
-### Quality Gates
-
-Every feature must pass three gates before completion:
-
-1. **Unit Tests**: Feature-specific tests in `tests/`
-2. **Linting**: `bun run lint` passes with zero errors
-3. **Simulation**: 100+ bot games run without errors
-
-### Immutability Pattern
-
-All state updates use `structuredClone` for deep immutability:
-
-```typescript
-export function applyAction(state: GameState, action: Action): GameState {
-  // Validate first
-  const errors = validateAction(state, action);
-  if (errors.length > 0) {
-    throw new Error(`Invalid action: ${errors.join(', ')}`);
-  }
-
-  // Clone entire state (immutable update)
-  const newState = structuredClone(state);
-
-  // Apply mutations to the clone
-  switch (action.type) {
-    case 'PLAY_LAND':
-      applyPlayLand(newState, action);
-      break;
-    // ...
-  }
-
-  // Check state-based actions
-  while (checkStateBasedActions(newState)) {
-    resolveTriggers(newState);
-  }
-
-  return newState;
-}
-```
-
----
-
-## Monorepo Structure
-
-```
-manacore/
-├── packages/
-│   ├── engine/              # Pure game logic (ZERO dependencies)
-│   │   ├── src/
-│   │   │   ├── state/       # GameState, PlayerState, CardInstance
-│   │   │   ├── actions/     # Action types, validators, reducers
-│   │   │   ├── rules/       # Game rules (stack, combat, SBAs, triggers)
-│   │   │   │   ├── abilities/  # Activated ability registry (O(1) lookup)
-│   │   │   │   ├── effects.ts  # Reusable effect helpers
-│   │   │   │   └── tokens.ts   # Token creation helpers
-│   │   │   ├── spells/      # Spell registry (O(1) lookup, 70 spells)
-│   │   │   │   └── categories/ # damage, destruction, counters, etc.
-│   │   │   ├── cards/       # CardLoader, card templates
-│   │   │   └── utils/       # Game initialization, deck building
-│   │   ├── data/
-│   │   │   └── cards/       # Scryfall card data (JSON)
-│   │   └── tests/           # Engine tests
-│   │
-│   ├── ai/                  # Bot implementations
-│   │   ├── src/
-│   │   │   ├── bots/        # RandomBot, etc.
-│   │   │   └── index.ts     # Bot interface
-│   │   └── tests/
-│   │
-│   ├── cli-client/          # Command-line interface
-│   │   ├── src/
-│   │   │   ├── commands/    # play, simulate
-│   │   │   ├── display/     # ASCII rendering
-│   │   │   └── index.ts     # CLI entry point
-│   │
-│   ├── web-client/          # React web interface (future)
-│   │
-│   └── data-scraper/        # Scryfall data fetcher
-│       └── src/
-│           ├── fetchCards.ts
-│           └── validateCards.ts
-│
-├── CLAUDE.md                # This file
-├── eslint.config.js         # Linting configuration
-└── package.json             # Workspace configuration
 ```
 
 ---
@@ -176,11 +72,17 @@ manacore/
 
 ### ✅ Phase 1: Core MTG Rules COMPLETE
 
-### 🔄 Phase 1.5: Integration Testing & Documentation
+### ✅ Phase 1.5: Integration Testing & Documentation COMPLETE
 
-**Goal**: "Every Card Works"
+**Achievements:**
 
-### 🔜 Phase 2: Hidden Information & Smart AI
+- 300 cards implemented (90% of 6th Edition)
+- 20 test decks (5 mono + 10 two-color + 5 special)
+- 2,000+ game stress test passed with 0 errors
+- 676 unit tests, 5,042 assertions
+- Performance: 1,000+ games/second
+
+### 🔄 Phase 2: Hidden Information & Smart AI (CURRENT)
 
 **Goal**: "The AI Gets Dangerous"
 
@@ -195,37 +97,126 @@ manacore/
 - Evaluation function tuned through self-play
 - Game replay system for debugging AI decisions
 
-### 🔜 Phase 3: Interactive Visualization
+### 🔜 Phase 3-5: Visualization, Research Tools, Machine Learning
 
-**Goal**: "Advanced Research Dashboard" 🔬
+See ROADMAP.md for full details.
 
-- Task 27: **Basic Web Dashboard** (Vite + PixiJS, state visualization, debug controls)
-- Task 28-29: **Visualization Polish** (action history, decision tree rendering)
-- Task 30-31: **Deck Lab** (browse cards, build test decks, mana curve analytics)
-- Task 32: **Final Polish** (Agent config, interactive tutorial, documentation)
+---
 
-**Deliverable**: 🔬 **RESEARCH PLATFORM v1.0**
+## Phase 2 Focus: AI Development
 
-### 🔜 Phase 4: AI Research Tools
+### Bot Interface
 
-**Goal**: "The AI Research Laboratory"
+All bots implement the `Bot` interface in `packages/ai/src/bots/Bot.ts`:
 
-- Task 33-34: **Tournament Simulator** (Swiss/Single-Elimination, large-scale simulations)
-- Task 35-36: **Deck Analytics** (deck scoring, card statistics, meta-game reports)
-- Task 37: **MCTS Visualization** (decision tree visualizer, win rate estimates)
-- Task 38: **A/B Testing Framework** (compare MCTS configs, evaluation functions)
+```typescript
+export interface Bot {
+  getName(): string;
+  decide(state: GameState): Action;
+}
+```
 
-**Deliverable**: Research platform for AI experimentation
+### Key Engine APIs for AI
 
-### 🔜 Phase 5: Machine Learning
+```typescript
+import {
+  // State
+  GameState,
+  getPlayer,
+  getOpponent,
 
-**Goal**: "Skynet Learns Magic"
+  // Actions
+  getLegalActions, // Returns Action[] - ALL valid moves
+  applyAction, // Returns new GameState (immutable)
+  validateAction, // Returns string[] of errors
 
-- Task 39-42: **Neural Network Evaluation** (100k+ game dataset, NN-based evaluation)
-- Task 43-46: **Genetic Algorithm Deck Builder** (evolve decks through generations)
-- Task 47+: **Self-Play & AlphaZero** (self-play loop, discover optimal strategies)
+  // Game setup
+  initializeGame,
+  getRandomTestDeck,
+  ALL_TEST_DECKS,
+} from '@manacore/engine';
+```
 
-**Long-term Goal**: AI discovers optimal play and designs tournament-winning decks
+### MCTS Implementation Notes
+
+1. **State Cloning**: Use `structuredClone(state)` for tree nodes
+2. **Legal Actions**: `getLegalActions(state)` returns all valid moves
+3. **Terminal Detection**: Check `state.gameOver` and `state.winner`
+4. **Hidden Information**: Opponent's hand is in `state.players.opponent.hand`
+   - For determinization, shuffle unknown cards into possible positions
+
+### Evaluation Function Inputs
+
+Key state properties for heuristics:
+
+```typescript
+// Life totals
+state.players.player.life;
+state.players.opponent.life;
+
+// Board presence
+state.players.player.battlefield; // CardInstance[]
+state.players.opponent.battlefield;
+
+// Card advantage
+state.players.player.hand.length;
+state.players.opponent.hand.length;
+
+// Mana available
+state.players.player.manaPool;
+
+// Game progression
+state.turnNumber;
+state.phase; // 'main1' | 'combat' | 'main2' | etc.
+```
+
+### Running AI Experiments
+
+```bash
+# Run bot simulations
+cd packages/cli-client
+bun src/index.ts simulate 1000
+
+# Run with specific decks (modify simulate.ts)
+# Compare win rates between bot implementations
+```
+
+---
+
+## Monorepo Structure
+
+```
+manacore/
+├── packages/
+│   ├── engine/              # Pure game logic (STABLE - don't modify)
+│   │   ├── src/
+│   │   │   ├── state/       # GameState, PlayerState, CardInstance
+│   │   │   ├── actions/     # Action types, validators, reducers
+│   │   │   ├── rules/       # Game rules (stack, combat, triggers)
+│   │   │   ├── spells/      # Spell implementations
+│   │   │   ├── cards/       # CardLoader
+│   │   │   └── utils/       # Game initialization, deck building
+│   │   ├── data/cards/      # 6ed.json (342 cards)
+│   │   ├── tests/           # 676 tests
+│   │   └── docs/            # CARD_STATUS.md, EDGE_CASES.md
+│   │
+│   ├── ai/                  # AI implementations (PHASE 2 FOCUS)
+│   │   ├── src/
+│   │   │   ├── bots/        # RandomBot, MCTSBot, etc.
+│   │   │   ├── evaluation/  # Board evaluation functions
+│   │   │   ├── search/      # MCTS implementation
+│   │   │   └── simulation/  # Self-play, tournaments
+│   │   └── tests/
+│   │
+│   ├── cli-client/          # Command-line interface
+│   │   └── src/commands/    # play, simulate
+│   │
+│   └── web-client/          # React dashboard (Phase 3)
+│
+├── CLAUDE.md                # This file
+├── ROADMAP.md               # Full project roadmap
+└── ARCHITECTURE.md          # Detailed architecture docs
+```
 
 ---
 
@@ -233,518 +224,32 @@ manacore/
 
 ### Runtime: Bun
 
-**Always use Bun instead of Node.js**:
-
 ```bash
-# Running files
-bun <file>                    # NOT: node, ts-node
-
-# Testing
-bun test                      # NOT: jest, vitest
-
-# Full TypeScript compilation check (catches import/export issues, type errors)
-# and
-# ESLint with type-aware rules (catches code style, patterns, unsafe any usage)
-bun run check
-
-# Formatting
-bun run format:check
-bun run format
-
-# Package management
-bun install                   # NOT: npm install, yarn
-bun add <package>
-bun run <script>
-
-# Building
-bun build <file>              # NOT: webpack, esbuild
-```
-
-### Bun Built-in APIs
-
-Prefer Bun's built-in APIs over npm packages:
-
-```typescript
-// SQLite - Use bun:sqlite
-import { Database } from 'bun:sqlite';
-// NOT: better-sqlite3
-
-// File I/O - Use Bun.file
-const file = Bun.file('data.json');
-const text = await file.text();
-// NOT: node:fs readFile/writeFile
-
-// Shell commands - Use Bun.$
-await Bun.$`ls -la`;
-// NOT: execa, child_process
-
-// WebSocket - Built-in
-// NOT: ws package
-
-// Env variables - Auto-loaded from .env
-process.env.API_KEY;
-// NOT: dotenv
+bun <file>                    # Run TypeScript directly
+bun test                      # Run tests
+bun run check                 # TypeScript + ESLint + Prettier
+bun install                   # Install dependencies
 ```
 
 ### Testing
 
-```typescript
-import { test, expect } from 'bun:test';
-
-test('creature takes damage', () => {
-  const state = createTestGameState();
-  const creature = state.players.player.battlefield[0]!;
-
-  creature.damage = 2;
-  const template = CardLoader.getById(creature.scryfallId);
-  const toughness = parseInt(template.toughness, 10);
-
-  expect(creature.damage < toughness).toBe(true);
-});
-```
-
-Run tests:
-
 ```bash
-cd packages/engine
-bun test
+cd packages/engine && bun test          # Run all tests
+bun test --watch                        # Watch mode
+bun test -t "pattern"                   # Run specific tests
 ```
 
-### Frontend (Visualization)
-
-We use a standard React stack for the research dashboard:
-
-```typescript
-// App.tsx
-import { Card } from './components/Card';
-
-export function Battlefield({ cards }) {
-  return (
-    <div className="grid grid-cols-6 gap-2">
-      {cards.map(card => <Card key={card.id} data={card} />)}
-    </div>
-  );
-}
-```
-
-No complex game loop - just reactive UI updates.
-
----
-
-## Code Conventions
-
-### TypeScript Style
-
-1. **Explicit Types**: Always type function parameters and return values
-2. **Const Assertions**: Use `as const` for literal arrays
-3. **Type Guards**: Create type guards for discriminated unions
-4. **No Any**: Avoid `any` - use `unknown` or proper types
-
-```typescript
-// Good
-export function validateAction(state: GameState, action: Action): string[] {
-  const errors: string[] = [];
-  // ...
-  return errors;
-}
-
-// Bad - missing return type
-export function validateAction(state: GameState, action: Action) {
-  // ...
-}
-```
-
-### Naming Conventions
-
-- **Files**: camelCase for files, PascalCase for types
-  - `gameState.ts` (contains `GameState` type)
-  - `cardLoader.ts` (contains `CardLoader` class)
-
-- **Functions**: Descriptive action verbs
-  - `createGameState()`, `applyAction()`, `validatePlayLand()`
-
-- **Types**: PascalCase with descriptive names
-  - `GameState`, `CardInstance`, `PlayLandAction`
-
-- **Constants**: UPPER_SNAKE_CASE
-  - `MAX_HAND_SIZE`, `DEFAULT_LIFE_TOTAL`
-
-### Action Types
-
-All actions follow this pattern:
-
-```typescript
-export interface SomeAction extends GameAction {
-  type: 'SOME_ACTION'; // UPPER_SNAKE_CASE
-  payload: {
-    // Action-specific data
-    fieldName: string;
-  };
-}
-```
-
-### State Updates
-
-**CRITICAL**: Never mutate the original state
-
-```typescript
-// ❌ BAD - mutates original state
-export function applyAction(state: GameState, action: Action): GameState {
-  state.turnCount++; // WRONG!
-  return state;
-}
-
-// ✅ GOOD - clones first
-export function applyAction(state: GameState, action: Action): GameState {
-  const newState = structuredClone(state);
-  newState.turnCount++;
-  return newState;
-}
-```
-
-### Helper Functions
-
-Apply functions modify state in-place (on the cloned state):
-
-```typescript
-// These modify the state parameter (void return)
-function applyPlayLand(state: GameState, action: PlayLandAction): void {
-  const player = getPlayer(state, action.playerId);
-  // ... mutations here
-}
-
-// These return new values (pure)
-function getPlayer(state: GameState, playerId: PlayerId): PlayerState {
-  return state.players[playerId];
-}
-```
-
-### File Organization
-
-Each module should have a clear, single responsibility:
-
-```
-actions/
-├── Action.ts           # Type definitions only
-├── validators.ts       # Validation logic
-├── reducer.ts          # State update logic
-└── getLegalActions.ts  # Action generation
-```
-
----
-
-## Testing Strategy
-
-### Test Organization
-
-```
-packages/engine/tests/
-├── engine.test.ts      # Core game mechanics
-├── combat.test.ts      # Combat-specific tests
-└── cards.test.ts       # Card-specific behavior
-```
-
-### Test Categories
-
-1. **Unit Tests**: Test individual functions
-2. **Integration Tests**: Test full action→reducer→state flow
-3. **Simulation Tests**: Run full games to ensure stability
-
-### Writing Tests
-
-```typescript
-import { test, expect } from 'bun:test';
-import { createGameState, applyAction } from '@manacore/engine';
-
-test('playing a land adds it to battlefield', () => {
-  // Setup
-  const state = createTestGameState();
-  const player = state.players.player;
-  const land = player.hand[0]!;
-
-  // Execute
-  const action: PlayLandAction = {
-    type: 'PLAY_LAND',
-    playerId: 'player',
-    payload: { cardInstanceId: land.instanceId },
-  };
-  const newState = applyAction(state, action);
-
-  // Verify
-  expect(newState.players.player.battlefield.length).toBe(1);
-  expect(newState.players.player.hand.length).toBe(0);
-  expect(newState.players.player.landsPlayedThisTurn).toBe(1);
-});
-```
-
-### Running Tests
-
-```bash
-# Run all tests
-cd packages/engine
-bun test
-
-# Run with watch mode
-bun test --watch
-
-# Run specific test file
-bun test combat.test.ts
-```
-
----
-
-## Common Tasks
-
-### Adding a New Action Type
-
-1. **Define the action interface** in `packages/engine/src/actions/Action.ts`:
-
-   ```typescript
-   export interface NewAction extends GameAction {
-     type: 'NEW_ACTION';
-     payload: {
-       someField: string;
-     };
-   }
-   ```
-
-2. **Add to Action union**:
-
-   ```typescript
-   export type Action =
-     | PlayLandAction
-     | NewAction  // Add here
-     | ...;
-   ```
-
-3. **Create validator** in `packages/engine/src/actions/validators.ts`:
-
-   ```typescript
-   function validateNewAction(state: GameState, action: NewAction): string[] {
-     const errors: string[] = [];
-     // Validation logic
-     return errors;
-   }
-   ```
-
-4. **Add to validateAction switch**:
-
-   ```typescript
-   case 'NEW_ACTION':
-     return validateNewAction(state, action);
-   ```
-
-5. **Create reducer** in `packages/engine/src/actions/reducer.ts`:
-
-   ```typescript
-   function applyNewAction(state: GameState, action: NewAction): void {
-     // Apply state changes
-   }
-   ```
-
-6. **Add to applyAction switch**:
-
-   ```typescript
-   case 'NEW_ACTION':
-     applyNewAction(newState, action);
-     break;
-   ```
-
-7. **Add to legal actions** in `packages/engine/src/actions/getLegalActions.ts`
-
-8. **Write tests** in `packages/engine/tests/`
-
-### Adding a New Card
-
-1. **Ensure card data exists** in `packages/engine/data/cards/6ed.json`
-
-2. **For keyword abilities**, check if helper exists in `packages/engine/src/cards/CardTemplate.ts`:
-
-   ```typescript
-   export function hasFlying(card: CardTemplate): boolean {
-     return card.keywords?.includes('Flying') || false;
-   }
-   ```
-
-3. **For instant/sorcery spells**, add to the spell registry in `packages/engine/src/spells/categories/`:
-
-   Choose the appropriate category file:
-   - `damage.ts` - Damage spells (Tremor, Inferno)
-   - `destruction.ts` - Destroy effects (Wrath of God, Armageddon)
-   - `counters.ts` - Counterspells (Memory Lapse, Remove Soul)
-   - `xcost.ts` - X-cost spells (Earthquake, Hurricane)
-   - `tutors.ts` - Library search (Enlightened Tutor)
-   - `card-draw.ts` - Draw/discard (Inspiration)
-   - `graveyard.ts` - Graveyard recursion (Raise Dead)
-   - `untap.ts` - Tap/untap effects (Vitalize)
-   - `prevention.ts` - Prevention/lifegain (Fog)
-   - `misc.ts` - Other effects (Boomerang, tokens)
-
-   ```typescript
-   // In spells/categories/damage.ts
-   {
-     cardName: 'Lightning Bolt',
-     resolve: (state, stackObj) => {
-       const target = stackObj.targets[0];
-       if (target) applyDamage(state, target, 3);
-     },
-   },
-   ```
-
-   Use helpers from `rules/effects.ts` (applyDamage, destroyPermanent, drawCards, etc.)
-   For tokens, use `createTokens()` from `rules/tokens.ts`
-
-4. **For activated abilities**, add to `packages/engine/src/rules/abilities/sets/6ed/*.ts`:
-
-   Use templates from `abilities/templates/` when possible:
-
-   ```typescript
-   // In abilities/sets/6ed/mana-creatures.ts
-   registerAbilities('Llanowar Elves', (card) => [createTapForMana(card, ['G'])]);
-   ```
-
-5. **For triggered abilities**, add to `packages/engine/src/rules/triggers.ts`
-
-6. **For new targeting patterns**, add to `packages/engine/src/rules/targeting/parser/patterns.ts`:
-
-   ```typescript
-   // Add to TARGET_PATTERNS array (priority determines specificity)
-   {
-     regex: /target tapped creature/i,
-     priority: 81,  // Higher = more specific, checked first
-     handler: (match, idx) =>
-       createRequirement(idx, 'creature', 'target tapped creature', {
-         restrictions: [{ type: 'tapped' }],
-       }),
-   },
-   ```
-
-7. **For new target restrictions**, add validator to `packages/engine/src/rules/targeting/validation/validators.ts`:
-
-   ```typescript
-   export function validateNewRestriction(...): string | null {
-     if (restriction.type !== 'newtype') return null;
-     // validation logic
-     return null; // or error string
-   }
-
-   // Register in RESTRICTION_VALIDATORS
-   export const RESTRICTION_VALIDATORS = {
-     // ...existing validators
-     newtype: validateNewRestriction,
-   };
-   ```
-
-8. **Write card-specific tests**
-
-### Running a Simulation
+### Simulations
 
 ```bash
 cd packages/cli-client
-bun src/index.ts simulate 100  # Run 100 bot games
-```
-
-### Playing Interactively
-
-```bash
-cd packages/cli-client
-bun src/index.ts play
-```
-
-### Linting
-
-```bash
-# From project root
-bun run lint
-
-# Auto-fix issues
-bun run lint:fix
-```
-
-### Fetching Card Data
-
-```bash
-cd packages/data-scraper
-bun src/fetchCards.ts 6ed  # Fetch 6th Edition
-```
-
----
-
-## Best Practices
-
-### 1. Read Before Writing
-
-**ALWAYS** read existing code before making changes:
-
-```typescript
-// Before adding a function, check if it exists
-// Before modifying a file, read it completely
-```
-
-### 2. Validate Early
-
-Validation happens BEFORE state changes:
-
-```typescript
-export function applyAction(state: GameState, action: Action): GameState {
-  // ✅ Validate first
-  const errors = validateAction(state, action);
-  if (errors.length > 0) {
-    throw new Error(`Invalid action: ${errors.join(', ')}`);
-  }
-
-  // Then clone and modify
-  const newState = structuredClone(state);
-  // ...
-}
-```
-
-### 3. Keep Engine Pure
-
-The `engine` package must have **ZERO** dependencies on UI:
-
-- No console.log in production code
-- No React, readline, or other UI libraries
-- Engine functions should be 100% testable headlessly
-
-### 4. Export Properly
-
-Update `packages/engine/src/index.ts` when adding new public APIs:
-
-```typescript
-// Export types
-export type { NewType } from './path/to/module';
-
-// Export functions
-export { newFunction } from './path/to/module';
-```
-
-### 5. Document Complex Logic
-
-Add comments for Magic-specific rules:
-
-```typescript
-// SBA: Creature dies if damage >= toughness (CR 704.5g)
-if (creature.damage >= toughness) {
-  // Move to graveyard
-}
-```
-
-### 6. Use Type Guards
-
-For discriminated unions:
-
-```typescript
-export function isPlayLandAction(action: Action): action is PlayLandAction {
-  return action.type === 'PLAY_LAND';
-}
+bun src/index.ts simulate 1000          # Run 1000 bot games
+bun src/index.ts play                   # Interactive play
 ```
 
 ---
 
 ## Performance Considerations
-
-### Why Speed Matters
 
 ManaCore is designed for **AI training**, which requires:
 
@@ -752,137 +257,69 @@ ManaCore is designed for **AI training**, which requires:
 - Simulating thousands of possible futures (MCTS)
 - Training neural networks with millions of game states
 
-### Optimization Guidelines
+**Current Performance:**
 
-1. **Avoid Unnecessary Cloning**: Only clone at action boundaries
-2. **Batch Operations**: Process multiple state checks in one pass
-3. **Cache Card Data**: CardLoader caches templates in memory
-4. **Minimize Allocations**: Reuse arrays/objects when safe
-5. **Profile Before Optimizing**: Use `console.time()` for bottlenecks
-
-Current Performance:
-
-- **1000+ games/second** in simulation mode
+- **1,000+ games/second** in simulation mode
 - **<1ms per action** for typical moves
 - **<30ms for full game** (50 turns, 100 actions)
 
----
+**Optimization Opportunities for MCTS:**
 
-## Debugging Tips
-
-### Common Issues
-
-**1. "Card not found" errors**
-
-```typescript
-// Check if card data is loaded
-console.log(CardLoader.getByName('Mountain')); // Should return template
-```
-
-**2. State mutation bugs**
-
-```typescript
-// Verify you're cloning:
-const newState = structuredClone(state); // Must be first line
-```
-
-**3. Validation errors**
-
-```typescript
-// Check validation messages:
-const errors = validateAction(state, action);
-console.log(errors); // Shows why action is invalid
-```
-
-### Useful Debug Commands
-
-```bash
-# Check what cards are loaded
-bun -e "import {CardLoader} from '@manacore/engine'; console.log(CardLoader.getAllCards().length);"
-
-# Run single test
-bun test -t "creature takes damage"
-
-# Check types
-bun tsc --noEmit
-```
+1. Incremental state updates instead of full clone
+2. Legal action caching between similar states
+3. Transposition tables with state hashing
+4. Parallel tree search with web workers
 
 ---
 
-## Contributing Guidelines
+## Quality Gates
 
-### Before Starting Work
+Every feature must pass:
 
-1. **Read** relevant existing code
-2. **Check** if feature already exists
-3. **Plan** the implementation approach
-4. **Test** existing functionality
-
-### During Development
-
-1. **Write tests first** (TDD when possible)
-2. **Lint frequently**: `bun run lint`
-3. **Run tests**: `bun test`
-4. **Simulate**: Run 100+ bot games to verify stability
-
-### Before Committing
-
-1. ✅ All tests pass (`bun test`)
-2. ✅ Linter clean (`bun run lint`)
-3. ✅ Simulations run without errors
-4. ✅ Documentation updated if needed
+1. **Unit Tests**: `bun test` passes
+2. **Linting**: `bun run check` passes
+3. **Simulation**: 100+ bot games without errors
 
 ---
 
 ## Quick Reference
 
-### Commands Cheat Sheet
+### Commands
 
 ```bash
 # Development
 bun install                              # Install dependencies
-bun run lint                            # Run linter
-bun run lint:fix                        # Fix lint issues
-cd packages/engine && bun test          # Run tests
+bun run check                           # Full check (types + lint + format)
+cd packages/engine && bun test          # Run engine tests
 
-# Playing
+# AI Development
 cd packages/cli-client
-bun src/index.ts play                   # Play vs bot
-bun src/index.ts simulate 100           # Run 100 games
-
-# Data
-cd packages/data-scraper
-bun src/fetchCards.ts 6ed               # Fetch card data
-bun src/validateCards.ts                # Validate card data
-
-# Building
-bun build src/index.ts                  # Build a file
+bun src/index.ts simulate 1000          # Run simulations
+bun src/index.ts play                   # Interactive play
 ```
 
-### File Location Quick Reference
+### Key File Locations
 
-| What                | Where                                                          |
-| ------------------- | -------------------------------------------------------------- |
-| Game state types    | `packages/engine/src/state/`                                   |
-| Action definitions  | `packages/engine/src/actions/Action.ts`                        |
-| Validators          | `packages/engine/src/actions/validators.ts`                    |
-| Reducers            | `packages/engine/src/actions/reducer.ts`                       |
-| Combat rules        | `packages/engine/src/rules/combat.ts`                          |
-| Stack system        | `packages/engine/src/rules/stack.ts`                           |
-| Targeting system    | `packages/engine/src/rules/targeting/` (modular)               |
-| Target patterns     | `packages/engine/src/rules/targeting/parser/patterns.ts`       |
-| Target validators   | `packages/engine/src/rules/targeting/validation/validators.ts` |
-| Spell registry      | `packages/engine/src/spells/` (O(1) lookup for 70 spells)      |
-| Spell categories    | `packages/engine/src/spells/categories/*.ts`                   |
-| Ability registry    | `packages/engine/src/rules/abilities/` (O(1) lookup)           |
-| Ability templates   | `packages/engine/src/rules/abilities/templates/*.ts`           |
-| Effect helpers      | `packages/engine/src/rules/effects.ts`                         |
-| Token helpers       | `packages/engine/src/rules/tokens.ts`                          |
-| Triggers            | `packages/engine/src/rules/triggers.ts`                        |
-| State-based actions | `packages/engine/src/rules/stateBasedActions.ts`               |
-| Legacy abilities    | `packages/engine/src/rules/activatedAbilities.ts` (fallback)   |
-| Card data           | `packages/engine/data/cards/6ed.json`                          |
-| Tests               | `packages/engine/tests/*.test.ts`                              |
-| CLI display         | `packages/cli-client/src/display/board.ts`                     |
+| What             | Where                                            |
+| ---------------- | ------------------------------------------------ |
+| Bot interface    | `packages/ai/src/bots/Bot.ts`                    |
+| RandomBot        | `packages/ai/src/bots/RandomBot.ts`              |
+| Game state types | `packages/engine/src/state/`                     |
+| Legal actions    | `packages/engine/src/actions/getLegalActions.ts` |
+| Action reducer   | `packages/engine/src/actions/reducer.ts`         |
+| Test decks       | `packages/engine/src/utils/gameInit.ts`          |
+| Card data        | `packages/engine/data/cards/6ed.json`            |
+| Engine tests     | `packages/engine/tests/`                         |
+| Card status      | `packages/engine/docs/CARD_STATUS.md`            |
+| Edge cases       | `packages/engine/docs/EDGE_CASES.md`             |
 
-**Happy coding! 🎴✨**
+---
+
+## Documentation
+
+- **ROADMAP.md**: Full project roadmap and phase details
+- **ARCHITECTURE.md**: Detailed architecture documentation
+- **packages/engine/docs/CARD_STATUS.md**: Card implementation status
+- **packages/engine/docs/EDGE_CASES.md**: Known limitations and quirks
+
+**Happy AI training! 🤖🎴**
