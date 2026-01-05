@@ -10,6 +10,8 @@
 import { RandomBot, GreedyBot, type Bot } from '@manacore/ai';
 import { runSimulation, printResults, exportResults } from './commands/simulate';
 import { playGame } from './commands/play';
+import { runTune } from './commands/tune';
+import { runBenchmarkSuite, parseBenchmarkSuiteArgs } from './commands/benchmarkSuite';
 import { OutputLevel, type ExportFormat } from './types';
 import { createBot, type BotType } from './botFactory';
 
@@ -310,6 +312,48 @@ async function main() {
       break;
     }
 
+    case 'tune': {
+      // Parse tune options
+      const methodArg = args.find((a, i) => args[i - 1] === '--method');
+      const method = methodArg === 'evolve' ? 'evolve' : 'local';
+
+      const gamesRandomArg = args.find((a, i) => args[i - 1] === '--games-random');
+      const gamesVsRandom = gamesRandomArg ? parseInt(gamesRandomArg, 10) : 30;
+
+      const gamesGreedyArg = args.find((a, i) => args[i - 1] === '--games-greedy');
+      const gamesVsGreedy = gamesGreedyArg ? parseInt(gamesGreedyArg, 10) : 20;
+
+      const gensArg = args.find((a, i) => args[i - 1] === '--generations');
+      const generations = gensArg ? parseInt(gensArg, 10) : 15;
+
+      const popArg = args.find((a, i) => args[i - 1] === '--population');
+      const populationSize = popArg ? parseInt(popArg, 10) : 10;
+
+      const seedArg = args.find((a, i) => args[i - 1] === '--seed');
+      const seed = seedArg ? parseInt(seedArg, 10) : Date.now();
+
+      const verbose = args.includes('--verbose') || args.includes('-v');
+
+      await runTune({
+        method,
+        gamesVsRandom,
+        gamesVsGreedy,
+        generations,
+        populationSize,
+        seed,
+        verbose,
+      });
+      break;
+    }
+
+    case 'benchmark-suite':
+    case 'suite': {
+      // Parse benchmark suite options
+      const options = parseBenchmarkSuiteArgs(args);
+      await runBenchmarkSuite(options);
+      break;
+    }
+
     case 'help':
     default:
       console.log('🔬 ManaCore Research CLI\n');
@@ -319,7 +363,10 @@ async function main() {
       console.log('  sim [count]             Alias for simulate');
       console.log('  benchmark [count]       Run GreedyBot vs RandomBot benchmark (default: 10)');
       console.log('  bench [count]           Alias for benchmark');
+      console.log('  benchmark-suite         Run bot comparison matrix (Phase 2.5)');
+      console.log('  suite                   Alias for benchmark-suite');
       console.log('  replay <seed>           Replay a specific game by seed (for debugging)');
+      console.log('  tune                    Run weight tuning optimization (Phase 2.3)');
       console.log('  help                    Show this help message');
       console.log('');
       console.log('Options:');
@@ -381,6 +428,32 @@ async function main() {
       console.log('  bun src/index.ts benchmark 100 --minimal     # Summary only');
       console.log('  bun src/index.ts benchmark 1000 --profile');
       console.log('  bun src/index.ts replay 12383 --verbose      # Replay failed game');
+      console.log('');
+      console.log('Weight Tuning (Phase 2.3):');
+      console.log('  tune                    Run weight optimization');
+      console.log('  --method <local|evolve> Optimization method (default: local)');
+      console.log('  --generations <n>       Number of generations (default: 15)');
+      console.log('  --population <n>        Population size for evolve (default: 10)');
+      console.log('  --games-random <n>      Games vs RandomBot per eval (default: 30)');
+      console.log('  --games-greedy <n>      Games vs GreedyBot per eval (default: 20)');
+      console.log('');
+      console.log('Tuning Examples:');
+      console.log('  bun src/index.ts tune                        # Quick local search');
+      console.log('  bun src/index.ts tune --method evolve        # Evolutionary search');
+      console.log('  bun src/index.ts tune --generations 30       # More iterations');
+      console.log('');
+      console.log('Benchmark Suite (Phase 2.5 - NEW):');
+      console.log('  suite                   Run bot comparison matrix');
+      console.log('  --preset <name>         Preset: quick, standard, comprehensive');
+      console.log('  --bots <list>           Comma-separated bot types (overrides preset)');
+      console.log('  --games <n>             Games per matchup (default: 50 for quick)');
+      console.log('  --seed <n>              Random seed for reproducibility');
+      console.log('  --no-export             Disable JSON export');
+      console.log('');
+      console.log('Suite Examples:');
+      console.log('  bun src/index.ts suite                       # Quick preset (4 bots)');
+      console.log('  bun src/index.ts suite --preset standard     # 6 bots, 100 games each');
+      console.log('  bun src/index.ts suite --bots random,greedy,mcts-eval --games 200');
       break;
   }
 }

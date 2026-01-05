@@ -60,10 +60,10 @@ The ManaCore AI package provides bot implementations for playing Magic: The Gath
 
 **Goals:**
 
-- [ ] Improve MCTS speed (target: 1+ games/sec)
-- [ ] Add determinization for opponent's hidden hand
-- [ ] Switch to GreedyBot rollouts for better simulation quality
-- [ ] Beat RandomBot 80%+ consistently
+- [x] Improve MCTS speed (target: 1+ games/sec)
+- [x] Add determinization for opponent's hidden hand
+- [x] Switch to GreedyBot rollouts for better simulation quality
+- [x] Beat RandomBot 80%+ consistently
 
 **Performance Bottlenecks Identified:**
 
@@ -118,15 +118,15 @@ function determinize(state: GameState): GameState {
 
 ### Phase 2.3: Greedy Rollouts
 
-- [ ] Implement `greedyRolloutPolicy` using GreedyBot's evaluation
-- [ ] Compare rollout quality: random vs greedy
-- [ ] Measure win rate improvement
+- [x] Implement `greedyRolloutPolicy` using GreedyBot's evaluation
+- [x] Compare rollout quality: random vs greedy
+- [x] Measure win rate improvement
 
 ### Phase 2.4: Evaluation Tuning
 
-- [ ] Self-play weight optimization
-- [ ] Compare hand-tuned vs learned weights
-- [ ] Document optimal weight configuration
+- [x] Self-play weight optimization
+- [x] Compare hand-tuned vs learned weights
+- [x] Document optimal weight configuration
 
 ### Phase 2.5: Benchmarking Suite
 
@@ -322,12 +322,3 @@ When working on the AI package:
 - [MCTS Survey Paper](https://www.cs.swarthmore.edu/~bryce/cs63/s16/reading/mcts.pdf)
 - [AlphaZero Paper](https://arxiv.org/abs/1712.01815)
 - [ISMCTS for Card Games](https://ieeexplore.ieee.org/document/6203567)
-
----
-
-**Next Session Goals:**
-
-1. Profile MCTS to identify specific bottlenecks
-2. Implement greedy rollout policy
-3. Add determinization for hidden information
-4. Target: MCTSBot beats RandomBot 70%+

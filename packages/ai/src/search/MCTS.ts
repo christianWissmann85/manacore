@@ -18,7 +18,12 @@ import {
   selectMostVisitedChild,
   backpropagate,
 } from './MCTSNode';
-import { evaluate, quickEvaluate } from '../evaluation/evaluate';
+import {
+  evaluate,
+  quickEvaluateWithCoefficients,
+  TUNED_WEIGHTS,
+  TUNED_COEFFICIENTS,
+} from '../evaluation/evaluate';
 
 /**
  * Rollout policy function type
@@ -296,8 +301,8 @@ export function runMCTS(
         reward = 0.0; // Loss
       }
     } else {
-      // Non-terminal - use evaluation function
-      reward = evaluate(evalState, playerId);
+      // Non-terminal - use evaluation function with tuned weights
+      reward = evaluate(evalState, playerId, TUNED_WEIGHTS);
       profile.evaluateCount++;
     }
 
@@ -386,7 +391,7 @@ export function randomRolloutPolicy(state: GameState, playerId: PlayerId): Actio
 /**
  * Greedy rollout policy - picks action with best immediate evaluation
  *
- * Uses quickEvaluate() to score each action's resulting state.
+ * Uses quickEvaluateWithCoefficients() with tuned coefficients to score actions.
  * Significantly better simulation quality than random at the cost of more computation.
  */
 export function greedyRolloutPolicy(state: GameState, playerId: PlayerId): Action {
@@ -411,7 +416,7 @@ export function greedyRolloutPolicy(state: GameState, playerId: PlayerId): Actio
   for (const action of actionsToEvaluate) {
     try {
       const newState = applyAction(state, action);
-      const score = quickEvaluate(newState, playerId);
+      const score = quickEvaluateWithCoefficients(newState, playerId, TUNED_COEFFICIENTS);
 
       if (score > bestScore) {
         bestScore = score;

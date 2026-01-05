@@ -21,7 +21,8 @@ import {
 } from '@manacore/engine';
 
 /**
- * Evaluation weights - can be tuned through self-play
+ * Evaluation weights - normalized to sum to 1.0
+ * Used for MCTS backpropagation (returns [0,1] scores)
  */
 export interface EvaluationWeights {
   life: number; // Life total differential
@@ -29,6 +30,18 @@ export interface EvaluationWeights {
   cards: number; // Hand size differential
   mana: number; // Available mana (lands on battlefield)
   tempo: number; // Tempo advantage (untapped vs tapped permanents)
+}
+
+/**
+ * Evaluation coefficients - raw multipliers for quickEvaluate
+ * Used for greedy action selection (returns unbounded scores)
+ */
+export interface EvaluationCoefficients {
+  life: number; // Multiplier for life differential
+  board: number; // Multiplier for board power differential
+  cards: number; // Multiplier for card advantage
+  mana: number; // Multiplier for mana advantage
+  stack: number; // Multiplier for creatures on stack (pending)
 }
 
 /**
@@ -41,6 +54,42 @@ export const DEFAULT_WEIGHTS: EvaluationWeights = {
   cards: 0.1, // Decreased - cards in hand don't win, cards on board do
   mana: 0.1,
   tempo: 0.05, // New - reward having untapped permanents
+};
+
+/**
+ * Optimized weights from self-play tuning (Phase 2.3)
+ * Found via local search optimization with 4355 games
+ */
+export const TUNED_WEIGHTS: EvaluationWeights = {
+  life: 0.31,
+  board: 0.46,
+  cards: 0.09,
+  mana: 0.08,
+  tempo: 0.05,
+};
+
+/**
+ * Default coefficients for quickEvaluate (raw scoring)
+ * These produce unbounded scores suitable for greedy action selection
+ */
+export const DEFAULT_COEFFICIENTS: EvaluationCoefficients = {
+  life: 2.0, // Each life point difference
+  board: 5.0, // Each power point on battlefield
+  cards: 0.1, // Each card in hand
+  mana: 1.5, // Each land on battlefield
+  stack: 8.0, // Creatures on stack (will resolve!)
+};
+
+/**
+ * Tuned coefficients derived from optimized weights
+ * Scaled to maintain similar score magnitudes
+ */
+export const TUNED_COEFFICIENTS: EvaluationCoefficients = {
+  life: 2.2, // 0.31 / 0.30 * 2.0
+  board: 5.1, // 0.46 / 0.45 * 5.0
+  cards: 0.09, // 0.09 / 0.10 * 0.1
+  mana: 1.2, // 0.08 / 0.10 * 1.5
+  stack: 8.0, // Keep same - not tuned yet
 };
 
 /**
@@ -115,8 +164,26 @@ export function evaluate(
 
 /**
  * Quick evaluation for sorting actions (doesn't need full calculation)
+ * Uses DEFAULT_COEFFICIENTS for scoring
  */
 export function quickEvaluate(state: GameState, playerId: PlayerId): number {
+  return quickEvaluateWithCoefficients(state, playerId, DEFAULT_COEFFICIENTS);
+}
+
+/**
+ * Quick evaluation with custom coefficients
+ * Returns unbounded scores suitable for greedy action selection
+ *
+ * @param state - Current game state
+ * @param playerId - Player to evaluate for
+ * @param coeff - Custom coefficients for scoring
+ * @returns Raw score (unbounded)
+ */
+export function quickEvaluateWithCoefficients(
+  state: GameState,
+  playerId: PlayerId,
+  coeff: EvaluationCoefficients,
+): number {
   if (state.gameOver) {
     if (state.winner === playerId) return 1000;
     if (state.winner === null) return 0;
@@ -139,11 +206,11 @@ export function quickEvaluate(state: GameState, playerId: PlayerId): number {
   const oppStackPower = getStackPower(state, playerId === 'player' ? 'opponent' : 'player');
 
   return (
-    (me.life - opp.life) * 2 +
-    (myPower - oppPower) * 5.0 + // Resolved creatures on battlefield
-    (myStackPower - oppStackPower) * 8.0 + // Creatures on stack (will resolve!) - weight even higher!
-    (me.hand.length - opp.hand.length) * 0.1 + // Hand size matters very little
-    (myLands - oppLands) * 1.5
+    (me.life - opp.life) * coeff.life +
+    (myPower - oppPower) * coeff.board +
+    (myStackPower - oppStackPower) * coeff.stack +
+    (me.hand.length - opp.hand.length) * coeff.cards +
+    (myLands - oppLands) * coeff.mana
   );
 }
 

@@ -18,8 +18,16 @@ export { GreedyBot } from './bots/GreedyBot';
 export { MCTSBot, createMCTSBot, MCTSBotPresets } from './bots/MCTSBot';
 
 // Evaluation exports
-export type { EvaluationWeights } from './evaluation/evaluate';
-export { evaluate, quickEvaluate, DEFAULT_WEIGHTS } from './evaluation/evaluate';
+export type { EvaluationWeights, EvaluationCoefficients } from './evaluation/evaluate';
+export {
+  evaluate,
+  quickEvaluate,
+  quickEvaluateWithCoefficients,
+  DEFAULT_WEIGHTS,
+  TUNED_WEIGHTS,
+  DEFAULT_COEFFICIENTS,
+  TUNED_COEFFICIENTS,
+} from './evaluation/evaluate';
 
 // Search exports
 export type { MCTSNode } from './search/MCTSNode';
@@ -40,6 +48,21 @@ export {
   selectMostVisitedChild,
   backpropagate,
 } from './search/MCTSNode';
+
+// Tuning exports
+export type {
+  FitnessScores,
+  WeightCandidate,
+  FitnessConfig,
+  OptimizerConfig,
+  OptimizationProgress,
+  OptimizationResult,
+  ProgressCallback,
+} from './tuning/types';
+export { FitnessEvaluator } from './tuning/FitnessEvaluator';
+export { LocalSearchOptimizer } from './tuning/LocalSearchOptimizer';
+export { EvolutionaryOptimizer } from './tuning/EvolutionaryOptimizer';
+export { TunableBot, normalizeWeights, weightsToCoefficients } from './tuning/TunableBot';
 
 if (!process.env.MANACORE_SILENT_INIT) {
   console.log(`✅ @manacore/ai v${AI_VERSION} loaded`);

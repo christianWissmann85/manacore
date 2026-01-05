@@ -408,13 +408,13 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 
 **Tasks:**
 
-- [ ] Implement MCTS algorithm
+- [x] Implement MCTS algorithm
   - Selection (UCB1)
   - Expansion
   - Simulation (rollout)
   - Backpropagation
-- [ ] Add determinization for hidden info
-- [ ] Implement GreedyBot for rollout policy
+- [x] Add determinization for hidden info
+- [x] Implement GreedyBot for rollout policy
 
 **Success Criteria:**
 
@@ -426,7 +426,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 
 **Tasks:**
 
-- [ ] Implement board evaluation heuristic:
+- [x] Implement board evaluation heuristic:
   ```typescript
   evaluation =
     (myLife - oppLife) * 2.0 +
@@ -435,8 +435,8 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
     myLandsInPlay * 0.3 +
     myCardAdvantage * 1.0;
   ```
-- [ ] Tune weights through self-play
-- [ ] Add tempo bonuses (untapped creatures > tapped)
+- [x] Tune weights through self-play
+- [x] Add tempo bonuses (untapped creatures > tapped)
 
 **Test:**
 Run 1000 games with different weight values, find optimal.
@@ -549,6 +549,7 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
       └── train_dqn.py        # PyTorch example
   ```
 - [ ] Define `pyproject.toml`:
+
   ```toml
   [project]
   name = "manacore-gym"
@@ -576,21 +577,22 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
 **Tasks:**
 
 - [ ] Implement `ManaCoreBattleEnv(gym.Env)`:
+
   ```python
   class ManaCoreBattleEnv(gym.Env):
       """
       OpenAI Gym environment for ManaCore battles.
-      
+
       Observation Space:
       - GameState serialized as flat vector or dict
       - Player life, mana, hand size, board state
       - Opponent visible info (life, board, graveyard count)
-      
+
       Action Space:
       - Discrete(N) where N = max possible actions
       - Or MultiDiscrete for structured actions
       - Or Dict space for hierarchical actions
-      
+
       Reward:
       - +1.0 for winning
       - -1.0 for losing
@@ -600,11 +602,11 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
           self.bridge = bridge  # FFI bridge to TypeScript
           # Define observation_space
           # Define action_space
-          
+
       def reset(self, seed=None):
           # Initialize new game via bridge
           # Return initial observation
-          
+
       def step(self, action):
           # Send action to bridge
           # Get new state
@@ -612,6 +614,7 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
           # Check if game is done
           # Return (obs, reward, terminated, truncated, info)
   ```
+
 - [ ] Design observation space:
   - **Option A:** Flat vector (400-1000 dims) for neural networks
   - **Option B:** Dict space (structured) for debugging
@@ -639,20 +642,21 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
 **Tasks:**
 
 - [ ] Create `packages/cli-client/src/server.ts`:
+
   ```typescript
   /**
    * HTTP/WebSocket server for Python bridge
    * Exposes game engine API to Python clients
    */
-  
+
   import { Hono } from 'hono'; // Lightweight web framework
   import { createGameState, applyAction } from '@manacore/engine';
-  
+
   const app = new Hono();
-  
+
   // Session management (keep games in memory)
   const sessions = new Map<string, GameState>();
-  
+
   app.post('/game/create', async (c) => {
     const { seed, deck_p1, deck_p2 } = await c.req.json();
     const gameId = crypto.randomUUID();
@@ -660,7 +664,7 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
     sessions.set(gameId, state);
     return c.json({ gameId, state: serializeState(state) });
   });
-  
+
   app.post('/game/:id/step', async (c) => {
     const gameId = c.req.param('id');
     const { action } = await c.req.json();
@@ -673,7 +677,7 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
       winner: getWinner(newState),
     });
   });
-  
+
   // Batch endpoint for performance
   app.post('/batch/step', async (c) => {
     const { gameIds, actions } = await c.req.json();
@@ -682,12 +686,13 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
     });
     return c.json({ results });
   });
-  
+
   export default {
     port: 3333,
     fetch: app.fetch,
   };
   ```
+
 - [ ] Add server command to CLI:
   ```bash
   bun run cli server --port 3333
@@ -713,11 +718,12 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
 **Tasks:**
 
 - [ ] Implement `manacore_gym/bridge.py`:
+
   ```python
   import requests
   import subprocess
   from typing import Dict, Any, Optional
-  
+
   class BunBridge:
       """
       Bridge to Bun server running ManaCore engine.
@@ -725,12 +731,12 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
       def __init__(self, host="localhost", port=3333, auto_start=True):
           self.base_url = f"http://{host}:{port}"
           self.process = None
-          
+
           if auto_start:
               self.start_server()
-          
+
           self._wait_for_server()
-      
+
       def start_server(self):
           """Start Bun server as subprocess."""
           self.process = subprocess.Popen(
@@ -738,7 +744,7 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
               stdout=subprocess.PIPE,
               stderr=subprocess.PIPE,
           )
-      
+
       def create_game(self, seed: int, deck_p1: Dict, deck_p2: Dict) -> str:
           """Create new game, return game ID."""
           response = requests.post(
@@ -746,7 +752,7 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
               json={"seed": seed, "deck_p1": deck_p1, "deck_p2": deck_p2},
           )
           return response.json()
-      
+
       def step(self, game_id: str, action: Dict[str, Any]) -> Dict:
           """Send action, get new state."""
           response = requests.post(
@@ -754,11 +760,12 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
               json={"action": action},
           )
           return response.json()
-      
+
       def __del__(self):
           if self.process:
               self.process.terminate()
   ```
+
 - [ ] Add connection pooling for performance
 - [ ] Add timeout handling and retries
 - [ ] Add logging for debugging
@@ -775,16 +782,17 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
 **Tasks:**
 
 - [ ] Create `examples/random_agent.py`:
+
   ```python
   """
   Sanity check: Random agent playing against RandomBot
   """
   import gymnasium as gym
   from manacore_gym import ManaCoreBattleEnv
-  
+
   env = gym.make("ManaCoreBattle-v0")
   obs, info = env.reset(seed=42)
-  
+
   for _ in range(1000):
       action = env.action_space.sample()
       obs, reward, terminated, truncated, info = env.step(action)
@@ -792,7 +800,9 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
           print(f"Game over! Reward: {reward}")
           obs, info = env.reset()
   ```
+
 - [ ] Create `examples/train_ppo.py`:
+
   ```python
   """
   Train PPO agent using Stable Baselines3
@@ -800,16 +810,16 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
   from stable_baselines3 import PPO
   from stable_baselines3.common.env_checker import check_env
   from manacore_gym import ManaCoreBattleEnv
-  
+
   # Create environment
   env = ManaCoreBattleEnv(
       deck_p1={"name": "Aggro Red", "cards": [...]},
       deck_p2={"name": "Control Blue", "cards": [...]},
   )
-  
+
   # Verify environment
   check_env(env)
-  
+
   # Train agent
   model = PPO(
       "MlpPolicy",
@@ -817,10 +827,10 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
       verbose=1,
       tensorboard_log="./logs/ppo_manacore/",
   )
-  
+
   model.learn(total_timesteps=100_000)
   model.save("ppo_manacore_100k")
-  
+
   # Evaluate
   obs, info = env.reset()
   for _ in range(100):
@@ -830,6 +840,7 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
           print(f"Win rate: {reward > 0}")
           obs, info = env.reset()
   ```
+
 - [ ] Create `examples/train_dqn.py` (alternative)
 - [ ] Create `examples/curriculum_learning.py`:
   - Start against RandomBot
@@ -848,6 +859,7 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
 **Tasks:**
 
 - [ ] Write unit tests:
+
   ```python
   # tests/test_env.py
   def test_env_reset():
@@ -855,27 +867,29 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
       obs, info = env.reset(seed=42)
       assert obs is not None
       assert "legal_actions" in info
-  
+
   def test_env_step():
       env = ManaCoreBattleEnv(...)
       obs, info = env.reset(seed=42)
       action = info["legal_actions"][0]
       obs, reward, terminated, truncated, info = env.step(action)
       assert obs is not None
-  
+
   def test_action_masking():
       # Verify only legal actions are returned
       pass
   ```
+
 - [ ] Write integration tests:
   - Full game with random actions
   - Full game with trained agent
   - Verify determinism (same seed → same game)
 - [ ] Performance benchmarking:
+
   ```python
   # Measure games/second from Python
   import time
-  
+
   start = time.time()
   for i in range(1000):
       env.reset(seed=i)
@@ -945,30 +959,34 @@ twine upload dist/*
 **Tasks:**
 
 - [ ] Implement vectorized environments:
+
   ```python
   from stable_baselines3.common.vec_env import SubprocVecEnv
-  
+
   def make_env(seed):
       def _init():
           env = ManaCoreBattleEnv(...)
           env.reset(seed=seed)
           return env
       return _init
-  
+
   # Train on 8 environments in parallel
   envs = SubprocVecEnv([make_env(i) for i in range(8)])
   model = PPO("MlpPolicy", envs)
   ```
+
 - [ ] Add curriculum learning helper:
+
   ```python
   from manacore_gym.curriculum import CurriculumScheduler
-  
+
   scheduler = CurriculumScheduler([
       {"opponent": "random", "steps": 10_000},
       {"opponent": "greedy", "steps": 20_000},
       {"opponent": "mcts", "steps": 50_000},
   ])
   ```
+
 - [ ] Add replay buffer for off-policy methods:
   - Save (state, action, reward, next_state) tuples
   - Export to HDF5 for offline training
