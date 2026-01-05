@@ -106,9 +106,6 @@ mana-core/
 │   │   ├── data/
 │   │   │   ├── cards/
 │   │   │   │   └── 6ed.json      # Cached Scryfall data
-│   │   │   └── decks/
-│   │   │       ├── red-burn.json
-│   │   │       └── blue-control.json
 │   │   └── tests/
 │   │       ├── combat.test.ts
 │   │       └── stack.test.ts

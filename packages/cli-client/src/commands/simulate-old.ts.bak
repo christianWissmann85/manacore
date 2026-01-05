@@ -1,0 +1,904 @@
+/**
+ * Game simulation - run bot vs bot games
+ *
+ * Features:
+ * - Runs multiple bot vs bot games
+ * - Tracks deck/matchup statistics
+ * - Verbose mode with state snapshots on errors
+ */
+
+import type { Bot } from '@manacore/ai';
+import type { PlayerId, GameState, Action, CardTemplate } from '@manacore/engine';
+import {
+  initializeGame,
+  getRandomTestDeck,
+  getDeckDisplayName,
+  applyAction,
+  getLegalActions,
+  describeAction,
+  getPlayer,
+  CardLoader,
+  getEffectivePowerWithLords,
+  getEffectiveToughnessWithLords,
+  isCreature,
+} from '@manacore/engine';
+
+export interface SimulationOptions {
+  gameCount: number;
+  maxTurns?: number;
+  verbose?: boolean;
+  debugVerbose?: boolean;
+  seed?: number;
+  exportJson?: boolean; // Export results as JSON
+  logErrors?: boolean;  // Save error details to file
+}
+
+export interface DeckStats {
+  wins: number;
+  losses: number;
+  draws: number;
+  games: number;
+  avgCmc?: number; // Average converted mana cost
+  cmcDistribution?: Record<number, number>; // Count of cards at each CMC
+}
+
+export interface MatchupStats {
+  wins: number;
+  losses: number;
+  draws: number;
+}
+
+export interface GameRecord {
+  gameNumber: number;
+  seed: number;
+  winner: PlayerId | null;
+  turns: number;
+  playerDeck: string;
+  opponentDeck: string;
+  error?: string;
+}
+
+export interface SimulationResults {
+  totalGames: number;
+  playerWins: number;
+  opponentWins: number;
+  draws: number;
+  averageTurns: number;
+  minTurns: number;
+  maxTurns: number;
+  errors: number;
+  gamesCompleted: number;
+  deckStats: Record<string, DeckStats>; // Changed from DeckColor to string to support all deck types
+  matchups: Record<string, MatchupStats>;
+  gameRecords: GameRecord[]; // New: detailed per-game tracking
+  baseSeed: number; // New: for reproducibility
+  failedSeeds: number[]; // New: seeds that caused errors
+}
+
+function createEmptyDeckStats(): DeckStats {
+  return { wins: 0, losses: 0, draws: 0, games: 0, cmcDistribution: {} };
+}
+
+function createEmptyMatchupStats(): MatchupStats {
+  return { wins: 0, losses: 0, draws: 0 };
+}
+
+function getMatchupKey(deck1: string, deck2: string): string {
+  return `${deck1} vs ${deck2}`;
+}
+
+/**
+ * Calculate mana curve statistics for a deck
+ */
+function calculateManaCurve(deck: CardTemplate[]): {
+  avgCmc: number;
+  cmcDistribution: Record<number, number>;
+} {
+  const nonLands = deck.filter((card) => !card.type_line?.includes('Land'));
+  const cmcDistribution: Record<number, number> = {};
+  let totalCmc = 0;
+
+  for (const card of nonLands) {
+    const cmc = card.cmc || 0;
+    cmcDistribution[cmc] = (cmcDistribution[cmc] || 0) + 1;
+    totalCmc += cmc;
+  }
+
+  const avgCmc = nonLands.length > 0 ? totalCmc / nonLands.length : 0;
+
+  return { avgCmc, cmcDistribution };
+}
+
+/**
+ * Run multiple games between two bots
+ */
+export async function runSimulation(
+  playerBot: Bot,
+  opponentBot: Bot,
+  options: SimulationOptions,
+): Promise<SimulationResults> {
+  const deckStats: Record<string, DeckStats> = {}; // Dynamic deck stats for all deck types
+
+  const matchups: Record<string, MatchupStats> = {};
+
+  const results: SimulationResults = {
+    totalGames: options.gameCount,
+    playerWins: 0,
+    opponentWins: 0,
+    draws: 0,
+    averageTurns: 0,
+    minTurns: Infinity,
+    maxTurns: 0,
+    errors: 0,
+    gamesCompleted: 0,
+    deckStats,
+    matchups,
+    gameRecords: [],
+    baseSeed: options.seed ?? Date.now(),
+    failedSeeds: [],
+  };
+
+  let totalTurns = 0;
+
+  console.log(
+    `\n🎮 Running ${options.gameCount} games: ${playerBot.getName()} vs ${opponentBot.getName()}\n`,
+  );
+
+  for (let i = 0; i < options.gameCount; i++) {
+    if (options.debugVerbose) {
+      console.log(`\n${'─'.repeat(60)}`);
+      console.log(`🎲 Game ${i + 1}/${options.gameCount}`);
+      console.log('─'.repeat(60));
+    } else if (i % 10 === 0) {
+      console.log(`  Progress: ${i}/${options.gameCount} games`);
+    }
+
+    try {
+      const seed = options.seed !== undefined ? options.seed + i : undefined;
+      const gameResult = await runSingleGame(playerBot, opponentBot, {
+        maxTurns: options.maxTurns || 100,
+        verbose: options.verbose || false,
+        debugVerbose: options.debugVerbose || false,
+        seed,
+      });
+
+      if (options.debugVerbose) {
+        const winnerName =
+          gameResult.winner === 'player'
+            ? playerBot.getName()
+            : gameResult.winner === 'opponent'
+              ? opponentBot.getName()
+              : 'Draw';
+        console.log(`\n✅ Game completed in ${gameResult.turns} turns`);
+        console.log(`🏆 Winner: ${winnerName}`);
+        console.log(`🎨 Decks: ${gameResult.playerDeck} vs ${gameResult.opponentDeck}`);
+      }
+
+      results.gamesCompleted++;
+      totalTurns += gameResult.turns;
+      results.minTurns = Math.min(results.minTurns, gameResult.turns);
+      results.maxTurns = Math.max(results.maxTurns, gameResult.turns);
+
+      const { playerDeck, opponentDeck } = gameResult;
+      const matchupKey = getMatchupKey(playerDeck, opponentDeck);
+
+      // Initialize deck stats if not exists
+      if (!deckStats[playerDeck]) {
+        deckStats[playerDeck] = createEmptyDeckStats();
+        // Calculate mana curve for this deck
+        const deck = gameResult.playerDeckCards;
+        if (deck) {
+          const curveStats = calculateManaCurve(deck);
+          deckStats[playerDeck].avgCmc = curveStats.avgCmc;
+          deckStats[playerDeck].cmcDistribution = curveStats.cmcDistribution;
+        }
+      }
+      if (!deckStats[opponentDeck]) {
+        deckStats[opponentDeck] = createEmptyDeckStats();
+        // Calculate mana curve for this deck
+        const deck = gameResult.opponentDeckCards;
+        if (deck) {
+          const curveStats = calculateManaCurve(deck);
+          deckStats[opponentDeck].avgCmc = curveStats.avgCmc;
+          deckStats[opponentDeck].cmcDistribution = curveStats.cmcDistribution;
+        }
+      }
+
+      // Initialize matchup if not exists
+      if (!matchups[matchupKey]) {
+        matchups[matchupKey] = createEmptyMatchupStats();
+      }
+
+      // Track deck games played
+      deckStats[playerDeck].games++;
+      deckStats[opponentDeck].games++;
+
+      if (gameResult.winner === 'player') {
+        results.playerWins++;
+        deckStats[playerDeck].wins++;
+        deckStats[opponentDeck].losses++;
+        matchups[matchupKey].wins++;
+      } else if (gameResult.winner === 'opponent') {
+        results.opponentWins++;
+        deckStats[playerDeck].losses++;
+        deckStats[opponentDeck].wins++;
+        matchups[matchupKey].losses++;
+      } else {
+        results.draws++;
+        deckStats[playerDeck].draws++;
+        deckStats[opponentDeck].draws++;
+        matchups[matchupKey].draws++;
+      }
+
+      // Record game details
+      results.gameRecords.push({
+        gameNumber: i + 1,
+        seed: seed!,
+        winner: gameResult.winner,
+        turns: gameResult.turns,
+        playerDeck: gameResult.playerDeck,
+        opponentDeck: gameResult.opponentDeck,
+      });
+    } catch (error) {
+      results.errors++;
+      const gameSeed = options.seed !== undefined ? options.seed + i : undefined;
+      if (gameSeed !== undefined) {
+        results.failedSeeds.push(gameSeed);
+      }
+
+      // Enhanced error reporting with state snapshots
+      if (error instanceof GameError) {
+        console.error(`\n  Error in game ${i + 1}:`);
+        console.error(`    ${error.message}`);
+
+        if (options.verbose) {
+          // Print full state snapshot to console
+          const snapshot = generateStateSnapshot(error.state, error.recentActions, error);
+          console.error(snapshot);
+
+          // Write to file for later analysis
+          const filename = await writeErrorSnapshot(
+            i + 1,
+            error.state,
+            error.recentActions,
+            error,
+            error.seed,
+          );
+          if (filename) {
+            console.error(`    State snapshot saved to: ${filename}`);
+          }
+        } else {
+          // Even in non-verbose mode, provide useful debugging hints
+          console.error(
+            `    State: turn=${error.state.turnCount}, phase=${error.state.phase}, step=${error.state.step}`,
+          );
+          console.error(`    Seed: ${error.seed ?? 'random'} (use --verbose for full snapshot)`);
+        }
+      } else if (options.verbose) {
+        console.error(`  Error in game ${i + 1}:`, error);
+      }
+    }
+  }
+
+  results.averageTurns = results.gamesCompleted > 0 ? totalTurns / results.gamesCompleted : 0;
+
+  if (results.minTurns === Infinity) results.minTurns = 0;
+
+  return results;
+}
+
+interface GameResult {
+  winner: PlayerId | null;
+  turns: number;
+  playerDeck: string; // Changed to string to support all deck types
+  opponentDeck: string;
+  playerDeckCards?: CardTemplate[]; // For mana curve calculation
+  opponentDeckCards?: CardTemplate[]; // For mana curve calculation
+}
+
+/**
+ * Error with additional game context
+ */
+class GameError extends Error {
+  constructor(
+    message: string,
+    public readonly state: GameState,
+    public readonly recentActions: Action[],
+    public readonly seed: number | undefined,
+  ) {
+    super(message);
+    this.name = 'GameError';
+  }
+}
+
+/**
+ * Run a single game to completion
+ */
+async function runSingleGame(
+  playerBot: Bot,
+  opponentBot: Bot,
+  options: { maxTurns: number; verbose: boolean; debugVerbose?: boolean; seed?: number },
+): Promise<GameResult> {
+  // Create decks - each bot gets a random test deck from ALL available decks
+  const playerDeck = getRandomTestDeck();
+  const opponentDeck = getRandomTestDeck();
+  const playerDeckName = getDeckDisplayName(playerDeck);
+  const opponentDeckName = getDeckDisplayName(opponentDeck);
+
+  // Initialize game
+  let state = initializeGame(playerDeck, opponentDeck, options.seed);
+
+  let turnCount = 0;
+  const maxTurns = options.maxTurns;
+  let actionCount = 0;
+  let lastLoggedTurn = 0;
+  let actionsThisTurn = 0;
+
+  // Track recent actions for debugging
+  const recentActions: Action[] = [];
+  const MAX_RECENT_ACTIONS = 50;
+
+  // Hang detection: track actions per priority window
+  let actionsThisPriorityWindow = 0;
+  let lastPriorityPlayer = state.priorityPlayer;
+  let lastPhase = state.phase;
+  let lastStep = state.step;
+  const MAX_ACTIONS_PER_PRIORITY = 50; // Reasonable limit per priority window
+
+  // Track repeated actions to detect loops
+  const actionHistory: string[] = [];
+  const MAX_ACTION_HISTORY = 20;
+
+  if (options.debugVerbose) {
+    console.log(`\n📋 Starting game with decks: ${playerDeckName} vs ${opponentDeckName}`);
+    console.log(`🎲 Seed: ${options.seed ?? 'random'}\n`);
+  }
+
+  while (!state.gameOver && turnCount < maxTurns) {
+    // Get the bot with priority (Phase 1+: priority determines who can act)
+    const priorityBot = state.priorityPlayer === 'player' ? playerBot : opponentBot;
+
+    // Get legal actions for the player with priority
+    const legalActions = getLegalActions(state, state.priorityPlayer);
+
+    if (legalActions.length === 0) {
+      // No legal actions - this is a bug! Throw with context
+      const error = new GameError(
+        `No legal actions for ${state.priorityPlayer} (phase=${state.phase}, step=${state.step})`,
+        state,
+        recentActions,
+        options.seed,
+      );
+      throw error;
+    }
+
+    // Bot chooses action
+    const action = priorityBot.chooseAction(state, state.priorityPlayer);
+
+    // Create action signature for loop detection
+    const actionSignature = `${action.type}_${action.type === 'ACTIVATE_ABILITY' ? action.payload.abilityId : ''}_${state.phase}_${state.step}`;
+    actionHistory.push(actionSignature);
+    if (actionHistory.length > MAX_ACTION_HISTORY) {
+      actionHistory.shift();
+    }
+
+    // Track action for debugging
+    recentActions.push(action);
+    if (recentActions.length > MAX_RECENT_ACTIONS) {
+      recentActions.shift();
+    }
+
+    // Apply action
+    try {
+      const previousPhase = state.phase;
+      const previousStep = state.step;
+      const previousPriorityPlayer = state.priorityPlayer;
+
+      state = applyAction(state, action);
+      actionCount++;
+      actionsThisTurn++;
+
+      // Check if priority changed or phase/step advanced
+      if (
+        state.priorityPlayer !== lastPriorityPlayer ||
+        state.phase !== lastPhase ||
+        state.step !== lastStep
+      ) {
+        // Priority window changed - reset counter
+        actionsThisPriorityWindow = 0;
+        lastPriorityPlayer = state.priorityPlayer;
+        lastPhase = state.phase;
+        lastStep = state.step;
+      } else {
+        // Same priority window - increment counter
+        actionsThisPriorityWindow++;
+
+        // HANG DETECTION: Too many actions in same priority window
+        if (actionsThisPriorityWindow >= MAX_ACTIONS_PER_PRIORITY) {
+          const player = getPlayer(state, state.priorityPlayer);
+          const opponent = getPlayer(
+            state,
+            state.priorityPlayer === 'player' ? 'opponent' : 'player',
+          );
+
+          // Analyze what's causing the loop
+          const recentActionTypes = actionHistory.slice(-10);
+          const uniqueActions = new Set(recentActionTypes);
+          const isRepeating = uniqueActions.size <= 2; // Only 1-2 different actions
+
+          let loopCause = 'Unknown';
+          let problematicCard = '';
+
+          if (action.type === 'ACTIVATE_ABILITY' && isRepeating) {
+            // Find the card with this ability
+            const abilityId = action.payload.abilityId;
+            const sourceId = action.payload.sourceId;
+            const card = player.battlefield.find((c) => c.instanceId === sourceId);
+            if (card) {
+              const template = CardLoader.getById(card.scryfallId);
+              problematicCard = template?.name || 'Unknown Card';
+              loopCause = `Infinite ability activation: ${problematicCard} (${abilityId})`;
+            }
+          }
+
+          // Build detailed error message
+          let errorMsg = `\n${'='.repeat(70)}\n`;
+          errorMsg += `🚨 INFINITE LOOP DETECTED!\n`;
+          errorMsg += `${'='.repeat(70)}\n\n`;
+          errorMsg += `Game: ${playerDeckName} vs ${opponentDeckName}\n`;
+          errorMsg += `Seed: ${options.seed ?? 'unknown'}\n`;
+          errorMsg += `Turn: ${state.turnCount}, Phase: ${state.phase}, Step: ${state.step}\n`;
+          errorMsg += `Priority: ${state.priorityPlayer}\n`;
+          errorMsg += `Actions in this priority window: ${actionsThisPriorityWindow}\n\n`;
+
+          errorMsg += `Loop Cause: ${loopCause}\n\n`;
+
+          errorMsg += `Recent Actions (last 10):\n`;
+          for (let i = Math.max(0, recentActions.length - 10); i < recentActions.length; i++) {
+            const a = recentActions[i];
+            if (!a) continue;
+            errorMsg += `  ${i + 1}. ${a.type}`;
+            if (a.type === 'ACTIVATE_ABILITY') {
+              errorMsg += ` (${a.payload.abilityId})`;
+            }
+            errorMsg += `\n`;
+          }
+
+          errorMsg += `\n${state.priorityPlayer.toUpperCase()}'s Battlefield (${player.battlefield.length} cards):\n`;
+          for (const card of player.battlefield) {
+            const template = CardLoader.getById(card.scryfallId);
+            if (template && isCreature(template)) {
+              const basePower = parseInt(template.power || '0', 10);
+              const baseToughness = parseInt(template.toughness || '0', 10);
+              const power = getEffectivePowerWithLords(state, card, basePower);
+              const toughness = getEffectiveToughnessWithLords(state, card, baseToughness);
+              const keywords = template.keywords?.length
+                ? ` [${template.keywords.join(', ')}]`
+                : '';
+              errorMsg += `  • ${template.name} (${power}/${toughness}) ${card.tapped ? '[T]' : '[U]'}${keywords}\n`;
+            } else {
+              errorMsg += `  • ${template?.name} ${card.tapped ? '[T]' : '[U]'}\n`;
+            }
+          }
+
+          errorMsg += `\nOpponent's Battlefield (${opponent.battlefield.length} cards):\n`;
+          for (const card of opponent.battlefield.slice(0, 5)) {
+            // Show first 5
+            const template = CardLoader.getById(card.scryfallId);
+            if (template && isCreature(template)) {
+              const basePower = parseInt(template.power || '0', 10);
+              const baseToughness = parseInt(template.toughness || '0', 10);
+              const power = getEffectivePowerWithLords(state, card, basePower);
+              const toughness = getEffectiveToughnessWithLords(state, card, baseToughness);
+              errorMsg += `  • ${template.name} (${power}/${toughness}) ${card.tapped ? '[T]' : '[U]'}\n`;
+            } else {
+              errorMsg += `  • ${template?.name} ${card.tapped ? '[T]' : '[U]'}\n`;
+            }
+          }
+          if (opponent.battlefield.length > 5) {
+            errorMsg += `  ... and ${opponent.battlefield.length - 5} more\n`;
+          }
+
+          errorMsg += `\n${'='.repeat(70)}\n`;
+
+          throw new Error(errorMsg);
+        }
+      }
+
+      // Show progress in debug verbose mode
+      if (options.debugVerbose) {
+        // Show turn changes
+        if (state.turnCount > turnCount) {
+          if (actionsThisTurn > 10) {
+            console.log(`   └─ ${actionsThisTurn} actions on turn ${turnCount}`);
+          }
+          console.log(
+            `\n🔄 Turn ${state.turnCount} | ${state.phase} | ${state.activePlayer}'s turn`,
+          );
+          lastLoggedTurn = state.turnCount;
+          actionsThisTurn = 0;
+        }
+        // Show phase changes
+        else if (state.phase !== previousPhase || state.step !== previousStep) {
+          // Only log if we're on a turn with lots of actions
+          if (actionsThisTurn > 20 && actionsThisTurn % 10 === 0) {
+            console.log(`   ├─ ${state.phase}/${state.step} (${actionsThisTurn} actions so far)`);
+          }
+        }
+
+        // Warn if we're processing too many actions on one turn
+        if (actionsThisTurn > 0 && actionsThisTurn % 100 === 0) {
+          const actionDesc = describeAction(action, state);
+          console.log(
+            `   ⚠️  Turn ${state.turnCount}: ${actionsThisTurn} actions! Last: ${actionDesc} [${state.phase}/${state.step}] ${previousPriorityPlayer}→${state.priorityPlayer}`,
+          );
+        }
+
+        // Show periodic action count
+        if (actionCount % 50 === 0 && state.turnCount === lastLoggedTurn) {
+          console.log(`   ⚡ ${actionCount} actions processed (turn ${state.turnCount})`);
+        }
+      }
+    } catch (error) {
+      // Wrap error with game context
+      const gameError = new GameError(
+        error instanceof Error ? error.message : String(error),
+        state,
+        recentActions,
+        options.seed,
+      );
+      throw gameError;
+    }
+
+    // Track turns
+    if (state.turnCount > turnCount) {
+      turnCount = state.turnCount;
+    }
+
+    // Safety check for infinite loops
+    if (state.turnCount > maxTurns) {
+      if (options.verbose) {
+        console.log(`Game exceeded ${maxTurns} turns - declaring draw`);
+      }
+      break;
+    }
+  }
+
+  // Determine winner
+  let winner: PlayerId | null = null;
+  if (state.gameOver && state.winner) {
+    winner = state.winner;
+  } else {
+    // Game didn't complete normally - check life totals
+    const playerLife = state.players.player.life;
+    const opponentLife = state.players.opponent.life;
+
+    if (playerLife > opponentLife) {
+      winner = 'player';
+    } else if (opponentLife > playerLife) {
+      winner = 'opponent';
+    }
+    // else it's a draw
+  }
+
+  return {
+    winner,
+    turns: turnCount,
+    playerDeck: playerDeckName,
+    opponentDeck: opponentDeckName,
+    playerDeckCards: playerDeck,
+    opponentDeckCards: opponentDeck,
+  };
+}
+
+/**
+ * Print simulation results
+ */
+export function printResults(
+  results: SimulationResults,
+  _playerName: string,
+  _opponentName: string,
+): void {
+  console.log('\n' + '═'.repeat(60));
+  console.log('  SIMULATION RESULTS');
+  console.log('═'.repeat(60));
+  console.log(`Games: ${results.gamesCompleted}/${results.totalGames} | Errors: ${results.errors}`);
+  console.log(
+    `Turns: ${results.minTurns}-${results.maxTurns} (avg ${results.averageTurns.toFixed(1)})`,
+  );
+  console.log('');
+
+  // Overall wins
+  console.log('─'.repeat(60));
+  console.log('  OVERALL');
+  console.log('─'.repeat(60));
+  console.log(
+    `P1 wins: ${results.playerWins} (${pct(results.playerWins, results.gamesCompleted)}) | P2 wins: ${results.opponentWins} (${pct(results.opponentWins, results.gamesCompleted)}) | Draws: ${results.draws} (${pct(results.draws, results.gamesCompleted)})`,
+  );
+
+  // Deck performance
+  console.log('');
+  console.log('─'.repeat(60));
+  console.log('  DECK PERFORMANCE');
+  console.log('─'.repeat(60));
+
+  const deckEmoji: Record<string, string> = {
+    white: '⬜',
+    blue: '🟦',
+    black: '⬛',
+    red: '🟥',
+    green: '🟩',
+    azorius: '⬜🟦',
+    orzhov: '⬜⬛',
+    boros: '⬜🟥',
+    selesnya: '⬜🟩',
+    dimir: '🟦⬛',
+    izzet: '🟦🟥',
+    simic: '🟦🟩',
+    rakdos: '⬛🟥',
+    golgari: '⬛🟩',
+    gruul: '🟥🟩',
+    artifact: '⚙️',
+    colorhate: '🛡️',
+    artifacts2: '⚙️',
+    spells: '✨',
+    creatures: '🦖',
+    multicolor: '🌈',
+    white_weenie: '⚔️⬜',
+    blue_control: '🛡️🟦',
+    black_aggro: '💀⬛',
+    red_burn: '🔥🟥',
+    green_midrange: '🌲🟩',
+    unknown: '❓',
+  };
+
+  // Sort by win rate
+  const sortedDecks = Object.keys(results.deckStats)
+    .filter((deckName) => (results.deckStats[deckName]?.games ?? 0) > 0)
+    .sort((a, b) => {
+      const aStats = results.deckStats[a];
+      const bStats = results.deckStats[b];
+      if (!aStats || !bStats) return 0;
+      const aRate = aStats.wins / aStats.games;
+      const bRate = bStats.wins / bStats.games;
+      return bRate - aRate;
+    });
+
+  for (const deckName of sortedDecks) {
+    const stats = results.deckStats[deckName];
+    if (!stats) continue;
+    const winRate = pct(stats.wins, stats.games);
+    const name = deckName.charAt(0).toUpperCase() + deckName.slice(1);
+    const emoji = deckEmoji[deckName] || '❓';
+
+    // Format mana curve info
+    const curveInfo = stats.avgCmc !== undefined ? ` [CMC: ${stats.avgCmc.toFixed(1)}]` : '';
+
+    console.log(
+      `${emoji} ${name.padEnd(14)} ${stats.wins}W-${stats.losses}L-${stats.draws}D (${winRate}) [${stats.games} games]${curveInfo}`,
+    );
+  }
+
+  // Mana Curve Analysis (if enough games played)
+  const largeDecks = sortedDecks.filter((d) => (results.deckStats[d]?.games ?? 0) >= 5);
+  if (largeDecks.length > 0) {
+    console.log('');
+    console.log('─'.repeat(60));
+    console.log('  MANA CURVE ANALYSIS (5+ games)');
+    console.log('─'.repeat(60));
+
+    for (const deckName of largeDecks.slice(0, 5)) {
+      const stats = results.deckStats[deckName];
+      if (!stats) continue;
+      const name = deckName.charAt(0).toUpperCase() + deckName.slice(1);
+
+      if (stats.avgCmc !== undefined && stats.cmcDistribution) {
+        const winRate = ((stats.wins / stats.games) * 100).toFixed(0);
+        console.log(
+          `${name.padEnd(14)} Avg CMC: ${stats.avgCmc.toFixed(2)} | Win Rate: ${winRate}%`,
+        );
+
+        // Show distribution bar chart
+        const maxCmc = Math.max(...Object.keys(stats.cmcDistribution).map(Number));
+        const bars = [];
+        for (let cmc = 0; cmc <= Math.min(maxCmc, 7); cmc++) {
+          const count = stats.cmcDistribution[cmc] || 0;
+          const bar = '█'.repeat(Math.ceil(count / 2)); // Scale down for display
+          bars.push(`${cmc}:${bar}${count}`);
+        }
+        console.log(`  ${bars.join(' ')}`);
+      }
+    }
+  }
+
+  // Top matchups (if enough data)
+  const matchupEntries = Object.entries(results.matchups)
+    .filter(([_, stats]) => stats.wins + stats.losses + stats.draws >= 2)
+    .sort((a, b) => {
+      const aTotal = a[1].wins + a[1].losses + a[1].draws;
+      const bTotal = b[1].wins + b[1].losses + b[1].draws;
+      return bTotal - aTotal;
+    })
+    .slice(0, 5);
+
+  if (matchupEntries.length > 0) {
+    console.log('');
+    console.log('─'.repeat(60));
+    console.log('  TOP MATCHUPS (P1 perspective)');
+    console.log('─'.repeat(60));
+    for (const [matchup, stats] of matchupEntries) {
+      const total = stats.wins + stats.losses + stats.draws;
+      console.log(
+        `${matchup}: ${stats.wins}W-${stats.losses}L-${stats.draws}D (${pct(stats.wins, total)}) [${total}x]`,
+      );
+    }
+  }
+
+  console.log('═'.repeat(60));
+
+  if (results.errors > 0) {
+    console.log(`⚠️  ${results.errors} games encountered errors`);
+    
+    if (results.failedSeeds.length > 0) {
+      console.log('\n🔬 Failed Game Seeds (for replay):');
+      for (const seed of results.failedSeeds) {
+        console.log(`   bun src/index.ts replay ${seed} --verbose`);
+      }
+    }
+  }
+
+  if (results.gamesCompleted === results.totalGames && results.errors === 0) {
+    console.log('✅ All games completed successfully!');
+  }
+}
+
+/**
+ * Calculate percentage with % suffix
+ */
+function pct(part: number, total: number): string {
+  if (total === 0) return '0%';
+  return ((part / total) * 100).toFixed(0) + '%';
+}
+
+/**
+ * Generate a detailed state snapshot for debugging
+ */
+function generateStateSnapshot(state: GameState, recentActions: Action[], error: Error): string {
+  const lines: string[] = [];
+
+  lines.push('');
+  lines.push('═'.repeat(80));
+  lines.push('  ERROR STATE SNAPSHOT');
+  lines.push('═'.repeat(80));
+  lines.push('');
+
+  // Error details
+  lines.push('ERROR:');
+  lines.push(`  ${error.message}`);
+  lines.push('');
+
+  // Game state summary
+  lines.push('GAME STATE:');
+  lines.push(`  Turn: ${state.turnCount}`);
+  lines.push(`  Phase: ${state.phase}`);
+  lines.push(`  Step: ${state.step || 'N/A'}`);
+  lines.push(`  Active Player: ${state.activePlayer}`);
+  lines.push(`  Priority Player: ${state.priorityPlayer}`);
+  lines.push(`  Game Over: ${state.gameOver}`);
+  lines.push(`  Winner: ${state.winner || 'none'}`);
+  lines.push('');
+
+  // Player states
+  for (const playerId of ['player', 'opponent'] as const) {
+    const player = state.players[playerId];
+    lines.push(`${playerId.toUpperCase()}:`);
+    lines.push(`  Life: ${player.life}`);
+    lines.push(`  Hand: ${player.hand.length} cards`);
+    lines.push(`  Library: ${player.library.length} cards`);
+    lines.push(`  Graveyard: ${player.graveyard.length} cards`);
+    lines.push(`  Battlefield: ${player.battlefield.length} permanents`);
+
+    // List battlefield permanents
+    if (player.battlefield.length > 0) {
+      lines.push('    Permanents:');
+      for (const card of player.battlefield) {
+        const template = CardLoader.getById(card.scryfallId);
+        const name = template?.name || 'Unknown';
+        const status: string[] = [];
+        if (card.tapped) status.push('tapped');
+        if (card.attacking) status.push('attacking');
+        if (card.blocking) status.push('blocking');
+        if (card.summoningSick) status.push('sick');
+        const statusStr = status.length > 0 ? ` (${status.join(', ')})` : '';
+        lines.push(`      - ${name}${statusStr}`);
+      }
+    }
+
+    // Mana pool
+    const mana = player.manaPool;
+    const manaStr = [
+      mana.white > 0 ? `${mana.white}W` : '',
+      mana.blue > 0 ? `${mana.blue}U` : '',
+      mana.black > 0 ? `${mana.black}B` : '',
+      mana.red > 0 ? `${mana.red}R` : '',
+      mana.green > 0 ? `${mana.green}G` : '',
+      mana.colorless > 0 ? `${mana.colorless}C` : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+    lines.push(`  Mana Pool: ${manaStr || 'empty'}`);
+    lines.push('');
+  }
+
+  // Stack
+  if (state.stack.length > 0) {
+    lines.push('STACK:');
+    for (const item of state.stack) {
+      const template = CardLoader.getById(item.card.scryfallId);
+      lines.push(`  - ${template?.name || 'Unknown'} (controller: ${item.controller})`);
+    }
+    lines.push('');
+  }
+
+  // Recent actions
+  if (recentActions.length > 0) {
+    lines.push('RECENT ACTIONS (last 10):');
+    const actionsToShow = recentActions.slice(-10);
+    for (let i = 0; i < actionsToShow.length; i++) {
+      const action = actionsToShow[i]!;
+      const desc = describeAction(action, state);
+      lines.push(`  ${i + 1}. [${action.playerId}] ${desc}`);
+    }
+    lines.push('');
+  }
+
+  // Legal actions at time of error
+  lines.push('LEGAL ACTIONS FOR PRIORITY PLAYER:');
+  const legalActions = getLegalActions(state, state.priorityPlayer);
+  if (legalActions.length === 0) {
+    lines.push('  (NONE - this is the problem!)');
+  } else {
+    for (const action of legalActions.slice(0, 10)) {
+      lines.push(`  - ${describeAction(action, state)}`);
+    }
+    if (legalActions.length > 10) {
+      lines.push(`  ... and ${legalActions.length - 10} more`);
+    }
+  }
+  lines.push('');
+
+  lines.push('═'.repeat(80));
+
+  return lines.join('\n');
+}
+
+/**
+ * Write state snapshot to a file for later analysis
+ */
+async function writeErrorSnapshot(
+  gameIndex: number,
+  state: GameState,
+  recentActions: Action[],
+  error: Error,
+  seed: number | undefined,
+): Promise<string> {
+  const snapshot = generateStateSnapshot(state, recentActions, error);
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const filename = `error-snapshot-game${gameIndex}-${timestamp}.txt`;
+
+  // Add seed info for reproducibility
+  const header = [
+    `Seed: ${seed ?? 'random'}`,
+    `Game Index: ${gameIndex}`,
+    `Timestamp: ${new Date().toISOString()}`,
+    '',
+  ].join('\n');
+
+  try {
+    await Bun.write(filename, header + snapshot);
+    return filename;
+  } catch {
+    // If we can't write to file, just return empty string
+    return '';
+  }
+}

@@ -72,6 +72,9 @@ bun run fetch-cards
 # Run a batch simulation of RandomBot vs RandomBot
 bun run cli simulate 100
 
+# Run with data export for analysis
+bun run cli benchmark 100 --export-json --export-csv
+
 # Start an interactive debug session
 bun run cli play
 ```
@@ -87,6 +90,8 @@ Every simulation is initialized with a specific RNG seed. Researchers can captur
 ### 2. High-Frequency Training
 
 The engine is optimized for performance, capable of resolving complex board states in microseconds, enabling massive parallel training sessions.
+
+**Data Export:** Results automatically save to `results/` directory in JSON and CSV formats for post-processing and visualization.
 
 ### 3. Agent Lab
 

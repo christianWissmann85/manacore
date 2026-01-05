@@ -25,6 +25,8 @@ export class GreedyBot implements Bot {
   private debug = false;
   private totalDecisions = 0;
   private totalActionsEvaluated = 0;
+  private recentActions: Action[] = [];
+  private readonly MAX_RECENT_ACTIONS = 10;
 
   /**
    * Create a new GreedyBot
@@ -95,7 +97,27 @@ export class GreedyBot implements Bot {
       try {
         // Apply action and evaluate resulting state
         const newState = applyAction(state, action);
-        const score = quickEvaluate(newState, playerId);
+        let score = quickEvaluate(newState, playerId);
+
+        // ANTI-LOOP FIX: Penalize repetitive ability activations
+        // If we've activated the same ability recently, reduce its score
+        if (action.type === 'ACTIVATE_ABILITY') {
+          const sameAbilityCount = this.countRecentSameAbility(action);
+          if (sameAbilityCount > 0) {
+            // Exponentially penalize repeated activations
+            // 1st repeat: -10, 2nd: -100, 3rd: -1000, etc.
+            const penalty = Math.pow(10, sameAbilityCount + 1);
+            score -= penalty;
+            
+            if (this.debug && sameAbilityCount >= 2) {
+              console.log(
+                `[GreedyBot] Penalizing repeated ability ${action.payload.abilityId}: ` +
+                `${sameAbilityCount} recent uses, penalty=${penalty}`
+              );
+            }
+          }
+        }
+
         scoredActions.push({ action, score });
       } catch {
         // If action fails, give it worst score
@@ -125,7 +147,15 @@ export class GreedyBot implements Bot {
 
     // Random tie-break among equally good actions
     const index = Math.floor(this.rng() * bestActions.length);
-    return bestActions[index]!.action;
+    const chosenAction = bestActions[index]!.action;
+
+    // Track this action for repetition detection
+    this.recentActions.push(chosenAction);
+    if (this.recentActions.length > this.MAX_RECENT_ACTIONS) {
+      this.recentActions.shift();
+    }
+
+    return chosenAction;
   }
 
   /**
@@ -137,6 +167,28 @@ export class GreedyBot implements Bot {
       actionsEvaluated: this.totalActionsEvaluated,
       avgActions: this.totalDecisions > 0 ? this.totalActionsEvaluated / this.totalDecisions : 0,
     };
+  }
+
+  /**
+   * Count how many times we've recently activated the same ability
+   */
+  private countRecentSameAbility(action: Action): number {
+    if (action.type !== 'ACTIVATE_ABILITY') {
+      return 0;
+    }
+
+    const abilityId = action.payload.abilityId;
+    let count = 0;
+
+    // Look at recent actions (more recent = more weight)
+    for (let i = this.recentActions.length - 1; i >= 0; i--) {
+      const recent = this.recentActions[i];
+      if (recent?.type === 'ACTIVATE_ABILITY' && recent.payload.abilityId === abilityId) {
+        count++;
+      }
+    }
+
+    return count;
   }
 
   /**

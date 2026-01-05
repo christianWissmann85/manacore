@@ -22,6 +22,8 @@ The `@manacore/cli-client` package provides a **terminal-based interface** for i
 - 📈 **Statistical Analysis** - Deck performance, matchup win rates, turn distributions
 - 🔍 **Error Diagnostics** - Detailed state snapshots when things go wrong
 - 🎲 **Deterministic Replay** - Reproduce any game with seed values
+- 📤 **Data Export** - JSON and CSV export for external analysis
+- ⚡ **Performance Profiling** - Built-in benchmarking and timing analysis
 
 ---
 
@@ -183,6 +185,9 @@ bun src/index.ts benchmark [count]
 
 # With debugging
 bun src/index.ts bench 20 --turns 100 --debug
+
+# With data export and profiling
+bun src/index.ts bench 100 --export-json --export-csv --profile
 ```
 
 **Options:**
@@ -190,6 +195,11 @@ bun src/index.ts bench 20 --turns 100 --debug
 - `--debug, -d` - Enable debug mode for GreedyBot (shows decision stats)
 - `--debug-verbose, -dv` - Show detailed progress for each game/turn
 - `--turns <n>` - Maximum turns per game (default: 100)
+- `--export-json` - Export results as JSON to `results/`
+- `--export-csv` - Export game data as CSV
+- `--export-path <path>` - Custom export path
+- `--profile` - Enable basic performance profiling
+- `--profile-detailed` - Enable detailed profiling with phase breakdown
 
 **Example Output:**
 
@@ -293,6 +303,106 @@ The simulation system tracks comprehensive statistics:
 - **Total decisions made** - How many times the bot chose an action
 - **Actions evaluated** - Total number of actions considered
 - **Average branching factor** - Actions per decision point
+
+### Performance Profiling
+
+When `--profile` is enabled:
+
+- **Total execution time** - Wall-clock time for entire simulation
+- **Average game duration** - Time per game in milliseconds
+- **Games per second** - Throughput metric
+- **Phase breakdown** (detailed mode) - Time spent in each game phase
+
+---
+
+## 📤 Data Export
+
+Export simulation results for external analysis:
+
+### JSON Export
+
+```bash
+bun src/index.ts benchmark 100 --export-json
+```
+
+**Outputs:** `results/results-seed{N}-{timestamp}.json`
+
+**Structure:**
+```json
+{
+  "metadata": {
+    "exportDate": "2026-01-05T16:56:21.123Z",
+    "playerBot": "GreedyBot",
+    "opponentBot": "RandomBot"
+  },
+  "results": {
+    "totalGames": 100,
+    "playerWins": 72,
+    "baseSeed": 42,
+    "gameRecords": [
+      {
+        "gameNumber": 1,
+        "seed": 42,
+        "winner": "player",
+        "turns": 15,
+        "playerDeck": "red",
+        "opponentDeck": "blue",
+        "durationMs": 23.4
+      }
+    ],
+    "deckStats": {...},
+    "matchups": {...},
+    "profile": {...}
+  }
+}
+```
+
+### CSV Export
+
+```bash
+bun src/index.ts benchmark 100 --export-csv
+```
+
+**Outputs:** `results/results-seed{N}-{timestamp}.csv`
+
+**Columns:**
+- `game_number`, `seed`, `winner`, `turns`, `player_deck`, `opponent_deck`, `duration_ms`, `error`
+
+Ideal for:
+- Pandas/R data analysis
+- Excel/Google Sheets
+- Statistical modeling
+- Machine learning datasets
+
+### Custom Export Paths
+
+```bash
+# Named experiment
+bun src/index.ts benchmark 100 --export-json --export-path experiments/baseline-v1
+
+# Creates:
+# experiments/baseline-v1.json
+# experiments/baseline-v1.csv
+```
+
+### Results Directory
+
+All exports default to `results/` in the project root:
+
+```
+manacore/
+  └─ results/
+      ├─ results-seed1000-2026-01-05T16-56-21.json
+      ├─ results-seed1000-2026-01-05T16-56-21.csv
+      ├─ experiments/
+      │   ├─ baseline-v1.json
+      │   └─ baseline-v1.csv
+      └─ error-snapshots/
+          ├─ game-42-seed-12383.json
+          └─ game-42-seed-12383.txt
+```
+
+**Note:** `results/` is git-ignored. Perfect for sharing analysis scripts across the team!
 
 ---
 
@@ -482,8 +592,12 @@ bun src/index.ts simulate 10 --debug-verbose
 
 ```bash
 # Compare different bot strategies
-bun src/index.ts sim 100 --p1 greedy --p2 random
-bun src/index.ts sim 100 --p1 greedy --p2 greedy
+bun src/index.ts sim 100 --p1 greedy --p2 random --export-json --export-path experiments/greedy-vs-random
+bun src/index.ts sim 100 --p1 greedy --p2 greedy --export-json --export-path experiments/greedy-vs-greedy
+
+# Analyze results programmatically
+import exp1 from './results/experiments/greedy-vs-random.json'
+import exp2 from './results/experiments/greedy-vs-greedy.json'
 ```
 
 ### 2. Deck Balance Testing
@@ -498,12 +612,20 @@ Analyze the "DECK PERFORMANCE" section to see which colors dominate.
 ### 3. Performance Profiling
 
 ```bash
-# Measure simulation speed
-bun src/index.ts benchmark 100
+# Measure simulation speed with profiling
+bun src/index.ts benchmark 100 --profile
+
+# Detailed profiling with phase breakdown
+bun src/index.ts benchmark 100 --profile-detailed
 
 # Compare with different turn limits
-bun src/index.ts benchmark 100 --turns 20
-bun src/index.ts benchmark 100 --turns 100
+bun src/index.ts benchmark 100 --turns 20 --profile --export-json
+bun src/index.ts benchmark 100 --turns 100 --profile --export-json
+
+# Analyze performance data
+import { results as fast } from './results/results-20turns.json'
+import { results as slow } from './results/results-100turns.json'
+console.log(`Speedup: ${slow.profile.avgGameMs / fast.profile.avgGameMs}x`)
 ```
 
 ### 4. Deterministic Debugging
