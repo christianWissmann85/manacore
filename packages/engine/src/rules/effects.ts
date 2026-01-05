@@ -940,7 +940,8 @@ export function drawCards(state: GameState, playerId: PlayerId, count: number): 
   for (let i = 0; i < count; i++) {
     if (player.library.length === 0) {
       // Can't draw from empty library
-      // Note: Drawing from empty library causes loss (handled by SBAs)
+      // Mark that this player attempted to draw from empty library (loss via SBA)
+      player.attemptedDrawFromEmptyLibrary = true;
       break;
     }
     const card = player.library.pop()!;

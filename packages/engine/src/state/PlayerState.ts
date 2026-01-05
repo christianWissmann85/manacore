@@ -47,6 +47,7 @@ export interface PlayerState {
   landsPlayedThisTurn: number;
   hasPassedPriority: boolean; // Passed priority on current stack state
   consecutivePasses: number; // Track consecutive priority passes
+  attemptedDrawFromEmptyLibrary?: boolean; // Set when player tries to draw from empty library
 
   // Damage prevention (Circles of Protection)
   preventionShields?: Array<{ color: string; amount: 'next' | number }>;

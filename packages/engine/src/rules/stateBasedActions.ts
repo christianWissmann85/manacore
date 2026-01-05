@@ -27,6 +27,9 @@ export function checkStateBasedActions(state: GameState): boolean {
   // Check for player death
   actionsPerformed = checkPlayerDeath(state) || actionsPerformed;
 
+  // Check for empty library (loss by decking)
+  actionsPerformed = checkEmptyLibraryDraw(state) || actionsPerformed;
+
   // Check for creature death
   actionsPerformed = checkCreatureDeath(state) || actionsPerformed;
 
@@ -46,6 +49,27 @@ function checkPlayerDeath(state: GameState): boolean {
     const player = state.players[playerId];
 
     if (player.life <= 0 && !state.gameOver) {
+      state.gameOver = true;
+      state.winner = playerId === 'player' ? 'opponent' : 'player';
+      actionsPerformed = true;
+    }
+  }
+
+  return actionsPerformed;
+}
+
+/**
+ * Check if a player tried to draw from an empty library
+ * This happens when the attemptedDrawFromEmptyLibrary flag is set
+ */
+function checkEmptyLibraryDraw(state: GameState): boolean {
+  let actionsPerformed = false;
+
+  for (const playerId of ['player', 'opponent'] as const) {
+    const player = state.players[playerId];
+
+    // Check if player attempted to draw from empty library
+    if (player.attemptedDrawFromEmptyLibrary && !state.gameOver) {
       state.gameOver = true;
       state.winner = playerId === 'player' ? 'opponent' : 'player';
       actionsPerformed = true;

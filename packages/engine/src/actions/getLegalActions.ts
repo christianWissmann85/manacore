@@ -49,12 +49,15 @@ export function getLegalActions(state: GameState, playerId: 'player' | 'opponent
   }
 
   // Can end turn when it's your turn (only during your priority)
+  // Restricted to Main Phases with empty stack to prevent skipping phases like combat
   if (state.activePlayer === playerId && state.priorityPlayer === playerId) {
-    actions.push({
-      type: 'END_TURN',
-      playerId,
-      payload: {},
-    } as EndTurnAction);
+    if ((state.phase === 'main1' || state.phase === 'main2') && state.stack.length === 0) {
+      actions.push({
+        type: 'END_TURN',
+        playerId,
+        payload: {},
+      } as EndTurnAction);
+    }
   }
 
   // Phase 1+: Can cast instant-speed spells whenever you have priority

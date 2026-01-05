@@ -14,7 +14,7 @@ import type { CardInstance } from '../state/CardInstance';
 import type { CardTemplate } from '../cards/CardTemplate';
 import { getPlayer } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
-import { hasFirstStrike, hasDoubleStrike, hasTrample } from '../cards/CardTemplate';
+import { hasFirstStrike, hasDoubleStrike, hasTrample, isCreature } from '../cards/CardTemplate';
 import { registerTrigger } from './triggers';
 import { getEffectivePowerWithLords, getEffectiveToughnessWithLords } from './lords';
 import { hasGaseousForm } from '../actions/validators';
@@ -255,24 +255,25 @@ function checkCreatureDeath(state: GameState): void {
       const creature = player.battlefield[i]!;
       const template = CardLoader.getById(creature.scryfallId);
 
-      if (template) {
-        const baseToughness = parseInt(template.toughness || '0', 10);
-        const effectiveToughness = getEffectiveToughnessWithLords(state, creature, baseToughness);
+      // Skip if not a creature
+      if (!template || !isCreature(template)) continue;
 
-        // Creature dies if damage >= toughness
-        if (creature.damage >= effectiveToughness) {
-          // Remove from battlefield
-          player.battlefield.splice(i, 1);
+      const baseToughness = parseInt(template.toughness || '0', 10);
+      const effectiveToughness = getEffectiveToughnessWithLords(state, creature, baseToughness);
 
-          // Put in graveyard
-          creature.zone = 'graveyard';
-          creature.damage = 0;
-          creature.tapped = false;
-          creature.attacking = false;
-          creature.blocking = undefined;
-          creature.blockedBy = undefined;
-          player.graveyard.push(creature);
-        }
+      // Creature dies if damage >= toughness
+      if (creature.damage >= effectiveToughness) {
+        // Remove from battlefield
+        player.battlefield.splice(i, 1);
+
+        // Put in graveyard
+        creature.zone = 'graveyard';
+        creature.damage = 0;
+        creature.tapped = false;
+        creature.attacking = false;
+        creature.blocking = undefined;
+        creature.blockedBy = undefined;
+        player.graveyard.push(creature);
       }
     }
   }

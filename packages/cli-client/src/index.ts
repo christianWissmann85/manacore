@@ -53,6 +53,10 @@ async function main() {
       const p1Type = p1Arg ? parseBotType(p1Arg) : 'random';
       const p2Type = p2Arg ? parseBotType(p2Arg) : 'random';
 
+      // Parse turn limit: --turns 100
+      const turnsIndex = args.indexOf('--turns');
+      const maxTurns = turnsIndex !== -1 ? parseInt(args[turnsIndex + 1] || '100', 10) : 100;
+
       console.log('🎮 ManaCore - Game Simulator\n');
 
       const playerBot = createBot(p1Type, 42);
@@ -60,7 +64,7 @@ async function main() {
 
       const results = await runSimulation(playerBot, opponentBot, {
         gameCount,
-        maxTurns: 50,
+        maxTurns,
         verbose,
         seed: 12345,
       });
@@ -76,6 +80,10 @@ async function main() {
       const debugMode = args.includes('--debug') || args.includes('-d');
       const debugVerbose = args.includes('--debug-verbose') || args.includes('-dv');
 
+      // Parse turn limit: --turns 100
+      const turnsIndex = args.indexOf('--turns');
+      const maxTurns = turnsIndex !== -1 ? parseInt(args[turnsIndex + 1] || '100', 10) : 100;
+
       console.log('🏆 ManaCore - Bot Benchmark\n');
       console.log(`Running ${gameCount} games: GreedyBot vs RandomBot`);
       if (debugMode) console.log('Debug mode enabled');
@@ -89,7 +97,7 @@ async function main() {
 
       const results = await runSimulation(greedyBot, randomBot, {
         gameCount,
-        maxTurns: 50,
+        maxTurns,
         verbose: false,
         debugVerbose,
         seed: 12345,
@@ -128,12 +136,13 @@ async function main() {
       console.log('  --debug-verbose, -dv    Show detailed progress for each game/turn');
       console.log('  --p1 <bot>              Player 1 bot type (random, greedy)');
       console.log('  --p2 <bot>              Player 2 bot type (random, greedy)');
+      console.log('  --turns <n>             Maximum turns per game (default: 100)');
       console.log('');
       console.log('Examples:');
       console.log('  bun src/index.ts play');
       console.log('  bun src/index.ts simulate 100');
-      console.log('  bun src/index.ts sim 10 --p1 greedy --p2 random');
-      console.log('  bun src/index.ts benchmark 20');
+      console.log('  bun src/index.ts sim 10 --p1 greedy --p2 random --turns 50');
+      console.log('  bun src/index.ts benchmark 20 --turns 100');
       break;
   }
 }

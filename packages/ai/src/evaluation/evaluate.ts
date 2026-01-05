@@ -100,13 +100,46 @@ export function quickEvaluate(state: GameState, playerId: PlayerId): number {
   const me = getPlayer(state, playerId);
   const opp = getOpponent(state, playerId);
 
-  // Simple heuristic: life + board power + cards
+  // Simple heuristic: life + board power + cards + mana
   const myPower = getBoardPower(state, me.battlefield);
   const oppPower = getBoardPower(state, opp.battlefield);
+  const myLands = countLands(me.battlefield);
+  const oppLands = countLands(opp.battlefield);
+
+  // CRITICAL FIX: Account for creatures on the stack!
+  // When we cast a creature, it goes on the stack but doesn't resolve immediately.
+  // We need to value having creatures on the stack as if they were on the battlefield.
+  const myStackPower = getStackPower(state, playerId);
+  const oppStackPower = getStackPower(state, playerId === 'player' ? 'opponent' : 'player');
 
   return (
-    (me.life - opp.life) * 2 + (myPower - oppPower) * 1.5 + (me.hand.length - opp.hand.length) * 0.5
+    (me.life - opp.life) * 2 +
+    (myPower - oppPower) * 5.0 +  // Resolved creatures on battlefield
+    (myStackPower - oppStackPower) * 8.0 +  // Creatures on stack (will resolve!) - weight even higher!
+    (me.hand.length - opp.hand.length) * 0.1 +  // Hand size matters very little
+    (myLands - oppLands) * 1.5
   );
+}
+
+/**
+ * Calculate power of creatures on the stack (will resolve soon)
+ */
+function getStackPower(state: GameState, playerId: PlayerId): number {
+  let totalPower = 0;
+
+  for (const stackItem of state.stack) {
+    if (stackItem.controller === playerId && !stackItem.resolved && !stackItem.countered) {
+      const template = CardLoader.getById(stackItem.card.scryfallId);
+      if (template && isCreature(template)) {
+        const basePower = parseInt(template.power || '0', 10) || 0;
+        const baseToughness = parseInt(template.toughness || '0', 10) || 0;
+        // Value at full power since it will resolve
+        totalPower += basePower + baseToughness * 0.3;
+      }
+    }
+  }
+
+  return totalPower;
 }
 
 /**
@@ -126,9 +159,13 @@ function getBoardPower(_state: GameState, battlefield: CardInstance[]): number {
       // Value creatures by power, with bonus for toughness
       totalPower += power + toughness * 0.3;
 
-      // Bonus for untapped creatures (can attack/block)
-      if (!card.tapped) {
-        totalPower += 0.5;
+      // Attacking creatures are GOOD - they're about to deal damage!
+      // Don't penalize tapped creatures if they're attacking
+      if (card.attacking) {
+        totalPower += power * 1.5; // Huge bonus for attacking - damage is coming!
+      } else if (!card.tapped) {
+        // Small bonus for untapped creatures (can attack/block)
+        totalPower += 0.3;
       }
     }
   }
