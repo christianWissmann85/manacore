@@ -44,9 +44,9 @@ export async function playGame(opponentBot: Bot): Promise<void> {
     console.log(renderGameState(state, 'player'));
     console.log('');
 
-    // Check whose turn
-    if (state.activePlayer === 'player') {
-      // Human turn
+    // Check who has priority (determines who should act)
+    if (state.priorityPlayer === 'player') {
+      // Human's turn to act
       const action = await getHumanAction(state);
 
       if (!action) {

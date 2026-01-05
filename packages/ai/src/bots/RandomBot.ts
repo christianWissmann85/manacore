@@ -41,7 +41,13 @@ export class RandomBot implements Bot {
     const legalActions = getLegalActions(state, playerId);
 
     if (legalActions.length === 0) {
-      throw new Error(`No legal actions available for ${playerId}`);
+      // Provide detailed debug info to help diagnose the issue
+      throw new Error(
+        `No legal actions available for ${playerId}. ` +
+          `State: phase=${state.phase}, step=${state.step}, ` +
+          `activePlayer=${state.activePlayer}, priorityPlayer=${state.priorityPlayer}, ` +
+          `turn=${state.turnCount}`,
+      );
     }
 
     // Pick a random action
