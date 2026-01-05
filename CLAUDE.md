@@ -226,7 +226,7 @@ manacore/
 
 ```bash
 bun <file>                    # Run TypeScript directly
-bun test                      # Run tests
+bun test                      # Run tests - verbose output
 bun run check                 # TypeScript + ESLint + Prettier
 bun install                   # Install dependencies
 ```
@@ -237,6 +237,10 @@ bun install                   # Install dependencies
 cd packages/engine && bun test          # Run all tests
 bun test --watch                        # Watch mode
 bun test -t "pattern"                   # Run specific tests
+
+                                  # Hides all successful and skipped tests to avoid bloating your logs.
+bun test:quiet                    # Only show failed tests, including the file name, the specific failure details, and the full stack trace.
+                                  # Always show the final summary (pass/fail/skip counts and total time).
 ```
 
 ### Simulations
@@ -276,7 +280,7 @@ ManaCore is designed for **AI training**, which requires:
 
 Every feature must pass:
 
-1. **Unit Tests**: `bun test` passes
+1. **Unit Tests**: `bun test:quiet` passes
 2. **Linting**: `bun run check` passes
 3. **Simulation**: 100+ bot games without errors
 
@@ -290,7 +294,7 @@ Every feature must pass:
 # Development
 bun install                              # Install dependencies
 bun run check                           # Full check (types + lint + format)
-cd packages/engine && bun test          # Run engine tests
+cd packages/engine && bun test:quiet          # Run engine tests
 
 # AI Development
 cd packages/cli-client

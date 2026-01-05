@@ -435,10 +435,22 @@ function advancePhase(state: GameState): void {
       state.step = 'main';
       state.priorityPlayer = state.activePlayer;
     }
-  } else if (state.phase === 'main1' || state.phase === 'main2') {
-    // Passing priority in main phase with empty stack - nothing special to do
-    // The active player can choose to END_TURN
+  } else if (state.phase === 'main1') {
+    // Main 1 -> Combat
+    state.phase = 'combat';
+    state.step = 'declare_attackers';
+    // Priority goes to active player to declare attackers?
+    // Actually, declaring attackers is a specific action that doesn't use the stack in the same way.
+    // But usually priority is with active player at start of step.
     state.priorityPlayer = state.activePlayer;
+  } else if (state.phase === 'main2') {
+    // Main 2 -> End Turn
+    // Automatically apply end turn logic
+    applyEndTurn(state, {
+      type: 'END_TURN',
+      playerId: state.activePlayer,
+      payload: {},
+    });
   }
 }
 

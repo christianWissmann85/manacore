@@ -313,8 +313,7 @@ export function createSelesnyaDeck(): CardTemplate[] {
     { name: 'Forest', count: 10 },
     { name: 'Brushland', count: 4 },
     // Creatures (22)
-    { name: 'Fyndhorn Elves', count: 2 },
-    { name: 'Elvish Mystic', count: 2 },
+    { name: 'Llanowar Elves', count: 4 },
     { name: 'Cat Warriors', count: 2 },
     { name: 'Trained Armodon', count: 2 },
     { name: 'Gorilla Chieftain', count: 2 },

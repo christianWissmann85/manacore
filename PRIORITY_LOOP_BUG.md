@@ -1,8 +1,22 @@
 # Priority Loop Bug - Investigation Summary
 
 **Date**: January 5, 2026  
-**Status**: 🔴 Critical Bug Identified  
+**Status**: 🟢 Fixed  
 **Impact**: Games randomly hang with infinite priority passing
+
+---
+
+## Resolution
+
+**Fixed on**: January 5, 2026
+
+The infinite loop was caused by missing logic in `packages/engine/src/actions/reducer.ts` within the `advancePhase` function. When both players passed priority on an empty stack in Main Phase 1 or Main Phase 2, the game failed to transition to the next phase/step (Combat or End Turn), instead just resetting priority to the active player.
+
+**Fix Details:**
+- Modified `advancePhase` in `reducer.ts`:
+  - **Main 1**: Now correctly transitions to `combat` phase, `declare_attackers` step.
+  - **Main 2**: Now automatically applies `END_TURN` logic to proceed to the next turn.
+- Added regression test `packages/engine/tests/phase-transitions.test.ts`.
 
 ---
 

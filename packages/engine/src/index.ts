@@ -118,6 +118,10 @@ export type {
 } from './rules/activatedAbilities';
 export { getActivatedAbilities, payCosts } from './rules/activatedAbilities';
 
+export {
+  checkStateBasedActions,
+} from './rules/stateBasedActions';
+
 // Lords system (Week 1.5.4)
 export type { AuraGrantedAbility } from './rules/lords';
 export {
