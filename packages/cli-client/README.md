@@ -16,6 +16,7 @@ The `@manacore/cli-client` package provides a **terminal-based interface** for i
 - 🐛 **Debugging Tools** - Rich error snapshots and verbose logging
 
 **Key Features:**
+
 - 🎨 **ASCII Art Renderer** - Beautiful terminal-based game state visualization
 - ⚡ **Batch Processing** - Simulate 100+ games in seconds
 - 📈 **Statistical Analysis** - Deck performance, matchup win rates, turn distributions
@@ -66,12 +67,14 @@ bun src/index.ts play
 ```
 
 **Features:**
+
 - Visual game state display with battlefield, hand, and zones
 - Action menu with numbered choices
 - Real-time updates as the bot plays
 - Keyboard commands: `list`, `state`, `quit`
 
 **Example Output:**
+
 ```
 ════════════════════════════════════════════════════════════════════════════════
  TURN 3 - PLAYER (main1/main)
@@ -123,12 +126,14 @@ bun src/index.ts sim 100 --p1 greedy --p2 random --turns 50 --verbose
 ```
 
 **Options:**
+
 - `--p1 <bot>` - Player 1 bot type (`random`, `greedy`)
 - `--p2 <bot>` - Player 2 bot type (`random`, `greedy`)
 - `--turns <n>` - Maximum turns per game (default: 100)
 - `--verbose, -v` - Show detailed logs and error snapshots
 
 **Example Output:**
+
 ```
 🎮 Running 100 games: GreedyBot vs RandomBot
 
@@ -181,11 +186,13 @@ bun src/index.ts bench 20 --turns 100 --debug
 ```
 
 **Options:**
+
 - `--debug, -d` - Enable debug mode for GreedyBot (shows decision stats)
 - `--debug-verbose, -dv` - Show detailed progress for each game/turn
 - `--turns <n>` - Maximum turns per game (default: 100)
 
 **Example Output:**
+
 ```
 🏆 ManaCore - Bot Benchmark
 
@@ -228,6 +235,7 @@ console.log(display);
 ```
 
 **Displays:**
+
 - **Header** - Turn count, active player, phase/step
 - **Opponent Summary** - Life, mana pool, untapped lands
 - **Opponent Zones** - Library, hand, graveyard counts
@@ -263,21 +271,25 @@ console.log(display);
 The simulation system tracks comprehensive statistics:
 
 ### Overall Statistics
+
 - **Win/Loss/Draw counts** for each bot
 - **Turn distributions** - min, max, average
 - **Completion rate** - successful vs errored games
 
 ### Deck Performance
+
 - **Per-color win rates** - Which decks perform best
 - **Games played** - Sample size for each color
 - **Win-Loss-Draw records** - Complete statistics
 
 ### Matchup Analysis
+
 - **Head-to-head records** - How each deck fares against others
 - **Matchup frequency** - Most common pairings
 - **Asymmetric analysis** - Different from P1 vs P2 perspective
 
 ### Bot Metrics (GreedyBot)
+
 - **Total decisions made** - How many times the bot chose an action
 - **Actions evaluated** - Total number of actions considered
 - **Average branching factor** - Actions per decision point
@@ -296,32 +308,30 @@ Run multiple games between two bots.
 import { runSimulation } from '@manacore/cli-client';
 import { RandomBot, GreedyBot } from '@manacore/ai';
 
-const results = await runSimulation(
-  new GreedyBot(),
-  new RandomBot(),
-  {
-    gameCount: 100,
-    maxTurns: 100,
-    verbose: false,
-    seed: 12345,
-  }
-);
+const results = await runSimulation(new GreedyBot(), new RandomBot(), {
+  gameCount: 100,
+  maxTurns: 100,
+  verbose: false,
+  seed: 12345,
+});
 
 console.log(`Win rate: ${results.playerWins / results.gamesCompleted}`);
 ```
 
 **Options:**
+
 ```typescript
 interface SimulationOptions {
-  gameCount: number;        // Number of games to run
-  maxTurns?: number;        // Max turns per game (default: 100)
-  verbose?: boolean;        // Show detailed logs (default: false)
-  debugVerbose?: boolean;   // Show per-turn progress (default: false)
-  seed?: number;            // RNG seed for reproducibility
+  gameCount: number; // Number of games to run
+  maxTurns?: number; // Max turns per game (default: 100)
+  verbose?: boolean; // Show detailed logs (default: false)
+  debugVerbose?: boolean; // Show per-turn progress (default: false)
+  seed?: number; // RNG seed for reproducibility
 }
 ```
 
 **Returns:**
+
 ```typescript
 interface SimulationResults {
   totalGames: number;
@@ -376,11 +386,11 @@ console.log(display);
 
 ```typescript
 import {
-  clearScreen,      // Clear the terminal
-  printSeparator,   // Print a line separator
-  printError,       // Print error message with ❌
-  printSuccess,     // Print success message with ✅
-  printInfo,        // Print info message with ℹ️
+  clearScreen, // Clear the terminal
+  printSeparator, // Print a line separator
+  printError, // Print error message with ❌
+  printSuccess, // Print success message with ✅
+  printInfo, // Print info message with ℹ️
 } from '@manacore/cli-client';
 
 clearScreen();
@@ -441,6 +451,7 @@ LEGAL ACTIONS FOR PRIORITY PLAYER:
 ```
 
 **Snapshot Features:**
+
 - Complete game state at time of error
 - Recent action history (last 50 actions)
 - Player states (life, zones, battlefield)
@@ -457,6 +468,7 @@ bun src/index.ts simulate 10 --debug-verbose
 ```
 
 **Shows:**
+
 - Turn transitions
 - Phase changes
 - Action counts
@@ -508,6 +520,7 @@ const results = await runSimulation(bot1, bot2, {
 ```
 
 Then replay the exact same game:
+
 ```bash
 # Modify simulate.ts to use seed: 12345
 bun src/index.ts simulate 1 --verbose
@@ -522,6 +535,7 @@ bun src/index.ts play
 ```
 
 Useful for:
+
 - Understanding bot decision-making
 - Testing new card implementations
 - Debugging specific game situations
@@ -561,11 +575,10 @@ import { runSimulation } from '@manacore/cli-client';
 import { GreedyBot, RandomBot } from '@manacore/ai';
 
 async function analyzeStrategy() {
-  const results = await runSimulation(
-    new GreedyBot(),
-    new RandomBot(),
-    { gameCount: 1000, maxTurns: 50 }
-  );
+  const results = await runSimulation(new GreedyBot(), new RandomBot(), {
+    gameCount: 1000,
+    maxTurns: 50,
+  });
 
   // Export results to CSV
   const csv = convertToCSV(results);

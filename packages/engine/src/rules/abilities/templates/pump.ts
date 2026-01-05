@@ -74,6 +74,12 @@ export function createPumpSelf(
         return false;
       }
 
+      // During declare_blockers step, disallow pump abilities to prevent infinite loops
+      // (In reality they should be allowed, but bots spam them infinitely)
+      if (state.step === 'declare_blockers') {
+        return false;
+      }
+
       // Check mana availability
       const colorMatches = manaCost.matchAll(/\{([WUBRGC])\}/g);
       for (const match of colorMatches) {

@@ -114,9 +114,9 @@ export function quickEvaluate(state: GameState, playerId: PlayerId): number {
 
   return (
     (me.life - opp.life) * 2 +
-    (myPower - oppPower) * 5.0 +  // Resolved creatures on battlefield
-    (myStackPower - oppStackPower) * 8.0 +  // Creatures on stack (will resolve!) - weight even higher!
-    (me.hand.length - opp.hand.length) * 0.1 +  // Hand size matters very little
+    (myPower - oppPower) * 5.0 + // Resolved creatures on battlefield
+    (myStackPower - oppStackPower) * 8.0 + // Creatures on stack (will resolve!) - weight even higher!
+    (me.hand.length - opp.hand.length) * 0.1 + // Hand size matters very little
     (myLands - oppLands) * 1.5
   );
 }

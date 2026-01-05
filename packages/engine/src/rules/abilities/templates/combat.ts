@@ -67,6 +67,12 @@ export function createRegenerate(
         return false;
       }
 
+      // During declare_blockers step, disallow regenerate to prevent infinite loops
+      // (In reality it should be allowed, but bots spam it infinitely)
+      if (state.step === 'declare_blockers') {
+        return false;
+      }
+
       // Check mana availability
       const colorMatches = manaCost.matchAll(/\{([WUBRGC])\}/g);
       for (const match of colorMatches) {

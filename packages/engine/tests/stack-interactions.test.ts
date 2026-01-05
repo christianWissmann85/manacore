@@ -1,4 +1,3 @@
-
 import { describe, test, expect, beforeEach } from 'bun:test';
 import {
   createGameState,
@@ -8,7 +7,7 @@ import {
   getPlayer,
   type GameState,
   type CastSpellAction,
-  type PassPriorityAction
+  type PassPriorityAction,
 } from '../src/index';
 
 describe('Stack Interactions', () => {
@@ -18,11 +17,15 @@ describe('Stack Interactions', () => {
     // Setup basic state with islands/mountains
     const island = CardLoader.getByName('Island');
     const mountain = CardLoader.getByName('Mountain');
-    
+
     if (!island || !mountain) throw new Error('Basic lands not found');
 
-    const pDeck = Array(40).fill(null).map(() => createCardInstance(island.id, 'player', 'library'));
-    const oDeck = Array(40).fill(null).map(() => createCardInstance(mountain.id, 'opponent', 'library'));
+    const pDeck = Array(40)
+      .fill(null)
+      .map(() => createCardInstance(island.id, 'player', 'library'));
+    const oDeck = Array(40)
+      .fill(null)
+      .map(() => createCardInstance(mountain.id, 'opponent', 'library'));
 
     state = createGameState(pDeck, oDeck);
   });
@@ -33,7 +36,8 @@ describe('Stack Interactions', () => {
     const mountain = CardLoader.getByName('Mountain');
     const island = CardLoader.getByName('Island');
 
-    if (!lightningBlast || !counterspell || !mountain || !island) throw new Error('Cards not found');
+    if (!lightningBlast || !counterspell || !mountain || !island)
+      throw new Error('Cards not found');
 
     const player = getPlayer(state, 'player');
     const opponent = getPlayer(state, 'opponent');
@@ -47,21 +51,24 @@ describe('Stack Interactions', () => {
     // Player needs 4R for Blast + 2U for Counter = 6 mana total (4 red sources, 2 blue)
     // Actually Blast is 3R. So 4 mana.
     // Let's just give infinite mana for simplicity
-    for(let i=0; i<10; i++) player.battlefield.push(createCardInstance(mountain.id, 'player', 'battlefield'));
-    for(let i=0; i<10; i++) player.battlefield.push(createCardInstance(island.id, 'player', 'battlefield'));
-    for(let i=0; i<10; i++) opponent.battlefield.push(createCardInstance(island.id, 'opponent', 'battlefield'));
+    for (let i = 0; i < 10; i++)
+      player.battlefield.push(createCardInstance(mountain.id, 'player', 'battlefield'));
+    for (let i = 0; i < 10; i++)
+      player.battlefield.push(createCardInstance(island.id, 'player', 'battlefield'));
+    for (let i = 0; i < 10; i++)
+      opponent.battlefield.push(createCardInstance(island.id, 'opponent', 'battlefield'));
 
     state.phase = 'main1';
 
     // 1. Player casts Lightning Blast targeting Opponent
-    const blastCard = player.hand.find(c => c.scryfallId === lightningBlast.id);
+    const blastCard = player.hand.find((c) => c.scryfallId === lightningBlast.id);
     state = applyAction(state, {
       type: 'CAST_SPELL',
       playerId: 'player',
       payload: {
         cardInstanceId: blastCard!.instanceId,
-        targets: ['opponent']
-      }
+        targets: ['opponent'],
+      },
     });
 
     // Stack: [Blast]
@@ -69,14 +76,14 @@ describe('Stack Interactions', () => {
     const blastStackId = state.stack[0].id;
 
     // 2. Opponent casts Counterspell targeting Blast
-    const oCounterCard = opponent.hand.find(c => c.scryfallId === counterspell.id);
+    const oCounterCard = opponent.hand.find((c) => c.scryfallId === counterspell.id);
     state = applyAction(state, {
       type: 'CAST_SPELL',
       playerId: 'opponent',
       payload: {
         cardInstanceId: oCounterCard!.instanceId,
-        targets: [blastStackId]
-      }
+        targets: [blastStackId],
+      },
     });
 
     // Stack: [Blast, O-Counter]
@@ -84,14 +91,14 @@ describe('Stack Interactions', () => {
     const oCounterStackId = state.stack[1].id;
 
     // 3. Player casts Counterspell targeting Opponent's Counterspell
-    const pCounterCard = player.hand.find(c => c.scryfallId === counterspell.id);
+    const pCounterCard = player.hand.find((c) => c.scryfallId === counterspell.id);
     state = applyAction(state, {
       type: 'CAST_SPELL',
       playerId: 'player',
       payload: {
         cardInstanceId: pCounterCard!.instanceId,
-        targets: [oCounterStackId]
-      }
+        targets: [oCounterStackId],
+      },
     });
 
     // Stack: [Blast, O-Counter, P-Counter]
@@ -110,7 +117,7 @@ describe('Stack Interactions', () => {
     // Wait, let's check `resolveTopOfStack`:
     // "Resolve spell... Remove from stack"
     // "if (effect.type === 'counter') targetStackObj.countered = true"
-    
+
     // So P-Counter resolves, marks O-Counter as countered. P-Counter removed.
     // Stack: [Blast, O-Counter(countered=true)]
     expect(state.stack.length).toBe(2);
@@ -128,7 +135,7 @@ describe('Stack Interactions', () => {
     // 6. Resolve Blast
     state = applyAction(state, { type: 'PASS_PRIORITY', playerId: 'opponent', payload: {} });
     state = applyAction(state, { type: 'PASS_PRIORITY', playerId: 'player', payload: {} });
-    
+
     // Refresh player ref
     const finalOpponent = getPlayer(state, 'opponent');
 
@@ -155,40 +162,42 @@ describe('Stack Interactions', () => {
 
     // Player Hand: Shock
     player.hand.push(createCardInstance(shock.id, 'player', 'hand'));
-    
+
     // Opponent Hand: Unsummon
     opponent.hand.push(createCardInstance(unsummon.id, 'opponent', 'hand'));
 
     // Mana
-    for(let i=0; i<5; i++) player.battlefield.push(createCardInstance(mountain.id, 'player', 'battlefield'));
-    for(let i=0; i<5; i++) opponent.battlefield.push(createCardInstance(island.id, 'opponent', 'battlefield'));
+    for (let i = 0; i < 5; i++)
+      player.battlefield.push(createCardInstance(mountain.id, 'player', 'battlefield'));
+    for (let i = 0; i < 5; i++)
+      opponent.battlefield.push(createCardInstance(island.id, 'opponent', 'battlefield'));
 
     state.phase = 'main1';
 
     // 1. Player casts Shock targeting Bear
     const shockCard = player.hand[0];
     state = applyAction(state, {
-        type: 'CAST_SPELL',
-        playerId: 'player',
-        payload: {
-            cardInstanceId: shockCard.instanceId,
-            targets: [bearId]
-        }
+      type: 'CAST_SPELL',
+      playerId: 'player',
+      payload: {
+        cardInstanceId: shockCard.instanceId,
+        targets: [bearId],
+      },
     });
 
     // 2. Opponent casts Unsummon targeting Bear (saving it)
     const unsummonCard = opponent.hand[0];
     state = applyAction(state, {
-        type: 'CAST_SPELL',
-        playerId: 'opponent',
-        payload: {
-            cardInstanceId: unsummonCard.instanceId,
-            targets: [bearId]
-        }
+      type: 'CAST_SPELL',
+      playerId: 'opponent',
+      payload: {
+        cardInstanceId: unsummonCard.instanceId,
+        targets: [bearId],
+      },
     });
 
     // Stack: [Shock, Unsummon]
-    
+
     // 3. Resolve Unsummon
     state = applyAction(state, { type: 'PASS_PRIORITY', playerId: 'player', payload: {} });
     state = applyAction(state, { type: 'PASS_PRIORITY', playerId: 'opponent', payload: {} });
@@ -201,7 +210,7 @@ describe('Stack Interactions', () => {
     expect(finalOpponent.battlefield.length).toBe(5); // Just lands
     expect(finalOpponent.hand.length).toBe(1); // Bear is back (was empty before, unsummon used, bear returned)
     // Actually Unsummon goes to GY, Bear goes to Hand.
-    
+
     // 4. Resolve Shock
     // Target (bearId) is no longer on battlefield.
     state = applyAction(state, { type: 'PASS_PRIORITY', playerId: 'opponent', payload: {} });
@@ -212,11 +221,11 @@ describe('Stack Interactions', () => {
 
     // Shock should fizzle (go to GY, no damage dealt).
     expect(state.stack.length).toBe(0);
-    // How to verify fizzle? 
+    // How to verify fizzle?
     // If it hit, it might have errored (trying to deal damage to non-existent permanent) or done nothing.
     // If we had a life total target, we could check life.
     // But since target was creature, main check is "did it crash" and "is it gone".
-    
+
     // Verify Shock is in GY
     expect(finalPlayerAfterShock.graveyard.length).toBe(1);
     expect(finalPlayerAfterShock.graveyard[0].scryfallId).toBe(shock.id);

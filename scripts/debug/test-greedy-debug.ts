@@ -30,11 +30,11 @@ ${'='.repeat(60)}`);
 
   const legalActions = getLegalActions(state, state.priorityPlayer);
   console.log(`Legal actions: ${legalActions.length}`);
-  
+
   // Show hand and mana on Turn 5
   if (state.turnCount === 5 && state.priorityPlayer === 'player' && state.phase === 'main1') {
     const me = getPlayer(state, 'player');
-    const lands = me.battlefield.filter(c => {
+    const lands = me.battlefield.filter((c) => {
       const template = CardLoader.getById(c.scryfallId);
       return template && template.type_line?.toLowerCase().includes('land');
     });
@@ -43,7 +43,7 @@ ${'='.repeat(60)}`);
     console.log(`🌳 Mana pool: G=${me.manaPool.green || 0}, W=${me.manaPool.white || 0}`);
     console.log(`🏞️  Lands on battlefield: ${lands.length}`);
     console.log(`
-CAST_SPELL actions available: ${legalActions.filter(a => a.type === 'CAST_SPELL').length}`);
+CAST_SPELL actions available: ${legalActions.filter((a) => a.type === 'CAST_SPELL').length}`);
   }
 
   if (legalActions.length === 0) break;
@@ -52,8 +52,8 @@ CAST_SPELL actions available: ${legalActions.filter(a => a.type === 'CAST_SPELL'
   const scoredActions: Array<{ action: Action; score: number; desc: string }> = [];
 
   // Make sure to evaluate ALL CAST_SPELL actions
-  const castSpells = legalActions.filter(a => a.type === 'CAST_SPELL');
-  const otherActions = legalActions.filter(a => a.type !== 'CAST_SPELL').slice(0, 15);
+  const castSpells = legalActions.filter((a) => a.type === 'CAST_SPELL');
+  const otherActions = legalActions.filter((a) => a.type !== 'CAST_SPELL').slice(0, 15);
   const actionsToScore = [...castSpells, ...otherActions];
 
   for (const action of actionsToScore) {
@@ -79,11 +79,13 @@ CAST_SPELL actions available: ${legalActions.filter(a => a.type === 'CAST_SPELL'
 
   console.log('Top 5 evaluated actions:');
   for (let i = 0; i < Math.min(5, scoredActions.length); i++) {
-    console.log(`  ${i + 1}. ${scoredActions[i].desc.padEnd(40)} → score: ${scoredActions[i].score.toFixed(2)}`);
+    console.log(
+      `  ${i + 1}. ${scoredActions[i].desc.padEnd(40)} → score: ${scoredActions[i].score.toFixed(2)}`,
+    );
   }
-  
+
   // Show CAST_SPELL actions separately if they exist
-  const castSpellActions = scoredActions.filter(sa => sa.action.type === 'CAST_SPELL');
+  const castSpellActions = scoredActions.filter((sa) => sa.action.type === 'CAST_SPELL');
   if (castSpellActions.length > 0) {
     console.log(`
 📜 CAST_SPELL actions (${castSpellActions.length}):`);

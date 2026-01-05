@@ -95,9 +95,14 @@ mana-core/
 │   │   │   │   ├── CardLoader.ts
 │   │   │   │   ├── CardTemplate.ts
 │   │   │   │   └── keywords.ts
-│   │   │   └── utils/
-│   │   │       ├── random.ts      # Seedable RNG
-│   │   │       └── clone.ts       # Fast state cloning
+│   │   │   ├── utils/
+│   │   │   │       ├── random.ts      # Seedable RNG
+│   │   │   │       ├── clone.ts       # Fast state cloning
+│   │   │   │       └── gameInit.ts    # Initialization logic
+│   │   │   ├── decks/                 # Test deck definitions
+│   │   │   │   ├── index.ts           # Registry
+│   │   │   │   ├── mono.ts            # Mono-colored
+│   │   │   │   └── competitive.ts     # Meta decks
 │   │   ├── data/
 │   │   │   ├── cards/
 │   │   │   │   └── 6ed.json      # Cached Scryfall data

@@ -16,6 +16,8 @@ import { sourceExistsCheck, countAvailableMana } from '../../templates';
 import type { ActivatedAbility } from '../../types';
 import type { GameState } from '../../../../state/GameState';
 import type { PlayerId } from '../../../../state/Zone';
+import { getPlayer } from '../../../../state/GameState';
+import { hasKeywordWithLords } from '../../../lords';
 
 // =============================================================================
 // FIREBREATHING ({R}: +1/+0)
@@ -118,7 +120,33 @@ registerAbilities('Patagia Golem', (card) => {
       },
     },
     isManaAbility: false,
-    canActivate: sourceExistsCheck,
+    canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+      if (!sourceExistsCheck(state, sourceId, controller)) {
+        return false;
+      }
+
+      // Don't allow activation if creature already has flying
+      const player = getPlayer(state, controller);
+      const source = player.battlefield.find((c) => c.instanceId === sourceId);
+      if (source && hasKeywordWithLords(state, source, 'Flying')) {
+        return false;
+      }
+
+      // During declare_blockers step, disallow to prevent infinite loops
+      if (state.step === 'declare_blockers') {
+        return false;
+      }
+
+      // Check mana availability (need {3})
+      const pool = player.manaPool;
+      const totalMana =
+        pool.white + pool.blue + pool.black + pool.red + pool.green + pool.colorless;
+      if (totalMana < 3) {
+        return false;
+      }
+
+      return true;
+    },
   };
   return [ability];
 });

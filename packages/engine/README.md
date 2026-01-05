@@ -11,6 +11,7 @@
 The `@manacore/engine` package is the **core rule implementation** of the ManaCore platform. It handles all game logic, state management, and card interactions in a pure, headless environment.
 
 **Key Features:**
+
 - 🎯 **Pure Logic:** Zero dependencies on UI libraries (React, DOM, etc.)
 - ⚡ **High Performance:** Optimized for batch simulations (1000+ games/sec)
 - 🔄 **Deterministic:** Seed-based RNG ensures 100% reproducible games
@@ -68,6 +69,12 @@ if (newState.gameOver) {
 │  - Pure functions: (state, action) → newState               │
 │  - Combat resolution, stack, state-based actions            │
 └─────────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────────┐
+│  LAYER 5: Test Decks (decks/)                               │
+│  - Organized library of 25+ pre-built decks                 │
+│  - Mono-color, dual-color, competitive, and special         │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -107,10 +114,10 @@ let state: GameState = initializeGame(playerDeck, opponentDeck, 12345);
 // 3. Game loop
 while (!state.gameOver) {
   const actions = getLegalActions(state);
-  
+
   // AI or player selects action
   const action = selectAction(actions);
-  
+
   // Apply action
   state = applyAction(state, action);
 }
@@ -141,25 +148,25 @@ interface GameState {
     player: PlayerState;
     opponent: PlayerState;
   };
-  
+
   // Shared zones
   stack: StackObject[];
   exile: CardInstance[];
-  
+
   // Game flow
-  activePlayer: PlayerId;      // Whose turn it is
-  priorityPlayer: PlayerId;    // Who has priority
+  activePlayer: PlayerId; // Whose turn it is
+  priorityPlayer: PlayerId; // Who has priority
   turnCount: number;
-  phase: GamePhase;            // 'beginning' | 'main1' | 'combat' | 'main2' | 'end'
+  phase: GamePhase; // 'beginning' | 'main1' | 'combat' | 'main2' | 'end'
   step: GameStep;
-  
+
   // Game status
   gameOver: boolean;
   winner: PlayerId | null;
-  
+
   // Determinism
   rngSeed: number;
-  actionHistory: string[];     // JSON of all actions
+  actionHistory: string[]; // JSON of all actions
 }
 ```
 
@@ -171,17 +178,17 @@ Per-player state:
 interface PlayerState {
   id: PlayerId;
   life: number;
-  
+
   // Zones
   library: CardInstance[];
   hand: CardInstance[];
   battlefield: CardInstance[];
   graveyard: CardInstance[];
-  
+
   // Resources
-  manaPool: ManaPool;          // Available mana
+  manaPool: ManaPool; // Available mana
   landsPlayedThisTurn: number;
-  
+
   // Combat
   attackers: CardInstance[];
 }
@@ -193,32 +200,32 @@ Runtime instance of a card in the game:
 
 ```typescript
 interface CardInstance {
-  instanceId: string;          // Unique ID for this copy
-  scryfallId: string;          // Reference to CardTemplate
-  
+  instanceId: string; // Unique ID for this copy
+  scryfallId: string; // Reference to CardTemplate
+
   controller: PlayerId;
   owner: PlayerId;
-  zone: Zone;                  // 'library' | 'hand' | 'battlefield' | 'graveyard' | 'exile'
-  
+  zone: Zone; // 'library' | 'hand' | 'battlefield' | 'graveyard' | 'exile'
+
   // State
   tapped: boolean;
   summoningSick: boolean;
   damage: number;
-  
+
   // Modifications
   counters: Partial<Record<CounterType, number>>;
   temporaryModifications: TemporaryModification[];
   temporaryKeywords?: Array<{ keyword: string; until: string }>;
-  
+
   // Attachments
-  attachments: string[];       // Auras/Equipment on this
-  attachedTo?: string;         // What this Aura is attached to
-  
+  attachments: string[]; // Auras/Equipment on this
+  attachedTo?: string; // What this Aura is attached to
+
   // Combat
   attacking?: boolean;
   blocking?: string;
   blockedBy?: string[];
-  
+
   // Tokens
   isToken?: boolean;
   tokenType?: string;
@@ -248,8 +255,8 @@ interface CastSpellAction {
   playerId: PlayerId;
   payload: {
     cardInstanceId: string;
-    targets?: string[];        // Target instance IDs
-    xValue?: number;           // For X-cost spells
+    targets?: string[]; // Target instance IDs
+    xValue?: number; // For X-cost spells
   };
 }
 
@@ -258,7 +265,7 @@ interface DeclareAttackersAction {
   type: 'DECLARE_ATTACKERS';
   playerId: PlayerId;
   payload: {
-    attackers: string[];       // Attacking creature IDs
+    attackers: string[]; // Attacking creature IDs
   };
 }
 
@@ -304,13 +311,13 @@ interface EndTurnAction {
 
 ```typescript
 // Get all legal actions for current player
-function getLegalActions(state: GameState): Action[]
+function getLegalActions(state: GameState): Action[];
 
 // Validate an action
-function validateAction(state: GameState, action: Action): string[]
+function validateAction(state: GameState, action: Action): string[];
 
 // Apply action to state (returns new state)
-function applyAction(state: GameState, action: Action): GameState
+function applyAction(state: GameState, action: Action): GameState;
 ```
 
 ### Card System
@@ -346,16 +353,16 @@ Static card data from Scryfall:
 
 ```typescript
 interface CardTemplate {
-  id: string;                  // Scryfall UUID
+  id: string; // Scryfall UUID
   name: string;
-  mana_cost?: string;          // "{2}{R}{R}"
-  cmc: number;                 // Converted mana cost
-  type_line: string;           // "Creature — Dragon"
+  mana_cost?: string; // "{2}{R}{R}"
+  cmc: number; // Converted mana cost
+  type_line: string; // "Creature — Dragon"
   oracle_text?: string;
   power?: string;
   toughness?: string;
-  colors: string[];            // ["R"]
-  keywords: string[];          // ["Flying", "Haste"]
+  colors: string[]; // ["R"]
+  keywords: string[]; // ["Flying", "Haste"]
   rarity: string;
   set: string;
 }
@@ -408,30 +415,37 @@ if (hasFlying(dragon)) {
 
 #### Pre-built Test Decks
 
+The engine includes a comprehensive library of 25+ pre-built decks organized by strategy and coverage:
+
 ```typescript
 import {
+  // Mono-colored
   createWhiteDeck,
-  createBlueDeck,
-  createBlackDeck,
-  createRedDeck,
   createGreenDeck,
+  // Dual-colored (all 10 pairs)
   createAzoriusDeck,
-  createBorosDeck,
-  // ... 15+ prebuilt decks
+  createGolgariDeck,
+  // Competitive Archetypes
+  createWhiteWeenie,
+  createBlueControl,
+  createBlackAggro,
+  // Special Coverage
+  createArtifactDeck,
+  createColorHateDeck,
+  // Helpers
   getRandomTestDeck,
-  TEST_DECKS,
+  ALL_TEST_DECKS,
 } from '@manacore/engine';
 
 // Get a mono-colored deck
 const whiteDeck = createWhiteDeck();
-// Returns: CardTemplate[] (60 cards)
 
-// Get a random deck
+// Get a random deck from all available archetypes
 const randomDeck = getRandomTestDeck();
 
-// Access deck registry
-console.log(TEST_DECKS);
-// ['white', 'blue', 'black', 'red', 'green', 'azorius', ...]
+// Access the full deck registry
+console.log(Object.keys(ALL_TEST_DECKS));
+// ['white', 'blue', 'azorius', 'white_weenie', 'artifact', ...]
 ```
 
 #### Custom Deck Creation
@@ -467,7 +481,7 @@ const state = initializeGame(playerDeck, opponentDeck);
 const replayableState = initializeGame(
   playerDeck,
   opponentDeck,
-  12345 // Same seed = same game
+  12345, // Same seed = same game
 );
 
 // Game starts at main1 phase with 7-card hands drawn
@@ -486,11 +500,11 @@ import { getLegalActions } from '@manacore/engine';
 class MyBot {
   selectAction(state: GameState): Action {
     const legalActions = getLegalActions(state);
-    
+
     if (legalActions.length === 0) {
       throw new Error('No legal actions available');
     }
-    
+
     // Your decision logic here
     return legalActions[0];
   }
@@ -522,43 +536,43 @@ import {
 function evaluateState(state: GameState, playerId: PlayerId): number {
   const player = getPlayer(state, playerId);
   const opponent = getPlayer(state, playerId === 'player' ? 'opponent' : 'player');
-  
+
   let score = 0;
-  
+
   // Life total
   score += player.life * 2;
   score -= opponent.life * 2;
-  
+
   // Creature count and power
   for (const creature of player.battlefield) {
     score += getEffectivePowerWithLords(state, creature, playerId);
     score += getEffectiveToughnessWithLords(state, creature, playerId);
   }
-  
+
   // Card advantage
   score += player.hand.length * 3;
   score -= opponent.hand.length * 3;
-  
+
   return score;
 }
 
 function selectGreedyAction(state: GameState): Action {
   const actions = getLegalActions(state);
   const playerId = state.priorityPlayer;
-  
+
   let bestAction = actions[0];
   let bestScore = -Infinity;
-  
+
   for (const action of actions) {
     const nextState = applyAction(state, action);
     const score = evaluateState(nextState, playerId);
-    
+
     if (score > bestScore) {
       bestScore = score;
       bestAction = action;
     }
   }
-  
+
   return bestAction!;
 }
 ```
@@ -581,14 +595,14 @@ console.log(card);
 
 ### Step 2: Identify Implementation Type
 
-| Card Type | Implementation |
-|-----------|---------------|
-| Vanilla creatures | Already works |
-| Keyword creatures (Flying, Haste, etc.) | Already works |
-| Basic lands | Already works |
-| Simple burn/removal | Check `src/spells/registry.ts` |
-| Activated abilities | Add to `src/rules/abilities/` |
-| Triggered abilities | Add trigger in `src/rules/triggers.ts` |
+| Card Type                               | Implementation                         |
+| --------------------------------------- | -------------------------------------- |
+| Vanilla creatures                       | Already works                          |
+| Keyword creatures (Flying, Haste, etc.) | Already works                          |
+| Basic lands                             | Already works                          |
+| Simple burn/removal                     | Check `src/spells/registry.ts`         |
+| Activated abilities                     | Add to `src/rules/abilities/`          |
+| Triggered abilities                     | Add trigger in `src/rules/triggers.ts` |
 
 ### Step 3: Implement Complex Cards
 
@@ -645,12 +659,7 @@ tests/
 
 ```typescript
 import { describe, test, expect } from 'bun:test';
-import {
-  createGameState,
-  createCardInstance,
-  applyAction,
-  CardLoader,
-} from '../src/index';
+import { createGameState, createCardInstance, applyAction, CardLoader } from '../src/index';
 
 describe('My Feature', () => {
   test('should work correctly', () => {
@@ -658,14 +667,14 @@ describe('My Feature', () => {
     const forest = CardLoader.getByName('Forest')!;
     const library = [createCardInstance(forest.id, 'player', 'library')];
     const state = createGameState(library, library);
-    
+
     // Execute
     const newState = applyAction(state, {
       type: 'PLAY_LAND',
       playerId: 'player',
       payload: { cardInstanceId: library[0].instanceId },
     });
-    
+
     // Assert
     expect(newState.players.player.battlefield.length).toBe(1);
   });
@@ -696,9 +705,7 @@ const blockAction: DeclareBlockersAction = {
   type: 'DECLARE_BLOCKERS',
   playerId: 'opponent',
   payload: {
-    blocks: [
-      { blockerId: blockerId, attackerId: creatureId1 },
-    ],
+    blocks: [{ blockerId: blockerId, attackerId: creatureId1 }],
   },
 };
 state = applyAction(state, blockAction);
@@ -729,12 +736,7 @@ state = applyAction(state, { type: 'PASS_PRIORITY', playerId: 'opponent' });
 ### Mana System
 
 ```typescript
-import {
-  parseManaCost,
-  canPayManaCost,
-  payManaCost,
-  addManaToPool,
-} from '@manacore/engine';
+import { parseManaCost, canPayManaCost, payManaCost, addManaToPool } from '@manacore/engine';
 
 // Parse mana cost
 const cost = parseManaCost('{2}{R}{R}');
@@ -750,11 +752,7 @@ const newState = payManaCost(state, 'player', cost);
 ### Targeting System
 
 ```typescript
-import {
-  requiresTargets,
-  getLegalTargets,
-  validateTargets,
-} from '@manacore/engine';
+import { requiresTargets, getLegalTargets, validateTargets } from '@manacore/engine';
 
 const shock = CardLoader.getByName('Shock')!;
 
@@ -762,7 +760,7 @@ const shock = CardLoader.getByName('Shock')!;
 if (requiresTargets(shock.oracle_text)) {
   // Get legal targets
   const targets = getLegalTargets(state, shock, 'player');
-  
+
   // Validate selected targets
   const errors = validateTargets(state, shock, 'player', [targetId]);
 }

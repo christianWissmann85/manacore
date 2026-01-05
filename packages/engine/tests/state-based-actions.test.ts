@@ -1,4 +1,3 @@
-
 import { describe, test, expect, beforeEach } from 'bun:test';
 import {
   createGameState,
@@ -8,7 +7,7 @@ import {
   getPlayer,
   type GameState,
   checkStateBasedActions,
-  addTemporaryModification
+  addTemporaryModification,
 } from '../src/index';
 
 describe('State-Based Actions (SBAs)', () => {
@@ -18,7 +17,7 @@ describe('State-Based Actions (SBAs)', () => {
     // Basic setup
     const bears = CardLoader.getByName('Grizzly Bears'); // 2/2
     const giantGrowth = CardLoader.getByName('Giant Growth'); // +3/+3
-    
+
     if (!bears || !giantGrowth) throw new Error('Cards not found');
 
     // Create minimal valid state
@@ -28,7 +27,7 @@ describe('State-Based Actions (SBAs)', () => {
   test('Creature dies from lethal damage', () => {
     const bears = CardLoader.getByName('Grizzly Bears')!;
     const player = getPlayer(state, 'player');
-    
+
     // Add bear to battlefield
     const bearCard = createCardInstance(bears.id, 'player', 'battlefield');
     player.battlefield.push(bearCard);
@@ -38,7 +37,7 @@ describe('State-Based Actions (SBAs)', () => {
 
     // Run SBAs manually (usually run by reducer)
     const performed = checkStateBasedActions(state);
-    
+
     expect(performed).toBe(true);
     expect(player.battlefield.length).toBe(0);
     expect(player.graveyard.length).toBe(1);
@@ -48,7 +47,7 @@ describe('State-Based Actions (SBAs)', () => {
   test('Creature dies from zero toughness', () => {
     const bears = CardLoader.getByName('Grizzly Bears')!;
     const player = getPlayer(state, 'player');
-    
+
     // Add bear to battlefield
     const bearCard = createCardInstance(bears.id, 'player', 'battlefield');
     player.battlefield.push(bearCard);
@@ -58,7 +57,7 @@ describe('State-Based Actions (SBAs)', () => {
 
     // Run SBAs
     const performed = checkStateBasedActions(state);
-    
+
     expect(performed).toBe(true);
     expect(player.battlefield.length).toBe(0);
     expect(player.graveyard.length).toBe(1);
@@ -67,7 +66,7 @@ describe('State-Based Actions (SBAs)', () => {
   test('Regeneration saves creature from lethal damage', () => {
     const bears = CardLoader.getByName('Grizzly Bears')!;
     const player = getPlayer(state, 'player');
-    
+
     const bearCard = createCardInstance(bears.id, 'player', 'battlefield');
     player.battlefield.push(bearCard);
 
@@ -80,11 +79,11 @@ describe('State-Based Actions (SBAs)', () => {
 
     // Run SBAs
     const performed = checkStateBasedActions(state);
-    
+
     expect(performed).toBe(true);
     expect(player.battlefield.length).toBe(1); // Still there
     expect(player.graveyard.length).toBe(0);
-    
+
     // Check regeneration side effects
     expect(bearCard.damage).toBe(0); // Damage removed
     expect(bearCard.tapped).toBe(true); // Tapped
@@ -94,7 +93,7 @@ describe('State-Based Actions (SBAs)', () => {
   test('Regeneration does NOT save from zero toughness', () => {
     const bears = CardLoader.getByName('Grizzly Bears')!;
     const player = getPlayer(state, 'player');
-    
+
     const bearCard = createCardInstance(bears.id, 'player', 'battlefield');
     player.battlefield.push(bearCard);
 
@@ -106,7 +105,7 @@ describe('State-Based Actions (SBAs)', () => {
 
     // Run SBAs
     const performed = checkStateBasedActions(state);
-    
+
     expect(performed).toBe(true);
     expect(player.battlefield.length).toBe(0); // Died
     expect(player.graveyard.length).toBe(1);
@@ -124,22 +123,22 @@ describe('State-Based Actions (SBAs)', () => {
   });
 
   test('Unattached Aura goes to graveyard', () => {
-    const aura = CardLoader.getByName('Holy Strength') || CardLoader.getByName('Fear'); 
+    const aura = CardLoader.getByName('Holy Strength') || CardLoader.getByName('Fear');
     // Just create a dummy aura if needed, but lets assume Holy Strength {W} Aura
     // If not found, skip or mock
-    
+
     if (!aura) {
-        // Mock check manually if card not found
-        console.warn('Skipping Aura test - card not found');
-        return;
+      // Mock check manually if card not found
+      console.warn('Skipping Aura test - card not found');
+      return;
     }
 
     const player = getPlayer(state, 'player');
     const auraCard = createCardInstance(aura.id, 'player', 'battlefield');
-    
+
     // Set type line manually if needed, but Loader should handle it
     // auraCard attachedTo is undefined
-    
+
     player.battlefield.push(auraCard);
 
     const performed = checkStateBasedActions(state);

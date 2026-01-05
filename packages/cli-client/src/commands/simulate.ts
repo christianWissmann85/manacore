@@ -8,21 +8,20 @@
  */
 
 import type { Bot } from '@manacore/ai';
-import type { PlayerId, DeckColor, GameState, Action } from '@manacore/engine';
+import type { PlayerId, GameState, Action, CardTemplate } from '@manacore/engine';
 import {
   initializeGame,
-  getTestDeck,
+  getRandomTestDeck,
+  getDeckDisplayName,
   applyAction,
   getLegalActions,
   describeAction,
+  getPlayer,
   CardLoader,
+  getEffectivePowerWithLords,
+  getEffectiveToughnessWithLords,
+  isCreature,
 } from '@manacore/engine';
-
-const DECK_COLORS: DeckColor[] = ['white', 'blue', 'black', 'red', 'green'];
-
-function getRandomDeckColor(): DeckColor {
-  return DECK_COLORS[Math.floor(Math.random() * DECK_COLORS.length)]!;
-}
 
 export interface SimulationOptions {
   gameCount: number;
@@ -37,6 +36,8 @@ export interface DeckStats {
   losses: number;
   draws: number;
   games: number;
+  avgCmc?: number; // Average converted mana cost
+  cmcDistribution?: Record<number, number>; // Count of cards at each CMC
 }
 
 export interface MatchupStats {
@@ -55,20 +56,42 @@ export interface SimulationResults {
   maxTurns: number;
   errors: number;
   gamesCompleted: number;
-  deckStats: Record<DeckColor, DeckStats>;
+  deckStats: Record<string, DeckStats>; // Changed from DeckColor to string to support all deck types
   matchups: Record<string, MatchupStats>;
 }
 
 function createEmptyDeckStats(): DeckStats {
-  return { wins: 0, losses: 0, draws: 0, games: 0 };
+  return { wins: 0, losses: 0, draws: 0, games: 0, cmcDistribution: {} };
 }
 
 function createEmptyMatchupStats(): MatchupStats {
   return { wins: 0, losses: 0, draws: 0 };
 }
 
-function getMatchupKey(color1: DeckColor, color2: DeckColor): string {
-  return `${color1} vs ${color2}`;
+function getMatchupKey(deck1: string, deck2: string): string {
+  return `${deck1} vs ${deck2}`;
+}
+
+/**
+ * Calculate mana curve statistics for a deck
+ */
+function calculateManaCurve(deck: CardTemplate[]): {
+  avgCmc: number;
+  cmcDistribution: Record<number, number>;
+} {
+  const nonLands = deck.filter((card) => !card.type_line?.includes('Land'));
+  const cmcDistribution: Record<number, number> = {};
+  let totalCmc = 0;
+
+  for (const card of nonLands) {
+    const cmc = card.cmc || 0;
+    cmcDistribution[cmc] = (cmcDistribution[cmc] || 0) + 1;
+    totalCmc += cmc;
+  }
+
+  const avgCmc = nonLands.length > 0 ? totalCmc / nonLands.length : 0;
+
+  return { avgCmc, cmcDistribution };
 }
 
 /**
@@ -79,13 +102,7 @@ export async function runSimulation(
   opponentBot: Bot,
   options: SimulationOptions,
 ): Promise<SimulationResults> {
-  const deckStats: Record<DeckColor, DeckStats> = {
-    white: createEmptyDeckStats(),
-    blue: createEmptyDeckStats(),
-    black: createEmptyDeckStats(),
-    red: createEmptyDeckStats(),
-    green: createEmptyDeckStats(),
-  };
+  const deckStats: Record<string, DeckStats> = {}; // Dynamic deck stats for all deck types
 
   const matchups: Record<string, MatchupStats> = {};
 
@@ -128,10 +145,12 @@ export async function runSimulation(
       });
 
       if (options.debugVerbose) {
-        const winnerName = 
-          gameResult.winner === 'player' ? playerBot.getName() :
-          gameResult.winner === 'opponent' ? opponentBot.getName() :
-          'Draw';
+        const winnerName =
+          gameResult.winner === 'player'
+            ? playerBot.getName()
+            : gameResult.winner === 'opponent'
+              ? opponentBot.getName()
+              : 'Draw';
         console.log(`\n✅ Game completed in ${gameResult.turns} turns`);
         console.log(`🏆 Winner: ${winnerName}`);
         console.log(`🎨 Decks: ${gameResult.playerDeck} vs ${gameResult.opponentDeck}`);
@@ -144,6 +163,28 @@ export async function runSimulation(
 
       const { playerDeck, opponentDeck } = gameResult;
       const matchupKey = getMatchupKey(playerDeck, opponentDeck);
+
+      // Initialize deck stats if not exists
+      if (!deckStats[playerDeck]) {
+        deckStats[playerDeck] = createEmptyDeckStats();
+        // Calculate mana curve for this deck
+        const deck = gameResult.playerDeckCards;
+        if (deck) {
+          const curveStats = calculateManaCurve(deck);
+          deckStats[playerDeck].avgCmc = curveStats.avgCmc;
+          deckStats[playerDeck].cmcDistribution = curveStats.cmcDistribution;
+        }
+      }
+      if (!deckStats[opponentDeck]) {
+        deckStats[opponentDeck] = createEmptyDeckStats();
+        // Calculate mana curve for this deck
+        const deck = gameResult.opponentDeckCards;
+        if (deck) {
+          const curveStats = calculateManaCurve(deck);
+          deckStats[opponentDeck].avgCmc = curveStats.avgCmc;
+          deckStats[opponentDeck].cmcDistribution = curveStats.cmcDistribution;
+        }
+      }
 
       // Initialize matchup if not exists
       if (!matchups[matchupKey]) {
@@ -217,8 +258,10 @@ export async function runSimulation(
 interface GameResult {
   winner: PlayerId | null;
   turns: number;
-  playerDeck: DeckColor;
-  opponentDeck: DeckColor;
+  playerDeck: string; // Changed to string to support all deck types
+  opponentDeck: string;
+  playerDeckCards?: CardTemplate[]; // For mana curve calculation
+  opponentDeckCards?: CardTemplate[]; // For mana curve calculation
 }
 
 /**
@@ -244,11 +287,11 @@ async function runSingleGame(
   opponentBot: Bot,
   options: { maxTurns: number; verbose: boolean; debugVerbose?: boolean; seed?: number },
 ): Promise<GameResult> {
-  // Create decks - each bot gets a random test deck
-  const playerDeckColor = getRandomDeckColor();
-  const opponentDeckColor = getRandomDeckColor();
-  const playerDeck = getTestDeck(playerDeckColor);
-  const opponentDeck = getTestDeck(opponentDeckColor);
+  // Create decks - each bot gets a random test deck from ALL available decks
+  const playerDeck = getRandomTestDeck();
+  const opponentDeck = getRandomTestDeck();
+  const playerDeckName = getDeckDisplayName(playerDeck);
+  const opponentDeckName = getDeckDisplayName(opponentDeck);
 
   // Initialize game
   let state = initializeGame(playerDeck, opponentDeck, options.seed);
@@ -263,8 +306,19 @@ async function runSingleGame(
   const recentActions: Action[] = [];
   const MAX_RECENT_ACTIONS = 50;
 
+  // Hang detection: track actions per priority window
+  let actionsThisPriorityWindow = 0;
+  let lastPriorityPlayer = state.priorityPlayer;
+  let lastPhase = state.phase;
+  let lastStep = state.step;
+  const MAX_ACTIONS_PER_PRIORITY = 50; // Reasonable limit per priority window
+
+  // Track repeated actions to detect loops
+  const actionHistory: string[] = [];
+  const MAX_ACTION_HISTORY = 20;
+
   if (options.debugVerbose) {
-    console.log(`\n📋 Starting game with decks: ${playerDeckColor} vs ${opponentDeckColor}`);
+    console.log(`\n📋 Starting game with decks: ${playerDeckName} vs ${opponentDeckName}`);
     console.log(`🎲 Seed: ${options.seed ?? 'random'}\n`);
   }
 
@@ -289,6 +343,13 @@ async function runSingleGame(
     // Bot chooses action
     const action = priorityBot.chooseAction(state, state.priorityPlayer);
 
+    // Create action signature for loop detection
+    const actionSignature = `${action.type}_${action.type === 'ACTIVATE_ABILITY' ? action.payload.abilityId : ''}_${state.phase}_${state.step}`;
+    actionHistory.push(actionSignature);
+    if (actionHistory.length > MAX_ACTION_HISTORY) {
+      actionHistory.shift();
+    }
+
     // Track action for debugging
     recentActions.push(action);
     if (recentActions.length > MAX_RECENT_ACTIONS) {
@@ -297,14 +358,120 @@ async function runSingleGame(
 
     // Apply action
     try {
-      const previousTurn = state.turnCount;
       const previousPhase = state.phase;
       const previousStep = state.step;
       const previousPriorityPlayer = state.priorityPlayer;
-      
+
       state = applyAction(state, action);
       actionCount++;
       actionsThisTurn++;
+
+      // Check if priority changed or phase/step advanced
+      if (
+        state.priorityPlayer !== lastPriorityPlayer ||
+        state.phase !== lastPhase ||
+        state.step !== lastStep
+      ) {
+        // Priority window changed - reset counter
+        actionsThisPriorityWindow = 0;
+        lastPriorityPlayer = state.priorityPlayer;
+        lastPhase = state.phase;
+        lastStep = state.step;
+      } else {
+        // Same priority window - increment counter
+        actionsThisPriorityWindow++;
+
+        // HANG DETECTION: Too many actions in same priority window
+        if (actionsThisPriorityWindow >= MAX_ACTIONS_PER_PRIORITY) {
+          const player = getPlayer(state, state.priorityPlayer);
+          const opponent = getPlayer(
+            state,
+            state.priorityPlayer === 'player' ? 'opponent' : 'player',
+          );
+
+          // Analyze what's causing the loop
+          const recentActionTypes = actionHistory.slice(-10);
+          const uniqueActions = new Set(recentActionTypes);
+          const isRepeating = uniqueActions.size <= 2; // Only 1-2 different actions
+
+          let loopCause = 'Unknown';
+          let problematicCard = '';
+
+          if (action.type === 'ACTIVATE_ABILITY' && isRepeating) {
+            // Find the card with this ability
+            const abilityId = action.payload.abilityId;
+            const sourceId = action.payload.sourceId;
+            const card = player.battlefield.find((c) => c.instanceId === sourceId);
+            if (card) {
+              const template = CardLoader.getById(card.scryfallId);
+              problematicCard = template?.name || 'Unknown Card';
+              loopCause = `Infinite ability activation: ${problematicCard} (${abilityId})`;
+            }
+          }
+
+          // Build detailed error message
+          let errorMsg = `\n${'='.repeat(70)}\n`;
+          errorMsg += `🚨 INFINITE LOOP DETECTED!\n`;
+          errorMsg += `${'='.repeat(70)}\n\n`;
+          errorMsg += `Game: ${playerDeckName} vs ${opponentDeckName}\n`;
+          errorMsg += `Seed: ${options.seed ?? 'unknown'}\n`;
+          errorMsg += `Turn: ${state.turnCount}, Phase: ${state.phase}, Step: ${state.step}\n`;
+          errorMsg += `Priority: ${state.priorityPlayer}\n`;
+          errorMsg += `Actions in this priority window: ${actionsThisPriorityWindow}\n\n`;
+
+          errorMsg += `Loop Cause: ${loopCause}\n\n`;
+
+          errorMsg += `Recent Actions (last 10):\n`;
+          for (let i = Math.max(0, recentActions.length - 10); i < recentActions.length; i++) {
+            const a = recentActions[i];
+            if (!a) continue;
+            errorMsg += `  ${i + 1}. ${a.type}`;
+            if (a.type === 'ACTIVATE_ABILITY') {
+              errorMsg += ` (${a.payload.abilityId})`;
+            }
+            errorMsg += `\n`;
+          }
+
+          errorMsg += `\n${state.priorityPlayer.toUpperCase()}'s Battlefield (${player.battlefield.length} cards):\n`;
+          for (const card of player.battlefield) {
+            const template = CardLoader.getById(card.scryfallId);
+            if (template && isCreature(template)) {
+              const basePower = parseInt(template.power || '0', 10);
+              const baseToughness = parseInt(template.toughness || '0', 10);
+              const power = getEffectivePowerWithLords(state, card, basePower);
+              const toughness = getEffectiveToughnessWithLords(state, card, baseToughness);
+              const keywords = template.keywords?.length
+                ? ` [${template.keywords.join(', ')}]`
+                : '';
+              errorMsg += `  • ${template.name} (${power}/${toughness}) ${card.tapped ? '[T]' : '[U]'}${keywords}\n`;
+            } else {
+              errorMsg += `  • ${template?.name} ${card.tapped ? '[T]' : '[U]'}\n`;
+            }
+          }
+
+          errorMsg += `\nOpponent's Battlefield (${opponent.battlefield.length} cards):\n`;
+          for (const card of opponent.battlefield.slice(0, 5)) {
+            // Show first 5
+            const template = CardLoader.getById(card.scryfallId);
+            if (template && isCreature(template)) {
+              const basePower = parseInt(template.power || '0', 10);
+              const baseToughness = parseInt(template.toughness || '0', 10);
+              const power = getEffectivePowerWithLords(state, card, basePower);
+              const toughness = getEffectiveToughnessWithLords(state, card, baseToughness);
+              errorMsg += `  • ${template.name} (${power}/${toughness}) ${card.tapped ? '[T]' : '[U]'}\n`;
+            } else {
+              errorMsg += `  • ${template?.name} ${card.tapped ? '[T]' : '[U]'}\n`;
+            }
+          }
+          if (opponent.battlefield.length > 5) {
+            errorMsg += `  ... and ${opponent.battlefield.length - 5} more\n`;
+          }
+
+          errorMsg += `\n${'='.repeat(70)}\n`;
+
+          throw new Error(errorMsg);
+        }
+      }
 
       // Show progress in debug verbose mode
       if (options.debugVerbose) {
@@ -313,33 +480,28 @@ async function runSingleGame(
           if (actionsThisTurn > 10) {
             console.log(`   └─ ${actionsThisTurn} actions on turn ${turnCount}`);
           }
-          console.log(`\n🔄 Turn ${state.turnCount} | ${state.phase} | ${state.activePlayer}'s turn`);
+          console.log(
+            `\n🔄 Turn ${state.turnCount} | ${state.phase} | ${state.activePlayer}'s turn`,
+          );
           lastLoggedTurn = state.turnCount;
           actionsThisTurn = 0;
         }
         // Show phase changes
         else if (state.phase !== previousPhase || state.step !== previousStep) {
           // Only log if we're on a turn with lots of actions
-          if (actionsThisTurn > 20 && (actionsThisTurn % 10 === 0)) {
+          if (actionsThisTurn > 20 && actionsThisTurn % 10 === 0) {
             console.log(`   ├─ ${state.phase}/${state.step} (${actionsThisTurn} actions so far)`);
           }
         }
-        
+
         // Warn if we're processing too many actions on one turn
         if (actionsThisTurn > 0 && actionsThisTurn % 100 === 0) {
           const actionDesc = describeAction(action, state);
-          console.log(`   ⚠️  Turn ${state.turnCount}: ${actionsThisTurn} actions! Last: ${actionDesc} [${state.phase}/${state.step}] ${previousPriorityPlayer}→${state.priorityPlayer}`);
-          
-          // Extra debugging at high counts
-          if (actionsThisTurn >= 500 && actionsThisTurn % 500 === 0) {
-            console.log(`   🔴 POTENTIAL INFINITE LOOP DETECTED!`);
-            console.log(`      Stack: ${state.stack.length} items`);
-            console.log(`      Priority: ${state.priorityPlayer}`);
-            console.log(`      Active: ${state.activePlayer}`);
-            console.log(`      Legal actions: ${legalActions.length}`);
-          }
+          console.log(
+            `   ⚠️  Turn ${state.turnCount}: ${actionsThisTurn} actions! Last: ${actionDesc} [${state.phase}/${state.step}] ${previousPriorityPlayer}→${state.priorityPlayer}`,
+          );
         }
-        
+
         // Show periodic action count
         if (actionCount % 50 === 0 && state.turnCount === lastLoggedTurn) {
           console.log(`   ⚡ ${actionCount} actions processed (turn ${state.turnCount})`);
@@ -390,8 +552,10 @@ async function runSingleGame(
   return {
     winner,
     turns: turnCount,
-    playerDeck: playerDeckColor,
-    opponentDeck: opponentDeckColor,
+    playerDeck: playerDeckName,
+    opponentDeck: opponentDeckName,
+    playerDeckCards: playerDeck,
+    opponentDeckCards: opponentDeck,
   };
 }
 
@@ -426,31 +590,93 @@ export function printResults(
   console.log('  DECK PERFORMANCE');
   console.log('─'.repeat(60));
 
-  const deckOrder: DeckColor[] = ['white', 'blue', 'black', 'red', 'green'];
-  const colorEmoji: Record<DeckColor, string> = {
+  const deckEmoji: Record<string, string> = {
     white: '⬜',
     blue: '🟦',
     black: '⬛',
     red: '🟥',
     green: '🟩',
+    azorius: '⬜🟦',
+    orzhov: '⬜⬛',
+    boros: '⬜🟥',
+    selesnya: '⬜🟩',
+    dimir: '🟦⬛',
+    izzet: '🟦🟥',
+    simic: '🟦🟩',
+    rakdos: '⬛🟥',
+    golgari: '⬛🟩',
+    gruul: '🟥🟩',
+    artifact: '⚙️',
+    colorhate: '🛡️',
+    artifacts2: '⚙️',
+    spells: '✨',
+    creatures: '🦖',
+    multicolor: '🌈',
+    white_weenie: '⚔️⬜',
+    blue_control: '🛡️🟦',
+    black_aggro: '💀⬛',
+    red_burn: '🔥🟥',
+    green_midrange: '🌲🟩',
+    unknown: '❓',
   };
 
   // Sort by win rate
-  const sortedDecks = deckOrder
-    .filter((color) => results.deckStats[color].games > 0)
+  const sortedDecks = Object.keys(results.deckStats)
+    .filter((deckName) => (results.deckStats[deckName]?.games ?? 0) > 0)
     .sort((a, b) => {
-      const aRate = results.deckStats[a].wins / results.deckStats[a].games;
-      const bRate = results.deckStats[b].wins / results.deckStats[b].games;
+      const aStats = results.deckStats[a];
+      const bStats = results.deckStats[b];
+      if (!aStats || !bStats) return 0;
+      const aRate = aStats.wins / aStats.games;
+      const bRate = bStats.wins / bStats.games;
       return bRate - aRate;
     });
 
-  for (const color of sortedDecks) {
-    const stats = results.deckStats[color];
+  for (const deckName of sortedDecks) {
+    const stats = results.deckStats[deckName];
+    if (!stats) continue;
     const winRate = pct(stats.wins, stats.games);
-    const name = color.charAt(0).toUpperCase() + color.slice(1);
+    const name = deckName.charAt(0).toUpperCase() + deckName.slice(1);
+    const emoji = deckEmoji[deckName] || '❓';
+
+    // Format mana curve info
+    const curveInfo = stats.avgCmc !== undefined ? ` [CMC: ${stats.avgCmc.toFixed(1)}]` : '';
+
     console.log(
-      `${colorEmoji[color]} ${name.padEnd(6)} ${stats.wins}W-${stats.losses}L-${stats.draws}D (${winRate}) [${stats.games} games]`,
+      `${emoji} ${name.padEnd(14)} ${stats.wins}W-${stats.losses}L-${stats.draws}D (${winRate}) [${stats.games} games]${curveInfo}`,
     );
+  }
+
+  // Mana Curve Analysis (if enough games played)
+  const largeDecks = sortedDecks.filter((d) => (results.deckStats[d]?.games ?? 0) >= 5);
+  if (largeDecks.length > 0) {
+    console.log('');
+    console.log('─'.repeat(60));
+    console.log('  MANA CURVE ANALYSIS (5+ games)');
+    console.log('─'.repeat(60));
+
+    for (const deckName of largeDecks.slice(0, 5)) {
+      const stats = results.deckStats[deckName];
+      if (!stats) continue;
+      const name = deckName.charAt(0).toUpperCase() + deckName.slice(1);
+
+      if (stats.avgCmc !== undefined && stats.cmcDistribution) {
+        const winRate = ((stats.wins / stats.games) * 100).toFixed(0);
+        console.log(
+          `${name.padEnd(14)} Avg CMC: ${stats.avgCmc.toFixed(2)} | Win Rate: ${winRate}%`,
+        );
+
+        // Show distribution bar chart
+        const maxCmc = Math.max(...Object.keys(stats.cmcDistribution).map(Number));
+        const bars = [];
+        for (let cmc = 0; cmc <= Math.min(maxCmc, 7); cmc++) {
+          const count = stats.cmcDistribution[cmc] || 0;
+          const bar = '█'.repeat(Math.ceil(count / 2)); // Scale down for display
+          bars.push(`${cmc}:${bar}${count}`);
+        }
+        console.log(`  ${bars.join(' ')}`);
+      }
+    }
   }
 
   // Top matchups (if enough data)

@@ -17,10 +17,29 @@ import type {
 } from './Action';
 import { getPlayer, findCard } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
-import { isLand, isCreature, isInstant, hasFlying, hasReach } from '../cards/CardTemplate';
+import {
+  isLand,
+  isCreature,
+  isInstant,
+  hasFlying,
+  hasReach,
+  hasDefender,
+} from '../cards/CardTemplate';
 import { validateAction } from './validators';
 import { getActivatedAbilities, getGraveyardAbilities } from '../rules/activatedAbilities';
 import { parseTargetRequirements, getAllLegalTargetCombinations } from '../rules/targeting';
+
+/**
+ * Helper: Check if a creature can't attack alone
+ */
+function cantAttackAlone(template: { name?: string; oracle_text?: string }): boolean {
+  const creatures = ['Goblin Elite Infantry'];
+  if (template.name && creatures.includes(template.name)) {
+    return true;
+  }
+  const text = template.oracle_text?.toLowerCase() || '';
+  return text.includes("can't attack alone");
+}
 
 /**
  * Get all legal actions for a player
@@ -426,6 +445,11 @@ function getLegalAttackerDeclarations(
     if (!template || !isCreature(template)) return false;
     if (card.tapped) return false;
     if (card.summoningSick) return false;
+
+    // Filter out creatures with Defender
+    // (Animate Wall check is handled in validator)
+    if (hasDefender(template)) return false;
+
     return true;
   });
 
@@ -449,24 +473,44 @@ function getLegalAttackerDeclarations(
     payload: { attackers: [] },
   });
 
-  // Attack with each creature individually
+  // Attack with each creature individually (unless it can't attack alone)
   for (const attacker of potentialAttackers) {
-    actions.push({
+    const template = CardLoader.getById(attacker.scryfallId);
+    // Skip creatures that can't attack alone if they would be the only attacker
+    if (template && cantAttackAlone(template) && potentialAttackers.length === 1) {
+      continue;
+    }
+    if (template && cantAttackAlone(template)) {
+      // This creature needs another attacker, skip single-attack
+      continue;
+    }
+
+    const action: DeclareAttackersAction = {
       type: 'DECLARE_ATTACKERS',
       playerId,
       payload: { attackers: [attacker.instanceId] },
-    });
+    };
+
+    // Validate before adding to ensure all constraints are met
+    if (validateAction(state, action).length === 0) {
+      actions.push(action);
+    }
   }
 
   // Attack with all
   if (potentialAttackers.length > 1) {
-    actions.push({
+    const action: DeclareAttackersAction = {
       type: 'DECLARE_ATTACKERS',
       playerId,
       payload: {
         attackers: potentialAttackers.map((c) => c.instanceId),
       },
-    });
+    };
+
+    // Validate before adding
+    if (validateAction(state, action).length === 0) {
+      actions.push(action);
+    }
   }
 
   return actions;

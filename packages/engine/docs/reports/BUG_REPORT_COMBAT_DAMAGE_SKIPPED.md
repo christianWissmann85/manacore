@@ -14,9 +14,11 @@ The root cause was that the `END_TURN` action was legally available to players d
 ## Bug Details
 
 ### Location
+
 `packages/engine/src/actions/getLegalActions.ts`
 
 ### Root Cause
+
 The `getLegalActions` function allowed `END_TURN` whenever the active player had priority, regardless of the current phase.
 
 ```typescript
@@ -32,6 +34,7 @@ if (state.activePlayer === playerId && state.priorityPlayer === playerId) {
 This allowed the active player to choose `END_TURN` during `combat/declare_blockers` after the defender passed priority. The reducer handles `END_TURN` by immediately clearing the state and advancing to the next turn's beginning phase, effectively skipping the pending combat damage.
 
 ### Symptom
+
 - Opponent life would drop in simulation (evaluations showed damage happening).
 - In actual execution, opponent life would remain static (e.g., stuck at 18) despite unblocked attackers.
 - Games would frequently end in Draws (62% rate) due to inability to deal lethal damage.
@@ -39,6 +42,7 @@ This allowed the active player to choose `END_TURN` during `combat/declare_block
 ## The Fix
 
 ### Solution
+
 Restricted `END_TURN` to only be available during Main Phases (`main1`, `main2`) and only when the stack is empty.
 
 ```typescript
@@ -55,10 +59,12 @@ if (state.activePlayer === playerId && state.priorityPlayer === playerId) {
 ```
 
 ### Verification
+
 - **Detailed Game Trace**: Confirmed life totals now decrease correctly (e.g., 20 -> 18 -> 16 -> 11 -> ... -> -4).
 - **Matchup Statistics**:
   - Before: 22% Win / 62% Draw
   - After: 90% Win / 4% Draw
 
 ## Related Issues
+
 - `BUG_REPORT_LANDS_DYING_IN_COMBAT.md`: This bug was often masked or confused with the lands dying bug, as both caused game stalls. Now both are fixed.

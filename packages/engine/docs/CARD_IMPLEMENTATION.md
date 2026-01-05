@@ -436,7 +436,7 @@ describe('Fyndhorn Elves', () => {
 ### Step 5: Add to Test Deck (Optional)
 
 ```typescript
-// In src/utils/gameInit.ts
+// In src/decks/mono.ts (or appropriate file in src/decks/)
 
 export function createGreenDeck(): CardTemplate[] {
   return createSimpleDeck([
@@ -703,7 +703,8 @@ These keywords work automatically (no implementation needed):
 | `rules/activatedAbilities.ts`              | Legacy abilities (fallback)          |
 | `actions/reducer.ts`                       | Action application                   |
 | `actions/validators.ts`                    | Action legality checks               |
-| `utils/gameInit.ts`                        | Test deck creation                   |
+| `utils/gameInit.ts`                        | Game initialization & deck exports   |
+| `decks/*.ts`                               | Test deck definitions                |
 
 ---
 

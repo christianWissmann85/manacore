@@ -45,10 +45,11 @@ describe('Mono-Colored Test Decks', () => {
       const cardNames = deck.map((c) => c.name);
 
       expect(cardNames.filter((n) => n === 'Plains').length).toBe(24);
-      expect(cardNames.filter((n) => n === 'Archangel').length).toBe(20);
-      expect(cardNames.filter((n) => n === 'Disenchant').length).toBe(4);
+      expect(cardNames.filter((n) => n === 'Tundra Wolves').length).toBe(4);
+      expect(cardNames.filter((n) => n === 'Infantry Veteran').length).toBe(4);
+      expect(cardNames.filter((n) => n === 'Longbow Archer').length).toBe(4);
       expect(cardNames.filter((n) => n === 'Pacifism').length).toBe(4);
-      expect(cardNames.filter((n) => n === 'Exile').length).toBe(8);
+      expect(cardNames.filter((n) => n === 'Exile').length).toBe(4);
     });
   });
 
@@ -72,10 +73,12 @@ describe('Mono-Colored Test Decks', () => {
       const cardNames = deck.map((c) => c.name);
 
       expect(cardNames.filter((n) => n === 'Island').length).toBe(24);
-      expect(cardNames.filter((n) => n === 'Air Elemental').length).toBe(10);
-      expect(cardNames.filter((n) => n === 'Fog Elemental').length).toBe(10);
-      expect(cardNames.filter((n) => n === 'Counterspell').length).toBe(8);
-      expect(cardNames.filter((n) => n === 'Unsummon').length).toBe(8);
+      expect(cardNames.filter((n) => n === 'Merfolk of the Pearl Trident').length).toBe(4);
+      expect(cardNames.filter((n) => n === 'Sage Owl').length).toBe(4);
+      expect(cardNames.filter((n) => n === 'Phantom Warrior').length).toBe(4);
+      expect(cardNames.filter((n) => n === 'Air Elemental').length).toBe(4);
+      expect(cardNames.filter((n) => n === 'Counterspell').length).toBe(4);
+      expect(cardNames.filter((n) => n === 'Unsummon').length).toBe(4);
     });
   });
 
@@ -99,10 +102,10 @@ describe('Mono-Colored Test Decks', () => {
       const cardNames = deck.map((c) => c.name);
 
       expect(cardNames.filter((n) => n === 'Swamp').length).toBe(24);
-      expect(cardNames.filter((n) => n === 'Abyssal Specter').length).toBe(10);
-      expect(cardNames.filter((n) => n === 'Gravedigger').length).toBe(10);
+      expect(cardNames.filter((n) => n === 'Bog Rats').length).toBe(4);
+      expect(cardNames.filter((n) => n === 'Drudge Skeletons').length).toBe(4);
+      expect(cardNames.filter((n) => n === 'Bog Imp').length).toBe(4);
       expect(cardNames.filter((n) => n === 'Terror').length).toBe(8);
-      expect(cardNames.filter((n) => n === 'Coercion').length).toBe(8);
     });
   });
 

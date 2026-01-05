@@ -13,6 +13,7 @@
 The infinite loop was caused by missing logic in `packages/engine/src/actions/reducer.ts` within the `advancePhase` function. When both players passed priority on an empty stack in Main Phase 1 or Main Phase 2, the game failed to transition to the next phase/step (Combat or End Turn), instead just resetting priority to the active player.
 
 **Fix Details:**
+
 - Modified `advancePhase` in `reducer.ts`:
   - **Main 1**: Now correctly transitions to `combat` phase, `declare_attackers` step.
   - **Main 2**: Now automatically applies `END_TURN` logic to proceed to the next turn.
@@ -27,6 +28,7 @@ Benchmark simulations randomly hang after ~2 minutes with no visible progress or
 ## Investigation
 
 ### What We Added
+
 Added `--debug-verbose` (`-dv`) CLI flag to provide detailed real-time feedback during simulations:
 
 ```bash
@@ -34,14 +36,16 @@ bun src/index.ts benchmark 3 --debug-verbose
 ```
 
 **New Logging Features:**
+
 - 📋 Game start info (deck colors, seed)
 - 🔄 Turn-by-turn progression with phase/step
 - ⚡ Action count updates every 50 actions
-- ⚠️  Warning every 100 actions on same turn (with action description and priority flow)
+- ⚠️ Warning every 100 actions on same turn (with action description and priority flow)
 - 🔴 Infinite loop detection at 500+ actions (with stack state, priority, active player, legal actions)
 - ✅ Game completion summary
 
 ### Files Modified
+
 - `/home/chris/manacore/packages/cli-client/src/index.ts` - Added flag parsing
 - `/home/chris/manacore/packages/cli-client/src/commands/simulate.ts` - Enhanced logging
 
@@ -50,6 +54,7 @@ bun src/index.ts benchmark 3 --debug-verbose
 ## Root Cause Identified
 
 ### The Bug
+
 **Infinite priority passing loop in main phase 2**
 
 ```
@@ -62,10 +67,11 @@ bun src/index.ts benchmark 3 --debug-verbose
 ```
 
 ### Key Observations
+
 1. **Location**: Occurs randomly around turn 15-20
 2. **Phase**: Stuck in `main2/main` (main phase 2, main step)
 3. **Pattern**: Priority bounces `player→opponent→player→opponent` infinitely
-4. **State**: 
+4. **State**:
    - Stack is **empty** (0 items)
    - Only **1 legal action** available (PASS_PRIORITY)
    - Priority player = Active player
@@ -77,19 +83,24 @@ bun src/index.ts benchmark 3 --debug-verbose
 ## Action Plan
 
 ### 1. Examine Priority Passing Logic
+
 **Files to investigate:**
+
 - `packages/engine/src/rules/stack.ts` - Priority system implementation
 - `packages/engine/src/actions/reducer.ts` - Action application logic
 - `packages/engine/src/actions/getLegalActions.ts` - Legal action generation
 
 **What to look for:**
+
 - How does PASS_PRIORITY action work?
 - What triggers phase advancement?
 - Is there a "both players passed" flag/counter?
 - When stack is empty + both passed → should advance phase
 
 ### 2. Reproduce the Bug Reliably
+
 **Known working seed that triggers bug:**
+
 ```bash
 cd packages/cli-client
 bun src/index.ts benchmark 5 --debug-verbose
@@ -103,6 +114,7 @@ The bug appears to be intermittent based on deck combinations and game state.
 **Hypothesis**: The priority passing mechanism doesn't track consecutive passes correctly.
 
 **Check for missing logic:**
+
 ```typescript
 // Pseudocode of what might be missing:
 if (action.type === 'PASS_PRIORITY') {
@@ -115,19 +127,20 @@ if (action.type === 'PASS_PRIORITY') {
 ```
 
 ### 4. Write a Test Case
+
 Create a failing test that reproduces the priority loop:
 
 ```typescript
 // packages/engine/tests/priority-loop.test.ts
 test('both players passing priority with empty stack should advance phase', () => {
   let state = /* setup game in main2 phase */;
-  
+
   // Player passes
   state = applyAction(state, { type: 'PASS_PRIORITY', ... });
-  
+
   // Opponent passes
   state = applyAction(state, { type: 'PASS_PRIORITY', ... });
-  
+
   // Should advance to ending phase, not loop back
   expect(state.phase).not.toBe('main2');
   expect(state.phase).toBe('ending'); // or next phase
@@ -135,6 +148,7 @@ test('both players passing priority with empty stack should advance phase', () =
 ```
 
 ### 5. Emergency Workaround (Temporary)
+
 Add action count limit to prevent infinite loops:
 
 ```typescript
@@ -144,7 +158,7 @@ let actionsThisTurn = 0;
 
 while (!state.gameOver && turnCount < maxTurns) {
   // ... existing code ...
-  
+
   if (state.turnCount > turnCount) {
     actionsThisTurn = 0;
   } else {
@@ -162,17 +176,20 @@ while (!state.gameOver && turnCount < maxTurns) {
 ## Debugging Commands
 
 **Run with verbose logging:**
+
 ```bash
 cd /home/chris/manacore/packages/cli-client
 bun src/index.ts benchmark 3 --debug-verbose
 ```
 
 **Capture full output for analysis:**
+
 ```bash
 timeout 30 bun src/index.ts benchmark 5 --debug-verbose 2>&1 | tee bug_output.log
 ```
 
 **Search for problem patterns:**
+
 ```bash
 grep "🔴" bug_output.log  # Find infinite loop occurrences
 grep "⚠️.*[0-9]{3,}" bug_output.log  # Find high action counts
@@ -194,6 +211,7 @@ grep "⚠️.*[0-9]{3,}" bug_output.log  # Find high action counts
 ## Technical Details
 
 ### Priority System Rules (Magic: The Gathering)
+
 1. Active player gets priority first in each phase
 2. When a player has priority, they can cast spells/activate abilities or pass
 3. When a player passes with non-empty stack → other player gets priority
@@ -201,6 +219,7 @@ grep "⚠️.*[0-9]{3,}" bug_output.log  # Find high action counts
 5. The bug: Step 4 is not working correctly
 
 ### Expected Flow in Main Phase 2
+
 ```
 main2 begins → active player priority
   → player passes → opponent priority
