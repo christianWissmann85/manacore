@@ -188,6 +188,17 @@ function applyCastSpell(state: GameState, action: CastSpellAction): void {
 
   // Push to stack (with xValue stored for resolution)
   pushToStack(state, card, action.playerId, action.payload.targets || [], xValue);
+
+  // Register SPELL_CAST trigger for artifacts like Crystal Rod, enchantments like Insight
+  const spellColor = template.colors?.[0] || null; // Primary color of the spell
+  const spellType = template.type_line?.toLowerCase() || '';
+  registerTrigger(state, {
+    type: 'SPELL_CAST',
+    cardId: card.instanceId,
+    controller: action.playerId,
+    spellColor,
+    spellType,
+  });
 }
 
 /**
@@ -202,12 +213,20 @@ function applyDeclareAttackers(state: GameState, action: DeclareAttackersAction)
     const attacker = player.battlefield.find((c) => c.instanceId === attackerId);
     if (attacker) {
       attacker.attacking = true;
+      attacker.attackedThisTurn = true; // Track for Lead Golem "doesn't untap"
 
       // Check for Vigilance keyword
       const template = CardLoader.getById(attacker.scryfallId);
       if (template && !hasVigilance(template)) {
         attacker.tapped = true; // Attacking taps the creature (unless Vigilance)
       }
+
+      // Register ATTACKS trigger (for Fog Elemental, Sibilant Spirit, etc.)
+      registerTrigger(state, {
+        type: 'ATTACKS',
+        cardId: attacker.instanceId,
+        controller: action.playerId,
+      });
     }
   }
 
@@ -316,9 +335,37 @@ function applyEndTurn(state: GameState, _action: EndTurnAction): void {
   const newActivePlayer = getPlayer(state, state.activePlayer);
   newActivePlayer.landsPlayedThisTurn = 0;
 
-  // Untap all permanents
+  // Check if Meekstone is on the battlefield
+  const meekstoneActive = state.players.player.battlefield.some((p) => {
+    const t = CardLoader.getById(p.scryfallId);
+    return t?.name === 'Meekstone';
+  }) || state.players.opponent.battlefield.some((p) => {
+    const t = CardLoader.getById(p.scryfallId);
+    return t?.name === 'Meekstone';
+  });
+
+  // Untap all permanents (except those with special untap restrictions)
   for (const permanent of newActivePlayer.battlefield) {
+    const template = CardLoader.getById(permanent.scryfallId);
+
+    // Lead Golem: Doesn't untap if it attacked during your last turn
+    if (template?.name === 'Lead Golem' && permanent.attackedThisTurn) {
+      // Skip untap - clear the flag for next turn
+      permanent.attackedThisTurn = false;
+      continue;
+    }
+
+    // Meekstone: Creatures with power 3+ don't untap
+    if (meekstoneActive && template?.type_line?.toLowerCase().includes('creature')) {
+      const power = parseInt(template.power || '0', 10);
+      if (power >= 3) {
+        permanent.attackedThisTurn = false; // Clear the flag
+        continue; // Skip untap
+      }
+    }
+
     permanent.tapped = false;
+    permanent.attackedThisTurn = false; // Clear the flag
   }
 }
 

@@ -114,4 +114,52 @@ export function getRegistrySize(): number {
  */
 export function clearRegistry(): void {
   abilityRegistry.clear();
+  graveyardAbilityRegistry.clear();
+}
+
+// =============================================================================
+// GRAVEYARD ABILITY REGISTRY
+// =============================================================================
+
+/**
+ * Registry for abilities that can be activated from the graveyard
+ * (e.g., Necrosavant's return ability)
+ */
+const graveyardAbilityRegistry = new Map<string, AbilityFactory>();
+
+/**
+ * Register a graveyard ability for a card
+ *
+ * @param cardName The card's name
+ * @param factory Function that creates abilities for the card
+ */
+export function registerGraveyardAbility(cardName: string, factory: AbilityFactory): void {
+  if (graveyardAbilityRegistry.has(cardName)) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(`[GraveyardRegistry] Overwriting abilities for: ${cardName}`);
+    }
+  }
+  graveyardAbilityRegistry.set(cardName, factory);
+}
+
+/**
+ * Get graveyard abilities for a card
+ */
+export function getGraveyardAbilitiesFromRegistry(
+  cardName: string,
+  card: CardInstance,
+  state: GameState,
+): ActivatedAbility[] | null {
+  const factory = graveyardAbilityRegistry.get(cardName);
+  if (factory) {
+    return factory(card, state);
+  }
+  return null;
+}
+
+/**
+ * Check if a card has registered graveyard abilities
+ */
+export function hasGraveyardAbilities(cardName: string): boolean {
+  return graveyardAbilityRegistry.has(cardName);
 }

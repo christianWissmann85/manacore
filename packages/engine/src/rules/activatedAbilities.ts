@@ -29,7 +29,10 @@ import {
 import type { TargetRequirement } from './targeting';
 
 // Import the new registry-based system
-import { getActivatedAbilities as getAbilitiesFromRegistry } from './abilities';
+import {
+  getActivatedAbilities as getAbilitiesFromRegistry,
+  getGraveyardAbilities as getGraveyardAbilitiesFromRegistry,
+} from './abilities';
 
 /**
  * Activated ability definition
@@ -88,6 +91,15 @@ export function getActivatedAbilities(card: CardInstance, state: GameState): Act
   // The registry handles most cards with O(1) lookup, falling back to
   // the legacy getLegacyAbilities function for non-migrated cards
   return getAbilitiesFromRegistry(card, state) as ActivatedAbility[];
+}
+
+/**
+ * Get all graveyard abilities for a card
+ *
+ * For cards like Necrosavant that can activate abilities from the graveyard.
+ */
+export function getGraveyardAbilities(card: CardInstance, state: GameState): ActivatedAbility[] {
+  return getGraveyardAbilitiesFromRegistry(card, state) as ActivatedAbility[];
 }
 
 /**

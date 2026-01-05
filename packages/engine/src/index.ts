@@ -119,6 +119,7 @@ export type {
 export { getActivatedAbilities, payCosts } from './rules/activatedAbilities';
 
 // Lords system (Week 1.5.4)
+export type { AuraGrantedAbility } from './rules/lords';
 export {
   getLordBonuses,
   getEffectivePowerWithLords,
@@ -129,6 +130,9 @@ export {
   hasCreatureSubtype,
   // Variable P/T (Phase 1.5.4)
   calculateVariablePT,
+  // Aura effects (Phase 1.5.5)
+  getAuraBonuses,
+  getAuraGrantedAbilities,
 } from './rules/lords';
 
 // Effect helpers (Week 1.5.2)

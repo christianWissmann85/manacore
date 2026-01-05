@@ -159,8 +159,65 @@ registerAbilities('Harmattan Efreet', (card) => {
   return [ability];
 });
 
+// Unseen Walker
+// "{1}{G}: Target creature gains forestwalk until end of turn."
+registerAbilities('Unseen Walker', (card) => {
+  const ability: ActivatedAbility = {
+    id: `${card.instanceId}_grant_forestwalk`,
+    name: '{1}{G}: Target gains forestwalk',
+    cost: { mana: '{1}{G}' },
+    effect: {
+      type: 'GRANT_KEYWORD',
+      keyword: 'Forestwalk',
+      duration: 'end_of_turn',
+      requiresTarget: true,
+    },
+    isManaAbility: false,
+    targetRequirements: [
+      {
+        id: 'target_0',
+        count: 1,
+        targetType: 'creature',
+        zone: 'battlefield',
+        restrictions: [],
+        optional: false,
+        description: 'target creature',
+      },
+    ],
+    canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+      if (!sourceExistsCheck(state, sourceId, controller)) {
+        return false;
+      }
+      // Check mana: {1}{G}
+      return countAvailableMana(state, controller, 'G') >= 1;
+    },
+    resolve: (state: GameState, _sourceId: string, _controller: PlayerId, targets?: string[]) => {
+      const target = targets?.[0];
+      if (!target) return;
+
+      // Find the creature and grant it forestwalk
+      for (const playerId of ['player', 'opponent'] as const) {
+        const creature = state.players[playerId].battlefield.find(
+          (c) => c.instanceId === target,
+        );
+        if (creature) {
+          if (!creature.temporaryKeywords) {
+            creature.temporaryKeywords = [];
+          }
+          creature.temporaryKeywords.push({
+            keyword: 'Forestwalk',
+            until: 'end_of_turn',
+          });
+          break;
+        }
+      }
+    },
+  };
+  return [ability];
+});
+
 // =============================================================================
 // EXPORT COUNT
 // =============================================================================
 
-export const PUMPERS_COUNT = 11;
+export const PUMPERS_COUNT = 12;

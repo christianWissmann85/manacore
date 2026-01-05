@@ -176,41 +176,18 @@ manacore/
 
 ### ✅ Phase 1: Core MTG Rules COMPLETE
 
-### 🔄 Phase 1.5: Complete Card Library - NEXT
+### 🔄 Phase 1.5: Integration Testing & Documentation
 
 **Goal**: "Every Card Works"
 
-- Week 1.5.1: **Infrastructure** ✅
-- Week 1.5.2: **Instants & Sorceries** ✅
-- Week 1.5.3: **Creatures Part 1** ✅
-- Week 1.5.4: **Creatures Part 2** ✅
-- Week 1.5.5: **Auras & Enchantments** (22 auras + 34 enchantments)
-- Week 1.5.6: **Artifacts** (41 artifacts)
-- Week 1.5.7: **Integration Testing** (1000-game simulation, documentation)
-
-**Deliverable**: 302+ cards (90% of 6th Edition) fully playable
-
-> **Tracking:** See [CARD_STATUS.md](./CARD_STATUS.md) for detailed implementation status. Always update the Tracker after Implementing a Task.
-
-### 🔜 Phase 1.6: Complex Card Mechanics 
-
-**Goal**: "The Last 10%"
-
-- Control-changing effects (Abduction, Juxtapose)
-- Replacement effects (Forbidden Crypt, Teferi's Puzzle Box)
-- Type/color changing (Celestial Dawn, Living Lands)
-- Complex interactions (Doomsday, Polymorph)
-
-**Deliverable**: 100% of 6th Edition (335 cards) complete
-
-### 🔜 Phase 2: Hidden Information & Smart AI 
+### 🔜 Phase 2: Hidden Information & Smart AI
 
 **Goal**: "The AI Gets Dangerous"
 
-- Week 21-22: **MCTS Core** (Monte Carlo Tree Search with hidden information handling)
-- Week 23: **Evaluation Function** (heuristic board evaluation, weight tuning)
-- Week 24-25: **Card Advantage & Disruption** (draw spells, removal, enchantments)
-- Week 26: **Replay System & Stats** (game replay, statistics dashboard, match history)
+- Task 21-22: **MCTS Core** (Monte Carlo Tree Search with hidden information handling)
+- Task 23: **Evaluation Function** (heuristic board evaluation, weight tuning)
+- Task 24-25: **Card Advantage & Disruption** (draw spells, removal, enchantments)
+- Task 26: **Replay System & Stats** (game replay, statistics dashboard, match history)
 
 **Key Deliverables**:
 
@@ -218,25 +195,25 @@ manacore/
 - Evaluation function tuned through self-play
 - Game replay system for debugging AI decisions
 
-### 🔜 Phase 3: Interactive Visualization 
+### 🔜 Phase 3: Interactive Visualization
 
 **Goal**: "Advanced Research Dashboard" 🔬
 
-- Week 27: **Basic Web Dashboard** (Vite + PixiJS, state visualization, debug controls)
-- Week 28-29: **Visualization Polish** (action history, decision tree rendering)
-- Week 30-31: **Deck Lab** (browse cards, build test decks, mana curve analytics)
-- Week 32: **Final Polish** (Agent config, interactive tutorial, documentation)
+- Task 27: **Basic Web Dashboard** (Vite + PixiJS, state visualization, debug controls)
+- Task 28-29: **Visualization Polish** (action history, decision tree rendering)
+- Task 30-31: **Deck Lab** (browse cards, build test decks, mana curve analytics)
+- Task 32: **Final Polish** (Agent config, interactive tutorial, documentation)
 
 **Deliverable**: 🔬 **RESEARCH PLATFORM v1.0**
 
-### 🔜 Phase 4: AI Research Tools 
+### 🔜 Phase 4: AI Research Tools
 
 **Goal**: "The AI Research Laboratory"
 
-- Week 33-34: **Tournament Simulator** (Swiss/Single-Elimination, large-scale simulations)
-- Week 35-36: **Deck Analytics** (deck scoring, card statistics, meta-game reports)
-- Week 37: **MCTS Visualization** (decision tree visualizer, win rate estimates)
-- Week 38: **A/B Testing Framework** (compare MCTS configs, evaluation functions)
+- Task 33-34: **Tournament Simulator** (Swiss/Single-Elimination, large-scale simulations)
+- Task 35-36: **Deck Analytics** (deck scoring, card statistics, meta-game reports)
+- Task 37: **MCTS Visualization** (decision tree visualizer, win rate estimates)
+- Task 38: **A/B Testing Framework** (compare MCTS configs, evaluation functions)
 
 **Deliverable**: Research platform for AI experimentation
 
@@ -244,9 +221,9 @@ manacore/
 
 **Goal**: "Skynet Learns Magic"
 
-- Week 39-42: **Neural Network Evaluation** (100k+ game dataset, NN-based evaluation)
-- Week 43-46: **Genetic Algorithm Deck Builder** (evolve decks through generations)
-- Week 47+: **Self-Play & AlphaZero** (self-play loop, discover optimal strategies)
+- Task 39-42: **Neural Network Evaluation** (100k+ game dataset, NN-based evaluation)
+- Task 43-46: **Genetic Algorithm Deck Builder** (evolve decks through generations)
+- Task 47+: **Self-Play & AlphaZero** (self-play loop, discover optimal strategies)
 
 **Long-term Goal**: AI discovers optimal play and designs tournament-winning decks
 
@@ -884,28 +861,28 @@ bun build src/index.ts                  # Build a file
 
 ### File Location Quick Reference
 
-| What                | Where                                                        |
-| ------------------- | ------------------------------------------------------------ |
-| Game state types    | `packages/engine/src/state/`                                 |
-| Action definitions  | `packages/engine/src/actions/Action.ts`                      |
-| Validators          | `packages/engine/src/actions/validators.ts`                  |
-| Reducers            | `packages/engine/src/actions/reducer.ts`                     |
-| Combat rules        | `packages/engine/src/rules/combat.ts`                        |
-| Stack system        | `packages/engine/src/rules/stack.ts`                         |
-| Targeting system    | `packages/engine/src/rules/targeting/` (modular)             |
-| Target patterns     | `packages/engine/src/rules/targeting/parser/patterns.ts`     |
+| What                | Where                                                          |
+| ------------------- | -------------------------------------------------------------- |
+| Game state types    | `packages/engine/src/state/`                                   |
+| Action definitions  | `packages/engine/src/actions/Action.ts`                        |
+| Validators          | `packages/engine/src/actions/validators.ts`                    |
+| Reducers            | `packages/engine/src/actions/reducer.ts`                       |
+| Combat rules        | `packages/engine/src/rules/combat.ts`                          |
+| Stack system        | `packages/engine/src/rules/stack.ts`                           |
+| Targeting system    | `packages/engine/src/rules/targeting/` (modular)               |
+| Target patterns     | `packages/engine/src/rules/targeting/parser/patterns.ts`       |
 | Target validators   | `packages/engine/src/rules/targeting/validation/validators.ts` |
-| Spell registry      | `packages/engine/src/spells/` (O(1) lookup for 70 spells)    |
-| Spell categories    | `packages/engine/src/spells/categories/*.ts`                 |
-| Ability registry    | `packages/engine/src/rules/abilities/` (O(1) lookup)         |
-| Ability templates   | `packages/engine/src/rules/abilities/templates/*.ts`         |
-| Effect helpers      | `packages/engine/src/rules/effects.ts`                       |
-| Token helpers       | `packages/engine/src/rules/tokens.ts`                        |
-| Triggers            | `packages/engine/src/rules/triggers.ts`                      |
-| State-based actions | `packages/engine/src/rules/stateBasedActions.ts`             |
-| Legacy abilities    | `packages/engine/src/rules/activatedAbilities.ts` (fallback) |
-| Card data           | `packages/engine/data/cards/6ed.json`                        |
-| Tests               | `packages/engine/tests/*.test.ts`                            |
-| CLI display         | `packages/cli-client/src/display/board.ts`                   |
+| Spell registry      | `packages/engine/src/spells/` (O(1) lookup for 70 spells)      |
+| Spell categories    | `packages/engine/src/spells/categories/*.ts`                   |
+| Ability registry    | `packages/engine/src/rules/abilities/` (O(1) lookup)           |
+| Ability templates   | `packages/engine/src/rules/abilities/templates/*.ts`           |
+| Effect helpers      | `packages/engine/src/rules/effects.ts`                         |
+| Token helpers       | `packages/engine/src/rules/tokens.ts`                          |
+| Triggers            | `packages/engine/src/rules/triggers.ts`                        |
+| State-based actions | `packages/engine/src/rules/stateBasedActions.ts`               |
+| Legacy abilities    | `packages/engine/src/rules/activatedAbilities.ts` (fallback)   |
+| Card data           | `packages/engine/data/cards/6ed.json`                          |
+| Tests               | `packages/engine/tests/*.test.ts`                              |
+| CLI display         | `packages/cli-client/src/display/board.ts`                     |
 
 **Happy coding! 🎴✨**

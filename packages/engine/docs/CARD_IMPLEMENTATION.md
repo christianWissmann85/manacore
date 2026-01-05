@@ -614,6 +614,7 @@ To support a new oracle text pattern, add an entry to `TARGET_PATTERNS` in `pars
 ```
 
 **Priority Guidelines:**
+
 - 100+: Most specific (multiple restrictions)
 - 90-99: Two restrictions or specific subtypes
 - 80-89: Single specific restriction
@@ -629,18 +630,18 @@ To support a new restriction type, add to `RESTRICTION_VALIDATORS` in `validatio
 // In packages/engine/src/rules/targeting/validation/validators.ts
 
 RESTRICTION_VALIDATORS.set('enchanted', (card, restriction, state) => {
-  return card.attachments?.some(a => isEnchantment(a)) ?? false;
+  return card.attachments?.some((a) => isEnchantment(a)) ?? false;
 });
 ```
 
 ### Key Functions
 
-| Function | Location | Purpose |
-| -------- | -------- | ------- |
-| `parseTargetRequirements()` | `parser/index.ts` | Parse oracle text to TargetRequirement[] |
-| `validateTargets()` | `validation/index.ts` | Check if targets are legal |
-| `getLegalTargets()` | `generation/index.ts` | Get all legal targets for a requirement |
-| `checkTargetsStillLegal()` | `resolution/index.ts` | Fizzle check at resolution |
+| Function                    | Location              | Purpose                                  |
+| --------------------------- | --------------------- | ---------------------------------------- |
+| `parseTargetRequirements()` | `parser/index.ts`     | Parse oracle text to TargetRequirement[] |
+| `validateTargets()`         | `validation/index.ts` | Check if targets are legal               |
+| `getLegalTargets()`         | `generation/index.ts` | Get all legal targets for a requirement  |
+| `checkTargetsStillLegal()`  | `resolution/index.ts` | Fizzle check at resolution               |
 
 ---
 
@@ -667,42 +668,42 @@ These keywords work automatically (no implementation needed):
 
 ## File Reference
 
-| File                             | Purpose                            |
-| -------------------------------- | ---------------------------------- |
-| `data/cards/6ed.json`            | Card data from Scryfall            |
-| `cards/CardLoader.ts`            | Loads and indexes cards            |
-| `cards/CardTemplate.ts`          | Type definitions, keyword helpers  |
-| `state/CardInstance.ts`          | Runtime card state                 |
-| **Spell Registry**               |                                    |
-| `spells/index.ts`                | Spell registry entry point         |
-| `spells/registry.ts`             | O(1) spell lookup Map              |
-| `spells/SpellImplementation.ts`  | SpellImplementation interface      |
-| `spells/categories/*.ts`         | Spell implementations by type      |
-| **Ability Registry**             |                                    |
-| `rules/abilities/index.ts`       | Main entry for activated abilities |
-| `rules/abilities/registry.ts`    | Card ability registration          |
-| `rules/abilities/types.ts`       | Ability type definitions           |
-| `rules/abilities/templates/*.ts` | Reusable ability templates         |
-| `rules/abilities/sets/6ed/*.ts`  | 6th Edition card abilities         |
-| **Targeting System**             |                                    |
-| `rules/targeting/index.ts`       | Targeting system entry point       |
-| `rules/targeting/types.ts`       | TargetRequirement, TargetRestriction |
-| `rules/targeting/parser/patterns.ts` | TARGET_PATTERNS registry       |
-| `rules/targeting/validation/validators.ts` | RESTRICTION_VALIDATORS   |
-| `rules/targeting/generation/`    | Legal target generation            |
-| `rules/targeting/resolution/`    | Fizzle checks                      |
-| **Helper Modules**               |                                    |
-| `rules/effects.ts`               | Reusable spell/ability effects     |
-| `rules/tokens.ts`                | Token creation helpers             |
-| `rules/triggers.ts`              | "When/Whenever" abilities          |
-| `rules/stack.ts`                 | Stack system, spell resolution     |
-| `rules/combat.ts`                | Combat damage, keywords            |
-| `rules/stateBasedActions.ts`     | Death, player loss checks          |
-| **Legacy/Other**                 |                                    |
-| `rules/activatedAbilities.ts`    | Legacy abilities (fallback)        |
-| `actions/reducer.ts`             | Action application                 |
-| `actions/validators.ts`          | Action legality checks             |
-| `utils/gameInit.ts`              | Test deck creation                 |
+| File                                       | Purpose                              |
+| ------------------------------------------ | ------------------------------------ |
+| `data/cards/6ed.json`                      | Card data from Scryfall              |
+| `cards/CardLoader.ts`                      | Loads and indexes cards              |
+| `cards/CardTemplate.ts`                    | Type definitions, keyword helpers    |
+| `state/CardInstance.ts`                    | Runtime card state                   |
+| **Spell Registry**                         |                                      |
+| `spells/index.ts`                          | Spell registry entry point           |
+| `spells/registry.ts`                       | O(1) spell lookup Map                |
+| `spells/SpellImplementation.ts`            | SpellImplementation interface        |
+| `spells/categories/*.ts`                   | Spell implementations by type        |
+| **Ability Registry**                       |                                      |
+| `rules/abilities/index.ts`                 | Main entry for activated abilities   |
+| `rules/abilities/registry.ts`              | Card ability registration            |
+| `rules/abilities/types.ts`                 | Ability type definitions             |
+| `rules/abilities/templates/*.ts`           | Reusable ability templates           |
+| `rules/abilities/sets/6ed/*.ts`            | 6th Edition card abilities           |
+| **Targeting System**                       |                                      |
+| `rules/targeting/index.ts`                 | Targeting system entry point         |
+| `rules/targeting/types.ts`                 | TargetRequirement, TargetRestriction |
+| `rules/targeting/parser/patterns.ts`       | TARGET_PATTERNS registry             |
+| `rules/targeting/validation/validators.ts` | RESTRICTION_VALIDATORS               |
+| `rules/targeting/generation/`              | Legal target generation              |
+| `rules/targeting/resolution/`              | Fizzle checks                        |
+| **Helper Modules**                         |                                      |
+| `rules/effects.ts`                         | Reusable spell/ability effects       |
+| `rules/tokens.ts`                          | Token creation helpers               |
+| `rules/triggers.ts`                        | "When/Whenever" abilities            |
+| `rules/stack.ts`                           | Stack system, spell resolution       |
+| `rules/combat.ts`                          | Combat damage, keywords              |
+| `rules/stateBasedActions.ts`               | Death, player loss checks            |
+| **Legacy/Other**                           |                                      |
+| `rules/activatedAbilities.ts`              | Legacy abilities (fallback)          |
+| `actions/reducer.ts`                       | Action application                   |
+| `actions/validators.ts`                    | Action legality checks               |
+| `utils/gameInit.ts`                        | Test deck creation                   |
 
 ---
 

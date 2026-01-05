@@ -333,33 +333,10 @@ registerAbilities('Soldevi Sage', (card) => {
   return [ability];
 });
 
-// Ashnod's Altar (artifact)
-// "Sacrifice a creature: Add {C}{C}."
-registerAbilities("Ashnod's Altar", (card) => {
-  const ability: ActivatedAbility = {
-    id: `${card.instanceId}_sac_creature_mana`,
-    name: 'Sacrifice creature: Add {C}{C}',
-    cost: { sacrifice: { type: 'creature' } },
-    effect: {
-      type: 'ADD_MANA',
-      amount: 2,
-      manaColors: ['C'],
-    },
-    isManaAbility: true,
-    canActivate: (state: GameState, _sourceId: string, controller: PlayerId) => {
-      // Check if player has any creatures to sacrifice
-      const player = state.players[controller];
-      return player.battlefield.some((c) => {
-        const t = CardLoader.getById(c.scryfallId);
-        return t && t.type_line?.toLowerCase().includes('creature');
-      });
-    },
-  };
-  return [ability];
-});
+// Note: Ashnod's Altar moved to artifacts.ts
 
 // =============================================================================
 // EXPORT COUNT
 // =============================================================================
 
-export const UTILITY_COUNT = 12;
+export const UTILITY_COUNT = 11; // Ashnod's Altar moved to artifacts.ts

@@ -12,6 +12,8 @@
  * - regeneration: Drudge Skeletons, River Boa, etc.
  * - sacrifice: Fallen Angel, Skull Catapult, etc.
  * - utility: Samite Healer, Elder Druid, etc.
+ * - enchantments: Greed, Tranquil Grove, Circles of Protection, etc.
+ * - artifacts: Diamonds (mana rocks), Mana Prism
  */
 
 // Special lands (pain lands, sacrifice lands, City of Brass, etc.)
@@ -35,6 +37,12 @@ import { SACRIFICE_COUNT } from './sacrifice';
 // Utility abilities (Samite Healer, Elder Druid, etc.)
 import { UTILITY_COUNT } from './utility';
 
+// Global enchantments (Greed, Tranquil Grove, Circles of Protection, etc.)
+import { ENCHANTMENTS_COUNT } from './enchantments';
+
+// Artifacts (Diamonds, Mana Prism, etc.)
+import { ARTIFACTS_COUNT } from './artifacts';
+
 // Export registration stats for debugging
 export const CARDS_REGISTERED =
   LANDS_COUNT +
@@ -43,7 +51,9 @@ export const CARDS_REGISTERED =
   PUMPERS_COUNT +
   REGENERATION_COUNT +
   SACRIFICE_COUNT +
-  UTILITY_COUNT;
+  UTILITY_COUNT +
+  ENCHANTMENTS_COUNT +
+  ARTIFACTS_COUNT;
 
 // Log registration count in development
 if (process.env.NODE_ENV !== 'production') {

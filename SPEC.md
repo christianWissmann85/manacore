@@ -502,17 +502,6 @@ interface ActivatedAbility {
 
 ---
 
-## 11. Future Expansions (Post-MVP)
-
-- **Urza's Block**: Add Urza's Saga, Legacy, Destiny
-- **Draft Mode**: AI-powered draft simulator
-- **Deck Recommender**: "You might like..." based on play history
-- **Card Design Tool**: Generate balanced custom cards
-- **Multiplayer**: 4-player Commander-style
-- **Mobile Client**: React Native port
-
----
-
 ## Appendix A: Key Decisions
 
 **Why 6th Edition?**

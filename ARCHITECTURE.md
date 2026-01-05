@@ -772,7 +772,7 @@ To add a new restriction type, add to `RESTRICTION_VALIDATORS` in `validation/va
 
 ```typescript
 RESTRICTION_VALIDATORS.set('enchanted', (card, restriction, state) => {
-  return card.attachments?.some(a => isEnchantment(a)) ?? false;
+  return card.attachments?.some((a) => isEnchantment(a)) ?? false;
 });
 ```
 

@@ -2,7 +2,7 @@
  * Lords System - Query-Time Power/Toughness and Keyword Calculation
  *
  * This module handles Lord creatures that grant bonuses to other creatures,
- * as well as global enchantment effects (anthems).
+ * as well as global enchantment effects (anthems) and aura effects.
  *
  * Lords in 6th Edition:
  * - Goblin King: Other Goblins get +1/+1 and have mountainwalk
@@ -16,6 +16,12 @@
  * - Orcish Oriflamme: Attacking creatures you control get +1/+0
  * - Serra's Blessing: Creatures you control have vigilance
  *
+ * Auras (Phase 1.5.5):
+ * - Stat modifications: Divine Transformation, Giant Strength, Hero's Resolve, etc.
+ * - Keyword granting: Flight, Fear, Burrowing, Leshrac's Rite
+ * - Ability granting: Firebreathing, Regeneration (handled via ability registry)
+ * - Combat prevention: Pacifism (handled via validators.ts)
+ *
  * Variable P/T Creatures (Phase 1.5.4):
  * - Maro: P/T = cards in hand
  * - Nightmare: P/T = Swamps you control
@@ -27,7 +33,7 @@ import type { GameState } from '../state/GameState';
 import type { PlayerId } from '../state/Zone';
 import type { CardInstance } from '../state/CardInstance';
 import { CardLoader } from '../cards/CardLoader';
-import { isCreature } from '../cards/CardTemplate';
+import { isCreature, isAura } from '../cards/CardTemplate';
 
 /**
  * Lord bonus definition
@@ -316,6 +322,219 @@ function checkAnthemEnchantment(
   return result;
 }
 
+// ==========================================
+// AURA EFFECTS (Phase 1.5.5)
+// ==========================================
+
+/**
+ * Aura stat modification definitions
+ * Maps aura name to { powerBonus, toughnessBonus }
+ */
+const AURA_STAT_MODIFICATIONS: Record<string, { power: number; toughness: number }> = {
+  // Positive stat buffs (6th Edition)
+  'Divine Transformation': { power: 3, toughness: 3 },
+  'Giant Strength': { power: 2, toughness: 2 },
+  "Hero's Resolve": { power: 1, toughness: 5 },
+  'Feast of the Unicorn': { power: 4, toughness: 0 },
+
+  // Negative stat debuffs (6th Edition)
+  Enfeeblement: { power: -2, toughness: -2 },
+};
+
+/**
+ * Aura keyword grants
+ * Maps aura name to keywords it grants
+ */
+const AURA_KEYWORD_GRANTS: Record<string, string[]> = {
+  Flight: ['Flying'],
+  Fear: ['Fear'],
+  Burrowing: ['Mountainwalk'],
+  "Leshrac's Rite": ['Swampwalk'],
+};
+
+/**
+ * Aura ability grants
+ * Maps aura name to ability type it grants
+ * Actual ability creation is done in getAuraGrantedAbilities
+ */
+type AuraAbilityType = 'firebreathing' | 'regeneration';
+const AURA_ABILITY_GRANTS: Record<string, AuraAbilityType> = {
+  Firebreathing: 'firebreathing',
+  Regeneration: 'regeneration',
+};
+
+/**
+ * Get activated abilities granted by auras attached to a creature
+ * These are abilities the creature can activate due to aura enchantments
+ *
+ * @param state Game state
+ * @param targetCard The creature to check for aura-granted abilities
+ * @returns Array of ability definitions from attached auras
+ */
+export function getAuraGrantedAbilities(
+  state: GameState,
+  targetCard: CardInstance,
+): AuraGrantedAbility[] {
+  const abilities: AuraGrantedAbility[] = [];
+
+  // No attachments = no granted abilities
+  if (!targetCard.attachments || targetCard.attachments.length === 0) {
+    return abilities;
+  }
+
+  // Check each attachment
+  for (const attachmentId of targetCard.attachments) {
+    const aura = findAuraByInstanceId(state, attachmentId);
+    if (!aura) continue;
+
+    const auraTemplate = CardLoader.getById(aura.scryfallId);
+    if (!auraTemplate || !isAura(auraTemplate)) continue;
+
+    const abilityType = AURA_ABILITY_GRANTS[auraTemplate.name];
+    if (!abilityType) continue;
+
+    // Create the ability based on type
+    const ability = createAuraGrantedAbility(abilityType, targetCard, aura, auraTemplate.name);
+    if (ability) {
+      abilities.push(ability);
+    }
+  }
+
+  return abilities;
+}
+
+/**
+ * Aura-granted ability definition
+ * Extends the standard ability format with aura reference
+ */
+export interface AuraGrantedAbility {
+  id: string;
+  name: string;
+  auraInstanceId: string;
+  abilityType: AuraAbilityType;
+  cost: {
+    mana?: string;
+    tap?: boolean;
+  };
+  effect: {
+    type: 'PUMP' | 'REGENERATE';
+    powerChange?: number;
+    toughnessChange?: number;
+  };
+  isManaAbility: boolean;
+}
+
+/**
+ * Create an ability definition for an aura-granted ability
+ */
+function createAuraGrantedAbility(
+  abilityType: AuraAbilityType,
+  creature: CardInstance,
+  aura: CardInstance,
+  _auraName: string, // Used for potential future logging/debugging
+): AuraGrantedAbility | null {
+  switch (abilityType) {
+    case 'firebreathing':
+      return {
+        id: `${creature.instanceId}_aura_${aura.instanceId}_firebreathing`,
+        name: '{R}: +1/+0 until end of turn',
+        auraInstanceId: aura.instanceId,
+        abilityType: 'firebreathing',
+        cost: { mana: '{R}' },
+        effect: {
+          type: 'PUMP',
+          powerChange: 1,
+          toughnessChange: 0,
+        },
+        isManaAbility: false,
+      };
+
+    case 'regeneration':
+      return {
+        id: `${creature.instanceId}_aura_${aura.instanceId}_regeneration`,
+        name: '{G}: Regenerate',
+        auraInstanceId: aura.instanceId,
+        abilityType: 'regeneration',
+        cost: { mana: '{G}' },
+        effect: {
+          type: 'REGENERATE',
+        },
+        isManaAbility: false,
+      };
+
+    default:
+      return null;
+  }
+}
+
+/**
+ * Check if an aura grants bonuses to the enchanted creature
+ * Called for each aura attached to the target creature
+ */
+function checkAuraEffects(auraName: string): LordBonus {
+  const result: LordBonus = { powerBonus: 0, toughnessBonus: 0, grantedKeywords: [] };
+
+  // Check stat modifications
+  const statMod = AURA_STAT_MODIFICATIONS[auraName];
+  if (statMod) {
+    result.powerBonus = statMod.power;
+    result.toughnessBonus = statMod.toughness;
+  }
+
+  // Check keyword grants
+  const keywords = AURA_KEYWORD_GRANTS[auraName];
+  if (keywords) {
+    result.grantedKeywords.push(...keywords);
+  }
+
+  return result;
+}
+
+/**
+ * Get bonuses from all auras attached to a creature
+ * Iterates through the creature's attachments array
+ */
+export function getAuraBonuses(state: GameState, targetCard: CardInstance): LordBonus {
+  let powerBonus = 0;
+  let toughnessBonus = 0;
+  const grantedKeywords: string[] = [];
+
+  // No attachments = no bonuses
+  if (!targetCard.attachments || targetCard.attachments.length === 0) {
+    return { powerBonus, toughnessBonus, grantedKeywords };
+  }
+
+  // Check each attachment
+  for (const attachmentId of targetCard.attachments) {
+    // Find the aura on the battlefield
+    const aura = findAuraByInstanceId(state, attachmentId);
+    if (!aura) continue;
+
+    const auraTemplate = CardLoader.getById(aura.scryfallId);
+    if (!auraTemplate || !isAura(auraTemplate)) continue;
+
+    // Get bonuses from this aura
+    const bonus = checkAuraEffects(auraTemplate.name);
+    powerBonus += bonus.powerBonus;
+    toughnessBonus += bonus.toughnessBonus;
+    grantedKeywords.push(...bonus.grantedKeywords);
+  }
+
+  return { powerBonus, toughnessBonus, grantedKeywords };
+}
+
+/**
+ * Find an aura by instance ID across all battlefields
+ */
+function findAuraByInstanceId(state: GameState, instanceId: string): CardInstance | undefined {
+  for (const playerId of ['player', 'opponent'] as const) {
+    const player = state.players[playerId];
+    const found = player.battlefield.find((c) => c.instanceId === instanceId);
+    if (found) return found;
+  }
+  return undefined;
+}
+
 /**
  * Get effective power including Lord/anthem bonuses
  * This is the main entry point for calculating power with all modifiers
@@ -351,13 +570,17 @@ export function getEffectivePowerWithLords(
   if (template && isCreature(template)) {
     const lordBonus = getLordBonuses(state, card, template);
     power += lordBonus.powerBonus;
+
+    // Add Aura bonuses (Phase 1.5.5)
+    const auraBonus = getAuraBonuses(state, card);
+    power += auraBonus.powerBonus;
   }
 
   return power;
 }
 
 /**
- * Get effective toughness including Lord/anthem bonuses
+ * Get effective toughness including Lord/anthem/aura bonuses
  * This is the main entry point for calculating toughness with all modifiers
  */
 export function getEffectiveToughnessWithLords(
@@ -391,13 +614,17 @@ export function getEffectiveToughnessWithLords(
   if (template && isCreature(template)) {
     const lordBonus = getLordBonuses(state, card, template);
     toughness += lordBonus.toughnessBonus;
+
+    // Add Aura bonuses (Phase 1.5.5)
+    const auraBonus = getAuraBonuses(state, card);
+    toughness += auraBonus.toughnessBonus;
   }
 
   return toughness;
 }
 
 /**
- * Check if a creature has a keyword (including granted keywords from Lords)
+ * Check if a creature has a keyword (including granted keywords from Lords/Auras)
  */
 export function hasKeywordWithLords(
   state: GameState,
@@ -428,6 +655,12 @@ export function hasKeywordWithLords(
     if (lordBonus.grantedKeywords.includes(keyword)) {
       return true;
     }
+
+    // Check granted keywords from Auras (Phase 1.5.5)
+    const auraBonus = getAuraBonuses(state, card);
+    if (auraBonus.grantedKeywords.includes(keyword)) {
+      return true;
+    }
   }
 
   return false;
@@ -456,6 +689,14 @@ export function getAllKeywords(state: GameState, card: CardInstance): string[] {
   if (isCreature(template)) {
     const lordBonus = getLordBonuses(state, card, template);
     for (const kw of lordBonus.grantedKeywords) {
+      if (!keywords.includes(kw)) {
+        keywords.push(kw);
+      }
+    }
+
+    // Add granted keywords from Auras (Phase 1.5.5)
+    const auraBonus = getAuraBonuses(state, card);
+    for (const kw of auraBonus.grantedKeywords) {
       if (!keywords.includes(kw)) {
         keywords.push(kw);
       }

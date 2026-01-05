@@ -17,6 +17,7 @@ import { CardLoader } from '../cards/CardLoader';
 import { hasFirstStrike, hasDoubleStrike, hasTrample } from '../cards/CardTemplate';
 import { registerTrigger } from './triggers';
 import { getEffectivePowerWithLords, getEffectiveToughnessWithLords } from './lords';
+import { hasGaseousForm } from '../actions/validators';
 
 /**
  * Resolve all combat damage for the current combat
@@ -30,10 +31,12 @@ export function resolveCombatDamage(state: GameState): void {
 
   // First Strike damage step
   assignCombatDamage(state, true); // onlyFirstStrike = true
+  checkBasiliskKills(state); // Thicket Basilisk kills non-Wall blockers/blocked
   checkCreatureDeath(state);
 
   // Normal damage step
   assignCombatDamage(state, false); // onlyFirstStrike = false
+  checkBasiliskKills(state); // Thicket Basilisk kills non-Wall blockers/blocked
   checkCreatureDeath(state);
 }
 
@@ -61,6 +64,11 @@ function assignCombatDamage(state: GameState, onlyFirstStrike: boolean): void {
 
     const basePower = parseInt(attackerTemplate.power || '0', 10);
     const attackerPower = getEffectivePowerWithLords(state, attacker, basePower);
+
+    // Gaseous Form prevents all combat damage dealt by the enchanted creature
+    if (hasGaseousForm(state, attacker)) {
+      continue; // Skip damage dealing for this attacker
+    }
 
     // Check if blocked
     if (attacker.blockedBy && attacker.blockedBy.length > 0) {
@@ -103,10 +111,18 @@ function assignCombatDamage(state: GameState, onlyFirstStrike: boolean): void {
     const basePower = parseInt(blockerTemplate.power || '0', 10);
     const blockerPower = getEffectivePowerWithLords(state, blocker, basePower);
 
+    // Gaseous Form prevents all combat damage dealt by the enchanted creature
+    if (hasGaseousForm(state, blocker)) {
+      continue; // Skip damage dealing for this blocker
+    }
+
     // Find the attacker being blocked
     const attacker = activePlayer.battlefield.find((c) => c.instanceId === blocker.blocking);
     if (attacker) {
-      attacker.damage += blockerPower;
+      // Gaseous Form also prevents damage to the enchanted creature
+      if (!hasGaseousForm(state, attacker)) {
+        attacker.damage += blockerPower;
+      }
     }
   }
 }
@@ -131,6 +147,18 @@ function assignDamageToBlockers(
     const blocker = defendingPlayer.battlefield.find((c) => c.instanceId === blockerId);
     if (!blocker) continue;
 
+    // Gaseous Form prevents combat damage to the enchanted creature
+    if (hasGaseousForm(state, blocker)) {
+      // Damage is "dealt" but immediately prevented - still counts for trample calculation
+      const blockerTemplate = CardLoader.getById(blocker.scryfallId);
+      if (!blockerTemplate) continue;
+      const baseToughness = parseInt(blockerTemplate.toughness || '0', 10);
+      const blockerToughness = getEffectiveToughnessWithLords(state, blocker, baseToughness);
+      const lethalDamage = Math.max(0, blockerToughness - blocker.damage);
+      remainingDamage -= Math.min(remainingDamage, lethalDamage);
+      continue;
+    }
+
     const blockerTemplate = CardLoader.getById(blocker.scryfallId);
     if (!blockerTemplate) continue;
 
@@ -154,6 +182,63 @@ function assignDamageToBlockers(
     if (defendingPlayer.life <= 0) {
       state.gameOver = true;
       state.winner = state.activePlayer;
+    }
+  }
+}
+
+/**
+ * Thicket Basilisk effect: Destroy non-Wall creatures that block or are blocked by it
+ * "Whenever Thicket Basilisk blocks or becomes blocked by a non-Wall creature,
+ *  destroy that creature at end of combat."
+ */
+function checkBasiliskKills(state: GameState): void {
+  const activePlayer = getPlayer(state, state.activePlayer);
+  const defendingPlayerId = state.activePlayer === 'player' ? 'opponent' : 'player';
+  const defendingPlayer = getPlayer(state, defendingPlayerId);
+
+  // Check all attackers for Thicket Basilisk
+  for (const attacker of activePlayer.battlefield) {
+    if (!attacker.attacking) continue;
+    const attackerTemplate = CardLoader.getById(attacker.scryfallId);
+    if (!attackerTemplate) continue;
+
+    const isBasilisk = attackerTemplate.name === 'Thicket Basilisk';
+
+    if (isBasilisk && attacker.blockedBy && attacker.blockedBy.length > 0) {
+      // Basilisk was blocked - destroy all non-Wall blockers
+      for (const blockerId of attacker.blockedBy) {
+        const blocker = defendingPlayer.battlefield.find((c) => c.instanceId === blockerId);
+        if (blocker) {
+          const blockerTemplate = CardLoader.getById(blocker.scryfallId);
+          if (blockerTemplate && !blockerTemplate.type_line?.includes('Wall')) {
+            // Mark for death by dealing lethal damage
+            const toughness = parseInt(blockerTemplate.toughness || '1', 10);
+            blocker.damage = toughness;
+          }
+        }
+      }
+    }
+  }
+
+  // Check all blockers for Thicket Basilisk
+  for (const blocker of defendingPlayer.battlefield) {
+    if (!blocker.blocking) continue;
+    const blockerTemplate = CardLoader.getById(blocker.scryfallId);
+    if (!blockerTemplate) continue;
+
+    const isBasilisk = blockerTemplate.name === 'Thicket Basilisk';
+
+    if (isBasilisk) {
+      // Basilisk is blocking - destroy the non-Wall attacker
+      const attacker = activePlayer.battlefield.find((c) => c.instanceId === blocker.blocking);
+      if (attacker) {
+        const attackerTemplate = CardLoader.getById(attacker.scryfallId);
+        if (attackerTemplate && !attackerTemplate.type_line?.includes('Wall')) {
+          // Mark for death by dealing lethal damage
+          const toughness = parseInt(attackerTemplate.toughness || '1', 10);
+          attacker.damage = toughness;
+        }
+      }
     }
   }
 }

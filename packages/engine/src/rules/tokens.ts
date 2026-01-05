@@ -72,6 +72,14 @@ export const TOKEN_DEFINITIONS: Record<string, TokenDefinition> = {
     types: ['Creature'],
     subtypes: ['Soldier'],
   },
+  serf: {
+    name: 'Serf',
+    power: 0,
+    toughness: 1,
+    colors: ['B'],
+    types: ['Creature'],
+    subtypes: ['Serf'],
+  },
   zombie: {
     name: 'Zombie',
     power: 2,

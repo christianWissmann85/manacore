@@ -19,7 +19,7 @@ import { getPlayer, findCard } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
 import { isLand, isCreature, isInstant, hasFlying, hasReach } from '../cards/CardTemplate';
 import { validateAction } from './validators';
-import { getActivatedAbilities } from '../rules/activatedAbilities';
+import { getActivatedAbilities, getGraveyardAbilities } from '../rules/activatedAbilities';
 import { parseTargetRequirements, getAllLegalTargetCombinations } from '../rules/targeting';
 
 /**
@@ -61,6 +61,7 @@ export function getLegalActions(state: GameState, playerId: 'player' | 'opponent
   if (state.priorityPlayer === playerId) {
     actions.push(...getLegalInstantCasts(state, playerId));
     actions.push(...getLegalAbilityActivations(state, playerId));
+    actions.push(...getLegalGraveyardAbilityActivations(state, playerId));
   }
 
   // Sorcery-speed actions require it to be your turn
@@ -331,6 +332,71 @@ function getLegalAbilityActivations(
         };
 
         // Validate before adding
+        if (validateAction(state, action).length === 0) {
+          actions.push(action);
+        }
+      }
+    }
+  }
+
+  return actions;
+}
+
+/**
+ * Get legal graveyard ability activations
+ * For abilities like Necrosavant that activate from the graveyard
+ */
+function getLegalGraveyardAbilityActivations(
+  state: GameState,
+  playerId: 'player' | 'opponent',
+): ActivateAbilityAction[] {
+  const actions: ActivateAbilityAction[] = [];
+  const player = getPlayer(state, playerId);
+
+  // Check each card in the graveyard
+  for (const card of player.graveyard) {
+    const abilities = getGraveyardAbilities(card, state);
+
+    for (const ability of abilities) {
+      // Check if this ability can be activated
+      if (!ability.canActivate(state, card.instanceId, playerId)) {
+        continue;
+      }
+
+      // Check if this ability requires targets
+      if (ability.targetRequirements && ability.targetRequirements.length > 0) {
+        const targetCombinations = getAllLegalTargetCombinations(
+          state,
+          ability.targetRequirements,
+          playerId,
+          card,
+        );
+
+        for (const targets of targetCombinations) {
+          const action: ActivateAbilityAction = {
+            type: 'ACTIVATE_ABILITY',
+            playerId,
+            payload: {
+              sourceId: card.instanceId,
+              abilityId: ability.id,
+              targets,
+            },
+          };
+
+          if (validateAction(state, action).length === 0) {
+            actions.push(action);
+          }
+        }
+      } else {
+        const action: ActivateAbilityAction = {
+          type: 'ACTIVATE_ABILITY',
+          playerId,
+          payload: {
+            sourceId: card.instanceId,
+            abilityId: ability.id,
+          },
+        };
+
         if (validateAction(state, action).length === 0) {
           actions.push(action);
         }

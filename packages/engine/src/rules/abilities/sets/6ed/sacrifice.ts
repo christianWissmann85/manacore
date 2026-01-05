@@ -14,7 +14,7 @@ import {
   createSacrificeLandForBuff,
   createSacrificeToPrevent,
 } from '../../templates';
-import { sourceExistsCheck, standardTapCheck } from '../../templates';
+import { sourceExistsCheck, standardTapCheck, countAvailableMana } from '../../templates';
 import type { ActivatedAbility } from '../../types';
 import type { GameState } from '../../../../state/GameState';
 import type { PlayerId } from '../../../../state/Zone';
@@ -27,33 +27,7 @@ import type { PlayerId } from '../../../../state/Zone';
 // "Sacrifice a creature: Fallen Angel gets +2/+1 until end of turn."
 registerAbilities('Fallen Angel', (card) => [createSacrificeForPump(card, 2, 1)]);
 
-// =============================================================================
-// SACRIFICE CREATURE FOR DAMAGE
-// =============================================================================
-
-// Skull Catapult
-// "{1}, {T}, Sacrifice a creature: Skull Catapult deals 2 damage to any target."
-registerAbilities('Skull Catapult', (card) => [
-  createSacrificeCreatureForDamage(card, 2, {
-    manaCost: '{1}',
-    requireTap: true,
-    name: '{1}, Tap, Sacrifice creature: 2 damage',
-  }),
-]);
-
-// =============================================================================
-// SACRIFICE CREATURE FOR DRAW
-// =============================================================================
-
-// Phyrexian Vault
-// "{2}, {T}, Sacrifice a creature: Draw a card."
-registerAbilities('Phyrexian Vault', (card) => [
-  createSacrificeCreatureForDraw(card, 1, {
-    manaCost: '{2}',
-    requireTap: true,
-    name: '{2}, Tap, Sacrifice creature: Draw',
-  }),
-]);
+// Note: Skull Catapult and Phyrexian Vault moved to artifacts.ts
 
 // =============================================================================
 // SACRIFICE SELF TO DESTROY
@@ -151,7 +125,90 @@ registerAbilities('Resistance Fighter', (card) => [createSacrificeToPrevent(card
 registerAbilities('Blighted Shaman', (card) => [createSacrificeLandForBuff(card, 'Swamp', 1, 1)]);
 
 // =============================================================================
+// GRAVEYARD ABILITIES
+// =============================================================================
+
+// Necrosavant
+// "{3}{B}{B}, Sacrifice a creature: Return Necrosavant from your graveyard to the battlefield.
+//  Activate only during your upkeep."
+// Note: This is a graveyard ability, registered separately
+import { registerGraveyardAbility } from '../../registry';
+import { CardLoader } from '../../../../cards/CardLoader';
+import { isCreature } from '../../../../cards/CardTemplate';
+
+registerGraveyardAbility('Necrosavant', (card) => {
+  const ability: ActivatedAbility = {
+    id: `${card.instanceId}_necrosavant_return`,
+    name: '{3}{B}{B}, Sacrifice creature: Return to battlefield',
+    cost: { mana: '{3}{B}{B}', sacrifice: { type: 'creature' } },
+    effect: {
+      type: 'CUSTOM',
+      custom: (state: GameState) => {
+        const player = state.players[card.controller];
+
+        // Find Necrosavant in graveyard
+        const necroIndex = player.graveyard.findIndex((c) => c.instanceId === card.instanceId);
+        if (necroIndex === -1) return;
+
+        // Find and sacrifice a creature
+        const creatureIndex = player.battlefield.findIndex((c) => {
+          const t = CardLoader.getById(c.scryfallId);
+          return t && isCreature(t);
+        });
+        if (creatureIndex !== -1) {
+          const creature = player.battlefield.splice(creatureIndex, 1)[0]!;
+          creature.zone = 'graveyard';
+          creature.damage = 0;
+          creature.tapped = false;
+          player.graveyard.push(creature);
+        }
+
+        // Move Necrosavant to battlefield
+        const necro = player.graveyard.splice(necroIndex, 1)[0]!;
+        necro.zone = 'battlefield';
+        necro.damage = 0;
+        necro.tapped = false;
+        necro.summoningSick = true;
+        player.battlefield.push(necro);
+      },
+    },
+    isManaAbility: false,
+    canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
+      // Must be owner's upkeep
+      if (state.activePlayer !== controller) return false;
+      if (state.phase !== 'beginning' || state.step !== 'upkeep') return false;
+
+      const player = state.players[controller];
+
+      // Check source exists in graveyard
+      const inGraveyard = player.graveyard.some((c) => c.instanceId === sourceId);
+      if (!inGraveyard) return false;
+
+      // Check mana: need 3 colorless + 2 black
+      const totalMana =
+        countAvailableMana(state, controller, 'W') +
+        countAvailableMana(state, controller, 'U') +
+        countAvailableMana(state, controller, 'B') +
+        countAvailableMana(state, controller, 'R') +
+        countAvailableMana(state, controller, 'G') +
+        countAvailableMana(state, controller, 'C');
+      if (totalMana < 5) return false;
+      if (countAvailableMana(state, controller, 'B') < 2) return false;
+
+      // Check for a creature to sacrifice
+      const hasCreature = player.battlefield.some((c) => {
+        const t = CardLoader.getById(c.scryfallId);
+        return t && isCreature(t);
+      });
+
+      return hasCreature;
+    },
+  };
+  return [ability];
+});
+
+// =============================================================================
 // EXPORT COUNT
 // =============================================================================
 
-export const SACRIFICE_COUNT = 9;
+export const SACRIFICE_COUNT = 8; // 7 + Necrosavant (graveyard ability)

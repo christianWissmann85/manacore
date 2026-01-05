@@ -25,7 +25,7 @@
 import type { CardInstance } from '../../state/CardInstance';
 import type { GameState } from '../../state/GameState';
 import { CardLoader } from '../../cards/CardLoader';
-import { getFromRegistry } from './registry';
+import { getFromRegistry, getGraveyardAbilitiesFromRegistry } from './registry';
 
 // Import the legacy function as fallback for non-migrated cards
 // This is the renamed function that handles special lands
@@ -89,6 +89,35 @@ export function getActivatedAbilities(
   // The legacy function returns the same shape, so we can use it directly
   // Note: As cards are migrated, they'll be found in the registry above
   return getLegacyAbilities(card, state) as import('./types').ActivatedAbility[];
+}
+
+// =============================================================================
+// GRAVEYARD ABILITIES
+// =============================================================================
+
+/**
+ * Get all graveyard-activated abilities for a card
+ *
+ * For cards like Necrosavant that can activate abilities from the graveyard.
+ *
+ * @param card The card instance in the graveyard
+ * @param state Current game state
+ * @returns Array of graveyard-activated abilities
+ */
+export function getGraveyardAbilities(
+  card: CardInstance,
+  state: GameState,
+): import('./types').ActivatedAbility[] {
+  const template = CardLoader.getById(card.scryfallId);
+  if (!template) return [];
+
+  // Check graveyard registry for abilities
+  const graveyardAbilities = getGraveyardAbilitiesFromRegistry(template.name, card, state);
+  if (graveyardAbilities !== null) {
+    return graveyardAbilities;
+  }
+
+  return [];
 }
 
 // =============================================================================

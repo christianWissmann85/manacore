@@ -54,6 +54,7 @@ export interface CardInstance {
   attacking?: boolean;
   blocking?: string; // Instance ID of attacker being blocked
   blockedBy?: string[]; // Instance IDs of creatures blocking this attacker
+  attackedThisTurn?: boolean; // Used for Lead Golem "doesn't untap if attacked"
 
   // Token-specific fields (Phase 1.5.1)
   isToken?: boolean; // True if this is a token (not a real card)

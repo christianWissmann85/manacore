@@ -18,6 +18,7 @@ import type { CardInstance } from '../state/CardInstance';
 import type { PlayerId } from '../state/Zone';
 import { CardLoader } from '../cards/CardLoader';
 import { isCreature } from '../cards/CardTemplate';
+import { createTokens } from './tokens';
 
 /**
  * Trigger event types
@@ -26,7 +27,9 @@ export type TriggerEvent =
   | { type: 'ENTERS_BATTLEFIELD'; cardId: string; controller: PlayerId }
   | { type: 'DIES'; cardId: string; controller: PlayerId; wasController: PlayerId }
   | { type: 'DEALS_DAMAGE'; sourceId: string; targetId: string; amount: number }
-  | { type: 'BECOMES_TAPPED'; cardId: string; controller: PlayerId };
+  | { type: 'BECOMES_TAPPED'; cardId: string; controller: PlayerId }
+  | { type: 'SPELL_CAST'; cardId: string; controller: PlayerId; spellColor: string | null; spellType: string }
+  | { type: 'ATTACKS'; cardId: string; controller: PlayerId };
 
 /**
  * Triggered ability definition
@@ -496,10 +499,532 @@ function getTriggersForCard(
       }
       break;
 
+    // ========================================
+    // FOG ELEMENTAL - ATTACK SACRIFICE (Phase 1.5.6)
+    // ========================================
+
+    case 'Fog Elemental':
+      // "When Fog Elemental attacks, sacrifice it unless you pay {U}."
+      if (event.type === 'ATTACKS' && event.cardId === card.instanceId) {
+        triggers.push((triggerState: GameState) => {
+          const player = triggerState.players[card.controller];
+
+          // Check if player has {U} available (simplified - auto-pay if possible)
+          const hasBlue = player.battlefield.some((p) => {
+            if (p.tapped) return false;
+            const t = CardLoader.getById(p.scryfallId);
+            if (!t) return false;
+            // Check for blue mana source
+            return t.type_line?.includes('Island') ||
+                   t.oracle_text?.includes('Add {U}');
+          });
+
+          if (hasBlue) {
+            // Auto-tap a blue source to pay
+            const blueSource = player.battlefield.find((p) => {
+              if (p.tapped) return false;
+              const t = CardLoader.getById(p.scryfallId);
+              if (!t) return false;
+              return t.type_line?.includes('Island') ||
+                     t.oracle_text?.includes('Add {U}');
+            });
+            if (blueSource) {
+              blueSource.tapped = true;
+            }
+          } else {
+            // Sacrifice Fog Elemental
+            const fogIndex = player.battlefield.findIndex((c) => c.instanceId === card.instanceId);
+            if (fogIndex !== -1) {
+              const fog = player.battlefield.splice(fogIndex, 1)[0]!;
+              fog.zone = 'graveyard';
+              fog.damage = 0;
+              fog.tapped = false;
+              fog.attacking = false;
+              player.graveyard.push(fog);
+            }
+          }
+        });
+      }
+      break;
+
+    // ========================================
+    // SIBILANT SPIRIT - ATTACK DRAW (Phase 1.5.6)
+    // ========================================
+
+    case 'Sibilant Spirit':
+      // "Whenever Sibilant Spirit attacks, defending player may draw a card."
+      if (event.type === 'ATTACKS' && event.cardId === card.instanceId) {
+        triggers.push((triggerState: GameState) => {
+          const defendingPlayer = card.controller === 'player' ? 'opponent' : 'player';
+          const defender = triggerState.players[defendingPlayer];
+
+          // Auto-draw for AI (they would always want to draw)
+          if (defender.library.length > 0) {
+            const drawnCard = defender.library.pop()!;
+            drawnCard.zone = 'hand';
+            defender.hand.push(drawnCard);
+          }
+        });
+      }
+      break;
+
+    // ========================================
+    // SENGIR AUTOCRAT - ETB/DIES TOKENS (Phase 1.5.6)
+    // ========================================
+
+    case 'Sengir Autocrat':
+      // "When Sengir Autocrat enters the battlefield, create three 0/1 black Serf creature tokens."
+      if (event.type === 'ENTERS_BATTLEFIELD' && event.cardId === card.instanceId) {
+        triggers.push((triggerState: GameState) => {
+          createTokens(triggerState, card.controller, 'serf', 3, {
+            createdBy: card.instanceId,
+          });
+        });
+      }
+      // "When Sengir Autocrat leaves the battlefield, exile all Serf tokens."
+      if (event.type === 'DIES' && event.cardId === card.instanceId) {
+        triggers.push((triggerState: GameState) => {
+          // Exile all Serf tokens created by this Autocrat
+          const player = triggerState.players[card.controller];
+          for (let i = player.battlefield.length - 1; i >= 0; i--) {
+            const perm = player.battlefield[i]!;
+            if (perm.isToken && perm.tokenType === 'Serf' && perm.createdBy === card.instanceId) {
+              player.battlefield.splice(i, 1);
+              perm.zone = 'exile';
+              // Tokens don't go to exile zone, they just cease to exist
+            }
+          }
+        });
+      }
+      break;
+
+    // ========================================
+    // GRAVEBANE ZOMBIE - DIES TO LIBRARY (Phase 1.5.6)
+    // ========================================
+
+    case 'Gravebane Zombie':
+      // "If Gravebane Zombie would be put into a graveyard from the battlefield,
+      //  put Gravebane Zombie on top of its owner's library instead."
+      // Note: This is actually a replacement effect, but we'll handle it as a death trigger
+      // that moves it from graveyard to library
+      if (event.type === 'DIES' && event.cardId === card.instanceId) {
+        triggers.push((triggerState: GameState) => {
+          const owner = triggerState.players[card.owner];
+          // Find and remove from graveyard
+          const graveyardIndex = owner.graveyard.findIndex((c) => c.instanceId === card.instanceId);
+          if (graveyardIndex !== -1) {
+            const zombie = owner.graveyard.splice(graveyardIndex, 1)[0]!;
+            zombie.zone = 'library';
+            zombie.damage = 0;
+            zombie.tapped = false;
+            owner.library.push(zombie); // Put on top of library
+          }
+        });
+      }
+      break;
+
+    // ========================================
+    // HECATOMB - ETB SACRIFICE (Phase 1.5.6)
+    // ========================================
+
+    case 'Hecatomb':
+      // "When Hecatomb enters the battlefield, sacrifice Hecatomb unless you sacrifice four creatures."
+      if (event.type === 'ENTERS_BATTLEFIELD' && event.cardId === card.instanceId) {
+        triggers.push((triggerState: GameState) => {
+          const player = triggerState.players[card.controller];
+
+          // Find four creatures to sacrifice (not tokens ideally)
+          const sacrificeableCreatures = player.battlefield.filter((c) => {
+            if (c.instanceId === card.instanceId) return false; // Not the enchantment itself
+            const t = CardLoader.getById(c.scryfallId);
+            return t && isCreature(t);
+          });
+
+          if (sacrificeableCreatures.length >= 4) {
+            // Sacrifice four creatures
+            for (let i = 0; i < 4; i++) {
+              const creature = sacrificeableCreatures[i]!;
+              const creatureIndex = player.battlefield.findIndex(
+                (c) => c.instanceId === creature.instanceId,
+              );
+              if (creatureIndex !== -1) {
+                const sacrificed = player.battlefield.splice(creatureIndex, 1)[0]!;
+                sacrificed.zone = 'graveyard';
+                sacrificed.damage = 0;
+                sacrificed.tapped = false;
+                player.graveyard.push(sacrificed);
+              }
+            }
+          } else {
+            // Not enough creatures - sacrifice Hecatomb
+            const hecatombIndex = player.battlefield.findIndex(
+              (c) => c.instanceId === card.instanceId,
+            );
+            if (hecatombIndex !== -1) {
+              const hecatomb = player.battlefield.splice(hecatombIndex, 1)[0]!;
+              hecatomb.zone = 'graveyard';
+              hecatomb.damage = 0;
+              hecatomb.tapped = false;
+              player.graveyard.push(hecatomb);
+            }
+          }
+        });
+      }
+      break;
+
     // Add more cards with triggers here
   }
 
+  // ========================================
+  // AURA TRIGGERS (Phase 1.5.5)
+  // Check if this card has auras attached that trigger on events
+  // ========================================
+
+  if (event.type === 'BECOMES_TAPPED' && event.cardId === card.instanceId) {
+    // Check for auras attached to this card that trigger on tap
+    for (const attachmentId of card.attachments) {
+      const aura = findAuraOnBattlefield(_state, attachmentId);
+      if (!aura) continue;
+
+      const auraTemplate = CardLoader.getById(aura.scryfallId);
+      if (!auraTemplate) continue;
+
+      switch (auraTemplate.name) {
+        case 'Wild Growth':
+          // "Whenever enchanted land is tapped for mana, its controller adds an additional {G}."
+          triggers.push((triggerState: GameState) => {
+            const player = triggerState.players[card.controller];
+            player.manaPool.green += 1;
+          });
+          break;
+
+        case 'Psychic Venom':
+          // "Whenever enchanted land becomes tapped, Psychic Venom deals 2 damage to that land's controller."
+          triggers.push((triggerState: GameState) => {
+            triggerState.players[card.controller].life -= 2;
+          });
+          break;
+
+        case 'Blight':
+          // "When enchanted land becomes tapped, destroy it."
+          triggers.push((triggerState: GameState) => {
+            const player = triggerState.players[card.controller];
+            const landIndex = player.battlefield.findIndex((c) => c.instanceId === card.instanceId);
+            if (landIndex !== -1) {
+              const land = player.battlefield.splice(landIndex, 1)[0]!;
+              land.zone = 'graveyard';
+              land.damage = 0;
+              land.tapped = false;
+              land.attachments = [];
+              player.graveyard.push(land);
+
+              // The aura falls off too (handled by SBA, but let's be explicit)
+              const auraPlayer = triggerState.players[aura.controller];
+              const auraIndex = auraPlayer.battlefield.findIndex(
+                (c) => c.instanceId === aura.instanceId,
+              );
+              if (auraIndex !== -1) {
+                const fallenAura = auraPlayer.battlefield.splice(auraIndex, 1)[0]!;
+                fallenAura.zone = 'graveyard';
+                fallenAura.attachedTo = undefined;
+                auraPlayer.graveyard.push(fallenAura);
+              }
+            }
+          });
+          break;
+      }
+    }
+  }
+
+  // Spirit Link: "Whenever enchanted creature deals damage, you gain that much life."
+  if (event.type === 'DEALS_DAMAGE' && event.sourceId === card.instanceId) {
+    for (const attachmentId of card.attachments) {
+      const aura = findAuraOnBattlefield(_state, attachmentId);
+      if (!aura) continue;
+
+      const auraTemplate = CardLoader.getById(aura.scryfallId);
+      if (!auraTemplate) continue;
+
+      if (auraTemplate.name === 'Spirit Link') {
+        const damageAmount = event.amount;
+        triggers.push((triggerState: GameState) => {
+          // Controller of Spirit Link gains the life
+          triggerState.players[aura.controller].life += damageAmount;
+        });
+      }
+    }
+  }
+
+  // ========================================
+  // GLOBAL ENCHANTMENT TRIGGERS (Phase 1.5.5)
+  // Only add triggers if THIS card is the triggering enchantment
+  // ========================================
+
+  const typeLine = template.type_line?.toLowerCase() || '';
+  const isGlobalEnchantment = typeLine.includes('enchantment') && !typeLine.includes('aura');
+
+  if (isGlobalEnchantment) {
+    switch (template.name) {
+      case 'Aether Flash':
+        // "Whenever a creature enters the battlefield, Aether Flash deals 2 damage to it."
+        if (event.type === 'ENTERS_BATTLEFIELD') {
+          const enteringCard = findCardById(_state, event.cardId);
+          if (enteringCard) {
+            const enteringTemplate = CardLoader.getById(enteringCard.scryfallId);
+            if (enteringTemplate && isCreature(enteringTemplate)) {
+              triggers.push((triggerState: GameState) => {
+                const target = findCardById(triggerState, event.cardId);
+                if (target) {
+                  target.damage += 2;
+                }
+              });
+            }
+          }
+        }
+        break;
+
+      case 'Manabarbs':
+        // "Whenever a player taps a land for mana, Manabarbs deals 1 damage to that player."
+        if (event.type === 'BECOMES_TAPPED') {
+          const tappedCard = findCardById(_state, event.cardId);
+          if (tappedCard) {
+            const tappedTemplate = CardLoader.getById(tappedCard.scryfallId);
+            if (tappedTemplate && tappedTemplate.type_line?.toLowerCase().includes('land')) {
+              triggers.push((triggerState: GameState) => {
+                triggerState.players[event.controller].life -= 1;
+              });
+            }
+          }
+        }
+        break;
+
+      case 'Kismet':
+        // "Artifacts, creatures, and lands your opponents control enter the battlefield tapped."
+        if (event.type === 'ENTERS_BATTLEFIELD') {
+          // Only affect opponent's permanents
+          if (event.controller !== card.controller) {
+            const enteringCard = findCardById(_state, event.cardId);
+            if (enteringCard) {
+              const enteringTemplate = CardLoader.getById(enteringCard.scryfallId);
+              if (enteringTemplate) {
+                const enteringType = enteringTemplate.type_line?.toLowerCase() || '';
+                const isAffected = enteringType.includes('artifact') ||
+                                   enteringType.includes('creature') ||
+                                   enteringType.includes('land');
+                if (isAffected) {
+                  triggers.push((triggerState: GameState) => {
+                    const target = findCardById(triggerState, event.cardId);
+                    if (target) {
+                      target.tapped = true;
+                    }
+                  });
+                }
+              }
+            }
+          }
+        }
+        break;
+
+      case 'Serenity':
+        // "At the beginning of your upkeep, destroy all artifacts and enchantments."
+        // Note: This is an upkeep trigger, which needs a different event type
+        // For now, we'll implement it as a static effect that activates during ETB resolution
+        // In Phase 1.5, we handle upkeep triggers through the end turn / untap step
+        break;
+    }
+  }
+
+  // ========================================
+  // ARTIFACT TRIGGERS (Phase 1.5.6)
+  // ========================================
+
+  const isArtifact = typeLine.includes('artifact') && !typeLine.includes('creature');
+
+  if (isArtifact) {
+    switch (template.name) {
+      case 'Ankh of Mishra':
+        // "Whenever a land enters the battlefield, Ankh of Mishra deals 2 damage to that land's controller."
+        if (event.type === 'ENTERS_BATTLEFIELD') {
+          const enteringCard = findCardById(_state, event.cardId);
+          if (enteringCard) {
+            const enteringTemplate = CardLoader.getById(enteringCard.scryfallId);
+            if (enteringTemplate && enteringTemplate.type_line?.toLowerCase().includes('land')) {
+              triggers.push((triggerState: GameState) => {
+                triggerState.players[event.controller].life -= 2;
+              });
+            }
+          }
+        }
+        break;
+
+      case 'Dingus Egg':
+        // "Whenever a land is put into a graveyard from the battlefield, Dingus Egg deals 2 damage to that land's controller."
+        if (event.type === 'DIES') {
+          // Check if the dying permanent was a land
+          // Look for it in graveyard
+          for (const pid of ['player', 'opponent'] as const) {
+            const dyingCard = _state.players[pid].graveyard.find(
+              (c) => c.instanceId === event.cardId
+            );
+            if (dyingCard) {
+              const dyingTemplate = CardLoader.getById(dyingCard.scryfallId);
+              if (dyingTemplate && dyingTemplate.type_line?.toLowerCase().includes('land')) {
+                const landController = event.wasController;
+                triggers.push((triggerState: GameState) => {
+                  triggerState.players[landController].life -= 2;
+                });
+              }
+              break;
+            }
+          }
+        }
+        break;
+
+      case 'Soul Net':
+        // "Whenever a creature dies, you may pay {1}. If you do, you gain 1 life."
+        // Note: For AI simplicity, we auto-pay if mana is available
+        if (event.type === 'DIES') {
+          // Check if the dying permanent was a creature
+          for (const pid of ['player', 'opponent'] as const) {
+            const dyingCard = _state.players[pid].graveyard.find(
+              (c) => c.instanceId === event.cardId
+            );
+            if (dyingCard) {
+              const dyingTemplate = CardLoader.getById(dyingCard.scryfallId);
+              if (dyingTemplate && isCreature(dyingTemplate)) {
+                triggers.push((triggerState: GameState) => {
+                  // Auto-gain life (simplified - no mana payment check for now)
+                  triggerState.players[card.controller].life += 1;
+                });
+              }
+              break;
+            }
+          }
+        }
+        break;
+
+      // ========================================
+      // COLOR ARTIFACTS - SPELL_CAST TRIGGERS
+      // "Whenever a player casts a [color] spell, you may pay {1}. If you do, you gain 1 life."
+      // ========================================
+
+      case 'Crystal Rod':
+        // "Whenever a player casts a blue spell, you may pay {1}. If you do, you gain 1 life."
+        if (event.type === 'SPELL_CAST' && event.spellColor === 'U') {
+          triggers.push((triggerState: GameState) => {
+            // Auto-gain life (simplified - would need {1} mana payment in full implementation)
+            triggerState.players[card.controller].life += 1;
+          });
+        }
+        break;
+
+      case 'Iron Star':
+        // "Whenever a player casts a red spell, you may pay {1}. If you do, you gain 1 life."
+        if (event.type === 'SPELL_CAST' && event.spellColor === 'R') {
+          triggers.push((triggerState: GameState) => {
+            triggerState.players[card.controller].life += 1;
+          });
+        }
+        break;
+
+      case 'Ivory Cup':
+        // "Whenever a player casts a white spell, you may pay {1}. If you do, you gain 1 life."
+        if (event.type === 'SPELL_CAST' && event.spellColor === 'W') {
+          triggers.push((triggerState: GameState) => {
+            triggerState.players[card.controller].life += 1;
+          });
+        }
+        break;
+
+      case 'Throne of Bone':
+        // "Whenever a player casts a black spell, you may pay {1}. If you do, you gain 1 life."
+        if (event.type === 'SPELL_CAST' && event.spellColor === 'B') {
+          triggers.push((triggerState: GameState) => {
+            triggerState.players[card.controller].life += 1;
+          });
+        }
+        break;
+
+      case 'Wooden Sphere':
+        // "Whenever a player casts a green spell, you may pay {1}. If you do, you gain 1 life."
+        if (event.type === 'SPELL_CAST' && event.spellColor === 'G') {
+          triggers.push((triggerState: GameState) => {
+            triggerState.players[card.controller].life += 1;
+          });
+        }
+        break;
+    }
+  }
+
+  // ========================================
+  // SPELL_CAST TRIGGERS - ENCHANTMENTS/CREATURES
+  // ========================================
+
+  if (event.type === 'SPELL_CAST') {
+    switch (template.name) {
+      case 'Insight':
+        // "Whenever an opponent casts a green spell, you draw a card."
+        if (event.spellColor === 'G' && event.controller !== card.controller) {
+          triggers.push((triggerState: GameState) => {
+            const player = triggerState.players[card.controller];
+            if (player.library.length > 0) {
+              const drawnCard = player.library.pop()!;
+              drawnCard.zone = 'hand';
+              player.hand.push(drawnCard);
+            }
+          });
+        }
+        break;
+
+      case 'Verduran Enchantress':
+        // "Whenever you cast an enchantment spell, you draw a card."
+        if (event.spellType.includes('enchantment') && event.controller === card.controller) {
+          triggers.push((triggerState: GameState) => {
+            const player = triggerState.players[card.controller];
+            if (player.library.length > 0) {
+              const drawnCard = player.library.pop()!;
+              drawnCard.zone = 'hand';
+              player.hand.push(drawnCard);
+            }
+          });
+        }
+        break;
+
+      case 'Warmth':
+        // "Whenever an opponent casts a red spell, you gain 2 life."
+        if (event.spellColor === 'R' && event.controller !== card.controller) {
+          triggers.push((triggerState: GameState) => {
+            triggerState.players[card.controller].life += 2;
+          });
+        }
+        break;
+    }
+  }
+
   return triggers;
+}
+
+/**
+ * Find a card by instanceId across all battlefields
+ */
+function findCardById(state: GameState, instanceId: string): CardInstance | undefined {
+  for (const playerId of ['player', 'opponent'] as const) {
+    const found = state.players[playerId].battlefield.find((c) => c.instanceId === instanceId);
+    if (found) return found;
+  }
+  return undefined;
+}
+
+/**
+ * Find an aura by instance ID across all battlefields
+ */
+function findAuraOnBattlefield(state: GameState, instanceId: string): CardInstance | undefined {
+  for (const playerId of ['player', 'opponent'] as const) {
+    const player = state.players[playerId];
+    const found = player.battlefield.find((c) => c.instanceId === instanceId);
+    if (found) return found;
+  }
+  return undefined;
 }
 
 /**

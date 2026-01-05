@@ -42,6 +42,23 @@ import {
 } from '../rules/targeting';
 
 /**
+ * Check if Dense Foliage is on the battlefield
+ * Dense Foliage: "Creatures can't be the targets of spells."
+ */
+export function hasDenseFoliage(state: GameState): boolean {
+  return (
+    state.players.player.battlefield.some((p) => {
+      const t = CardLoader.getById(p.scryfallId);
+      return t?.name === 'Dense Foliage';
+    }) ||
+    state.players.opponent.battlefield.some((p) => {
+      const t = CardLoader.getById(p.scryfallId);
+      return t?.name === 'Dense Foliage';
+    })
+  );
+}
+
+/**
  * Check if a creature is prevented from attacking or blocking by an aura
  * (e.g., Pacifism: "Enchanted creature can't attack or block")
  */
@@ -63,6 +80,298 @@ function isPreventedFromCombat(state: GameState, creature: CardInstance): boolea
           if (text.includes("can't attack") || text.includes('cannot attack')) {
             return true;
           }
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Check if a creature is prevented from attacking or blocking by a global enchantment
+ * (e.g., Light of Day: "Black creatures can't attack or block")
+ */
+function isPreventedByGlobalEnchantment(state: GameState, creature: CardInstance): boolean {
+  const creatureTemplate = CardLoader.getById(creature.scryfallId);
+  if (!creatureTemplate) return false;
+
+  const creatureColors = creatureTemplate.colors || [];
+
+  // Check all enchantments on battlefield
+  for (const playerId of ['player', 'opponent'] as const) {
+    for (const permanent of state.players[playerId].battlefield) {
+      const template = CardLoader.getById(permanent.scryfallId);
+      if (!template) continue;
+
+      const typeLine = template.type_line?.toLowerCase() || '';
+      if (!typeLine.includes('enchantment') || typeLine.includes('aura')) continue;
+
+      switch (template.name) {
+        case 'Light of Day':
+          // "Black creatures can't attack or block."
+          if (creatureColors.includes('B')) {
+            return true;
+          }
+          break;
+
+        // Add more global enchantment combat restrictions here
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Check if a creature has Animate Wall attached
+ * (Animate Wall: "Enchanted Wall can attack as though it didn't have defender.")
+ */
+function hasAnimateWall(state: GameState, creature: CardInstance): boolean {
+  if (!creature.attachments || creature.attachments.length === 0) {
+    return false;
+  }
+
+  for (const attachmentId of creature.attachments) {
+    for (const playerId of ['player', 'opponent'] as const) {
+      const aura = state.players[playerId].battlefield.find((c) => c.instanceId === attachmentId);
+      if (aura) {
+        const auraTemplate = CardLoader.getById(aura.scryfallId);
+        if (auraTemplate?.name === 'Animate Wall') {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Check if a creature can't block (e.g., Hulking Cyclops)
+ * Cards with "can't block" in oracle text or specific card names
+ */
+function cantBlock(template: { name?: string; oracle_text?: string }): boolean {
+  // Check specific card names
+  const cantBlockCreatures = ['Hulking Cyclops'];
+  if (template.name && cantBlockCreatures.includes(template.name)) {
+    return true;
+  }
+
+  // Check oracle text for "can't block" or "cannot block"
+  const text = template.oracle_text?.toLowerCase() || '';
+  if (text.includes("can't block") || text.includes('cannot block')) {
+    // Make sure it's not "can't block alone" or other conditional
+    if (!text.includes("can't block alone") && !text.includes("can't be blocked")) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Check if a creature can't be blocked (unblockable)
+ * e.g., Phantom Warrior: "Phantom Warrior can't be blocked."
+ *
+ * IMPORTANT: This should NOT match conditional unblockable like:
+ * - Landwalk: "can't be blocked as long as defending player controls..."
+ * - Shadow: "can't be blocked except by creatures with shadow"
+ */
+function isUnblockable(template: { name?: string; oracle_text?: string }): boolean {
+  // Check specific card names
+  const unblockableCreatures = ['Phantom Warrior'];
+  if (template.name && unblockableCreatures.includes(template.name)) {
+    return true;
+  }
+
+  // Check oracle text - be VERY careful not to match conditional unblockable
+  const text = template.oracle_text?.toLowerCase() || '';
+
+  // Skip if it has conditional blocking text (landwalk, shadow, etc.)
+  if (text.includes("can't be blocked as long as") ||
+      text.includes("can't be blocked except") ||
+      text.includes("walk")) {
+    return false;
+  }
+
+  // Match true unblockable: "[Name] can't be blocked." (period at end)
+  // or "~ can't be blocked."
+  if (text.includes("can't be blocked.") || text.includes("cannot be blocked.")) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Check if a creature requires opponent to control a specific land type to attack
+ * e.g., Sea Monster: "Sea Monster can't attack unless defending player controls an Island."
+ */
+function requiresLandToAttack(
+  state: GameState,
+  attacker: CardInstance,
+  defendingPlayer: PlayerId,
+): boolean {
+  const template = CardLoader.getById(attacker.scryfallId);
+  if (!template) return false;
+
+  // Sea Monster can't attack unless defending player controls an Island
+  if (template.name === 'Sea Monster') {
+    const defender = state.players[defendingPlayer];
+    const hasIsland = defender.battlefield.some((permanent) => {
+      const permTemplate = CardLoader.getById(permanent.scryfallId);
+      return permTemplate?.type_line?.includes('Island') ?? false;
+    });
+    return !hasIsland; // Returns true if attack should be PREVENTED (no Island)
+  }
+
+  return false; // No restriction
+}
+
+/**
+ * Check if an attacker can't be blocked by Walls
+ * e.g., Bog Rats: "Bog Rats can't be blocked by Walls."
+ */
+function cantBeBlockedByWalls(template: { name?: string; oracle_text?: string }): boolean {
+  const cantBeBlockedByWallsCreatures = ['Bog Rats'];
+  if (template.name && cantBeBlockedByWallsCreatures.includes(template.name)) {
+    return true;
+  }
+  const text = template.oracle_text?.toLowerCase() || '';
+  return text.includes("can't be blocked by walls");
+}
+
+/**
+ * Check if an attacker can only be blocked by creatures with flying or walls
+ * e.g., Elven Riders: "Elven Riders can't be blocked except by Walls and/or creatures with flying."
+ */
+function cantBeBlockedExceptByFlyingOrWalls(template: { name?: string; oracle_text?: string }): boolean {
+  const creatures = ['Elven Riders'];
+  if (template.name && creatures.includes(template.name)) {
+    return true;
+  }
+  const text = template.oracle_text?.toLowerCase() || '';
+  return text.includes("can't be blocked except by walls") ||
+         text.includes("can't be blocked except by creatures with flying");
+}
+
+/**
+ * Check if a creature can't attack alone
+ * e.g., Goblin Elite Infantry: "Goblin Elite Infantry can't attack alone."
+ */
+function cantAttackAlone(template: { name?: string; oracle_text?: string }): boolean {
+  const creatures = ['Goblin Elite Infantry'];
+  if (template.name && creatures.includes(template.name)) {
+    return true;
+  }
+  const text = template.oracle_text?.toLowerCase() || '';
+  return text.includes("can't attack alone");
+}
+
+/**
+ * Check if an attacker must be blocked by two or more creatures (like Menace but on attacker)
+ * e.g., Stalking Tiger: "Stalking Tiger can't be blocked by more than one creature."
+ * Note: This is the OPPOSITE - it can only be blocked by ONE creature
+ */
+function canOnlyBeBlockedByOne(template: { name?: string; oracle_text?: string }): boolean {
+  const creatures = ['Stalking Tiger'];
+  if (template.name && creatures.includes(template.name)) {
+    return true;
+  }
+  const text = template.oracle_text?.toLowerCase() || '';
+  return text.includes("can't be blocked by more than one");
+}
+
+/**
+ * Check if a creature can't block small creatures (power 2 or less)
+ * e.g., Sunweb: "Sunweb can't block creatures with power 2 or less."
+ */
+function cantBlockSmallCreatures(template: { name?: string; oracle_text?: string }): boolean {
+  const creatures = ['Sunweb'];
+  if (template.name && creatures.includes(template.name)) {
+    return true;
+  }
+  const text = template.oracle_text?.toLowerCase() || '';
+  return text.includes("can't block creatures with power 2 or less");
+}
+
+/**
+ * Check if a creature can only be blocked by Walls
+ * e.g., Evil Eye of Orms-by-Gore: "Evil Eye of Orms-by-Gore can't be blocked except by Walls."
+ */
+function canOnlyBeBlockedByWalls(template: { name?: string; oracle_text?: string }): boolean {
+  const creatures = ['Evil Eye of Orms-by-Gore'];
+  if (template.name && creatures.includes(template.name)) {
+    return true;
+  }
+  const text = template.oracle_text?.toLowerCase() || '';
+  return text.includes("can't be blocked except by walls");
+}
+
+/**
+ * Check if controlling Evil Eye prevents non-Eye creatures from attacking
+ * Evil Eye of Orms-by-Gore: "Non-Eye creatures you control can't attack."
+ */
+function isPreventedByEvilEye(state: GameState, creature: CardInstance): boolean {
+  const creatureTemplate = CardLoader.getById(creature.scryfallId);
+  if (!creatureTemplate) return false;
+
+  // If this creature IS an Eye, it can attack
+  if (creatureTemplate.type_line?.includes('Eye')) {
+    return false;
+  }
+
+  // Check if controller has Evil Eye of Orms-by-Gore
+  const controller = state.players[creature.controller];
+  const hasEvilEye = controller.battlefield.some((p) => {
+    const t = CardLoader.getById(p.scryfallId);
+    return t?.name === 'Evil Eye of Orms-by-Gore';
+  });
+
+  return hasEvilEye;
+}
+
+/**
+ * Check if a creature has Lure attached
+ * (Lure: "All creatures able to block enchanted creature do so.")
+ */
+function hasLure(state: GameState, creature: CardInstance): boolean {
+  if (!creature.attachments || creature.attachments.length === 0) {
+    return false;
+  }
+
+  for (const attachmentId of creature.attachments) {
+    for (const playerId of ['player', 'opponent'] as const) {
+      const aura = state.players[playerId].battlefield.find((c) => c.instanceId === attachmentId);
+      if (aura) {
+        const auraTemplate = CardLoader.getById(aura.scryfallId);
+        if (auraTemplate?.name === 'Lure') {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Check if a creature has Gaseous Form attached
+ * (Gaseous Form: "Prevent all combat damage that would be dealt to and dealt by enchanted creature.")
+ */
+export function hasGaseousForm(state: GameState, creature: CardInstance): boolean {
+  if (!creature.attachments || creature.attachments.length === 0) {
+    return false;
+  }
+
+  for (const attachmentId of creature.attachments) {
+    for (const playerId of ['player', 'opponent'] as const) {
+      const aura = state.players[playerId].battlefield.find((c) => c.instanceId === attachmentId);
+      if (aura) {
+        const auraTemplate = CardLoader.getById(aura.scryfallId);
+        if (auraTemplate?.name === 'Gaseous Form') {
+          return true;
         }
       }
     }
@@ -245,6 +554,21 @@ function validateCastSpell(state: GameState, action: CastSpellAction): string[] 
         card,
       );
       errors.push(...targetErrors);
+
+      // Dense Foliage: Creatures can't be the targets of spells
+      if (hasDenseFoliage(state)) {
+        for (const targetId of targets) {
+          // Check if target is a creature on the battlefield
+          const target = findCard(state, targetId);
+          if (target && target.zone === 'battlefield') {
+            const targetTemplate = CardLoader.getById(target.scryfallId);
+            if (targetTemplate && isCreature(targetTemplate)) {
+              errors.push('Creatures cannot be targeted while Dense Foliage is on the battlefield');
+              break;
+            }
+          }
+        }
+      }
     }
   }
 
@@ -298,6 +622,16 @@ function validateDeclareAttackers(state: GameState, action: DeclareAttackersActi
       errors.push(`${attackerId} can't attack`);
     }
 
+    // Check if creature is prevented from attacking by a global enchantment (e.g., Light of Day)
+    if (isPreventedByGlobalEnchantment(state, attacker)) {
+      errors.push(`${attackerId} can't attack`);
+    }
+
+    // Check if creature is prevented from attacking by Evil Eye of Orms-by-Gore
+    if (isPreventedByEvilEye(state, attacker)) {
+      errors.push(`${attackerId} can't attack (non-Eye creatures can't attack while you control Evil Eye)`);
+    }
+
     // Check if it's a creature
     const template = CardLoader.getById(attacker.scryfallId);
     if (template && !isCreature(template)) {
@@ -305,8 +639,26 @@ function validateDeclareAttackers(state: GameState, action: DeclareAttackersActi
     }
 
     // Check if creature has Defender (can't attack)
-    if (template && hasDefender(template)) {
+    // Unless it has Animate Wall attached
+    if (template && hasDefender(template) && !hasAnimateWall(state, attacker)) {
       errors.push(`${attackerId} has Defender and cannot attack`);
+    }
+
+    // Check if creature requires defending player to control specific lands (e.g., Sea Monster)
+    const defendingPlayer = state.activePlayer === 'player' ? 'opponent' : 'player';
+    if (requiresLandToAttack(state, attacker, defendingPlayer)) {
+      errors.push(`${attackerId} can't attack unless defending player controls required land`);
+    }
+  }
+
+  // Check for "can't attack alone" creatures (e.g., Goblin Elite Infantry)
+  if (action.payload.attackers.length === 1) {
+    const loneAttacker = findCard(state, action.payload.attackers[0]!);
+    if (loneAttacker) {
+      const template = CardLoader.getById(loneAttacker.scryfallId);
+      if (template && cantAttackAlone(template)) {
+        errors.push(`${action.payload.attackers[0]} can't attack alone`);
+      }
     }
   }
 
@@ -361,9 +713,19 @@ function validateDeclareBlockers(state: GameState, action: DeclareBlockersAction
       errors.push(`Blocker ${block.blockerId} can't block`);
     }
 
+    // Check if creature is prevented from blocking by a global enchantment (e.g., Light of Day)
+    if (isPreventedByGlobalEnchantment(state, blocker)) {
+      errors.push(`Blocker ${block.blockerId} can't block`);
+    }
+
     const blockerTemplate = CardLoader.getById(blocker.scryfallId);
     if (blockerTemplate && !isCreature(blockerTemplate)) {
       errors.push(`Blocker ${block.blockerId} is not a creature`);
+    }
+
+    // Check if creature can't block (e.g., Hulking Cyclops)
+    if (blockerTemplate && cantBlock(blockerTemplate)) {
+      errors.push(`${block.blockerId} can't block`);
     }
 
     // Check attacker exists and is attacking
@@ -376,8 +738,14 @@ function validateDeclareBlockers(state: GameState, action: DeclareBlockersAction
       errors.push(`${block.attackerId} is not attacking`);
     }
 
-    // Flying restriction: Flying creatures can only be blocked by Flying/Reach
+    // Check if attacker is unblockable (e.g., Phantom Warrior)
     const attackerTemplate = CardLoader.getById(attacker.scryfallId);
+    if (attackerTemplate && isUnblockable(attackerTemplate)) {
+      errors.push(`${block.attackerId} can't be blocked`);
+      continue;
+    }
+
+    // Flying restriction: Flying creatures can only be blocked by Flying/Reach
     if (attackerTemplate && blockerTemplate) {
       if (hasFlying(attackerTemplate)) {
         if (!hasFlying(blockerTemplate) && !hasReach(blockerTemplate)) {
@@ -423,6 +791,39 @@ function validateDeclareBlockers(state: GameState, action: DeclareBlockersAction
           errors.push(`${block.blockerId} cannot block ${block.attackerId} (Intimidate)`);
         }
       }
+
+      // Bog Rats restriction: Can't be blocked by Walls
+      if (cantBeBlockedByWalls(attackerTemplate)) {
+        const isWall = blockerTemplate.type_line?.includes('Wall') ?? false;
+        if (isWall) {
+          errors.push(`${block.blockerId} cannot block ${block.attackerId} (can't be blocked by Walls)`);
+        }
+      }
+
+      // Elven Riders restriction: Can only be blocked by creatures with flying or Walls
+      if (cantBeBlockedExceptByFlyingOrWalls(attackerTemplate)) {
+        const isWall = blockerTemplate.type_line?.includes('Wall') ?? false;
+        const canBlock = hasFlying(blockerTemplate) || isWall;
+        if (!canBlock) {
+          errors.push(`${block.blockerId} cannot block ${block.attackerId} (only flying/Walls can block)`);
+        }
+      }
+
+      // Evil Eye of Orms-by-Gore restriction: Can only be blocked by Walls
+      if (canOnlyBeBlockedByWalls(attackerTemplate)) {
+        const isWall = blockerTemplate.type_line?.includes('Wall') ?? false;
+        if (!isWall) {
+          errors.push(`${block.blockerId} cannot block ${block.attackerId} (only Walls can block Evil Eye)`);
+        }
+      }
+
+      // Sunweb restriction: Can't block creatures with power 2 or less
+      if (cantBlockSmallCreatures(blockerTemplate)) {
+        const attackerPower = parseInt(attackerTemplate.power || '0', 10);
+        if (attackerPower <= 2) {
+          errors.push(`${block.blockerId} can't block creatures with power 2 or less`);
+        }
+      }
     }
   }
 
@@ -446,6 +847,107 @@ function validateDeclareBlockers(state: GameState, action: DeclareBlockersAction
     for (const [attackerId, blockerCount] of menaceBlockerCounts) {
       if (blockerCount === 1) {
         errors.push(`${attackerId} has Menace - must be blocked by two or more creatures`);
+      }
+    }
+  }
+
+  // Stalking Tiger restriction: Can only be blocked by one creature (opposite of Menace)
+  // Also check for Familiar Ground: "Each creature you control can't be blocked by more than one creature"
+  if (action.payload.blocks.length > 0) {
+    const singleBlockerCounts: Map<string, number> = new Map();
+
+    // Check if attacking player controls Familiar Ground
+    const attackingPlayer = state.activePlayer;
+    const hasFamiliarGround = state.players[attackingPlayer].battlefield.some((p) => {
+      const t = CardLoader.getById(p.scryfallId);
+      return t?.name === 'Familiar Ground';
+    });
+
+    for (const block of action.payload.blocks) {
+      const attacker = findCard(state, block.attackerId);
+      if (!attacker) continue;
+
+      const attackerTemplate = CardLoader.getById(attacker.scryfallId);
+      // Count blockers for creatures with the restriction OR if Familiar Ground is active
+      const hasRestriction = (attackerTemplate && canOnlyBeBlockedByOne(attackerTemplate)) ||
+                            (hasFamiliarGround && attacker.controller === attackingPlayer);
+      if (hasRestriction) {
+        const count = singleBlockerCounts.get(block.attackerId) || 0;
+        singleBlockerCounts.set(block.attackerId, count + 1);
+      }
+    }
+
+    // Check that each "can only be blocked by one" creature has at most 1 blocker
+    for (const [attackerId, blockerCount] of singleBlockerCounts) {
+      if (blockerCount > 1) {
+        errors.push(`${attackerId} can't be blocked by more than one creature`);
+      }
+    }
+  }
+
+  // Lure check: All creatures able to block a Lured creature must block it
+  const attackingPlayerState = getPlayer(state, state.activePlayer);
+
+  for (const attacker of attackingPlayerState.battlefield) {
+    if (!attacker.attacking) continue;
+    if (!hasLure(state, attacker)) continue;
+
+    // This attacker has Lure - check if all able blockers are blocking it
+    const defendingPlayerState = getPlayer(state, defendingPlayer);
+
+    for (const potentialBlocker of defendingPlayerState.battlefield) {
+      const blockerTemplate = CardLoader.getById(potentialBlocker.scryfallId);
+      if (!blockerTemplate || !isCreature(blockerTemplate)) continue;
+
+      // Skip if tapped
+      if (potentialBlocker.tapped) continue;
+
+      // Skip if prevented from combat
+      if (isPreventedFromCombat(state, potentialBlocker)) continue;
+      if (isPreventedByGlobalEnchantment(state, potentialBlocker)) continue;
+
+      // Check if this blocker CAN block the Lured attacker (Flying, etc.)
+      const attackerTemplate = CardLoader.getById(attacker.scryfallId);
+      if (!attackerTemplate) continue;
+
+      // Flying check
+      if (hasFlying(attackerTemplate)) {
+        if (!hasFlying(blockerTemplate) && !hasReach(blockerTemplate)) {
+          continue; // Can't block this attacker
+        }
+      }
+
+      // Landwalk check
+      const landwalkTypes = getLandwalkTypes(attackerTemplate);
+      if (landwalkTypes.length > 0) {
+        let hasMatchingLand = false;
+        for (const landType of landwalkTypes) {
+          hasMatchingLand = defendingPlayerState.battlefield.some((permanent) => {
+            const permTemplate = CardLoader.getById(permanent.scryfallId);
+            if (!permTemplate) return false;
+            return permTemplate.type_line.includes(landType);
+          });
+          if (hasMatchingLand) break;
+        }
+        if (hasMatchingLand) continue; // Can't block this attacker (landwalk)
+      }
+
+      // Fear check
+      if (hasFear(attackerTemplate)) {
+        const isBlackCreature = blockerTemplate.colors?.includes('B') ?? false;
+        const isArtifactCreature = isArtifact(blockerTemplate) && isCreature(blockerTemplate);
+        if (!isBlackCreature && !isArtifactCreature) continue;
+      }
+
+      // This blocker CAN block the Lured attacker - check if it IS blocking it
+      const isBlockingLuredCreature = action.payload.blocks.some(
+        (block) =>
+          block.blockerId === potentialBlocker.instanceId &&
+          block.attackerId === attacker.instanceId,
+      );
+
+      if (!isBlockingLuredCreature) {
+        errors.push(`${potentialBlocker.instanceId} must block ${attacker.instanceId} (Lure)`);
       }
     }
   }
