@@ -7,7 +7,6 @@
 
 ---
 
-
 ## Status Legend
 
 | Symbol | Meaning                                 |
@@ -371,7 +370,7 @@
 
 ---
 
-## Artifacts 
+## Artifacts
 
 | Card                  | Status | Cost | Effect                                   | Notes              |
 | --------------------- | ------ | ---- | ---------------------------------------- | ------------------ |

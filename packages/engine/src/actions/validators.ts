@@ -189,15 +189,17 @@ function isUnblockable(template: { name?: string; oracle_text?: string }): boole
   const text = template.oracle_text?.toLowerCase() || '';
 
   // Skip if it has conditional blocking text (landwalk, shadow, etc.)
-  if (text.includes("can't be blocked as long as") ||
-      text.includes("can't be blocked except") ||
-      text.includes("walk")) {
+  if (
+    text.includes("can't be blocked as long as") ||
+    text.includes("can't be blocked except") ||
+    text.includes('walk')
+  ) {
     return false;
   }
 
   // Match true unblockable: "[Name] can't be blocked." (period at end)
   // or "~ can't be blocked."
-  if (text.includes("can't be blocked.") || text.includes("cannot be blocked.")) {
+  if (text.includes("can't be blocked.") || text.includes('cannot be blocked.')) {
     return true;
   }
 
@@ -246,14 +248,19 @@ function cantBeBlockedByWalls(template: { name?: string; oracle_text?: string })
  * Check if an attacker can only be blocked by creatures with flying or walls
  * e.g., Elven Riders: "Elven Riders can't be blocked except by Walls and/or creatures with flying."
  */
-function cantBeBlockedExceptByFlyingOrWalls(template: { name?: string; oracle_text?: string }): boolean {
+function cantBeBlockedExceptByFlyingOrWalls(template: {
+  name?: string;
+  oracle_text?: string;
+}): boolean {
   const creatures = ['Elven Riders'];
   if (template.name && creatures.includes(template.name)) {
     return true;
   }
   const text = template.oracle_text?.toLowerCase() || '';
-  return text.includes("can't be blocked except by walls") ||
-         text.includes("can't be blocked except by creatures with flying");
+  return (
+    text.includes("can't be blocked except by walls") ||
+    text.includes("can't be blocked except by creatures with flying")
+  );
 }
 
 /**
@@ -629,7 +636,9 @@ function validateDeclareAttackers(state: GameState, action: DeclareAttackersActi
 
     // Check if creature is prevented from attacking by Evil Eye of Orms-by-Gore
     if (isPreventedByEvilEye(state, attacker)) {
-      errors.push(`${attackerId} can't attack (non-Eye creatures can't attack while you control Evil Eye)`);
+      errors.push(
+        `${attackerId} can't attack (non-Eye creatures can't attack while you control Evil Eye)`,
+      );
     }
 
     // Check if it's a creature
@@ -796,7 +805,9 @@ function validateDeclareBlockers(state: GameState, action: DeclareBlockersAction
       if (cantBeBlockedByWalls(attackerTemplate)) {
         const isWall = blockerTemplate.type_line?.includes('Wall') ?? false;
         if (isWall) {
-          errors.push(`${block.blockerId} cannot block ${block.attackerId} (can't be blocked by Walls)`);
+          errors.push(
+            `${block.blockerId} cannot block ${block.attackerId} (can't be blocked by Walls)`,
+          );
         }
       }
 
@@ -805,7 +816,9 @@ function validateDeclareBlockers(state: GameState, action: DeclareBlockersAction
         const isWall = blockerTemplate.type_line?.includes('Wall') ?? false;
         const canBlock = hasFlying(blockerTemplate) || isWall;
         if (!canBlock) {
-          errors.push(`${block.blockerId} cannot block ${block.attackerId} (only flying/Walls can block)`);
+          errors.push(
+            `${block.blockerId} cannot block ${block.attackerId} (only flying/Walls can block)`,
+          );
         }
       }
 
@@ -813,7 +826,9 @@ function validateDeclareBlockers(state: GameState, action: DeclareBlockersAction
       if (canOnlyBeBlockedByWalls(attackerTemplate)) {
         const isWall = blockerTemplate.type_line?.includes('Wall') ?? false;
         if (!isWall) {
-          errors.push(`${block.blockerId} cannot block ${block.attackerId} (only Walls can block Evil Eye)`);
+          errors.push(
+            `${block.blockerId} cannot block ${block.attackerId} (only Walls can block Evil Eye)`,
+          );
         }
       }
 
@@ -869,8 +884,9 @@ function validateDeclareBlockers(state: GameState, action: DeclareBlockersAction
 
       const attackerTemplate = CardLoader.getById(attacker.scryfallId);
       // Count blockers for creatures with the restriction OR if Familiar Ground is active
-      const hasRestriction = (attackerTemplate && canOnlyBeBlockedByOne(attackerTemplate)) ||
-                            (hasFamiliarGround && attacker.controller === attackingPlayer);
+      const hasRestriction =
+        (attackerTemplate && canOnlyBeBlockedByOne(attackerTemplate)) ||
+        (hasFamiliarGround && attacker.controller === attackingPlayer);
       if (hasRestriction) {
         const count = singleBlockerCounts.get(block.attackerId) || 0;
         singleBlockerCounts.set(block.attackerId, count + 1);

@@ -28,7 +28,13 @@ export type TriggerEvent =
   | { type: 'DIES'; cardId: string; controller: PlayerId; wasController: PlayerId }
   | { type: 'DEALS_DAMAGE'; sourceId: string; targetId: string; amount: number }
   | { type: 'BECOMES_TAPPED'; cardId: string; controller: PlayerId }
-  | { type: 'SPELL_CAST'; cardId: string; controller: PlayerId; spellColor: string | null; spellType: string }
+  | {
+      type: 'SPELL_CAST';
+      cardId: string;
+      controller: PlayerId;
+      spellColor: string | null;
+      spellType: string;
+    }
   | { type: 'ATTACKS'; cardId: string; controller: PlayerId };
 
 /**
@@ -186,11 +192,6 @@ function getTriggersForCard(
           }
         });
       }
-      break;
-
-    case 'Sibilant Spirit':
-      // "Whenever Sibilant Spirit attacks, defending player may draw a card."
-      // Note: This would need an ATTACKS event type, not implemented yet
       break;
 
     case 'Soul Net':
@@ -515,8 +516,7 @@ function getTriggersForCard(
             const t = CardLoader.getById(p.scryfallId);
             if (!t) return false;
             // Check for blue mana source
-            return t.type_line?.includes('Island') ||
-                   t.oracle_text?.includes('Add {U}');
+            return t.type_line?.includes('Island') || t.oracle_text?.includes('Add {U}');
           });
 
           if (hasBlue) {
@@ -525,8 +525,7 @@ function getTriggersForCard(
               if (p.tapped) return false;
               const t = CardLoader.getById(p.scryfallId);
               if (!t) return false;
-              return t.type_line?.includes('Island') ||
-                     t.oracle_text?.includes('Add {U}');
+              return t.type_line?.includes('Island') || t.oracle_text?.includes('Add {U}');
             });
             if (blueSource) {
               blueSource.tapped = true;
@@ -808,9 +807,10 @@ function getTriggersForCard(
               const enteringTemplate = CardLoader.getById(enteringCard.scryfallId);
               if (enteringTemplate) {
                 const enteringType = enteringTemplate.type_line?.toLowerCase() || '';
-                const isAffected = enteringType.includes('artifact') ||
-                                   enteringType.includes('creature') ||
-                                   enteringType.includes('land');
+                const isAffected =
+                  enteringType.includes('artifact') ||
+                  enteringType.includes('creature') ||
+                  enteringType.includes('land');
                 if (isAffected) {
                   triggers.push((triggerState: GameState) => {
                     const target = findCardById(triggerState, event.cardId);
@@ -864,7 +864,7 @@ function getTriggersForCard(
           // Look for it in graveyard
           for (const pid of ['player', 'opponent'] as const) {
             const dyingCard = _state.players[pid].graveyard.find(
-              (c) => c.instanceId === event.cardId
+              (c) => c.instanceId === event.cardId,
             );
             if (dyingCard) {
               const dyingTemplate = CardLoader.getById(dyingCard.scryfallId);
@@ -887,7 +887,7 @@ function getTriggersForCard(
           // Check if the dying permanent was a creature
           for (const pid of ['player', 'opponent'] as const) {
             const dyingCard = _state.players[pid].graveyard.find(
-              (c) => c.instanceId === event.cardId
+              (c) => c.instanceId === event.cardId,
             );
             if (dyingCard) {
               const dyingTemplate = CardLoader.getById(dyingCard.scryfallId);

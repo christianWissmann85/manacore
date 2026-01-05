@@ -336,13 +336,15 @@ function applyEndTurn(state: GameState, _action: EndTurnAction): void {
   newActivePlayer.landsPlayedThisTurn = 0;
 
   // Check if Meekstone is on the battlefield
-  const meekstoneActive = state.players.player.battlefield.some((p) => {
-    const t = CardLoader.getById(p.scryfallId);
-    return t?.name === 'Meekstone';
-  }) || state.players.opponent.battlefield.some((p) => {
-    const t = CardLoader.getById(p.scryfallId);
-    return t?.name === 'Meekstone';
-  });
+  const meekstoneActive =
+    state.players.player.battlefield.some((p) => {
+      const t = CardLoader.getById(p.scryfallId);
+      return t?.name === 'Meekstone';
+    }) ||
+    state.players.opponent.battlefield.some((p) => {
+      const t = CardLoader.getById(p.scryfallId);
+      return t?.name === 'Meekstone';
+    });
 
   // Untap all permanents (except those with special untap restrictions)
   for (const permanent of newActivePlayer.battlefield) {

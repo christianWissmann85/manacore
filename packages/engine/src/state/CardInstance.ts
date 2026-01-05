@@ -46,6 +46,12 @@ export interface CardInstance {
   // Temporary modifications (pump spells, combat tricks)
   temporaryModifications: TemporaryModification[];
 
+  // Temporary keywords (until end of turn)
+  temporaryKeywords?: Array<{
+    keyword: string;
+    until: 'end_of_turn' | 'end_of_combat';
+  }>;
+
   // Attachments (Phase 2+)
   attachments: string[]; // Instance IDs of Auras/Equipment attached to this
   attachedTo?: string; // Instance ID of permanent this is attached to (for Auras)

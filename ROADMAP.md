@@ -99,7 +99,7 @@ HAND: [Lightning Bolt] [Grizzly Bears] [Mountain]
 
 ---
 
-## Phase 1: Core MTG Rules 
+## Phase 1: Core MTG Rules
 
 **Theme:** "This Actually Feels Like Magic"
 

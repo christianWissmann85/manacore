@@ -197,9 +197,7 @@ registerAbilities('Unseen Walker', (card) => {
 
       // Find the creature and grant it forestwalk
       for (const playerId of ['player', 'opponent'] as const) {
-        const creature = state.players[playerId].battlefield.find(
-          (c) => c.instanceId === target,
-        );
+        const creature = state.players[playerId].battlefield.find((c) => c.instanceId === target);
         if (creature) {
           if (!creature.temporaryKeywords) {
             creature.temporaryKeywords = [];

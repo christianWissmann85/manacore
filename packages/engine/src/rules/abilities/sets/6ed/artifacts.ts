@@ -22,12 +22,7 @@ import type { GameState } from '../../../../state/GameState';
 import type { PlayerId } from '../../../../state/Zone';
 import { CardLoader } from '../../../../cards/CardLoader';
 import { isCreature } from '../../../../cards/CardTemplate';
-import {
-  drawCards,
-  discardCards,
-  gainLife,
-  applyDamage,
-} from '../../../effects';
+import { drawCards, discardCards, gainLife, applyDamage } from '../../../effects';
 import { createTokens } from '../../../tokens';
 
 // =============================================================================
@@ -148,6 +143,7 @@ registerAbilities('Rod of Ruin', (card) => {
       amount: 1,
       requiresTarget: true,
     },
+    isManaAbility: false,
     canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
       if (!standardTapCheck(state, sourceId, controller)) return false;
       const totalMana =
@@ -181,6 +177,7 @@ registerAbilities("Aladdin's Ring", (card) => {
       amount: 4,
       requiresTarget: true,
     },
+    isManaAbility: false,
     canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
       if (!standardTapCheck(state, sourceId, controller)) return false;
       const totalMana =
@@ -217,6 +214,7 @@ registerAbilities('Jayemdae Tome', (card) => {
       type: 'DRAW_CARDS',
       count: 1,
     },
+    isManaAbility: false,
     canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
       if (!standardTapCheck(state, sourceId, controller)) return false;
       const totalMana =
@@ -247,6 +245,7 @@ registerAbilities('Jalum Tome', (card) => {
       draw: 1,
       discard: 1,
     },
+    isManaAbility: false,
     canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
       if (!standardTapCheck(state, sourceId, controller)) return false;
       const totalMana =
@@ -281,6 +280,7 @@ registerAbilities('Fountain of Youth', (card) => {
       type: 'GAIN_LIFE',
       amount: 1,
     },
+    isManaAbility: false,
     canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
       if (!standardTapCheck(state, sourceId, controller)) return false;
       const totalMana =
@@ -315,6 +315,7 @@ registerAbilities('Millstone', (card) => {
       count: 2,
       requiresTarget: true,
     },
+    isManaAbility: false,
     canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
       if (!standardTapCheck(state, sourceId, controller)) return false;
       const totalMana =
@@ -356,6 +357,7 @@ registerAbilities('Disrupting Scepter', (card) => {
       count: 1,
       requiresTarget: true,
     },
+    isManaAbility: false,
     canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
       // Must be your turn
       if (state.activePlayer !== controller) return false;
@@ -392,6 +394,7 @@ registerAbilities('The Hive', (card) => {
       type: 'CREATE_TOKEN',
       tokenType: 'Wasp',
     },
+    isManaAbility: false,
     canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
       if (!standardTapCheck(state, sourceId, controller)) return false;
       const totalMana =
@@ -404,7 +407,7 @@ registerAbilities('The Hive', (card) => {
       return totalMana >= 5;
     },
     resolve: (state: GameState, sourceId: string, controller: PlayerId) => {
-      createTokens(state, controller, 'Wasp', 1, sourceId);
+      createTokens(state, controller, 'Wasp', 1, { createdBy: sourceId });
     },
   };
   return [ability];
@@ -420,7 +423,7 @@ registerAbilities("Ashnod's Altar", (card) => {
   const ability: ActivatedAbility = {
     id: `${card.instanceId}_sac_mana`,
     name: 'Sacrifice a creature: Add {C}{C}',
-    cost: { sacrifice: 'creature' },
+    cost: { sacrifice: { type: 'creature' } },
     effect: {
       type: 'ADD_MANA',
       amount: 2,
@@ -440,12 +443,13 @@ registerAbilities('Skull Catapult', (card) => {
   const ability: ActivatedAbility = {
     id: `${card.instanceId}_sac_damage`,
     name: '{1}, Tap, Sacrifice a creature: 2 damage to any target',
-    cost: { tap: true, mana: '{1}', sacrifice: 'creature' },
+    cost: { tap: true, mana: '{1}', sacrifice: { type: 'creature' } },
     effect: {
       type: 'DEAL_DAMAGE',
       amount: 2,
       requiresTarget: true,
     },
+    isManaAbility: false,
     canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
       if (!standardTapCheck(state, sourceId, controller)) return false;
       if (!hasSacrificeable(state, controller, 'creature')) return false;
@@ -474,11 +478,12 @@ registerAbilities('Phyrexian Vault', (card) => {
   const ability: ActivatedAbility = {
     id: `${card.instanceId}_sac_draw`,
     name: '{2}, Tap, Sacrifice a creature: Draw a card',
-    cost: { tap: true, mana: '{2}', sacrifice: 'creature' },
+    cost: { tap: true, mana: '{2}', sacrifice: { type: 'creature' } },
     effect: {
       type: 'DRAW_CARDS',
       count: 1,
     },
+    isManaAbility: false,
     canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
       if (!standardTapCheck(state, sourceId, controller)) return false;
       if (!hasSacrificeable(state, controller, 'creature')) return false;
@@ -515,6 +520,7 @@ registerAbilities('Flying Carpet', (card) => {
       duration: 'end_of_turn',
       requiresTarget: true,
     },
+    isManaAbility: false,
     canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
       if (!standardTapCheck(state, sourceId, controller)) return false;
       const totalMana =
@@ -532,9 +538,7 @@ registerAbilities('Flying Carpet', (card) => {
 
       // Find the creature and grant it flying
       for (const playerId of ['player', 'opponent'] as const) {
-        const creature = state.players[playerId].battlefield.find(
-          (c) => c.instanceId === target
-        );
+        const creature = state.players[playerId].battlefield.find((c) => c.instanceId === target);
         if (creature) {
           // Add temporary flying keyword
           if (!creature.temporaryKeywords) {
@@ -568,6 +572,7 @@ registerAbilities('Pentagram of the Ages', (card) => {
       amount: 'next',
       target: 'controller',
     },
+    isManaAbility: false,
     canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
       if (!standardTapCheck(state, sourceId, controller)) return false;
       const totalMana =
@@ -585,8 +590,8 @@ registerAbilities('Pentagram of the Ages', (card) => {
         state.players[controller].preventionShields = [];
       }
       state.players[controller].preventionShields.push({
-        type: 'next_damage',
-        until: 'end_of_turn',
+        color: 'any',
+        amount: 'next',
       });
     },
   };
@@ -603,12 +608,13 @@ registerAbilities('Snake Basket', (card) => {
   const ability: ActivatedAbility = {
     id: `${card.instanceId}_sac_tokens`,
     name: '{X}, Sacrifice: Create X 1/1 Snake tokens',
-    cost: { mana: '{X}', sacrifice: 'self' },
+    cost: { mana: '{X}', sacrifice: { type: 'self' } },
     effect: {
       type: 'CREATE_TOKEN',
       tokenType: 'Snake',
       countFromX: true,
     },
+    isManaAbility: false,
     canActivate: (state: GameState, sourceId: string, controller: PlayerId) => {
       // Find the source on the battlefield
       const player = state.players[controller];
@@ -625,11 +631,17 @@ registerAbilities('Snake Basket', (card) => {
         countAvailableMana(state, controller, 'C');
       return totalMana >= 1;
     },
-    resolve: (state: GameState, sourceId: string, controller: PlayerId, _targets?: string[], xValue?: number) => {
+    resolve: (
+      state: GameState,
+      sourceId: string,
+      controller: PlayerId,
+      _targets?: string[],
+      xValue?: number,
+    ) => {
       // X can't be 0
       const x = xValue || 1;
       if (x > 0) {
-        createTokens(state, controller, 'Snake', x, sourceId);
+        createTokens(state, controller, 'Snake', x, { createdBy: sourceId });
       }
     },
   };
