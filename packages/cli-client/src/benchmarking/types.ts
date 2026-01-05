@@ -43,6 +43,8 @@ export interface MatchupResult {
   totalGames: number;
   /** Bot1 win rate (0-1) */
   winRate: number;
+  /** 95% confidence interval for win rate [lower, upper] */
+  confidenceInterval?: [number, number];
   /** Average turns per game */
   avgTurns: number;
   /** Total time for this matchup in ms */
@@ -57,6 +59,10 @@ export interface BotRanking {
   bot: BotType;
   /** Average win rate across all matchups (0-1) */
   avgWinRate: number;
+  /** 95% confidence interval for avg win rate [lower, upper] */
+  confidenceInterval?: [number, number];
+  /** Elo rating (optional, computed with --elo flag) */
+  elo?: number;
   /** Total games played */
   gamesPlayed: number;
   /** Total wins */

@@ -13,6 +13,7 @@ import type {
   BenchmarkSummary,
   BenchmarkMetadata,
 } from './types';
+import { wilsonInterval, calculateEloRatings } from './StatisticsCalculator';
 
 /**
  * Internal matchup tracking data
@@ -108,6 +109,10 @@ export class MatchupRecorder {
     const winRate = totalGames > 0 ? data.bot1Wins / totalGames : 0;
     const avgTurns = totalGames > 0 ? data.totalTurns / totalGames : 0;
 
+    // Compute 95% Wilson score confidence interval
+    const confidenceInterval =
+      totalGames > 0 ? wilsonInterval(data.bot1Wins, totalGames) : undefined;
+
     return {
       bot1,
       bot2,
@@ -116,6 +121,7 @@ export class MatchupRecorder {
       draws: data.draws,
       totalGames,
       winRate,
+      confidenceInterval,
       avgTurns,
       totalMs: data.totalMs,
     };
@@ -141,8 +147,9 @@ export class MatchupRecorder {
 
   /**
    * Calculate bot rankings by average win rate
+   * @param includeElo - Whether to compute Elo ratings
    */
-  calculateRankings(): BotRanking[] {
+  calculateRankings(includeElo = false): BotRanking[] {
     const rankings: BotRanking[] = [];
 
     for (const bot of this.config.bots) {
@@ -162,14 +169,36 @@ export class MatchupRecorder {
 
       const avgWinRate = totalGames > 0 ? totalWins / totalGames : 0;
 
+      // Compute 95% Wilson score confidence interval for overall win rate
+      const confidenceInterval = totalGames > 0 ? wilsonInterval(totalWins, totalGames) : undefined;
+
       rankings.push({
         bot,
         avgWinRate,
+        confidenceInterval,
         gamesPlayed: totalGames,
         wins: totalWins,
         losses: totalLosses,
         draws: totalDraws,
       });
+    }
+
+    // Optionally compute Elo ratings
+    if (includeElo) {
+      const matchResults = this.getAllMatchups().map((m) => ({
+        bot1: m.bot1,
+        bot2: m.bot2,
+        bot1Wins: m.bot1Wins,
+        bot2Wins: m.bot2Wins,
+        draws: m.draws,
+      }));
+
+      const eloRatings = calculateEloRatings(matchResults);
+      const eloMap = new Map(eloRatings.map((r) => [r.bot, r.elo]));
+
+      for (const ranking of rankings) {
+        ranking.elo = eloMap.get(ranking.bot);
+      }
     }
 
     // Sort by average win rate (descending)
@@ -213,8 +242,10 @@ export class MatchupRecorder {
 
   /**
    * Finalize and return complete benchmark results
+   * @param preset - Preset name for metadata
+   * @param includeElo - Whether to compute Elo ratings
    */
-  finalize(preset?: string): BenchmarkResults {
+  finalize(preset?: string, includeElo = false): BenchmarkResults {
     const endTime = new Date().toISOString();
     const startTimeStr = new Date(this.startTime).toISOString();
 
@@ -230,7 +261,7 @@ export class MatchupRecorder {
       config: this.config,
       matchups: this.getAllMatchups(),
       matrix: this.buildMatrix(),
-      rankings: this.calculateRankings(),
+      rankings: this.calculateRankings(includeElo),
       summary: this.calculateSummary(),
       metadata,
     };

@@ -46,8 +46,15 @@ export class BenchmarkRunner {
 
   /**
    * Run the complete benchmark suite
+   * @param onProgress - Progress callback
+   * @param preset - Preset name for metadata
+   * @param includeElo - Whether to compute Elo ratings
    */
-  async run(onProgress?: BenchmarkProgressCallback, preset?: string): Promise<BenchmarkResults> {
+  async run(
+    onProgress?: BenchmarkProgressCallback,
+    preset?: string,
+    includeElo = false,
+  ): Promise<BenchmarkResults> {
     this.startTime = Date.now();
     this.gamesCompleted = 0;
 
@@ -76,7 +83,7 @@ export class BenchmarkRunner {
       }
     }
 
-    return this.recorder.finalize(preset);
+    return this.recorder.finalize(preset, includeElo);
   }
 
   /**
@@ -187,7 +194,8 @@ export async function runBenchmark(
   config: Partial<BenchmarkConfig>,
   onProgress?: BenchmarkProgressCallback,
   preset?: string,
+  includeElo = false,
 ): Promise<BenchmarkResults> {
   const runner = new BenchmarkRunner(config);
-  return runner.run(onProgress, preset);
+  return runner.run(onProgress, preset, includeElo);
 }

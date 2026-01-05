@@ -13,6 +13,7 @@ import type {
 } from '../benchmarking/types';
 import { BenchmarkRunner } from '../benchmarking/BenchmarkRunner';
 import { getPreset, parseBotList } from '../benchmarking/presets';
+import { exportMarkdown } from '../export/MarkdownExporter';
 import { OutputLevel } from '../types';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -28,7 +29,9 @@ export interface BenchmarkSuiteOptions {
   seed?: number;
   outputLevel?: OutputLevel;
   exportJson?: boolean;
+  exportMarkdown?: boolean;
   exportPath?: string;
+  includeElo?: boolean;
 }
 
 /**
@@ -154,25 +157,54 @@ function printMatrix(results: BenchmarkResults): void {
 }
 
 /**
+ * Format confidence interval
+ */
+function formatCI(ci?: [number, number]): string {
+  if (!ci) return '';
+  return `[${(ci[0] * 100).toFixed(1)}%, ${(ci[1] * 100).toFixed(1)}%]`;
+}
+
+/**
  * Print rankings to console
  */
 function printRankings(results: BenchmarkResults): void {
   const { rankings } = results;
+  const hasElo = rankings.some((r) => r.elo !== undefined);
+  const hasCI = rankings.some((r) => r.confidenceInterval !== undefined);
 
-  console.log('='.repeat(70));
+  console.log('='.repeat(90));
   console.log('  BOT RANKINGS (by average win rate)');
-  console.log('='.repeat(70) + '\n');
+  console.log('='.repeat(90) + '\n');
 
-  console.log('  Rank  Bot                    Avg Win%   Games   W/L/D');
-  console.log('  ' + '-'.repeat(60));
+  // Build header based on what data is available
+  let header = '  Rank  Bot                    Avg Win%';
+  if (hasCI) header += '   95% CI';
+  if (hasElo) header += '      Elo';
+  header += '   Games   W/L/D';
+  console.log(header);
+  console.log('  ' + '-'.repeat(86));
 
   rankings.forEach((ranking, index) => {
     const rank = String(index + 1).padStart(4);
     const bot = ranking.bot.padEnd(22);
     const winRate = formatPercent(ranking.avgWinRate).padStart(8);
+
+    let line = `  ${rank}  ${bot}${winRate}`;
+
+    if (hasCI) {
+      const ci = formatCI(ranking.confidenceInterval).padStart(18);
+      line += ci;
+    }
+    if (hasElo) {
+      const elo = ranking.elo !== undefined ? String(ranking.elo).padStart(8) : '     ---';
+      line += elo;
+    }
+
     const games = String(ranking.gamesPlayed).padStart(7);
     const wld = `${ranking.wins}/${ranking.losses}/${ranking.draws}`;
-    console.log(`  ${rank}  ${bot}${winRate}${games}   ${wld}`);
+    line += `${games}   ${wld}`;
+
+    console.log(line);
   });
 
   console.log();
@@ -204,7 +236,7 @@ function printSummary(results: BenchmarkResults): void {
 /**
  * Export results to JSON
  */
-function exportJson(results: BenchmarkResults, outputPath?: string): string {
+function exportJsonFile(results: BenchmarkResults, outputPath?: string): string {
   const resultsDir = path.resolve(__dirname, '../../../../results/benchmarks');
 
   // Ensure directory exists
@@ -217,6 +249,27 @@ function exportJson(results: BenchmarkResults, outputPath?: string): string {
   const filepath = outputPath || path.join(resultsDir, filename);
 
   fs.writeFileSync(filepath, JSON.stringify(results, null, 2));
+
+  return filepath;
+}
+
+/**
+ * Export results to Markdown
+ */
+function exportMarkdownFile(results: BenchmarkResults, outputPath?: string): string {
+  const resultsDir = path.resolve(__dirname, '../../../../results/benchmarks');
+
+  // Ensure directory exists
+  if (!fs.existsSync(resultsDir)) {
+    fs.mkdirSync(resultsDir, { recursive: true });
+  }
+
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const filename = `benchmark-${results.metadata.preset || 'custom'}-${timestamp}.md`;
+  const filepath = outputPath?.replace(/\.json$/, '.md') || path.join(resultsDir, filename);
+
+  const markdown = exportMarkdown(results);
+  fs.writeFileSync(filepath, markdown);
 
   return filepath;
 }
@@ -275,9 +328,13 @@ export async function runBenchmarkSuite(options: BenchmarkSuiteOptions): Promise
   printInitialDashboard();
 
   // Run benchmark with progress updates
-  const results = await runner.run((progress) => {
-    printDashboard(progress);
-  }, preset);
+  const results = await runner.run(
+    (progress) => {
+      printDashboard(progress);
+    },
+    preset,
+    options.includeElo ?? false,
+  );
 
   // Clear dashboard area and print results
   console.log('\n');
@@ -289,9 +346,17 @@ export async function runBenchmarkSuite(options: BenchmarkSuiteOptions): Promise
 
   // Export JSON if requested (or by default)
   if (options.exportJson !== false) {
-    const jsonPath = exportJson(results, options.exportPath);
-    console.log(`  Results exported to: ${jsonPath}\n`);
+    const jsonPath = exportJsonFile(results, options.exportPath);
+    console.log(`  JSON exported to: ${jsonPath}`);
   }
+
+  // Export Markdown if requested
+  if (options.exportMarkdown) {
+    const mdPath = exportMarkdownFile(results, options.exportPath);
+    console.log(`  Markdown exported to: ${mdPath}`);
+  }
+
+  console.log();
 
   return results;
 }
@@ -355,6 +420,16 @@ export function parseBenchmarkSuiteArgs(args: string[]): BenchmarkSuiteOptions {
   const exportPathIdx = args.indexOf('--export-path');
   if (exportPathIdx !== -1 && args[exportPathIdx + 1]) {
     options.exportPath = args[exportPathIdx + 1];
+  }
+
+  // Parse --elo
+  if (args.includes('--elo')) {
+    options.includeElo = true;
+  }
+
+  // Parse --export-markdown
+  if (args.includes('--export-markdown')) {
+    options.exportMarkdown = true;
   }
 
   return options;

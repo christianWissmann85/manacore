@@ -442,18 +442,21 @@ async function main() {
       console.log('  bun src/index.ts tune --method evolve        # Evolutionary search');
       console.log('  bun src/index.ts tune --generations 30       # More iterations');
       console.log('');
-      console.log('Benchmark Suite (Phase 2.5 - NEW):');
+      console.log('Benchmark Suite (Phase 2.5):');
       console.log('  suite                   Run bot comparison matrix');
       console.log('  --preset <name>         Preset: quick, standard, comprehensive');
       console.log('  --bots <list>           Comma-separated bot types (overrides preset)');
       console.log('  --games <n>             Games per matchup (default: 50 for quick)');
       console.log('  --seed <n>              Random seed for reproducibility');
+      console.log('  --elo                   Include Elo ratings in results');
+      console.log('  --export-markdown       Export results as Markdown report');
       console.log('  --no-export             Disable JSON export');
       console.log('');
       console.log('Suite Examples:');
       console.log('  bun src/index.ts suite                       # Quick preset (4 bots)');
       console.log('  bun src/index.ts suite --preset standard     # 6 bots, 100 games each');
-      console.log('  bun src/index.ts suite --bots random,greedy,mcts-eval --games 200');
+      console.log('  bun src/index.ts suite --bots random,greedy,mcts-eval --games 200 --elo');
+      console.log('  bun src/index.ts suite --preset quick --export-markdown');
       break;
   }
 }

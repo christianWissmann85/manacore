@@ -31,3 +31,14 @@ export {
   parseBotList,
   type PresetConfig,
 } from './presets';
+
+// Statistics
+export {
+  wilsonInterval,
+  calculateEloRatings,
+  proportionZTest,
+  recommendedGames,
+  formatCI,
+  type EloRating,
+  type MatchResult,
+} from './StatisticsCalculator';

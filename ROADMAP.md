@@ -1059,11 +1059,6 @@ twine upload dist/*
 - [ ] Add "Targeting Mode" (click source -> click target)
 - [ ] Implement keyboard shortcuts for common actions (Space to pass)
 
-**Assets Needed:**
-
-- Icons (Lucide React)
-- Tailwind Config (Custom colors)
-
 ### Task 30-31: Deck Lab
 
 **Tasks:**
