@@ -109,7 +109,11 @@ describe('quickEvaluate', () => {
 describe('DEFAULT_WEIGHTS', () => {
   test('weights sum to 1.0', () => {
     const sum =
-      DEFAULT_WEIGHTS.life + DEFAULT_WEIGHTS.board + DEFAULT_WEIGHTS.cards + DEFAULT_WEIGHTS.mana;
+      DEFAULT_WEIGHTS.life +
+      DEFAULT_WEIGHTS.board +
+      DEFAULT_WEIGHTS.cards +
+      DEFAULT_WEIGHTS.mana +
+      DEFAULT_WEIGHTS.tempo;
     expect(sum).toBe(1.0);
   });
 });

@@ -5,6 +5,8 @@
  * Supports configurable rollout policies and iteration limits.
  */
 
+/* global performance */
+
 import type { GameState, Action, PlayerId } from '@manacore/engine';
 import { getLegalActions, applyAction } from '@manacore/engine';
 import {
@@ -16,7 +18,7 @@ import {
   selectMostVisitedChild,
   backpropagate,
 } from './MCTSNode';
-import { evaluate } from '../evaluation/evaluate';
+import { evaluate, quickEvaluate } from '../evaluation/evaluate';
 
 /**
  * Rollout policy function type
@@ -37,11 +39,17 @@ export interface MCTSConfig {
   /** UCB1 exploration constant (default sqrt(2)) */
   explorationConstant: number;
 
-  /** Maximum depth for rollouts */
+  /** Maximum depth for rollouts (0 = no rollout, just evaluate) */
   rolloutDepth: number;
 
   /** Enable debug output */
   debug: boolean;
+
+  /** Enable profiling output */
+  profile: boolean;
+
+  /** Enable determinization (shuffle opponent's hidden cards) */
+  determinize: boolean;
 }
 
 export const DEFAULT_MCTS_CONFIG: MCTSConfig = {
@@ -50,7 +58,73 @@ export const DEFAULT_MCTS_CONFIG: MCTSConfig = {
   explorationConstant: 1.41,
   rolloutDepth: 20, // Reduced - we use evaluation function for incomplete games
   debug: false,
+  profile: false,
+  determinize: true, // Default to fair play - don't cheat!
 };
+
+/**
+ * Determinize a game state by shuffling opponent's hidden information
+ *
+ * This makes MCTS "fair" by not letting it see the opponent's actual hand.
+ * We combine opponent's hand + library, shuffle, and redistribute.
+ */
+export function determinize(state: GameState, playerId: PlayerId): GameState {
+  const opponentId = playerId === 'player' ? 'opponent' : 'player';
+  const opponent = state.players[opponentId];
+
+  // Combine hand and library (all hidden cards)
+  const hiddenCards = [...opponent.hand, ...opponent.library];
+
+  // Fisher-Yates shuffle
+  for (let i = hiddenCards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [hiddenCards[i], hiddenCards[j]] = [hiddenCards[j]!, hiddenCards[i]!];
+  }
+
+  // Redistribute: hand gets original hand size, rest goes to library
+  const handSize = opponent.hand.length;
+  const newHand = hiddenCards.slice(0, handSize);
+  const newLibrary = hiddenCards.slice(handSize);
+
+  // Update zones
+  for (const card of newHand) {
+    card.zone = 'hand';
+  }
+  for (const card of newLibrary) {
+    card.zone = 'library';
+  }
+
+  // Create new state with shuffled opponent zones
+  // Use structuredClone for the opponent since we're modifying their zones
+  const newState: GameState = {
+    ...state,
+    players: {
+      ...state.players,
+      [opponentId]: {
+        ...opponent,
+        hand: newHand,
+        library: newLibrary,
+      },
+    },
+  };
+
+  return newState;
+}
+
+/**
+ * Profiling statistics for MCTS performance analysis
+ */
+export interface MCTSProfile {
+  totalMs: number;
+  selectionMs: number;
+  expansionMs: number;
+  rolloutMs: number;
+  backpropMs: number;
+  cloneCount: number;
+  applyActionCount: number;
+  getLegalActionsCount: number;
+  evaluateCount: number;
+}
 
 /**
  * MCTS search result
@@ -70,6 +144,9 @@ export interface MCTSResult {
 
   /** Win rate of best action */
   winRate: number;
+
+  /** Profiling data (if enabled) */
+  profile?: MCTSProfile;
 }
 
 /**
@@ -88,10 +165,28 @@ export function runMCTS(
   config: Partial<MCTSConfig> = {},
 ): MCTSResult {
   const cfg = { ...DEFAULT_MCTS_CONFIG, ...config };
-  const startTime = Date.now();
+  const startTime = performance.now();
+
+  // Apply determinization if enabled (shuffle opponent's hidden cards)
+  // This makes MCTS "fair" by not letting it peek at opponent's actual hand
+  const searchState = cfg.determinize ? determinize(state, playerId) : state;
+
+  // Profiling counters
+  const profile: MCTSProfile = {
+    totalMs: 0,
+    selectionMs: 0,
+    expansionMs: 0,
+    rolloutMs: 0,
+    backpropMs: 0,
+    cloneCount: 0,
+    applyActionCount: 0,
+    getLegalActionsCount: 0,
+    evaluateCount: 0,
+  };
 
   // Get legal actions for root
-  const rootActions = getLegalActions(state, playerId);
+  const rootActions = getLegalActions(searchState, playerId);
+  profile.getLegalActionsCount++;
 
   if (rootActions.length === 0) {
     throw new Error('No legal actions available for MCTS');
@@ -99,42 +194,44 @@ export function runMCTS(
 
   // Single action? Return immediately
   if (rootActions.length === 1) {
-    const root = createMCTSNode(state, null, null, []);
+    const root = createMCTSNode(searchState, null, null, []);
     return {
       action: rootActions[0]!,
       iterations: 0,
-      timeMs: Date.now() - startTime,
+      timeMs: performance.now() - startTime,
       root,
       winRate: 0.5,
     };
   }
 
   // Create root node
-  const root = createMCTSNode(state, null, null, [...rootActions]);
+  const root = createMCTSNode(searchState, null, null, [...rootActions]);
 
   let iterations = 0;
 
   // Main MCTS loop
   while (iterations < cfg.iterations) {
     // Check time limit
-    if (cfg.timeLimit > 0 && Date.now() - startTime >= cfg.timeLimit) {
+    if (cfg.timeLimit > 0 && performance.now() - startTime >= cfg.timeLimit) {
       break;
     }
 
     // 1. SELECTION: Traverse tree using UCB1 until we find an expandable node
+    const selStart = performance.now();
     let node = root;
-    let currentState = structuredClone(state);
+    // OPTIMIZATION: Use node.state directly instead of cloning from root each time
+    let currentState = node.state;
 
     while (isFullyExpanded(node) && !isTerminal(node)) {
       const bestChild = selectBestChild(node, cfg.explorationConstant);
       if (!bestChild) break;
-
       node = bestChild;
-      // State is already in the node, but we track it for clarity
-      currentState = node.state;
+      currentState = node.state; // State is stored in node - no clone needed!
     }
+    profile.selectionMs += performance.now() - selStart;
 
     // 2. EXPANSION: Add a new child node if not terminal
+    const expStart = performance.now();
     if (!isTerminal(node) && node.untriedActions.length > 0) {
       // Pick a random untried action
       const actionIndex = Math.floor(Math.random() * node.untriedActions.length);
@@ -143,7 +240,9 @@ export function runMCTS(
       // Apply action to get new state
       try {
         const newState = applyAction(currentState, action);
+        profile.applyActionCount++;
         const childActions = getLegalActions(newState, newState.priorityPlayer);
+        profile.getLegalActionsCount++;
 
         // Create child node
         const child = createMCTSNode(newState, action, node, [...childActions]);
@@ -156,43 +255,54 @@ export function runMCTS(
         continue;
       }
     }
+    profile.expansionMs += performance.now() - expStart;
 
-    // 3. SIMULATION: Play out the game using rollout policy
-    // Use a lighter simulation - fewer steps but evaluate at the end
-    let simState = structuredClone(currentState);
-    let depth = 0;
+    // 3. SIMULATION: Play out using rollout policy (or skip if rolloutDepth=0)
+    const rollStart = performance.now();
+    let evalState = currentState;
 
-    while (!simState.gameOver && depth < cfg.rolloutDepth) {
-      try {
-        const simAction = rolloutPolicy(simState, simState.priorityPlayer);
-        simState = applyAction(simState, simAction);
-        depth++;
-      } catch {
-        // Simulation error - break and evaluate
-        break;
+    if (cfg.rolloutDepth > 0 && !currentState.gameOver) {
+      // Clone once for rollout, then mutate via applyAction
+      let simState = structuredClone(currentState);
+      profile.cloneCount++;
+      let depth = 0;
+
+      while (!simState.gameOver && depth < cfg.rolloutDepth) {
+        try {
+          const simAction = rolloutPolicy(simState, simState.priorityPlayer);
+          simState = applyAction(simState, simAction);
+          profile.applyActionCount++;
+          depth++;
+        } catch {
+          // Simulation error - break and evaluate
+          break;
+        }
       }
+      evalState = simState;
     }
+    profile.rolloutMs += performance.now() - rollStart;
 
     // 4. BACKPROPAGATION: Update statistics up the tree
+    const backStart = performance.now();
     let reward: number;
 
-    if (simState.gameOver) {
+    if (evalState.gameOver) {
       // Terminal state - clear win/loss/draw
-      if (simState.winner === playerId) {
+      if (evalState.winner === playerId) {
         reward = 1.0;
-      } else if (simState.winner === null) {
+      } else if (evalState.winner === null) {
         reward = 0.5; // Draw
       } else {
         reward = 0.0; // Loss
       }
     } else {
       // Non-terminal - use evaluation function
-      // This is the key: evaluate() returns score from playerId's perspective [0,1]
-      reward = evaluate(simState, playerId);
+      reward = evaluate(evalState, playerId);
+      profile.evaluateCount++;
     }
 
-    // Backpropagate from playerId's perspective
     backpropagate(node, reward, playerId);
+    profile.backpropMs += performance.now() - backStart;
     iterations++;
   }
 
@@ -204,17 +314,18 @@ export function runMCTS(
     return {
       action: rootActions[0]!,
       iterations,
-      timeMs: Date.now() - startTime,
+      timeMs: performance.now() - startTime,
       root,
       winRate: 0.5,
     };
   }
 
   const winRate = bestChild.visits > 0 ? bestChild.totalReward / bestChild.visits : 0.5;
+  profile.totalMs = performance.now() - startTime;
 
   if (cfg.debug) {
     console.log(
-      `[MCTS] ${iterations} iterations in ${Date.now() - startTime}ms, ` +
+      `[MCTS] ${iterations} iterations in ${profile.totalMs.toFixed(0)}ms, ` +
         `best action visits=${bestChild.visits}, winRate=${(winRate * 100).toFixed(1)}%`,
     );
 
@@ -230,12 +341,34 @@ export function runMCTS(
     }
   }
 
+  if (cfg.profile) {
+    console.log(
+      `[MCTS Profile] Total: ${profile.totalMs.toFixed(1)}ms for ${iterations} iterations`,
+    );
+    console.log(
+      `  Selection:  ${profile.selectionMs.toFixed(1)}ms (${((profile.selectionMs / profile.totalMs) * 100).toFixed(1)}%)`,
+    );
+    console.log(
+      `  Expansion:  ${profile.expansionMs.toFixed(1)}ms (${((profile.expansionMs / profile.totalMs) * 100).toFixed(1)}%)`,
+    );
+    console.log(
+      `  Rollout:    ${profile.rolloutMs.toFixed(1)}ms (${((profile.rolloutMs / profile.totalMs) * 100).toFixed(1)}%)`,
+    );
+    console.log(
+      `  Backprop:   ${profile.backpropMs.toFixed(1)}ms (${((profile.backpropMs / profile.totalMs) * 100).toFixed(1)}%)`,
+    );
+    console.log(
+      `  Clones: ${profile.cloneCount}, ApplyAction: ${profile.applyActionCount}, GetLegalActions: ${profile.getLegalActionsCount}, Evaluate: ${profile.evaluateCount}`,
+    );
+  }
+
   return {
     action: bestChild.action,
     iterations,
-    timeMs: Date.now() - startTime,
+    timeMs: profile.totalMs,
     root,
     winRate,
+    profile: cfg.profile ? profile : undefined,
   };
 }
 
@@ -248,4 +381,108 @@ export function randomRolloutPolicy(state: GameState, playerId: PlayerId): Actio
     throw new Error('No legal actions in rollout');
   }
   return actions[Math.floor(Math.random() * actions.length)]!;
+}
+
+/**
+ * Greedy rollout policy - picks action with best immediate evaluation
+ *
+ * Uses quickEvaluate() to score each action's resulting state.
+ * Significantly better simulation quality than random at the cost of more computation.
+ */
+export function greedyRolloutPolicy(state: GameState, playerId: PlayerId): Action {
+  const actions = getLegalActions(state, playerId);
+  if (actions.length === 0) {
+    throw new Error('No legal actions in rollout');
+  }
+
+  // Single action? Return immediately
+  if (actions.length === 1) {
+    return actions[0]!;
+  }
+
+  let bestAction = actions[0]!;
+  let bestScore = -Infinity;
+
+  // Limit action evaluation to avoid explosion (same as GreedyBot)
+  const maxActionsToEvaluate = 30;
+  const actionsToEvaluate =
+    actions.length <= maxActionsToEvaluate ? actions : sampleActions(actions, maxActionsToEvaluate);
+
+  for (const action of actionsToEvaluate) {
+    try {
+      const newState = applyAction(state, action);
+      const score = quickEvaluate(newState, playerId);
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestAction = action;
+      }
+    } catch {
+      // Skip actions that fail to apply
+      continue;
+    }
+  }
+
+  return bestAction;
+}
+
+/**
+ * Epsilon-greedy rollout policy - mostly greedy with some random exploration
+ *
+ * @param epsilon - Probability of random action (default 0.1 = 10%)
+ */
+export function epsilonGreedyRolloutPolicy(
+  epsilon = 0.1,
+): (state: GameState, playerId: PlayerId) => Action {
+  return (state: GameState, playerId: PlayerId): Action => {
+    if (Math.random() < epsilon) {
+      return randomRolloutPolicy(state, playerId);
+    }
+    return greedyRolloutPolicy(state, playerId);
+  };
+}
+
+/**
+ * Sample N actions from a list, prioritizing important action types
+ */
+function sampleActions(actions: Action[], n: number): Action[] {
+  // Prioritize: spells > abilities > attacks > blocks > pass
+  const spells = actions.filter((a) => a.type === 'CAST_SPELL');
+  const abilities = actions.filter((a) => a.type === 'ACTIVATE_ABILITY');
+  const attacks = actions.filter((a) => a.type === 'DECLARE_ATTACKERS');
+  const blocks = actions.filter((a) => a.type === 'DECLARE_BLOCKERS');
+  const lands = actions.filter((a) => a.type === 'PLAY_LAND');
+  const other = actions.filter(
+    (a) =>
+      a.type !== 'CAST_SPELL' &&
+      a.type !== 'ACTIVATE_ABILITY' &&
+      a.type !== 'DECLARE_ATTACKERS' &&
+      a.type !== 'DECLARE_BLOCKERS' &&
+      a.type !== 'PLAY_LAND',
+  );
+
+  const result: Action[] = [];
+
+  // Take from each category proportionally
+  const categories = [spells, abilities, lands, attacks, blocks, other];
+  let remaining = n;
+
+  for (const category of categories) {
+    if (remaining <= 0) break;
+    const take = Math.min(category.length, Math.ceil(remaining / 2));
+    for (let i = 0; i < take && i < category.length; i++) {
+      result.push(category[i]!);
+    }
+    remaining -= take;
+  }
+
+  // Fill remaining with random from all actions
+  while (result.length < n && result.length < actions.length) {
+    const randomAction = actions[Math.floor(Math.random() * actions.length)]!;
+    if (!result.includes(randomAction)) {
+      result.push(randomAction);
+    }
+  }
+
+  return result;
 }

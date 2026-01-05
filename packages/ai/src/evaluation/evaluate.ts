@@ -28,13 +28,30 @@ export interface EvaluationWeights {
   board: number; // Creature power on battlefield
   cards: number; // Hand size differential
   mana: number; // Available mana (lands on battlefield)
+  tempo: number; // Tempo advantage (untapped vs tapped permanents)
 }
 
+/**
+ * Default weights - tuned for aggressive play
+ * Board presence is king, life matters more at low values
+ */
 export const DEFAULT_WEIGHTS: EvaluationWeights = {
-  life: 0.35,
-  board: 0.4,
-  cards: 0.15,
+  life: 0.3,
+  board: 0.45, // Increased - creatures win games
+  cards: 0.1, // Decreased - cards in hand don't win, cards on board do
   mana: 0.1,
+  tempo: 0.05, // New - reward having untapped permanents
+};
+
+/**
+ * Aggressive weights - prioritize damage and board control
+ */
+export const AGGRESSIVE_WEIGHTS: EvaluationWeights = {
+  life: 0.25,
+  board: 0.5,
+  cards: 0.05,
+  mana: 0.1,
+  tempo: 0.1,
 };
 
 /**
@@ -60,8 +77,11 @@ export function evaluate(
   const me = getPlayer(state, playerId);
   const opp = getOpponent(state, playerId);
 
-  // Life differential (normalized to [-1, 1])
-  const lifeDiff = normalizeScore(me.life - opp.life, 40);
+  // Life differential with non-linear scaling (low life is VERY bad)
+  // Being at 5 life vs 20 is worse than being at 15 vs 20
+  const myLifeValue = lifeValue(me.life);
+  const oppLifeValue = lifeValue(opp.life);
+  const lifeDiff = normalizeScore(myLifeValue - oppLifeValue, 20);
 
   // Board presence (total creature power)
   const myPower = getBoardPower(state, me.battlefield);
@@ -76,12 +96,18 @@ export function evaluate(
   const oppLands = countLands(opp.battlefield);
   const manaDiff = normalizeScore(myLands - oppLands, 10);
 
+  // Tempo advantage (untapped permanents)
+  const myTempo = countUntapped(me.battlefield);
+  const oppTempo = countUntapped(opp.battlefield);
+  const tempoDiff = normalizeScore(myTempo - oppTempo, 10);
+
   // Weighted combination
   const rawScore =
     weights.life * lifeDiff +
     weights.board * boardDiff +
     weights.cards * cardDiff +
-    weights.mana * manaDiff;
+    weights.mana * manaDiff +
+    weights.tempo * tempoDiff;
 
   // Convert from [-1, 1] to [0, 1]
   return 0.5 + 0.5 * clamp(rawScore, -1, 1);
@@ -201,4 +227,36 @@ function normalizeScore(value: number, maxExpected: number): number {
  */
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
+}
+
+/**
+ * Non-linear life value - low life is disproportionately bad
+ * 20 life = 20, 10 life = 8, 5 life = 3, 1 life = 0.5
+ */
+function lifeValue(life: number): number {
+  if (life <= 0) return -10; // Dead or about to die
+  if (life >= 20) return life; // Above starting life is linear
+  // Quadratic scaling below 20: life^1.5 / sqrt(20)
+  return Math.pow(life, 1.5) / Math.sqrt(20);
+}
+
+/**
+ * Count untapped permanents (tempo indicator)
+ */
+function countUntapped(battlefield: CardInstance[]): number {
+  let count = 0;
+  for (const card of battlefield) {
+    if (!card.tapped) {
+      const template = CardLoader.getById(card.scryfallId);
+      if (template) {
+        // Creatures count more than lands for tempo
+        if (template.type_line?.toLowerCase().includes('creature')) {
+          count += 2;
+        } else {
+          count += 1;
+        }
+      }
+    }
+  }
+  return count;
 }

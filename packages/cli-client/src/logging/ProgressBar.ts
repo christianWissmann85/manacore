@@ -28,14 +28,14 @@ export class ProgressBar {
    */
   update(current: number): void {
     this.current = current;
-    
+
     // Throttle updates (max every 100ms)
     const now = Date.now();
     if (now - this.lastUpdate < 100 && current < this.total) {
       return;
     }
     this.lastUpdate = now;
-    
+
     this.render();
   }
 
@@ -55,19 +55,19 @@ export class ProgressBar {
     const percentage = this.current / this.total;
     const filled = Math.floor(this.barLength * percentage);
     const empty = this.barLength - filled;
-    
+
     const bar = '█'.repeat(filled) + '░'.repeat(empty);
-    
+
     // Calculate stats
     const elapsed = (Date.now() - this.startTime) / 1000;
     const rate = this.current / elapsed;
-    
+
     let line = `⏳ [${bar}] ${this.current}/${this.total}`;
-    
+
     if (this.current > 0) {
       line += ` (${elapsed.toFixed(1)}s) | ${rate.toFixed(1)} games/sec`;
     }
-    
+
     // Use ANSI escape codes to clear line and move cursor to start
     // \x1b[2K clears the entire line, \r moves cursor to start
     process.stdout.write('\x1b[2K\r' + line);

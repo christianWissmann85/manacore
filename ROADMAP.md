@@ -441,31 +441,6 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 **Test:**
 Run 1000 games with different weight values, find optimal.
 
-### Task 24-25: Card Advantage & Disruption
-
-**Tasks:**
-
-- [ ] Add card draw spells
-- [ ] Add discard spells
-- [ ] Add removal spells
-- [ ] Implement Enchantments (Auras)
-
-**New Cards:**
-
-```
-Ancestral Recall (U) - Draw 3 cards
-Brainstorm (U) - Draw 3, put 2 back
-Mind Rot (2B) - Target player discards 2 cards
-Swords to Plowshares (W) - Exile target creature, controller gains life
-Pacifism (1W) - Enchant creature, it can't attack or block
-```
-
-**Success Criteria:**
-
-- ✅ MCTS values card draw correctly
-- ✅ AI uses removal at appropriate times
-- ✅ AI doesn't discard important cards
-
 ### Task 26: Replay System & Stats
 
 **Tasks:**
@@ -485,6 +460,541 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 
 ---
 
+## Phase 2.5: The Bridge 🛠️
+
+**Theme:** "ManaCore becomes a Gym"
+
+### Goals
+
+- Create Python bindings to the TypeScript engine
+- Implement OpenAI Gym-compatible interface
+- Enable Python ML frameworks (Stable Baselines3, RLlib) to train agents
+- Maintain simulation performance (>100 games/second from Python)
+- Support both training and inference workflows
+
+### Task 24: FFI Layer (TypeScript → Python)
+
+**Tasks:**
+
+- [ ] Research Bun FFI capabilities for Python interop
+- [ ] Implement JSON-RPC or WebSocket bridge:
+  - TypeScript server exposes engine API
+  - Python client sends commands, receives state
+  - Alternative: Use Bun's native FFI to call Python directly
+- [ ] Create serialization layer:
+  - Convert `GameState` → Python dict/JSON
+  - Convert Python action dict → TypeScript `Action`
+  - Optimize for speed (avoid deep copies where possible)
+- [ ] Implement batch mode:
+  - Send multiple actions in single request
+  - Return multiple states in single response
+  - Target: <1ms overhead per action
+
+**Architecture Options:**
+
+```
+Option A: Bun Server + Python Client (RECOMMENDED)
+┌─────────────────┐         ┌─────────────────┐
+│  Python Client  │ ◄─────► │   Bun Server    │
+│  (Gym Wrapper)  │  HTTP/  │  (Engine API)   │
+│                 │  WS     │                 │
+└─────────────────┘         └─────────────────┘
+
+Option B: Bun CLI + Python Subprocess (SIMPLER)
+┌─────────────────┐         ┌─────────────────┐
+│  Python Wrapper │ ◄─────► │  Bun Process    │
+│  (Gym Wrapper)  │  stdin/ │  (CLI Server)   │
+│                 │  stdout │                 │
+└─────────────────┘         └─────────────────┘
+```
+
+**Success Criteria:**
+
+- ✅ Can initialize game from Python
+- ✅ Can send action from Python, receive new state
+- ✅ Overhead <5ms per game step
+- ✅ Handles 100+ games/second from Python
+
+### Task 25: Python Package Structure
+
+**Tasks:**
+
+- [ ] Create `packages/python-gym/` directory:
+  ```
+  packages/python-gym/
+  ├── pyproject.toml          # Modern Python packaging
+  ├── setup.py                # Fallback for pip install
+  ├── README.md
+  ├── manacore_gym/
+  │   ├── __init__.py
+  │   ├── env.py              # Main Gym environment
+  │   ├── bridge.py           # FFI bridge to TypeScript
+  │   ├── types.py            # Type hints
+  │   ├── wrappers/
+  │   │   ├── __init__.py
+  │   │   ├── frame_stack.py  # Stack N observations
+  │   │   ├── normalize.py    # Normalize obs/rewards
+  │   │   └── vec_env.py      # Vectorized environments
+  │   └── utils/
+  │       ├── __init__.py
+  │       ├── serialization.py
+  │       └── visualization.py
+  ├── tests/
+  │   ├── test_env.py
+  │   ├── test_bridge.py
+  │   └── test_wrappers.py
+  └── examples/
+      ├── random_agent.py
+      ├── train_ppo.py        # Stable Baselines3 example
+      └── train_dqn.py        # PyTorch example
+  ```
+- [ ] Define `pyproject.toml`:
+  ```toml
+  [project]
+  name = "manacore-gym"
+  version = "0.1.0"
+  dependencies = [
+      "gymnasium>=0.29.0",
+      "numpy>=1.24.0",
+      "requests>=2.31.0",  # For HTTP bridge
+  ]
+
+  [project.optional-dependencies]
+  stable-baselines = ["stable-baselines3>=2.0.0"]
+  rllib = ["ray[rllib]>=2.9.0"]
+  dev = ["pytest", "black", "mypy", "ruff"]
+  ```
+
+**Success Criteria:**
+
+- ✅ Package structure follows modern Python standards
+- ✅ Can install via `pip install -e packages/python-gym/`
+- ✅ Type hints pass `mypy --strict`
+
+### Task 26: Gym Environment Implementation
+
+**Tasks:**
+
+- [ ] Implement `ManaCoreBattleEnv(gym.Env)`:
+  ```python
+  class ManaCoreBattleEnv(gym.Env):
+      """
+      OpenAI Gym environment for ManaCore battles.
+      
+      Observation Space:
+      - GameState serialized as flat vector or dict
+      - Player life, mana, hand size, board state
+      - Opponent visible info (life, board, graveyard count)
+      
+      Action Space:
+      - Discrete(N) where N = max possible actions
+      - Or MultiDiscrete for structured actions
+      - Or Dict space for hierarchical actions
+      
+      Reward:
+      - +1.0 for winning
+      - -1.0 for losing
+      - Optional: small rewards for life differential, board control
+      """
+      def __init__(self, bridge, deck_p1, deck_p2):
+          self.bridge = bridge  # FFI bridge to TypeScript
+          # Define observation_space
+          # Define action_space
+          
+      def reset(self, seed=None):
+          # Initialize new game via bridge
+          # Return initial observation
+          
+      def step(self, action):
+          # Send action to bridge
+          # Get new state
+          # Calculate reward
+          # Check if game is done
+          # Return (obs, reward, terminated, truncated, info)
+  ```
+- [ ] Design observation space:
+  - **Option A:** Flat vector (400-1000 dims) for neural networks
+  - **Option B:** Dict space (structured) for debugging
+  - Include: life totals, mana pools, hand sizes, battlefield zones
+  - Mask invalid actions (return legal actions list)
+- [ ] Design action space:
+  - **Option A:** Discrete space (all possible actions indexed)
+  - **Option B:** Dict space (type, target, parameters)
+  - Handle PASS_PRIORITY action separately
+  - Return action mask for invalid actions
+- [ ] Implement reward function:
+  - Primary: +1 win, -1 loss
+  - Optional shaping: life differential, card advantage
+  - Configurable via constructor parameter
+
+**Success Criteria:**
+
+- ✅ Environment passes `gym.make()` registration
+- ✅ Can run with Stable Baselines3's `check_env()`
+- ✅ Observation space is consistent across steps
+- ✅ Action masking works correctly
+
+### Task 27: Bun Server for Python Bridge
+
+**Tasks:**
+
+- [ ] Create `packages/cli-client/src/server.ts`:
+  ```typescript
+  /**
+   * HTTP/WebSocket server for Python bridge
+   * Exposes game engine API to Python clients
+   */
+  
+  import { Hono } from 'hono'; // Lightweight web framework
+  import { createGameState, applyAction } from '@manacore/engine';
+  
+  const app = new Hono();
+  
+  // Session management (keep games in memory)
+  const sessions = new Map<string, GameState>();
+  
+  app.post('/game/create', async (c) => {
+    const { seed, deck_p1, deck_p2 } = await c.req.json();
+    const gameId = crypto.randomUUID();
+    const state = createGameState(seed, deck_p1, deck_p2);
+    sessions.set(gameId, state);
+    return c.json({ gameId, state: serializeState(state) });
+  });
+  
+  app.post('/game/:id/step', async (c) => {
+    const gameId = c.req.param('id');
+    const { action } = await c.req.json();
+    const state = sessions.get(gameId);
+    const newState = applyAction(state, deserializeAction(action));
+    sessions.set(gameId, newState);
+    return c.json({
+      state: serializeState(newState),
+      done: isGameOver(newState),
+      winner: getWinner(newState),
+    });
+  });
+  
+  // Batch endpoint for performance
+  app.post('/batch/step', async (c) => {
+    const { gameIds, actions } = await c.req.json();
+    const results = gameIds.map((id, i) => {
+      // Process multiple games in parallel
+    });
+    return c.json({ results });
+  });
+  
+  export default {
+    port: 3333,
+    fetch: app.fetch,
+  };
+  ```
+- [ ] Add server command to CLI:
+  ```bash
+  bun run cli server --port 3333
+  ```
+- [ ] Implement state serialization:
+  - Convert `GameState` to JSON-friendly dict
+  - Optimize: only send changed fields (diffs)
+  - Compress large states (gzip)
+- [ ] Add health check endpoint:
+  ```typescript
+  app.get('/health', (c) => c.json({ status: 'ok', version: ENGINE_VERSION }));
+  ```
+
+**Success Criteria:**
+
+- ✅ Server starts on `bun run cli server`
+- ✅ Can create games via POST /game/create
+- ✅ Can step games via POST /game/:id/step
+- ✅ Response time <10ms for simple states
+
+### Task 28: Python Bridge Client
+
+**Tasks:**
+
+- [ ] Implement `manacore_gym/bridge.py`:
+  ```python
+  import requests
+  import subprocess
+  from typing import Dict, Any, Optional
+  
+  class BunBridge:
+      """
+      Bridge to Bun server running ManaCore engine.
+      """
+      def __init__(self, host="localhost", port=3333, auto_start=True):
+          self.base_url = f"http://{host}:{port}"
+          self.process = None
+          
+          if auto_start:
+              self.start_server()
+          
+          self._wait_for_server()
+      
+      def start_server(self):
+          """Start Bun server as subprocess."""
+          self.process = subprocess.Popen(
+              ["bun", "run", "cli", "server"],
+              stdout=subprocess.PIPE,
+              stderr=subprocess.PIPE,
+          )
+      
+      def create_game(self, seed: int, deck_p1: Dict, deck_p2: Dict) -> str:
+          """Create new game, return game ID."""
+          response = requests.post(
+              f"{self.base_url}/game/create",
+              json={"seed": seed, "deck_p1": deck_p1, "deck_p2": deck_p2},
+          )
+          return response.json()
+      
+      def step(self, game_id: str, action: Dict[str, Any]) -> Dict:
+          """Send action, get new state."""
+          response = requests.post(
+              f"{self.base_url}/game/{game_id}/step",
+              json={"action": action},
+          )
+          return response.json()
+      
+      def __del__(self):
+          if self.process:
+              self.process.terminate()
+  ```
+- [ ] Add connection pooling for performance
+- [ ] Add timeout handling and retries
+- [ ] Add logging for debugging
+
+**Success Criteria:**
+
+- ✅ Bridge can start Bun server automatically
+- ✅ Bridge can create games and step through them
+- ✅ Connection is stable (handles disconnects)
+- ✅ Error messages are clear and actionable
+
+### Task 29: Example Training Scripts
+
+**Tasks:**
+
+- [ ] Create `examples/random_agent.py`:
+  ```python
+  """
+  Sanity check: Random agent playing against RandomBot
+  """
+  import gymnasium as gym
+  from manacore_gym import ManaCoreBattleEnv
+  
+  env = gym.make("ManaCoreBattle-v0")
+  obs, info = env.reset(seed=42)
+  
+  for _ in range(1000):
+      action = env.action_space.sample()
+      obs, reward, terminated, truncated, info = env.step(action)
+      if terminated or truncated:
+          print(f"Game over! Reward: {reward}")
+          obs, info = env.reset()
+  ```
+- [ ] Create `examples/train_ppo.py`:
+  ```python
+  """
+  Train PPO agent using Stable Baselines3
+  """
+  from stable_baselines3 import PPO
+  from stable_baselines3.common.env_checker import check_env
+  from manacore_gym import ManaCoreBattleEnv
+  
+  # Create environment
+  env = ManaCoreBattleEnv(
+      deck_p1={"name": "Aggro Red", "cards": [...]},
+      deck_p2={"name": "Control Blue", "cards": [...]},
+  )
+  
+  # Verify environment
+  check_env(env)
+  
+  # Train agent
+  model = PPO(
+      "MlpPolicy",
+      env,
+      verbose=1,
+      tensorboard_log="./logs/ppo_manacore/",
+  )
+  
+  model.learn(total_timesteps=100_000)
+  model.save("ppo_manacore_100k")
+  
+  # Evaluate
+  obs, info = env.reset()
+  for _ in range(100):
+      action, _states = model.predict(obs, deterministic=True)
+      obs, reward, terminated, truncated, info = env.step(action)
+      if terminated or truncated:
+          print(f"Win rate: {reward > 0}")
+          obs, info = env.reset()
+  ```
+- [ ] Create `examples/train_dqn.py` (alternative)
+- [ ] Create `examples/curriculum_learning.py`:
+  - Start against RandomBot
+  - Graduate to GreedyBot
+  - Finally train against MCTS-Bot
+
+**Success Criteria:**
+
+- ✅ Random agent runs without errors
+- ✅ PPO training completes without crashes
+- ✅ Can load and evaluate trained model
+- ✅ Training logs are visible in TensorBoard
+
+### Task 30: Testing & Validation
+
+**Tasks:**
+
+- [ ] Write unit tests:
+  ```python
+  # tests/test_env.py
+  def test_env_reset():
+      env = ManaCoreBattleEnv(...)
+      obs, info = env.reset(seed=42)
+      assert obs is not None
+      assert "legal_actions" in info
+  
+  def test_env_step():
+      env = ManaCoreBattleEnv(...)
+      obs, info = env.reset(seed=42)
+      action = info["legal_actions"][0]
+      obs, reward, terminated, truncated, info = env.step(action)
+      assert obs is not None
+  
+  def test_action_masking():
+      # Verify only legal actions are returned
+      pass
+  ```
+- [ ] Write integration tests:
+  - Full game with random actions
+  - Full game with trained agent
+  - Verify determinism (same seed → same game)
+- [ ] Performance benchmarking:
+  ```python
+  # Measure games/second from Python
+  import time
+  
+  start = time.time()
+  for i in range(1000):
+      env.reset(seed=i)
+      while True:
+          action = env.action_space.sample()
+          obs, reward, terminated, truncated, info = env.step(action)
+          if terminated or truncated:
+              break
+  elapsed = time.time() - start
+  print(f"Games/second: {1000 / elapsed:.2f}")
+  ```
+
+**Success Criteria:**
+
+- ✅ All tests pass with `pytest`
+- ✅ Can run 100+ games/second from Python
+- ✅ Environment is deterministic (same seed → same result)
+- ✅ Memory usage is stable (no leaks)
+
+### Task 31: Documentation & Publishing
+
+**Tasks:**
+
+- [ ] Write comprehensive README for `packages/python-gym/`:
+  - Installation instructions
+  - Quick start example
+  - API reference
+  - Training guide
+  - Troubleshooting section
+- [ ] Add docstrings to all public APIs (Google style)
+- [ ] Create tutorial Jupyter notebook:
+  - `tutorials/01_getting_started.ipynb`
+  - `tutorials/02_training_ppo.ipynb`
+  - `tutorials/03_custom_rewards.ipynb`
+- [ ] Prepare for PyPI publishing:
+  - Add LICENSE file
+  - Add CHANGELOG.md
+  - Test installation from PyPI test server
+- [ ] Update main README.md:
+  - Add Python installation section
+  - Add link to Gym documentation
+  - Add citation for research use
+
+**Publishing Checklist:**
+
+```bash
+# Build package
+cd packages/python-gym
+python -m build
+
+# Test install locally
+pip install dist/manacore_gym-0.1.0-py3-none-any.whl
+
+# Upload to PyPI (when ready)
+twine upload dist/*
+```
+
+**Success Criteria:**
+
+- ✅ README is clear and comprehensive
+- ✅ All public APIs have docstrings
+- ✅ Tutorial notebooks run without errors
+- ✅ Can install via `pip install manacore-gym`
+
+### Task 32: Advanced Features (Optional)
+
+**Tasks:**
+
+- [ ] Implement vectorized environments:
+  ```python
+  from stable_baselines3.common.vec_env import SubprocVecEnv
+  
+  def make_env(seed):
+      def _init():
+          env = ManaCoreBattleEnv(...)
+          env.reset(seed=seed)
+          return env
+      return _init
+  
+  # Train on 8 environments in parallel
+  envs = SubprocVecEnv([make_env(i) for i in range(8)])
+  model = PPO("MlpPolicy", envs)
+  ```
+- [ ] Add curriculum learning helper:
+  ```python
+  from manacore_gym.curriculum import CurriculumScheduler
+  
+  scheduler = CurriculumScheduler([
+      {"opponent": "random", "steps": 10_000},
+      {"opponent": "greedy", "steps": 20_000},
+      {"opponent": "mcts", "steps": 50_000},
+  ])
+  ```
+- [ ] Add replay buffer for off-policy methods:
+  - Save (state, action, reward, next_state) tuples
+  - Export to HDF5 for offline training
+- [ ] Add multi-agent support:
+  - Both players are trainable agents
+  - Self-play training loop
+
+**Success Criteria:**
+
+- ✅ Can train on 8+ environments in parallel
+- ✅ Curriculum learning improves training efficiency
+- ✅ Replay buffer works with DQN/SAC
+
+---
+
+**Phase 2.5 Deliverables:**
+
+- ✅ `pip install manacore-gym` works
+- ✅ Can run RandomBot vs GreedyBot from Python
+- ✅ Can train PPO agent with Stable Baselines3
+- ✅ Simulation speed: >100 games/second from Python
+- ✅ Comprehensive documentation and examples
+- ✅ Published to PyPI
+
+---
+
 ## Phase 3: Advanced Visualization
 
 **Theme:** "The Research Dashboard"
@@ -496,6 +1006,7 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 - Multiple AI Agent configurations
 - Audio feedback for events
 - Interactive documentation
+- Impressive Huggingface Space `manacore-arena`. A user goes to the URL and sees two bots (e.g., "MCTS-Alpha" vs "GreedyBot") playing a match in real-time. They don't play; they watch the AI think.
 
 ### Task 27: Basic Web Dashboard
 
@@ -514,7 +1025,8 @@ Pacifism (1W) - Enchant creature, it can't attack or block
 
 - ✅ Dashboard renders game state via React
 - ✅ Responsive grid layout works
-- ✅ Can play a full game via UI controls
+- ✅ Researcher can play a full game via UI controls
+- ✅ Can watch RandomBot, GreedyBot, MCTSBot watch Play against other Bots (with time slider)
 - ✅ Clean, scientific aesthetic (Dark mode, monospace fonts)
 
 **Deliverable:** Interactive research dashboard

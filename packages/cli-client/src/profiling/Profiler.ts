@@ -1,8 +1,8 @@
 /**
- * Profiler - Basic performance profiling for simulations
- *
- * Tracks timing and performance metrics during simulation runs.
+ * Profiler - Performance tracking for simulations
  */
+
+/* global performance */
 
 import type { ProfileData } from '../types';
 
@@ -44,9 +44,10 @@ export class Profiler {
    */
   getProfileData(gamesCompleted: number): ProfileData {
     const totalMs = performance.now() - this.startTime;
-    const avgGameMs = this.gameDurations.length > 0
-      ? this.gameDurations.reduce((a, b) => a + b, 0) / this.gameDurations.length
-      : 0;
+    const avgGameMs =
+      this.gameDurations.length > 0
+        ? this.gameDurations.reduce((a, b) => a + b, 0) / this.gameDurations.length
+        : 0;
     const gamesPerSecond = totalMs > 0 ? (gamesCompleted / totalMs) * 1000 : 0;
 
     const profile: ProfileData = {

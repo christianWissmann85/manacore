@@ -5,7 +5,7 @@
  */
 
 import type { Bot } from '@manacore/ai';
-import type { PlayerId, GameState, Action, CardTemplate } from '@manacore/engine';
+import type { PlayerId, GameState, Action, CardInstance } from '@manacore/engine';
 import type { GameResult } from '../types';
 import {
   initializeGame,
@@ -238,10 +238,7 @@ function buildInfiniteLoopError(
   seed: number | undefined,
 ): string {
   const player = getPlayer(state, state.priorityPlayer);
-  const opponent = getPlayer(
-    state,
-    state.priorityPlayer === 'player' ? 'opponent' : 'player',
-  );
+  const opponent = getPlayer(state, state.priorityPlayer === 'player' ? 'opponent' : 'player');
 
   // Analyze what's causing the loop
   const recentActionTypes = actionHistory.slice(-10);
@@ -305,7 +302,7 @@ function buildInfiniteLoopError(
 /**
  * Format a battlefield card for display
  */
-function formatBattlefieldCard(state: GameState, card: any): string {
+function formatBattlefieldCard(state: GameState, card: CardInstance): string {
   const template = CardLoader.getById(card.scryfallId);
   if (template && isCreature(template)) {
     const basePower = parseInt(template.power || '0', 10);

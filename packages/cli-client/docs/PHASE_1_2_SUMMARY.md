@@ -75,6 +75,7 @@ bun src/index.ts benchmark 100 --export-json
 **Output:** `results/results-seed{N}-{timestamp}.json`
 
 **Contains:**
+
 - Simulation metadata (bots, timestamp)
 - Complete game records with seeds
 - Deck statistics
@@ -93,6 +94,7 @@ bun src/index.ts benchmark 100 --export-csv
 **Columns:** `game_number`, `seed`, `winner`, `turns`, `player_deck`, `opponent_deck`, `duration_ms`, `error`
 
 **Use Cases:**
+
 - Excel/Google Sheets analysis
 - Python pandas, R dataframes
 - Statistical modeling
@@ -117,6 +119,7 @@ bun src/index.ts benchmark 100 --profile-detailed
 ```
 
 **Metrics:**
+
 - Total execution time
 - Average game duration
 - Games per second throughput
@@ -141,6 +144,7 @@ manacore/
 ```
 
 **Benefits:**
+
 - ✅ Single location for all outputs
 - ✅ Easy to find by all developers (Claude, Copilot, Gemini)
 - ✅ Git-ignored by default
@@ -163,6 +167,7 @@ manacore/
 ### Updated Commands
 
 All simulation commands support export:
+
 - `benchmark`
 - `simulate`
 - (Future: `batch-replay`)
@@ -174,22 +179,26 @@ All simulation commands support export:
 ### Updated Files
 
 ✅ **packages/cli-client/RESEARCH_GUIDE.md**
+
 - Added "Data Export" section
 - Added "Performance Profiling" section
 - Updated "Future Enhancements" (marked completed items)
 - Updated command references with new flags
 
 ✅ **packages/cli-client/README.md**
+
 - Added export features to key features list
 - Added "Data Export" section with examples
 - Updated research use cases with export examples
 - Updated performance profiling section
 
 ✅ **README.md** (project root)
+
 - Updated Quick Start with export example
 - Added note about results directory
 
 ✅ **results/README.md** (NEW)
+
 - Created guide for results directory
 - Documented file formats and structure
 - Usage examples for researchers
@@ -219,6 +228,7 @@ All features tested and verified:
 ```
 
 **Results:**
+
 - ✅ Files created in correct locations
 - ✅ JSON properly structured
 - ✅ CSV format valid

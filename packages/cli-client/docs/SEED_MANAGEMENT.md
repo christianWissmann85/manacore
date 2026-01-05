@@ -9,20 +9,24 @@ This update adds comprehensive seed management and reproducibility features to t
 ## ✨ New Features
 
 ### 1. **Seed Parameter Support**
+
 - Add `--seed <n>` flag to all simulation commands
 - Default to `Date.now()` for automatic reproducibility
 - Display base seed at simulation start
 - Derive per-game seeds: `gameSeed = baseSeed + gameIndex`
 
 ### 2. **Replay Command**
+
 ```bash
 bun src/index.ts replay <seed> [--verbose] [--debug]
 ```
+
 - Replay any game by its exact seed
 - Perfect for debugging specific failures
 - Supports full verbosity and debug modes
 
 ### 3. **Enhanced Error Tracking**
+
 - Track all failed game seeds in `results.failedSeeds[]`
 - Display replay commands for failures:
   ```
@@ -32,11 +36,12 @@ bun src/index.ts replay <seed> [--verbose] [--debug]
 - Per-game records with seed, winner, turns, decks
 
 ### 4. **Detailed Game Records**
+
 ```typescript
 interface SimulationResults {
-  gameRecords: GameRecord[];     // Complete game history
-  baseSeed: number;              // For full reproduction
-  failedSeeds: number[];         // Easy error replay
+  gameRecords: GameRecord[]; // Complete game history
+  baseSeed: number; // For full reproduction
+  failedSeeds: number[]; // Easy error replay
 }
 ```
 
@@ -45,6 +50,7 @@ interface SimulationResults {
 ## 🎯 Research Use Cases
 
 ### Regression Testing
+
 ```bash
 # Test known problematic seed after bug fix
 bun src/index.ts replay 12383
@@ -54,6 +60,7 @@ bun src/index.ts benchmark 100 --seed 12345
 ```
 
 ### Performance Comparison
+
 ```bash
 # Test strategy A
 bun src/index.ts benchmark 1000 --seed 42
@@ -65,6 +72,7 @@ bun src/index.ts benchmark 1000 --seed 42
 ```
 
 ### Bug Reproduction
+
 ```bash
 # User reports issue
 "Game crashed at seed 12383"
@@ -74,6 +82,7 @@ bun src/index.ts replay 12383 --verbose
 ```
 
 ### CI/CD Integration
+
 ```yaml
 - name: Regression Tests
   run: |
@@ -129,6 +138,7 @@ P1 wins: 60 (61%) | P2 wins: 27 (27%) | Draws: 12 (12%)
 ## 🔧 Implementation Details
 
 ### Files Modified
+
 1. **`index.ts`** - CLI argument parsing
    - Added `--seed` parameter
    - Implemented `replay` command
@@ -141,15 +151,16 @@ P1 wins: 60 (61%) | P2 wins: 27 (27%) | Draws: 12 (12%)
    - Display replay commands for failures
 
 ### Data Structures
+
 ```typescript
 interface SimulationOptions {
-  seed?: number;              // Base seed (defaults to Date.now())
+  seed?: number; // Base seed (defaults to Date.now())
   // ... existing options
 }
 
 interface GameRecord {
   gameNumber: number;
-  seed: number;               // Exact seed for this game
+  seed: number; // Exact seed for this game
   winner: PlayerId | null;
   turns: number;
   playerDeck: string;
@@ -158,9 +169,9 @@ interface GameRecord {
 }
 
 interface SimulationResults {
-  baseSeed: number;           // Original base seed
-  gameRecords: GameRecord[];  // All game details
-  failedSeeds: number[];      // Seeds that errored
+  baseSeed: number; // Original base seed
+  gameRecords: GameRecord[]; // All game details
+  failedSeeds: number[]; // Seeds that errored
   // ... existing fields
 }
 ```
@@ -197,6 +208,7 @@ bun src/index.ts help
 ## 🚀 Future Enhancements
 
 Potential additions:
+
 - JSON/CSV export for data analysis
 - Batch replay from file
 - Performance profiling

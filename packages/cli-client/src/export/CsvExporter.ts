@@ -25,9 +25,7 @@ export class CsvExporter extends ResultsExporter {
     const lines: string[] = [];
 
     // Header
-    lines.push(
-      'game_number,seed,winner,turns,player_deck,opponent_deck,duration_ms,error',
-    );
+    lines.push('game_number,seed,winner,turns,player_deck,opponent_deck,duration_ms,error');
 
     // Data rows
     for (const game of results.gameRecords) {

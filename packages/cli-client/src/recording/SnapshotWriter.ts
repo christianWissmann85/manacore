@@ -299,7 +299,9 @@ export class SnapshotWriter {
     try {
       if (!fs.existsSync(this.snapshotDir)) {
         fs.mkdirSync(this.snapshotDir, { recursive: true });
-        console.log(`📁 Created snapshot directory: ${path.relative(process.cwd(), this.snapshotDir)}/`);
+        console.log(
+          `📁 Created snapshot directory: ${path.relative(process.cwd(), this.snapshotDir)}/`,
+        );
       }
     } catch (err) {
       console.error('Failed to create snapshot directory:', err);

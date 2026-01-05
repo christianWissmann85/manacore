@@ -30,9 +30,7 @@ export class JsonExporter extends ResultsExporter {
       results,
     };
 
-    const jsonString = options?.pretty
-      ? JSON.stringify(output, null, 2)
-      : JSON.stringify(output);
+    const jsonString = options?.pretty ? JSON.stringify(output, null, 2) : JSON.stringify(output);
 
     if (options?.outputPath) {
       await Bun.write(options.outputPath, jsonString);

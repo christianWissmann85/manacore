@@ -21,6 +21,7 @@ import {
   isLand,
   isCreature,
   isInstant,
+  hasKeyword,
   hasFlying,
   hasReach,
   hasDefender,
@@ -79,35 +80,25 @@ export function getLegalActions(state: GameState, playerId: 'player' | 'opponent
     }
   }
 
-  // Phase 1+: Can cast instant-speed spells whenever you have priority
+  // Generate actions from hand (Lands + Spells) - Single Pass with Deduplication
   if (state.priorityPlayer === playerId) {
-    actions.push(...getLegalInstantCasts(state, playerId));
+    actions.push(...getLegalHandActions(state, playerId));
+  }
+
+  // Abilities from battlefield and graveyard
+  if (state.priorityPlayer === playerId) {
     actions.push(...getLegalAbilityActivations(state, playerId));
     actions.push(...getLegalGraveyardAbilityActivations(state, playerId));
   }
 
-  // Sorcery-speed actions require it to be your turn
-  if (state.activePlayer !== playerId) {
-    return actions;
-  }
-
-  // Main phase actions
-  if (state.phase === 'main1' || state.phase === 'main2') {
-    // Play lands
-    actions.push(...getLegalLandPlays(state, playerId));
-
-    // Cast sorcery-speed spells
-    actions.push(...getLegalSorcerySpeedCasts(state, playerId));
-  }
-
   // Phase 0: Simplified combat - can attack from main1
-  if (state.phase === 'main1') {
+  if (state.phase === 'main1' && state.activePlayer === playerId) {
     actions.push(...getLegalAttackerDeclarations(state, playerId));
   }
 
   // Combat phase actions
   if (state.phase === 'combat') {
-    if (state.step === 'declare_attackers') {
+    if (state.step === 'declare_attackers' && state.activePlayer === playerId) {
       actions.push(...getLegalAttackerDeclarations(state, playerId));
     }
     if (state.step === 'declare_blockers') {
@@ -123,64 +114,57 @@ export function getLegalActions(state: GameState, playerId: 'player' | 'opponent
 }
 
 /**
- * Get legal land plays
+ * Get all legal actions from hand (Lands and Spells)
+ * Optimized to iterate hand once and deduplicate identical cards
  */
-function getLegalLandPlays(state: GameState, playerId: 'player' | 'opponent'): PlayLandAction[] {
-  const actions: PlayLandAction[] = [];
+function getLegalHandActions(state: GameState, playerId: 'player' | 'opponent'): Action[] {
+  const actions: Action[] = [];
   const player = getPlayer(state, playerId);
 
-  // Can only play one land per turn
-  if (player.landsPlayedThisTurn >= 1) {
-    return actions;
-  }
+  // Check conditions for Sorcery-speed actions (Lands, Sorceries, Creatures, etc.)
+  const canPlaySorcerySpeed =
+    state.activePlayer === playerId &&
+    (state.phase === 'main1' || state.phase === 'main2') &&
+    state.stack.length === 0;
 
-  // Find lands in hand
+  const seenLandNames = new Set<string>();
+  const seenSpellNames = new Set<string>();
+
   for (const card of player.hand) {
     const template = CardLoader.getById(card.scryfallId);
-    if (template && isLand(template)) {
-      const action: PlayLandAction = {
-        type: 'PLAY_LAND',
-        playerId,
-        payload: {
-          cardInstanceId: card.instanceId,
-        },
-      };
+    if (!template) continue;
 
-      // Validate before adding
-      if (validateAction(state, action).length === 0) {
-        actions.push(action);
+    // 1. LANDS
+    if (isLand(template)) {
+      if (
+        canPlaySorcerySpeed &&
+        player.landsPlayedThisTurn < 1 &&
+        !seenLandNames.has(template.name)
+      ) {
+        const action: PlayLandAction = {
+          type: 'PLAY_LAND',
+          playerId,
+          payload: { cardInstanceId: card.instanceId },
+        };
+
+        if (validateAction(state, action).length === 0) {
+          actions.push(action);
+          seenLandNames.add(template.name); // Dedupe identical lands
+        }
       }
+      continue;
     }
-  }
 
-  return actions;
-}
+    // 2. SPELLS
+    // Check timing restriction
+    const isInstantSpeed = isInstant(template) || hasKeyword(template, 'Flash');
+    if (!canPlaySorcerySpeed && !isInstantSpeed) continue;
 
-/**
- * Get legal sorcery-speed spell casts
- * Phase 1+: Only when it's your turn, main phase, stack empty
- */
-function getLegalSorcerySpeedCasts(
-  state: GameState,
-  playerId: 'player' | 'opponent',
-): CastSpellAction[] {
-  const actions: CastSpellAction[] = [];
-  const player = getPlayer(state, playerId);
+    // Deduplication: If we've already generated actions for this card name, skip
+    // (Assumes identical cards in hand have identical valid actions)
+    if (seenSpellNames.has(template.name)) continue;
 
-  // Stack must be empty for sorcery-speed spells
-  if (state.stack.length > 0) {
-    return actions;
-  }
-
-  // Find sorcery-speed castable cards in hand
-  for (const card of player.hand) {
-    const template = CardLoader.getById(card.scryfallId);
-    if (!template || isLand(template)) continue;
-
-    // Skip instants - they're handled separately
-    if (isInstant(template)) continue;
-
-    // Check if this spell requires targets
+    const spellActions: CastSpellAction[] = [];
     const targetRequirements = parseTargetRequirements(template.oracle_text || '');
 
     if (targetRequirements.length > 0) {
@@ -202,9 +186,8 @@ function getLegalSorcerySpeedCasts(
           },
         };
 
-        // Validate before adding
         if (validateAction(state, action).length === 0) {
-          actions.push(action);
+          spellActions.push(action);
         }
       }
     } else {
@@ -218,82 +201,21 @@ function getLegalSorcerySpeedCasts(
         },
       };
 
-      // Validate before adding
       if (validateAction(state, action).length === 0) {
-        actions.push(action);
+        spellActions.push(action);
       }
+    }
+
+    if (spellActions.length > 0) {
+      actions.push(...spellActions);
+      seenSpellNames.add(template.name); // Dedupe!
     }
   }
 
   return actions;
 }
 
-/**
- * Get legal instant-speed spell casts
- * Phase 1+: Can cast instants any time you have priority
- */
-function getLegalInstantCasts(
-  state: GameState,
-  playerId: 'player' | 'opponent',
-): CastSpellAction[] {
-  const actions: CastSpellAction[] = [];
-  const player = getPlayer(state, playerId);
-
-  // Find instant-speed castable cards in hand
-  for (const card of player.hand) {
-    const template = CardLoader.getById(card.scryfallId);
-    if (!template || isLand(template)) continue;
-
-    // Only instants
-    if (!isInstant(template)) continue;
-
-    // Check if this spell requires targets
-    const targetRequirements = parseTargetRequirements(template.oracle_text || '');
-
-    if (targetRequirements.length > 0) {
-      // Generate actions for each valid target combination
-      const targetCombinations = getAllLegalTargetCombinations(
-        state,
-        targetRequirements,
-        playerId,
-        card,
-      );
-
-      for (const targets of targetCombinations) {
-        const action: CastSpellAction = {
-          type: 'CAST_SPELL',
-          playerId,
-          payload: {
-            cardInstanceId: card.instanceId,
-            targets,
-          },
-        };
-
-        // Validate before adding
-        if (validateAction(state, action).length === 0) {
-          actions.push(action);
-        }
-      }
-    } else {
-      // No targets required
-      const action: CastSpellAction = {
-        type: 'CAST_SPELL',
-        playerId,
-        payload: {
-          cardInstanceId: card.instanceId,
-          targets: [],
-        },
-      };
-
-      // Validate before adding
-      if (validateAction(state, action).length === 0) {
-        actions.push(action);
-      }
-    }
-  }
-
-  return actions;
-}
+// REMOVED: getLegalLandPlays, getLegalSorcerySpeedCasts, getLegalInstantCasts
 
 /**
  * Get legal ability activations

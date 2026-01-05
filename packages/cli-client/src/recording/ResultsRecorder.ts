@@ -9,13 +9,7 @@
  */
 
 import type { CardTemplate } from '@manacore/engine';
-import type {
-  SimulationResults,
-  GameRecord,
-  GameResult,
-  DeckStats,
-  MatchupStats,
-} from '../types';
+import type { SimulationResults, GameResult, DeckStats } from '../types';
 
 export class ResultsRecorder {
   private results: SimulationResults;
@@ -58,9 +52,11 @@ export class ResultsRecorder {
     }
 
     // Track game outcome
-    const playerDeckStats = this.results.deckStats[result.playerDeck]!;
-    const opponentDeckStats = this.results.deckStats[result.opponentDeck]!;
-    const matchupStats = this.results.matchups[matchupKey]!;
+    const playerDeckStats = this.results.deckStats[result.playerDeck];
+    const opponentDeckStats = this.results.deckStats[result.opponentDeck];
+    const matchupStats = this.results.matchups[matchupKey];
+
+    if (!playerDeckStats || !opponentDeckStats || !matchupStats) return;
 
     playerDeckStats.games++;
     opponentDeckStats.games++;
@@ -117,10 +113,7 @@ export class ResultsRecorder {
    */
   finalize(): SimulationResults {
     // Calculate average turns
-    const totalTurns = this.results.gameRecords.reduce(
-      (sum, game) => sum + game.turns,
-      0,
-    );
+    const totalTurns = this.results.gameRecords.reduce((sum, game) => sum + game.turns, 0);
     this.results.averageTurns =
       this.results.gamesCompleted > 0 ? totalTurns / this.results.gamesCompleted : 0;
 

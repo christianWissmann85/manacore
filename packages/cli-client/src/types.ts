@@ -10,10 +10,10 @@ import type { PlayerId, CardTemplate } from '@manacore/engine';
  * Output verbosity levels
  */
 export enum OutputLevel {
-  QUIET = 0,      // Errors only
-  MINIMAL = 1,    // Summary + file references (default)
-  NORMAL = 2,     // Key stats + top performers
-  VERBOSE = 3,    // Full statistics (current behavior)
+  QUIET = 0, // Errors only
+  MINIMAL = 1, // Summary + file references (default)
+  NORMAL = 2, // Key stats + top performers
+  VERBOSE = 3, // Full statistics (current behavior)
 }
 
 /**
@@ -31,7 +31,9 @@ export interface SimulationOptions {
   profile?: boolean | 'detailed';
   logErrors?: boolean;
   outputLevel?: OutputLevel;
-  autoExport?: boolean;  // Auto-export JSON (default: true)
+  autoExport?: boolean; // Auto-export JSON (default: true)
+  botTypes?: { p1: string; p2: string };
+  parallel?: boolean;
 }
 
 /**

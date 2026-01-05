@@ -24,7 +24,13 @@ export { evaluate, quickEvaluate, DEFAULT_WEIGHTS } from './evaluation/evaluate'
 // Search exports
 export type { MCTSNode } from './search/MCTSNode';
 export type { MCTSConfig, MCTSResult, RolloutPolicy } from './search/MCTS';
-export { runMCTS, randomRolloutPolicy, DEFAULT_MCTS_CONFIG } from './search/MCTS';
+export {
+  runMCTS,
+  randomRolloutPolicy,
+  greedyRolloutPolicy,
+  epsilonGreedyRolloutPolicy,
+  DEFAULT_MCTS_CONFIG,
+} from './search/MCTS';
 export {
   createMCTSNode,
   isFullyExpanded,
@@ -35,4 +41,6 @@ export {
   backpropagate,
 } from './search/MCTSNode';
 
-console.log(`✅ @manacore/ai v${AI_VERSION} loaded`);
+if (!process.env.MANACORE_SILENT_INIT) {
+  console.log(`✅ @manacore/ai v${AI_VERSION} loaded`);
+}

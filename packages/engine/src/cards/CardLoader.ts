@@ -38,7 +38,9 @@ export class CardLoader {
     this.loadTokenDefinitions();
 
     this.initialized = true;
-    console.log(`🃏 CardLoader: Loaded ${this.cache.size} cards from 6th Edition`);
+    if (!process.env.MANACORE_SILENT_INIT) {
+      console.log(`🃏 CardLoader: Loaded ${this.cache.size} cards from 6th Edition`);
+    }
   }
 
   /**

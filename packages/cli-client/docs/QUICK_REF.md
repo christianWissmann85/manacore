@@ -24,6 +24,7 @@ bun src/index.ts replay 12383 --verbose
 ## 📊 Common Workflows
 
 ### Debug a Failure
+
 ```bash
 # 1. See the error
 bun src/index.ts benchmark 100
@@ -37,6 +38,7 @@ bun src/index.ts replay 12383 --verbose --debug
 ```
 
 ### Test a Fix
+
 ```bash
 # Before fix
 bun src/index.ts replay 12383
@@ -51,6 +53,7 @@ bun src/index.ts benchmark 100 --seed 12300
 ```
 
 ### Compare Strategies
+
 ```bash
 # Same opponents = fair comparison
 bun src/index.ts benchmark 1000 --seed 42

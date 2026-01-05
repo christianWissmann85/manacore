@@ -13,6 +13,7 @@ This guide covers the research-focused features of ManaCore's CLI client, design
 Every simulation in ManaCore uses a **base seed** that determines the random number generation. Each individual game within a simulation gets its own derived seed: `gameSeed = baseSeed + gameIndex`.
 
 **Why this matters:**
+
 - **Reproducibility**: Same seed = identical game
 - **Debugging**: Replay exact failure scenarios
 - **Research**: Compare AI performance under identical conditions
@@ -29,6 +30,7 @@ bun src/index.ts benchmark 100
 ```
 
 ### Default Behavior
+
 - If you **don't** specify `--seed`, the CLI uses `Date.now()` as the base seed
 - The base seed is **always displayed** at the start of simulation
 - This ensures every run is reproducible even when you forget to set a seed
@@ -42,6 +44,7 @@ When a game fails, ManaCore records its seed for easy replay.
 ### Example Workflow
 
 1. **Run a benchmark and observe a failure:**
+
 ```bash
 $ bun src/index.ts benchmark 100
 
@@ -56,6 +59,7 @@ Error in game 39:
 ```
 
 2. **Replay the specific failed game:**
+
 ```bash
 $ bun src/index.ts replay 12383 --verbose
 
@@ -66,6 +70,7 @@ Replaying game with seed: 12383
 ```
 
 3. **Debug with full verbosity:**
+
 ```bash
 $ bun src/index.ts replay 12383 --verbose --debug
 
@@ -102,9 +107,9 @@ All failed games are tracked in `results.failedSeeds[]`:
 ```typescript
 interface SimulationResults {
   // ... other fields
-  gameRecords: GameRecord[];     // All games
-  baseSeed: number;              // Base seed for reproduction
-  failedSeeds: number[];         // Seeds that caused errors
+  gameRecords: GameRecord[]; // All games
+  baseSeed: number; // Base seed for reproduction
+  failedSeeds: number[]; // Seeds that caused errors
 }
 ```
 
@@ -184,6 +189,7 @@ bun src/index.ts replay 12383 --verbose
 ```
 
 **Shows:**
+
 - Full game state at failure
 - Last 10 actions taken
 - Board state (all permanents)
@@ -197,6 +203,7 @@ bun src/index.ts replay 12383 --debug-verbose
 ```
 
 **Additional output:**
+
 - Action-by-action game log
 - Phase/step transitions
 - Priority changes
@@ -215,6 +222,7 @@ With `--verbose`, failed games save snapshots to disk:
 ```
 
 These files contain:
+
 - **JSON**: Structured data for programmatic analysis
 - **TXT**: Human-readable snapshot with ASCII visualization
 - Complete game state
@@ -229,22 +237,26 @@ These files contain:
 Control console output based on your workflow:
 
 **Quiet Mode** (`--quiet`, `-q`)
+
 - Errors only
 - Best for: CI/CD pipelines, automated testing
 
 **Minimal Mode** (`--minimal`, `-m`)
+
 - Summary + file locations
 - Progress bar with live stats
 - Auto-enabled for runs >50 games
 - Best for: Large-scale experiments
 
 **Normal Mode** (`--normal`, `-n`)
+
 - Key statistics + summary
 - Progress bar included
 - Auto-enabled for runs ≤50 games
 - Best for: Standard development workflow
 
 **Verbose Mode** (`--verbose`, `-v`)
+
 - Full detailed statistics
 - Complete breakdowns and distributions
 - Best for: Deep analysis, debugging
@@ -313,6 +325,7 @@ Options:
 ## 💡 Best Practices
 
 ### 1. Always Log Base Seeds
+
 When sharing results or filing bugs, include the base seed:
 
 ```bash
@@ -341,10 +354,10 @@ Maintain a list of problematic seeds:
 ```markdown
 ## Known Edge Cases
 
-| Seed  | Issue | Status |
-|-------|-------|--------|
-| 12383 | Gorilla Chieftain regenerate loop | ✅ Fixed |
-| 15672 | Combat damage to planeswalker | 🔧 In Progress |
+| Seed  | Issue                             | Status         |
+| ----- | --------------------------------- | -------------- |
+| 12383 | Gorilla Chieftain regenerate loop | ✅ Fixed       |
+| 15672 | Combat damage to planeswalker     | 🔧 In Progress |
 ```
 
 ### 4. Archive Research Results
@@ -363,6 +376,7 @@ bun src/index.ts benchmark 1000 --seed 42 --export-json | tee logs/experiment-$(
 ```
 
 **Result Files:**
+
 ```
 results/
   ├─ experiments-greedy-baseline.json
@@ -388,6 +402,7 @@ bun src/index.ts benchmark 100 --export-json --export-path my-experiment
 ```
 
 **JSON Structure:**
+
 ```json
 {
   "metadata": {
@@ -418,6 +433,7 @@ bun src/index.ts benchmark 100 --export-json --export-csv
 ```
 
 **CSV Columns:**
+
 - `game_number`, `seed`, `winner`, `turns`, `player_deck`, `opponent_deck`, `duration_ms`, `error`
 
 ### Export Location
@@ -447,6 +463,7 @@ bun src/index.ts benchmark 100 --profile
 ```
 
 **Output:**
+
 ```
 ────────────────────────────────────────────────────────────
   PERFORMANCE PROFILE

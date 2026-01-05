@@ -34,6 +34,7 @@ import { registerTrigger, resolveTriggers } from '../rules/triggers';
 import { getActivatedAbilities, payCosts, applyAbilityEffect } from '../rules/activatedAbilities';
 import { parseManaCost, addManaToPool, type ManaColor } from '../utils/manaCosts';
 import { createEmptyManaPool, type ManaPool } from '../state/PlayerState';
+import { incrementalClone } from '../state/incrementalClone';
 
 /**
  * Apply an action to the game state
@@ -45,8 +46,8 @@ export function applyAction(state: GameState, action: Action): GameState {
     throw new Error(`Invalid action: ${errors.join(', ')}`);
   }
 
-  // Clone state (immutable updates)
-  const newState = structuredClone(state);
+  // Clone state (immutable updates) - use incremental cloning for performance
+  const newState = incrementalClone(state, action);
 
   // Record action in history
   newState.actionHistory.push(JSON.stringify(action));
@@ -506,6 +507,15 @@ function applyActivateAbility(state: GameState, action: ActivateAbilityAction): 
   const ability = abilities.find((a) => a.id === action.payload.abilityId);
   if (!ability) return;
 
+  // Auto-tap lands if ability has mana cost (Phase 1.5.6 Fix)
+  if (ability.cost.mana) {
+    const manaCost = parseManaCost(ability.cost.mana);
+    // Activated abilities generally don't have X costs unless specified (like Snake Basket)
+    // For now, we assume X=0 for abilities unless we implement X selection in ActivateAbilityAction
+    const xValue = 0;
+    autoTapForMana(state, action.playerId, manaCost, xValue, false); // pay=false, payCosts will consume
+  }
+
   // Pay costs (tap, mana, etc.)
   if (!payCosts(state, action.payload.sourceId, ability.cost)) {
     return; // Failed to pay costs
@@ -569,6 +579,7 @@ function autoTapForMana(
     x: number;
   },
   xValue: number,
+  pay: boolean = true,
 ): void {
   const player = getPlayer(state, playerId);
 
@@ -590,7 +601,9 @@ function autoTapForMana(
   ): number => {
     const available = player.manaPool[color];
     const toUse = Math.min(available, amount);
-    player.manaPool[color] -= toUse;
+    if (pay) {
+      player.manaPool[color] -= toUse;
+    }
     return amount - toUse;
   };
 
@@ -698,15 +711,17 @@ function autoTapForMana(
         // No source for this color - try to use mana we've already added
         const poolKey = key as keyof ManaPool;
         if (player.manaPool[poolKey] > 0) {
-          player.manaPool[poolKey]--;
+          if (pay) player.manaPool[poolKey]--;
           needed[key]--;
         } else {
           break; // Can't pay - should have been caught by validator
         }
       } else {
         // Used the mana we just added
-        const poolKey = key as keyof ManaPool;
-        player.manaPool[poolKey]--;
+        if (pay) {
+          const poolKey = key as keyof ManaPool;
+          player.manaPool[poolKey]--;
+        }
         needed[key]--;
       }
     }
@@ -718,19 +733,21 @@ function autoTapForMana(
     if (!color) break;
 
     // Use the mana we just added
-    const poolKey =
-      color === 'W'
-        ? 'white'
-        : color === 'U'
-          ? 'blue'
-          : color === 'B'
-            ? 'black'
-            : color === 'R'
-              ? 'red'
-              : color === 'G'
-                ? 'green'
-                : 'colorless';
-    player.manaPool[poolKey]--;
+    if (pay) {
+      const poolKey =
+        color === 'W'
+          ? 'white'
+          : color === 'U'
+            ? 'blue'
+            : color === 'B'
+              ? 'black'
+              : color === 'R'
+                ? 'red'
+                : color === 'G'
+                  ? 'green'
+                  : 'colorless';
+      player.manaPool[poolKey]--;
+    }
     needed.generic--;
   }
 }

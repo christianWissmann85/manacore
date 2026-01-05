@@ -10,7 +10,7 @@
  * - Failed game seeds for replay
  */
 
-import type { SimulationResults, OutputLevel } from '../types';
+import type { SimulationResults } from '../types';
 import { ResultsExporter, type ExportOptions } from './ResultsExporter';
 
 export class ConsoleExporter extends ResultsExporter {
@@ -61,11 +61,17 @@ export class ConsoleExporter extends ResultsExporter {
   ): void {
     console.log('');
     console.log('📊 Quick Summary');
-    console.log(`   ${playerName}: ${results.playerWins} wins (${this.pct(results.playerWins, results.gamesCompleted)}) | ${opponentName}: ${results.opponentWins} wins (${this.pct(results.opponentWins, results.gamesCompleted)}) | Draws: ${results.draws}`);
-    console.log(`   Avg game length: ${results.averageTurns.toFixed(1)} turns (range: ${results.minTurns}-${results.maxTurns})`);
-    
+    console.log(
+      `   ${playerName}: ${results.playerWins} wins (${this.pct(results.playerWins, results.gamesCompleted)}) | ${opponentName}: ${results.opponentWins} wins (${this.pct(results.opponentWins, results.gamesCompleted)}) | Draws: ${results.draws}`,
+    );
+    console.log(
+      `   Avg game length: ${results.averageTurns.toFixed(1)} turns (range: ${results.minTurns}-${results.maxTurns})`,
+    );
+
     if (results.profile) {
-      console.log(`   Performance: ${(results.profile.totalMs / 1000).toFixed(1)}s total | ${results.profile.gamesPerSecond.toFixed(1)} games/sec`);
+      console.log(
+        `   Performance: ${(results.profile.totalMs / 1000).toFixed(1)}s total | ${results.profile.gamesPerSecond.toFixed(1)} games/sec`,
+      );
     }
 
     if (results.errors > 0) {
@@ -73,12 +79,12 @@ export class ConsoleExporter extends ResultsExporter {
     }
 
     console.log('');
-    
+
     if (logPath) {
       console.log('📁 Exports');
       console.log(`   📝 Full log: ${logPath}`);
     }
-    
+
     console.log('');
     console.log('💡 Use --verbose for more details or check the log file');
   }
@@ -98,22 +104,32 @@ export class ConsoleExporter extends ResultsExporter {
     console.log('═'.repeat(60));
     console.log('');
 
-    console.log(`Total: ${results.totalGames} games | Completed: ${results.gamesCompleted}${results.errors > 0 ? ` | Errors: ${results.errors}` : ''}`);
+    console.log(
+      `Total: ${results.totalGames} games | Completed: ${results.gamesCompleted}${results.errors > 0 ? ` | Errors: ${results.errors}` : ''}`,
+    );
     console.log('');
 
-    console.log(`${playerName}: ${results.playerWins} wins (${this.pct(results.playerWins, results.gamesCompleted)})`);
-    console.log(`${opponentName}: ${results.opponentWins} wins (${this.pct(results.opponentWins, results.gamesCompleted)})`);
+    console.log(
+      `${playerName}: ${results.playerWins} wins (${this.pct(results.playerWins, results.gamesCompleted)})`,
+    );
+    console.log(
+      `${opponentName}: ${results.opponentWins} wins (${this.pct(results.opponentWins, results.gamesCompleted)})`,
+    );
     console.log(`Draws: ${results.draws}`);
     console.log('');
 
-    console.log(`Turns: avg ${results.averageTurns.toFixed(1)} (range ${results.minTurns}-${results.maxTurns})`);
+    console.log(
+      `Turns: avg ${results.averageTurns.toFixed(1)} (range ${results.minTurns}-${results.maxTurns})`,
+    );
 
     if (results.profile) {
       console.log('');
       console.log('─'.repeat(60));
       console.log('  PERFORMANCE');
       console.log('─'.repeat(60));
-      console.log(`Time: ${(results.profile.totalMs / 1000).toFixed(1)}s | Avg: ${results.profile.avgGameMs.toFixed(1)}ms/game | Rate: ${results.profile.gamesPerSecond.toFixed(1)} games/sec`);
+      console.log(
+        `Time: ${(results.profile.totalMs / 1000).toFixed(1)}s | Avg: ${results.profile.avgGameMs.toFixed(1)}ms/game | Rate: ${results.profile.gamesPerSecond.toFixed(1)} games/sec`,
+      );
     }
 
     // Top performing decks
@@ -149,8 +165,10 @@ export class ConsoleExporter extends ResultsExporter {
         const winRate = this.pct(stats.wins, stats.games);
         const name = deckName.charAt(0).toUpperCase() + deckName.slice(1).replace(/_/g, ' ');
         const emoji = deckEmoji[deckName] || '❓';
-        
-        console.log(`${emoji} ${name.padEnd(18)} ${stats.wins}W-${stats.losses}L-${stats.draws}D (${winRate}) [${stats.games} games]`);
+
+        console.log(
+          `${emoji} ${name.padEnd(18)} ${stats.wins}W-${stats.losses}L-${stats.draws}D (${winRate}) [${stats.games} games]`,
+        );
       }
     }
 
@@ -172,11 +190,7 @@ export class ConsoleExporter extends ResultsExporter {
   /**
    * Verbose output: Full statistics (current behavior)
    */
-  private printVerbose(
-    results: SimulationResults,
-    playerName: string,
-    opponentName: string,
-  ): void {
+  private printVerbose(results: SimulationResults, playerName: string, opponentName: string): void {
     console.log('');
     console.log('═'.repeat(60));
     console.log('  SIMULATION RESULTS');
@@ -191,8 +205,12 @@ export class ConsoleExporter extends ResultsExporter {
     }
     console.log('');
 
-    console.log(`${playerName}: ${results.playerWins} wins (${this.pct(results.playerWins, results.gamesCompleted)})`);
-    console.log(`${opponentName}: ${results.opponentWins} wins (${this.pct(results.opponentWins, results.gamesCompleted)})`);
+    console.log(
+      `${playerName}: ${results.playerWins} wins (${this.pct(results.playerWins, results.gamesCompleted)})`,
+    );
+    console.log(
+      `${opponentName}: ${results.opponentWins} wins (${this.pct(results.opponentWins, results.gamesCompleted)})`,
+    );
     console.log(`Draws: ${results.draws}`);
     console.log('');
 

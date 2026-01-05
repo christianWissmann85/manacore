@@ -266,4 +266,6 @@ export {
 // Validator utilities
 export { calculateAvailableMana } from './actions/validators';
 
-console.log(`✅ @manacore/engine v${ENGINE_VERSION} loaded`);
+if (!process.env.MANACORE_SILENT_INIT) {
+  console.log(`✅ @manacore/engine v${ENGINE_VERSION} loaded`);
+}

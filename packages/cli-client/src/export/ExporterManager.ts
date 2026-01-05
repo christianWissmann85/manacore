@@ -45,7 +45,7 @@ export class ExporterManager {
     config: ExportConfig,
   ): Promise<void> {
     // Ensure results directory exists (only if we're exporting to files)
-    const hasFileExports = config.formats.some(f => f !== 'console');
+    const hasFileExports = config.formats.some((f) => f !== 'console');
     if (hasFileExports && !config.outputPath) {
       this.ensureResultsDir();
     }
@@ -106,7 +106,9 @@ export class ExporterManager {
     try {
       if (!fs.existsSync(DEFAULT_RESULTS_DIR)) {
         fs.mkdirSync(DEFAULT_RESULTS_DIR, { recursive: true });
-        console.log(`📁 Created results directory: ${path.relative(process.cwd(), DEFAULT_RESULTS_DIR)}/`);
+        console.log(
+          `📁 Created results directory: ${path.relative(process.cwd(), DEFAULT_RESULTS_DIR)}/`,
+        );
       }
     } catch (err) {
       console.error('⚠️  Failed to create results directory:', err);

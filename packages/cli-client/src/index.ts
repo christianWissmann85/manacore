@@ -7,35 +7,36 @@
  * - Bot vs Bot simulation runner
  */
 
-import { RandomBot, GreedyBot, MCTSBot, type Bot } from '@manacore/ai';
+import { RandomBot, GreedyBot, type Bot } from '@manacore/ai';
 import { runSimulation, printResults, exportResults } from './commands/simulate';
 import { playGame } from './commands/play';
 import { OutputLevel, type ExportFormat } from './types';
-
-type BotType = 'random' | 'greedy' | 'mcts' | 'mcts-fast' | 'mcts-strong';
-
-function createBot(type: BotType, seed: number, debug = false): Bot {
-  switch (type) {
-    case 'greedy':
-      return new GreedyBot(seed, debug);
-    case 'mcts':
-      return new MCTSBot({ iterations: 200, rolloutDepth: 20, debug });
-    case 'mcts-fast':
-      return new MCTSBot({ iterations: 50, rolloutDepth: 15, debug, nameSuffix: 'fast' });
-    case 'mcts-strong':
-      return new MCTSBot({ iterations: 500, rolloutDepth: 25, debug, nameSuffix: 'strong' });
-    case 'random':
-    default:
-      return new RandomBot(seed);
-  }
-}
+import { createBot, type BotType } from './botFactory';
 
 function parseBotType(arg: string): BotType {
   const lower = arg.toLowerCase();
   if (lower === 'greedy' || lower === 'g') return 'greedy';
+
+  // Random rollout variants (slow)
   if (lower === 'mcts' || lower === 'm') return 'mcts';
   if (lower === 'mcts-fast' || lower === 'mf') return 'mcts-fast';
   if (lower === 'mcts-strong' || lower === 'ms') return 'mcts-strong';
+
+  // Greedy rollout variants
+  if (lower === 'mcts-greedy' || lower === 'mg') return 'mcts-greedy';
+  if (lower === 'mcts-greedy-fast' || lower === 'mgf') return 'mcts-greedy-fast';
+  if (lower === 'mcts-epsilon' || lower === 'me') return 'mcts-epsilon';
+
+  // No-rollout variants (FASTEST)
+  if (lower === 'mcts-eval' || lower === 'mev') return 'mcts-eval';
+  if (lower === 'mcts-eval-fast' || lower === 'mevf') return 'mcts-eval-fast';
+  if (lower === 'mcts-eval-strong' || lower === 'mevs') return 'mcts-eval-strong';
+  if (lower === 'mcts-eval-turbo' || lower === 'mevt') return 'mcts-eval-turbo';
+
+  // Shallow greedy (best balance)
+  if (lower === 'mcts-shallow' || lower === 'msh') return 'mcts-shallow';
+  if (lower === 'mcts-shallow-fast' || lower === 'mshf') return 'mcts-shallow-fast';
+
   return 'random';
 }
 
@@ -53,7 +54,7 @@ async function main() {
     case 'simulate':
     case 'sim': {
       const gameCount = parseInt(args[1] || '100', 10);
-      
+
       // Parse output level (new Phase 2.5 flags)
       let outputLevel: OutputLevel;
       if (args.includes('--quiet') || args.includes('-q')) {
@@ -95,8 +96,15 @@ async function main() {
       const exportPath = exportPathIndex !== -1 ? args[exportPathIndex + 1] : undefined;
 
       // Parse profiling option
-      const profile = args.includes('--profile-detailed') ? 'detailed' : 
-                     args.includes('--profile') ? true : false;
+      const profile = args.includes('--profile-detailed')
+        ? 'detailed'
+        : args.includes('--profile')
+          ? true
+          : false;
+
+      // Parallel execution (default for gameCount > 1, disable with --serial)
+      const serial = args.includes('--serial');
+      const parallel = !serial && gameCount > 1;
 
       // Only show header if not quiet
       if (outputLevel > OutputLevel.QUIET) {
@@ -119,6 +127,8 @@ async function main() {
         profile,
         outputLevel,
         autoExport,
+        botTypes: { p1: p1Type, p2: p2Type },
+        parallel,
       });
 
       // Determine export formats
@@ -127,11 +137,17 @@ async function main() {
       if (exportCsv) formats.push('csv');
 
       // Export results
-      await exportResults(results, playerBot.getName(), opponentBot.getName(), {
-        formats,
-        outputPath: exportPath,
-        pretty: true,
-      }, logPath);
+      await exportResults(
+        results,
+        playerBot.getName(),
+        opponentBot.getName(),
+        {
+          formats,
+          outputPath: exportPath,
+          pretty: true,
+        },
+        logPath,
+      );
       break;
     }
 
@@ -152,7 +168,7 @@ async function main() {
       } else if (args.includes('--verbose') || args.includes('-v')) {
         outputLevel = OutputLevel.VERBOSE;
       } else {
-        outputLevel = OutputLevel.NORMAL;  // Replay defaults to NORMAL
+        outputLevel = OutputLevel.NORMAL; // Replay defaults to NORMAL
       }
 
       const debugMode = args.includes('--debug') || args.includes('-d');
@@ -186,7 +202,7 @@ async function main() {
     case 'bench': {
       // Quick benchmark: GreedyBot vs RandomBot
       const gameCount = parseInt(args[1] || '10', 10);
-      
+
       // Parse output level (new Phase 2.5 flags)
       let outputLevel: OutputLevel;
       if (args.includes('--quiet') || args.includes('-q')) {
@@ -223,8 +239,11 @@ async function main() {
       const exportPath = exportPathIndex !== -1 ? args[exportPathIndex + 1] : undefined;
 
       // Parse profiling option
-      const profile = args.includes('--profile-detailed') ? 'detailed' : 
-                     args.includes('--profile') ? true : false;
+      const profile = args.includes('--profile-detailed')
+        ? 'detailed'
+        : args.includes('--profile')
+          ? true
+          : false;
 
       // Only show header if not quiet
       if (outputLevel > OutputLevel.QUIET) {
@@ -264,11 +283,17 @@ async function main() {
       if (exportCsv) formats.push('csv');
 
       // Export results
-      await exportResults(results, greedyBot.getName(), randomBot.getName(), {
-        formats,
-        outputPath: exportPath,
-        pretty: true,
-      }, logPath);
+      await exportResults(
+        results,
+        greedyBot.getName(),
+        randomBot.getName(),
+        {
+          formats,
+          outputPath: exportPath,
+          pretty: true,
+        },
+        logPath,
+      );
 
       // Only show stats if not quiet
       if (outputLevel > OutputLevel.QUIET) {
@@ -298,7 +323,9 @@ async function main() {
       console.log('  help                    Show this help message');
       console.log('');
       console.log('Options:');
-      console.log('  --seed <n>              Set base seed for reproducibility (default: timestamp)');
+      console.log(
+        '  --seed <n>              Set base seed for reproducibility (default: timestamp)',
+      );
       console.log('  --p1 <bot>              Player 1 bot type (see Bot Types below)');
       console.log('  --p2 <bot>              Player 2 bot type (see Bot Types below)');
       console.log('  --turns <n>             Maximum turns per game (default: 100)');
@@ -306,14 +333,29 @@ async function main() {
       console.log('Bot Types:');
       console.log('  random, r               RandomBot - picks random legal actions');
       console.log('  greedy, g               GreedyBot - 1-ply lookahead');
-      console.log('  mcts, m                 MCTSBot - 200 iterations (default)');
-      console.log('  mcts-fast, mf           MCTSBot - 50 iterations (fast)');
-      console.log('  mcts-strong, ms         MCTSBot - 500 iterations (strong)');
+      console.log('');
+      console.log('  MCTS with Random Rollouts (original):');
+      console.log('  mcts, m                 MCTSBot - 200 iterations');
+      console.log('  mcts-fast, mf           MCTSBot - 50 iterations');
+      console.log('  mcts-strong, ms         MCTSBot - 500 iterations');
+      console.log('');
+      console.log('  MCTS with Greedy Rollouts:');
+      console.log('  mcts-greedy, mg         MCTSBot - 100 iter, greedy rollout');
+      console.log('  mcts-greedy-fast, mgf   MCTSBot - 25 iter, greedy rollout');
+      console.log('  mcts-epsilon, me        MCTSBot - 100 iter, 90% greedy + 10% random');
+      console.log('');
+      console.log('  MCTS No-Rollout (FASTEST - uses evaluation function):');
+      console.log('  mcts-eval, mev          MCTSBot - 200 iter, no rollout');
+      console.log('  mcts-eval-fast, mevf    MCTSBot - 50 iter, no rollout');
+      console.log('  mcts-eval-strong, mevs  MCTSBot - 500 iter, no rollout');
+      console.log('  mcts-eval-turbo, mevt   MCTSBot - 1000 iter, no rollout (RECOMMENDED)');
       console.log('');
       console.log('Output Verbosity (Phase 2.5 - NEW):');
       console.log('  --quiet, -q             Suppress all output (silent mode)');
       console.log('  --minimal, -m           Show only summary and file locations');
-      console.log('  --normal, -n            Show summary with top statistics (auto for <50 games)');
+      console.log(
+        '  --normal, -n            Show summary with top statistics (auto for <50 games)',
+      );
       console.log('  --verbose, -v           Show detailed statistics and breakdowns (legacy)');
       console.log('  [auto]                  Auto-select: minimal for >50 games, normal otherwise');
       console.log('');
@@ -324,6 +366,7 @@ async function main() {
       console.log('  --no-auto-export        Disable automatic JSON export');
       console.log('  --profile               Enable basic performance profiling');
       console.log('  --profile-detailed      Enable detailed performance profiling');
+      console.log('  --serial                Run games sequentially (disable parallel execution)');
       console.log('');
       console.log('Debug Options:');
       console.log('  --debug, -d             Enable debug mode for bots');

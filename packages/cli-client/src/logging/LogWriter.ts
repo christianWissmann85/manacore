@@ -33,7 +33,7 @@ export class LogWriter {
     opponentBot: string;
   }): void {
     this.logStream = fs.createWriteStream(this.logPath, { flags: 'w' });
-    
+
     this.writeLine('═'.repeat(80));
     this.writeLine('ManaCore Simulation Log');
     this.writeLine('═'.repeat(80));
@@ -62,7 +62,7 @@ export class LogWriter {
    */
   write(content: string): void {
     const lines = content.split('\n');
-    lines.forEach(line => this.writeLine(line));
+    lines.forEach((line) => this.writeLine(line));
   }
 
   /**

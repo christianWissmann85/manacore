@@ -56,6 +56,6 @@ export const CARDS_REGISTERED =
   ARTIFACTS_COUNT;
 
 // Log registration count in development
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== 'production' && !process.env.MANACORE_SILENT_INIT) {
   console.log(`[6ed] Registered ${CARDS_REGISTERED} cards with abilities`);
 }

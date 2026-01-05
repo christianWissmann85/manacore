@@ -206,6 +206,7 @@ bun src/index.ts bench 100 --export-json --export-csv --profile
 - `--export-path <path>` - Custom export path (default: `results/`)
 
 **Automatic Features:**
+
 - 📊 Progress bar with live stats (games/sec, elapsed time)
 - 📝 Full log file saved to `results/logs/run-seed{N}-{timestamp}.log`
 - 📄 JSON export enabled by default
@@ -339,6 +340,7 @@ bun src/index.ts benchmark 100 --export-json
 **Outputs:** `results/results-seed{N}-{timestamp}.json`
 
 **Structure:**
+
 ```json
 {
   "metadata": {
@@ -377,9 +379,11 @@ bun src/index.ts benchmark 100 --export-csv
 **Outputs:** `results/results-seed{N}-{timestamp}.csv`
 
 **Columns:**
+
 - `game_number`, `seed`, `winner`, `turns`, `player_deck`, `opponent_deck`, `duration_ms`, `error`
 
 Ideal for:
+
 - Pandas/R data analysis
 - Excel/Google Sheets
 - Statistical modeling
