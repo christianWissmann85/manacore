@@ -28,6 +28,7 @@ export interface SimulationOptions {
   gameCount: number;
   maxTurns?: number;
   verbose?: boolean;
+  debugVerbose?: boolean;
   seed?: number;
 }
 
@@ -109,7 +110,11 @@ export async function runSimulation(
   );
 
   for (let i = 0; i < options.gameCount; i++) {
-    if (i % 10 === 0) {
+    if (options.debugVerbose) {
+      console.log(`\n${'─'.repeat(60)}`);
+      console.log(`🎲 Game ${i + 1}/${options.gameCount}`);
+      console.log('─'.repeat(60));
+    } else if (i % 10 === 0) {
       console.log(`  Progress: ${i}/${options.gameCount} games`);
     }
 
@@ -118,8 +123,19 @@ export async function runSimulation(
       const gameResult = await runSingleGame(playerBot, opponentBot, {
         maxTurns: options.maxTurns || 100,
         verbose: options.verbose || false,
+        debugVerbose: options.debugVerbose || false,
         seed,
       });
+
+      if (options.debugVerbose) {
+        const winnerName = 
+          gameResult.winner === 'player' ? playerBot.getName() :
+          gameResult.winner === 'opponent' ? opponentBot.getName() :
+          'Draw';
+        console.log(`\n✅ Game completed in ${gameResult.turns} turns`);
+        console.log(`🏆 Winner: ${winnerName}`);
+        console.log(`🎨 Decks: ${gameResult.playerDeck} vs ${gameResult.opponentDeck}`);
+      }
 
       results.gamesCompleted++;
       totalTurns += gameResult.turns;
@@ -226,7 +242,7 @@ class GameError extends Error {
 async function runSingleGame(
   playerBot: Bot,
   opponentBot: Bot,
-  options: { maxTurns: number; verbose: boolean; seed?: number },
+  options: { maxTurns: number; verbose: boolean; debugVerbose?: boolean; seed?: number },
 ): Promise<GameResult> {
   // Create decks - each bot gets a random test deck
   const playerDeckColor = getRandomDeckColor();
@@ -239,10 +255,18 @@ async function runSingleGame(
 
   let turnCount = 0;
   const maxTurns = options.maxTurns;
+  let actionCount = 0;
+  let lastLoggedTurn = 0;
+  let actionsThisTurn = 0;
 
   // Track recent actions for debugging
   const recentActions: Action[] = [];
   const MAX_RECENT_ACTIONS = 50;
+
+  if (options.debugVerbose) {
+    console.log(`\n📋 Starting game with decks: ${playerDeckColor} vs ${opponentDeckColor}`);
+    console.log(`🎲 Seed: ${options.seed ?? 'random'}\n`);
+  }
 
   while (!state.gameOver && turnCount < maxTurns) {
     // Get the bot with priority (Phase 1+: priority determines who can act)
@@ -273,7 +297,54 @@ async function runSingleGame(
 
     // Apply action
     try {
+      const previousTurn = state.turnCount;
+      const previousPhase = state.phase;
+      const previousStep = state.step;
+      const previousPriorityPlayer = state.priorityPlayer;
+      
       state = applyAction(state, action);
+      actionCount++;
+      actionsThisTurn++;
+
+      // Show progress in debug verbose mode
+      if (options.debugVerbose) {
+        // Show turn changes
+        if (state.turnCount > turnCount) {
+          if (actionsThisTurn > 10) {
+            console.log(`   └─ ${actionsThisTurn} actions on turn ${turnCount}`);
+          }
+          console.log(`\n🔄 Turn ${state.turnCount} | ${state.phase} | ${state.activePlayer}'s turn`);
+          lastLoggedTurn = state.turnCount;
+          actionsThisTurn = 0;
+        }
+        // Show phase changes
+        else if (state.phase !== previousPhase || state.step !== previousStep) {
+          // Only log if we're on a turn with lots of actions
+          if (actionsThisTurn > 20 && (actionsThisTurn % 10 === 0)) {
+            console.log(`   ├─ ${state.phase}/${state.step} (${actionsThisTurn} actions so far)`);
+          }
+        }
+        
+        // Warn if we're processing too many actions on one turn
+        if (actionsThisTurn > 0 && actionsThisTurn % 100 === 0) {
+          const actionDesc = describeAction(action, state);
+          console.log(`   ⚠️  Turn ${state.turnCount}: ${actionsThisTurn} actions! Last: ${actionDesc} [${state.phase}/${state.step}] ${previousPriorityPlayer}→${state.priorityPlayer}`);
+          
+          // Extra debugging at high counts
+          if (actionsThisTurn >= 500 && actionsThisTurn % 500 === 0) {
+            console.log(`   🔴 POTENTIAL INFINITE LOOP DETECTED!`);
+            console.log(`      Stack: ${state.stack.length} items`);
+            console.log(`      Priority: ${state.priorityPlayer}`);
+            console.log(`      Active: ${state.activePlayer}`);
+            console.log(`      Legal actions: ${legalActions.length}`);
+          }
+        }
+        
+        // Show periodic action count
+        if (actionCount % 50 === 0 && state.turnCount === lastLoggedTurn) {
+          console.log(`   ⚡ ${actionCount} actions processed (turn ${state.turnCount})`);
+        }
+      }
     } catch (error) {
       // Wrap error with game context
       const gameError = new GameError(
