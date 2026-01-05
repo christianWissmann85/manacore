@@ -108,11 +108,11 @@ export class GreedyBot implements Bot {
             // 1st repeat: -10, 2nd: -100, 3rd: -1000, etc.
             const penalty = Math.pow(10, sameAbilityCount + 1);
             score -= penalty;
-            
+
             if (this.debug && sameAbilityCount >= 2) {
               console.log(
                 `[GreedyBot] Penalizing repeated ability ${action.payload.abilityId}: ` +
-                `${sameAbilityCount} recent uses, penalty=${penalty}`
+                  `${sameAbilityCount} recent uses, penalty=${penalty}`,
               );
             }
           }

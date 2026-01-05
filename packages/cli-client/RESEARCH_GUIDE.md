@@ -224,6 +224,36 @@ These files contain:
 
 ---
 
+## 📊 Output Verbosity Levels
+
+Control console output based on your workflow:
+
+**Quiet Mode** (`--quiet`, `-q`)
+- Errors only
+- Best for: CI/CD pipelines, automated testing
+
+**Minimal Mode** (`--minimal`, `-m`)
+- Summary + file locations
+- Progress bar with live stats
+- Auto-enabled for runs >50 games
+- Best for: Large-scale experiments
+
+**Normal Mode** (`--normal`, `-n`)
+- Key statistics + summary
+- Progress bar included
+- Auto-enabled for runs ≤50 games
+- Best for: Standard development workflow
+
+**Verbose Mode** (`--verbose`, `-v`)
+- Full detailed statistics
+- Complete breakdowns and distributions
+- Best for: Deep analysis, debugging
+
+**Automatic Logging:**
+All modes save complete logs to `results/logs/` with seed in filename for easy replay.
+
+---
+
 ## 🎯 Command Reference
 
 ### Benchmark
@@ -233,14 +263,22 @@ bun src/index.ts benchmark <count> [options]
 
 Options:
   --seed <n>              Base seed for reproducibility
+  --quiet, -q             Suppress output (errors only)
+  --minimal, -m           Summary + file locations only
+  --normal, -n            Key statistics (default for <50 games)
+  --verbose, -v           Full detailed output
   --debug                 Show bot reasoning
-  --debug-verbose         Show turn-by-turn progress
   --turns <n>             Max turns per game (default: 100)
-  --export-json           Export results as JSON
-  --export-csv            Export results as CSV
+  --no-auto-export        Disable automatic JSON export
+  --export-csv            Also export as CSV
   --export-path <path>    Custom output path (default: results/)
   --profile               Enable basic profiling
   --profile-detailed      Enable detailed profiling
+
+Automatic:
+  - Progress bar with live stats
+  - Log file: results/logs/run-seed{N}-{timestamp}.log
+  - JSON export (unless --no-auto-export)
 ```
 
 ### Simulate

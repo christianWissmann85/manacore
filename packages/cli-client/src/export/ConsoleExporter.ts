@@ -2,6 +2,7 @@
  * ConsoleExporter - Outputs results to console
  *
  * Provides rich, formatted console output with:
+ * - Multiple verbosity levels (minimal, normal, verbose)
  * - Summary statistics
  * - Per-deck win rates
  * - Mana curve analysis
@@ -9,7 +10,7 @@
  * - Failed game seeds for replay
  */
 
-import type { SimulationResults } from '../types';
+import type { SimulationResults, OutputLevel } from '../types';
 import { ResultsExporter, type ExportOptions } from './ResultsExporter';
 
 export class ConsoleExporter extends ResultsExporter {
@@ -21,8 +22,161 @@ export class ConsoleExporter extends ResultsExporter {
     results: SimulationResults,
     playerBotName: string,
     opponentBotName: string,
-    _options?: ExportOptions,
+    options?: ExportOptions,
   ): Promise<void> {
+    const level = options?.outputLevel ?? 1; // Default to MINIMAL
+
+    if (level === 0) {
+      // QUIET: Only errors
+      if (results.errors > 0) {
+        this.printErrors(results);
+      }
+      return;
+    }
+
+    if (level === 1) {
+      // MINIMAL: Quick summary + file references
+      this.printMinimal(results, playerBotName, opponentBotName, options?.logPath);
+      return;
+    }
+
+    if (level === 2) {
+      // NORMAL: Key stats + top performers
+      this.printNormal(results, playerBotName, opponentBotName, options?.logPath);
+      return;
+    }
+
+    // VERBOSE: Full output (current behavior)
+    this.printVerbose(results, playerBotName, opponentBotName);
+  }
+
+  /**
+   * Minimal output: Quick summary + file references
+   */
+  private printMinimal(
+    results: SimulationResults,
+    playerName: string,
+    opponentName: string,
+    logPath?: string,
+  ): void {
+    console.log('');
+    console.log('📊 Quick Summary');
+    console.log(`   ${playerName}: ${results.playerWins} wins (${this.pct(results.playerWins, results.gamesCompleted)}) | ${opponentName}: ${results.opponentWins} wins (${this.pct(results.opponentWins, results.gamesCompleted)}) | Draws: ${results.draws}`);
+    console.log(`   Avg game length: ${results.averageTurns.toFixed(1)} turns (range: ${results.minTurns}-${results.maxTurns})`);
+    
+    if (results.profile) {
+      console.log(`   Performance: ${(results.profile.totalMs / 1000).toFixed(1)}s total | ${results.profile.gamesPerSecond.toFixed(1)} games/sec`);
+    }
+
+    if (results.errors > 0) {
+      console.log(`   ⚠️  ${results.errors} errors encountered`);
+    }
+
+    console.log('');
+    
+    if (logPath) {
+      console.log('📁 Exports');
+      console.log(`   📝 Full log: ${logPath}`);
+    }
+    
+    console.log('');
+    console.log('💡 Use --verbose for more details or check the log file');
+  }
+
+  /**
+   * Normal output: Key stats + top performers
+   */
+  private printNormal(
+    results: SimulationResults,
+    playerName: string,
+    opponentName: string,
+    logPath?: string,
+  ): void {
+    console.log('');
+    console.log('═'.repeat(60));
+    console.log('  SIMULATION RESULTS');
+    console.log('═'.repeat(60));
+    console.log('');
+
+    console.log(`Total: ${results.totalGames} games | Completed: ${results.gamesCompleted}${results.errors > 0 ? ` | Errors: ${results.errors}` : ''}`);
+    console.log('');
+
+    console.log(`${playerName}: ${results.playerWins} wins (${this.pct(results.playerWins, results.gamesCompleted)})`);
+    console.log(`${opponentName}: ${results.opponentWins} wins (${this.pct(results.opponentWins, results.gamesCompleted)})`);
+    console.log(`Draws: ${results.draws}`);
+    console.log('');
+
+    console.log(`Turns: avg ${results.averageTurns.toFixed(1)} (range ${results.minTurns}-${results.maxTurns})`);
+
+    if (results.profile) {
+      console.log('');
+      console.log('─'.repeat(60));
+      console.log('  PERFORMANCE');
+      console.log('─'.repeat(60));
+      console.log(`Time: ${(results.profile.totalMs / 1000).toFixed(1)}s | Avg: ${results.profile.avgGameMs.toFixed(1)}ms/game | Rate: ${results.profile.gamesPerSecond.toFixed(1)} games/sec`);
+    }
+
+    // Top performing decks
+    const sortedDecks = Object.keys(results.deckStats)
+      .filter((deckName) => (results.deckStats[deckName]?.games ?? 0) > 0)
+      .sort((a, b) => {
+        const aStats = results.deckStats[a];
+        const bStats = results.deckStats[b];
+        if (!aStats || !bStats) return 0;
+        const aRate = aStats.wins / aStats.games;
+        const bRate = bStats.wins / bStats.games;
+        return bRate - aRate;
+      })
+      .slice(0, 5);
+
+    if (sortedDecks.length > 0) {
+      console.log('');
+      console.log('─'.repeat(60));
+      console.log('  TOP PERFORMING DECKS');
+      console.log('─'.repeat(60));
+
+      const deckEmoji: Record<string, string> = {
+        white_weenie: '⚪👼',
+        blue_control: '🔵🧊',
+        black_aggro: '⚫💀',
+        red_burn: '🔥🟥',
+        green_midrange: '🌲🟩',
+      };
+
+      for (const deckName of sortedDecks) {
+        const stats = results.deckStats[deckName];
+        if (!stats) continue;
+        const winRate = this.pct(stats.wins, stats.games);
+        const name = deckName.charAt(0).toUpperCase() + deckName.slice(1).replace(/_/g, ' ');
+        const emoji = deckEmoji[deckName] || '❓';
+        
+        console.log(`${emoji} ${name.padEnd(18)} ${stats.wins}W-${stats.losses}L-${stats.draws}D (${winRate}) [${stats.games} games]`);
+      }
+    }
+
+    console.log('');
+
+    if (logPath) {
+      console.log(`📝 Full details: ${logPath}`);
+      console.log('');
+    }
+
+    if (results.errors > 0 && results.failedSeeds.length > 0) {
+      console.log(`⚠️  ${results.errors} errors - check log for failed seeds`);
+      console.log('');
+    }
+
+    console.log('💡 Use --verbose for complete statistics');
+  }
+
+  /**
+   * Verbose output: Full statistics (current behavior)
+   */
+  private printVerbose(
+    results: SimulationResults,
+    playerName: string,
+    opponentName: string,
+  ): void {
     console.log('');
     console.log('═'.repeat(60));
     console.log('  SIMULATION RESULTS');
@@ -37,8 +191,8 @@ export class ConsoleExporter extends ResultsExporter {
     }
     console.log('');
 
-    console.log(`${playerBotName}: ${results.playerWins} wins (${this.pct(results.playerWins, results.gamesCompleted)})`);
-    console.log(`${opponentBotName}: ${results.opponentWins} wins (${this.pct(results.opponentWins, results.gamesCompleted)})`);
+    console.log(`${playerName}: ${results.playerWins} wins (${this.pct(results.playerWins, results.gamesCompleted)})`);
+    console.log(`${opponentName}: ${results.opponentWins} wins (${this.pct(results.opponentWins, results.gamesCompleted)})`);
     console.log(`Draws: ${results.draws}`);
     console.log('');
 
@@ -170,6 +324,18 @@ export class ConsoleExporter extends ResultsExporter {
 
     if (results.gamesCompleted === results.totalGames && results.errors === 0) {
       console.log('✅ All games completed successfully!');
+    }
+  }
+
+  /**
+   * Print errors only
+   */
+  private printErrors(results: SimulationResults): void {
+    if (results.failedSeeds.length > 0) {
+      console.error(`\n⚠️  ${results.errors} games failed:`);
+      for (const seed of results.failedSeeds) {
+        console.error(`   Seed: ${seed}`);
+      }
     }
   }
 

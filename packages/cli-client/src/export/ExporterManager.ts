@@ -4,7 +4,7 @@
  * Coordinates exporting results to multiple formats simultaneously.
  */
 
-import type { SimulationResults, ExportFormat } from '../types';
+import type { SimulationResults, ExportFormat, OutputLevel } from '../types';
 import { ResultsExporter } from './ResultsExporter';
 import { ConsoleExporter } from './ConsoleExporter';
 import { JsonExporter } from './JsonExporter';
@@ -16,6 +16,8 @@ export interface ExportConfig {
   formats: ExportFormat[];
   outputPath?: string;
   pretty?: boolean;
+  outputLevel?: OutputLevel;
+  logPath?: string;
 }
 
 // Default export directory: results/ in project root
@@ -64,6 +66,8 @@ export class ExporterManager {
         exporter.export(results, playerBotName, opponentBotName, {
           outputPath,
           pretty: config.pretty,
+          outputLevel: config.outputLevel,
+          logPath: config.logPath,
         }),
       );
     }

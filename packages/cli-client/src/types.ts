@@ -7,6 +7,16 @@
 import type { PlayerId, CardTemplate } from '@manacore/engine';
 
 /**
+ * Output verbosity levels
+ */
+export enum OutputLevel {
+  QUIET = 0,      // Errors only
+  MINIMAL = 1,    // Summary + file references (default)
+  NORMAL = 2,     // Key stats + top performers
+  VERBOSE = 3,    // Full statistics (current behavior)
+}
+
+/**
  * Configuration for running simulations
  */
 export interface SimulationOptions {
@@ -20,6 +30,8 @@ export interface SimulationOptions {
   exportPath?: string;
   profile?: boolean | 'detailed';
   logErrors?: boolean;
+  outputLevel?: OutputLevel;
+  autoExport?: boolean;  // Auto-export JSON (default: true)
 }
 
 /**
@@ -34,6 +46,14 @@ export interface GameRecord {
   opponentDeck: string;
   error?: string;
   durationMs?: number;
+}
+
+/**
+ * Return type for runSimulation - includes results and log file path
+ */
+export interface SimulationOutput {
+  results: SimulationResults;
+  logPath: string;
 }
 
 /**

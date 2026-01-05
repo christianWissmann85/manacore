@@ -4,11 +4,13 @@
  * Defines the interface for exporting simulation results in various formats.
  */
 
-import type { SimulationResults } from '../types';
+import type { SimulationResults, OutputLevel } from '../types';
 
 export interface ExportOptions {
   outputPath?: string;
   pretty?: boolean;
+  outputLevel?: OutputLevel;
+  logPath?: string;
 }
 
 export abstract class ResultsExporter {

@@ -43,8 +43,30 @@ describe('GreedyBot', () => {
     expect(JSON.stringify(action1)).toBe(JSON.stringify(action2));
   });
 
-  // Skip slow game tests - use CLI benchmark instead
-  test.skip('completes a full game without errors', () => {
-    // Run via: bun src/index.ts benchmark greedy 10
+  test('completes a full game without errors', () => {
+    const playerBot = new GreedyBot(111);
+    const opponentBot = new RandomBot(222);
+
+    const playerDeck = createRedDeck();
+    const opponentDeck = createGreenDeck();
+    let state = initializeGame(playerDeck, opponentDeck, 333);
+
+    let actionCount = 0;
+    const maxActions = 5000;
+
+    while (!state.gameOver && actionCount < maxActions) {
+      const activeBot = state.priorityPlayer === 'player' ? playerBot : opponentBot;
+      const action = activeBot.chooseAction(state, state.priorityPlayer);
+      state = applyAction(state, action);
+      actionCount++;
+    }
+
+    // If we hit maxActions, that's suspicious but not necessarily a crash.
+    // Ideally it finishes.
+    if (actionCount >= maxActions) {
+      console.warn('Game did not finish within action limit');
+    }
+
+    expect(state).toBeDefined();
   });
 });

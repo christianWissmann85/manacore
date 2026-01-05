@@ -46,11 +46,14 @@ bun install
 # Interactive play mode (Human vs Bot)
 bun src/index.ts play
 
-# Run 100 bot vs bot simulations
+# Run 100 bot vs bot simulations (minimal output + progress bar)
 bun src/index.ts simulate 100
 
 # Quick benchmark (GreedyBot vs RandomBot)
 bun src/index.ts benchmark 10
+
+# Quiet mode (errors only)
+bun src/index.ts benchmark 100 --quiet
 
 # Get help
 bun src/index.ts help
@@ -132,7 +135,10 @@ bun src/index.ts sim 100 --p1 greedy --p2 random --turns 50 --verbose
 - `--p1 <bot>` - Player 1 bot type (`random`, `greedy`)
 - `--p2 <bot>` - Player 2 bot type (`random`, `greedy`)
 - `--turns <n>` - Maximum turns per game (default: 100)
-- `--verbose, -v` - Show detailed logs and error snapshots
+- `--quiet, -q` - Suppress output (errors only)
+- `--minimal, -m` - Summary + file locations (auto for >50 games)
+- `--normal, -n` - Key stats + summary (auto for ≤50 games)
+- `--verbose, -v` - Full detailed statistics
 
 **Example Output:**
 
@@ -192,12 +198,17 @@ bun src/index.ts bench 100 --export-json --export-csv --profile
 
 **Options:**
 
+- `--quiet, -q` / `--minimal, -m` / `--normal, -n` / `--verbose, -v` - Output verbosity
 - `--debug, -d` - Enable debug mode for GreedyBot (shows decision stats)
-- `--debug-verbose, -dv` - Show detailed progress for each game/turn
 - `--turns <n>` - Maximum turns per game (default: 100)
-- `--export-json` - Export results as JSON to `results/`
-- `--export-csv` - Export game data as CSV
-- `--export-path <path>` - Custom export path
+- `--no-auto-export` - Disable automatic JSON export (enabled by default)
+- `--export-csv` - Also export game data as CSV
+- `--export-path <path>` - Custom export path (default: `results/`)
+
+**Automatic Features:**
+- 📊 Progress bar with live stats (games/sec, elapsed time)
+- 📝 Full log file saved to `results/logs/run-seed{N}-{timestamp}.log`
+- 📄 JSON export enabled by default
 - `--profile` - Enable basic performance profiling
 - `--profile-detailed` - Enable detailed profiling with phase breakdown
 

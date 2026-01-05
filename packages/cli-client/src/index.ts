@@ -7,17 +7,23 @@
  * - Bot vs Bot simulation runner
  */
 
-import { RandomBot, GreedyBot, type Bot } from '@manacore/ai';
+import { RandomBot, GreedyBot, MCTSBot, type Bot } from '@manacore/ai';
 import { runSimulation, printResults, exportResults } from './commands/simulate';
 import { playGame } from './commands/play';
-import type { ExportFormat } from './types';
+import { OutputLevel, type ExportFormat } from './types';
 
-type BotType = 'random' | 'greedy';
+type BotType = 'random' | 'greedy' | 'mcts' | 'mcts-fast' | 'mcts-strong';
 
-function createBot(type: BotType, seed: number): Bot {
+function createBot(type: BotType, seed: number, debug = false): Bot {
   switch (type) {
     case 'greedy':
-      return new GreedyBot(seed);
+      return new GreedyBot(seed, debug);
+    case 'mcts':
+      return new MCTSBot({ iterations: 200, rolloutDepth: 20, debug });
+    case 'mcts-fast':
+      return new MCTSBot({ iterations: 50, rolloutDepth: 15, debug, nameSuffix: 'fast' });
+    case 'mcts-strong':
+      return new MCTSBot({ iterations: 500, rolloutDepth: 25, debug, nameSuffix: 'strong' });
     case 'random':
     default:
       return new RandomBot(seed);
@@ -27,6 +33,9 @@ function createBot(type: BotType, seed: number): Bot {
 function parseBotType(arg: string): BotType {
   const lower = arg.toLowerCase();
   if (lower === 'greedy' || lower === 'g') return 'greedy';
+  if (lower === 'mcts' || lower === 'm') return 'mcts';
+  if (lower === 'mcts-fast' || lower === 'mf') return 'mcts-fast';
+  if (lower === 'mcts-strong' || lower === 'ms') return 'mcts-strong';
   return 'random';
 }
 
@@ -44,7 +53,25 @@ async function main() {
     case 'simulate':
     case 'sim': {
       const gameCount = parseInt(args[1] || '100', 10);
-      const verbose = args.includes('--verbose') || args.includes('-v');
+      
+      // Parse output level (new Phase 2.5 flags)
+      let outputLevel: OutputLevel;
+      if (args.includes('--quiet') || args.includes('-q')) {
+        outputLevel = OutputLevel.QUIET;
+      } else if (args.includes('--minimal') || args.includes('-m')) {
+        outputLevel = OutputLevel.MINIMAL;
+      } else if (args.includes('--normal') || args.includes('-n')) {
+        outputLevel = OutputLevel.NORMAL;
+      } else if (args.includes('--verbose') || args.includes('-v')) {
+        outputLevel = OutputLevel.VERBOSE;
+      } else {
+        // Auto-determine: minimal for large runs, normal otherwise
+        outputLevel = gameCount > 50 ? OutputLevel.MINIMAL : OutputLevel.NORMAL;
+      }
+
+      // Phase 2.5: Always auto-export JSON (unless explicitly disabled)
+      const noAutoExport = args.includes('--no-auto-export');
+      const autoExport = !noAutoExport;
 
       // Parse bot types: --p1 greedy --p2 random
       const p1Index = args.indexOf('--p1');
@@ -62,8 +89,7 @@ async function main() {
       const seedIndex = args.indexOf('--seed');
       const baseSeed = seedIndex !== -1 ? parseInt(args[seedIndex + 1]!, 10) : Date.now();
 
-      // Parse export options
-      const exportJson = args.includes('--export-json');
+      // Parse additional export options (CSV, custom path)
       const exportCsv = args.includes('--export-csv');
       const exportPathIndex = args.indexOf('--export-path');
       const exportPath = exportPathIndex !== -1 ? args[exportPathIndex + 1] : undefined;
@@ -72,26 +98,32 @@ async function main() {
       const profile = args.includes('--profile-detailed') ? 'detailed' : 
                      args.includes('--profile') ? true : false;
 
-      console.log('🎮 ManaCore - Game Simulator\n');
-      console.log(`🎲 Base Seed: ${baseSeed}\n`);
+      // Only show header if not quiet
+      if (outputLevel > OutputLevel.QUIET) {
+        console.log('🎮 ManaCore - Game Simulator\n');
+        console.log(`🎲 Base Seed: ${baseSeed}\n`);
+      }
 
-      const playerBot = createBot(p1Type, 42);
-      const opponentBot = createBot(p2Type, 43);
+      const debugMode = args.includes('--debug') || args.includes('-d');
+      const playerBot = createBot(p1Type, 42, debugMode);
+      const opponentBot = createBot(p2Type, 43, debugMode);
 
-      const results = await runSimulation(playerBot, opponentBot, {
+      const { results, logPath } = await runSimulation(playerBot, opponentBot, {
         gameCount,
         maxTurns,
-        verbose,
+        verbose: outputLevel === OutputLevel.VERBOSE,
         seed: baseSeed,
-        exportJson,
+        exportJson: autoExport,
         exportCsv,
         exportPath,
         profile,
+        outputLevel,
+        autoExport,
       });
 
       // Determine export formats
       const formats: ExportFormat[] = ['console'];
-      if (exportJson) formats.push('json');
+      if (autoExport) formats.push('json');
       if (exportCsv) formats.push('csv');
 
       // Export results
@@ -99,7 +131,7 @@ async function main() {
         formats,
         outputPath: exportPath,
         pretty: true,
-      });
+      }, logPath);
       break;
     }
 
@@ -113,7 +145,16 @@ async function main() {
         break;
       }
 
-      const verbose = args.includes('--verbose') || args.includes('-v');
+      // Parse output level
+      let outputLevel: OutputLevel;
+      if (args.includes('--quiet') || args.includes('-q')) {
+        outputLevel = OutputLevel.QUIET;
+      } else if (args.includes('--verbose') || args.includes('-v')) {
+        outputLevel = OutputLevel.VERBOSE;
+      } else {
+        outputLevel = OutputLevel.NORMAL;  // Replay defaults to NORMAL
+      }
+
       const debugMode = args.includes('--debug') || args.includes('-d');
 
       console.log('🔄 ManaCore - Game Replay\n');
@@ -122,19 +163,21 @@ async function main() {
       const greedyBot = new GreedyBot(42, debugMode);
       const randomBot = new RandomBot(43);
 
-      const results = await runSimulation(greedyBot, randomBot, {
+      const { results, logPath } = await runSimulation(greedyBot, randomBot, {
         gameCount: 1,
         maxTurns: 100,
-        verbose: true,
-        debugVerbose: verbose,
+        verbose: outputLevel === OutputLevel.VERBOSE,
+        debugVerbose: outputLevel === OutputLevel.VERBOSE,
         seed: gameSeed,
+        outputLevel,
+        autoExport: true,
       });
 
       if (results.errors > 0) {
         console.log('\n❌ Game failed with error (see details above)');
       } else {
         console.log('\n✅ Game completed successfully');
-        printResults(results, greedyBot.getName(), randomBot.getName());
+        await printResults(results, greedyBot.getName(), randomBot.getName(), outputLevel, logPath);
       }
       break;
     }
@@ -143,8 +186,28 @@ async function main() {
     case 'bench': {
       // Quick benchmark: GreedyBot vs RandomBot
       const gameCount = parseInt(args[1] || '10', 10);
+      
+      // Parse output level (new Phase 2.5 flags)
+      let outputLevel: OutputLevel;
+      if (args.includes('--quiet') || args.includes('-q')) {
+        outputLevel = OutputLevel.QUIET;
+      } else if (args.includes('--minimal') || args.includes('-m')) {
+        outputLevel = OutputLevel.MINIMAL;
+      } else if (args.includes('--normal') || args.includes('-n')) {
+        outputLevel = OutputLevel.NORMAL;
+      } else if (args.includes('--verbose') || args.includes('-v')) {
+        outputLevel = OutputLevel.VERBOSE;
+      } else {
+        // Auto-determine: minimal for large runs, normal otherwise
+        outputLevel = gameCount > 50 ? OutputLevel.MINIMAL : OutputLevel.NORMAL;
+      }
+
       const debugMode = args.includes('--debug') || args.includes('-d');
       const debugVerbose = args.includes('--debug-verbose') || args.includes('-dv');
+
+      // Phase 2.5: Always auto-export JSON (unless explicitly disabled)
+      const noAutoExport = args.includes('--no-auto-export');
+      const autoExport = !noAutoExport;
 
       // Parse turn limit: --turns 100
       const turnsIndex = args.indexOf('--turns');
@@ -154,8 +217,7 @@ async function main() {
       const seedIndex = args.indexOf('--seed');
       const baseSeed = seedIndex !== -1 ? parseInt(args[seedIndex + 1]!, 10) : Date.now();
 
-      // Parse export options
-      const exportJson = args.includes('--export-json');
+      // Parse additional export options (CSV, custom path)
       const exportCsv = args.includes('--export-csv');
       const exportPathIndex = args.indexOf('--export-path');
       const exportPath = exportPathIndex !== -1 ? args[exportPathIndex + 1] : undefined;
@@ -164,36 +226,41 @@ async function main() {
       const profile = args.includes('--profile-detailed') ? 'detailed' : 
                      args.includes('--profile') ? true : false;
 
-      console.log('🏆 ManaCore - Bot Benchmark\n');
-      console.log(`Running ${gameCount} games: GreedyBot vs RandomBot`);
-      console.log(`🎲 Base Seed: ${baseSeed}`);
-      if (debugMode) console.log('Debug mode enabled');
-      if (debugVerbose) console.log('Verbose debug mode enabled');
-      if (profile) console.log(`Profiling enabled${profile === 'detailed' ? ' (detailed)' : ''}`);
-      console.log('');
+      // Only show header if not quiet
+      if (outputLevel > OutputLevel.QUIET) {
+        console.log('🏆 ManaCore - Bot Benchmark\n');
+        console.log(`Running ${gameCount} games: GreedyBot vs RandomBot`);
+        console.log(`🎲 Base Seed: ${baseSeed}`);
+        if (debugMode) console.log('Debug mode enabled');
+        if (debugVerbose) console.log('Verbose debug mode enabled');
+        if (profile) console.log(`Profiling enabled${profile === 'detailed' ? ' (detailed)' : ''}`);
+        console.log('');
+      }
 
       const greedyBot = new GreedyBot(42, debugMode);
       const randomBot = new RandomBot(43);
 
       const startTime = Date.now();
 
-      const results = await runSimulation(greedyBot, randomBot, {
+      const { results, logPath } = await runSimulation(greedyBot, randomBot, {
         gameCount,
         maxTurns,
-        verbose: false,
+        verbose: outputLevel === OutputLevel.VERBOSE,
         debugVerbose,
         seed: baseSeed,
-        exportJson,
+        exportJson: autoExport,
         exportCsv,
         exportPath,
         profile,
+        outputLevel,
+        autoExport,
       });
 
       const elapsed = (Date.now() - startTime) / 1000;
 
       // Determine export formats
       const formats: ExportFormat[] = ['console'];
-      if (exportJson) formats.push('json');
+      if (autoExport) formats.push('json');
       if (exportCsv) formats.push('csv');
 
       // Export results
@@ -201,17 +268,20 @@ async function main() {
         formats,
         outputPath: exportPath,
         pretty: true,
-      });
+      }, logPath);
 
-      const winRate = (results.playerWins / results.gamesCompleted) * 100;
-      const stats = greedyBot.getStats();
-      console.log(`\n📊 GreedyBot Win Rate: ${winRate.toFixed(1)}%`);
-      console.log(
-        `⏱️  Total time: ${elapsed.toFixed(1)}s (${(elapsed / gameCount).toFixed(2)}s/game)`,
-      );
-      console.log(
-        `🧠 Decisions: ${stats.decisions} | Actions evaluated: ${stats.actionsEvaluated} | Avg: ${stats.avgActions.toFixed(1)}/decision`,
-      );
+      // Only show stats if not quiet
+      if (outputLevel > OutputLevel.QUIET) {
+        const winRate = (results.playerWins / results.gamesCompleted) * 100;
+        const stats = greedyBot.getStats();
+        console.log(`\n📊 GreedyBot Win Rate: ${winRate.toFixed(1)}%`);
+        console.log(
+          `⏱️  Total time: ${elapsed.toFixed(1)}s (${(elapsed / gameCount).toFixed(2)}s/game)`,
+        );
+        console.log(
+          `🧠 Decisions: ${stats.decisions} | Actions evaluated: ${stats.actionsEvaluated} | Avg: ${stats.avgActions.toFixed(1)}/decision`,
+        );
+      }
       break;
     }
 
@@ -229,29 +299,45 @@ async function main() {
       console.log('');
       console.log('Options:');
       console.log('  --seed <n>              Set base seed for reproducibility (default: timestamp)');
-      console.log('  --verbose, -v           Show detailed simulation logs');
-      console.log('  --debug, -d             Enable debug mode for bots');
-      console.log('  --debug-verbose, -dv    Show detailed progress for each game/turn');
-      console.log('  --p1 <bot>              Player 1 bot type (random, greedy)');
-      console.log('  --p2 <bot>              Player 2 bot type (random, greedy)');
+      console.log('  --p1 <bot>              Player 1 bot type (see Bot Types below)');
+      console.log('  --p2 <bot>              Player 2 bot type (see Bot Types below)');
       console.log('  --turns <n>             Maximum turns per game (default: 100)');
       console.log('');
-      console.log('Export Options (Phase 2 - NEW):');
-      console.log('  --export-json           Export results as JSON');
+      console.log('Bot Types:');
+      console.log('  random, r               RandomBot - picks random legal actions');
+      console.log('  greedy, g               GreedyBot - 1-ply lookahead');
+      console.log('  mcts, m                 MCTSBot - 200 iterations (default)');
+      console.log('  mcts-fast, mf           MCTSBot - 50 iterations (fast)');
+      console.log('  mcts-strong, ms         MCTSBot - 500 iterations (strong)');
+      console.log('');
+      console.log('Output Verbosity (Phase 2.5 - NEW):');
+      console.log('  --quiet, -q             Suppress all output (silent mode)');
+      console.log('  --minimal, -m           Show only summary and file locations');
+      console.log('  --normal, -n            Show summary with top statistics (auto for <50 games)');
+      console.log('  --verbose, -v           Show detailed statistics and breakdowns (legacy)');
+      console.log('  [auto]                  Auto-select: minimal for >50 games, normal otherwise');
+      console.log('');
+      console.log('Export Options (Phase 2):');
+      console.log('  --export-json           Export results as JSON (auto-enabled by default)');
       console.log('  --export-csv            Export results as CSV');
-      console.log('  --export-path <path>    Specify output file path');
+      console.log('  --export-path <path>    Specify custom output path (default: results/)');
+      console.log('  --no-auto-export        Disable automatic JSON export');
       console.log('  --profile               Enable basic performance profiling');
       console.log('  --profile-detailed      Enable detailed performance profiling');
+      console.log('');
+      console.log('Debug Options:');
+      console.log('  --debug, -d             Enable debug mode for bots');
+      console.log('  --debug-verbose, -dv    Show detailed progress for each game/turn');
       console.log('');
       console.log('Examples:');
       console.log('  bun src/index.ts play');
       console.log('  bun src/index.ts simulate 100');
       console.log('  bun src/index.ts sim 10 --p1 greedy --p2 random --seed 42');
       console.log('  bun src/index.ts benchmark 100 --seed 12345');
-      console.log('  bun src/index.ts benchmark 100 --export-json --export-csv');
-      console.log('  bun src/index.ts benchmark 100 --export-json --export-path my-results');
+      console.log('  bun src/index.ts benchmark 100 --quiet       # Silent mode');
+      console.log('  bun src/index.ts benchmark 100 --minimal     # Summary only');
       console.log('  bun src/index.ts benchmark 1000 --profile');
-      console.log('  bun src/index.ts replay 12383 --verbose  # Replay failed game');
+      console.log('  bun src/index.ts replay 12383 --verbose      # Replay failed game');
       break;
   }
 }
