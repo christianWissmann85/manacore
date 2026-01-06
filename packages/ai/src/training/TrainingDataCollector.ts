@@ -91,6 +91,9 @@ export interface TrainingSample {
 
   // Player making the decision
   playerId: PlayerId;
+
+  // Optional: Reasoning behind the decision (for human/LLM players)
+  reasoning?: string;
 }
 
 /**
@@ -340,8 +343,9 @@ export class TrainingDataCollector {
    * @param state - Game state before action
    * @param action - Action that was chosen
    * @param legalActions - All legal actions at this point
+   * @param reasoning - Optional reasoning text
    */
-  recordDecision(state: GameState, action: Action, legalActions: Action[]): void {
+  recordDecision(state: GameState, action: Action, legalActions: Action[], reasoning?: string): void {
     const playerId = action.playerId;
 
     // Check if we should record this player
@@ -386,6 +390,7 @@ export class TrainingDataCollector {
       turn: state.turnCount,
       phase: state.phase,
       playerId,
+      reasoning,
     });
   }
 
