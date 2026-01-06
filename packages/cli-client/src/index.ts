@@ -11,6 +11,7 @@ import { RandomBot, GreedyBot, type Bot } from '@manacore/ai';
 import { runSimulation, printResults, exportResults } from './commands/simulate';
 import { playGame } from './commands/play';
 import { runTune } from './commands/tune';
+import { runTuneMCTS, parseTuneMCTSArgs } from './commands/tune-mcts';
 import { runBenchmarkSuite, parseBenchmarkSuiteArgs } from './commands/benchmarkSuite';
 import { runReplayCommand, parseReplayArgs } from './commands/replay';
 import { OutputLevel, type ExportFormat } from './types';
@@ -374,6 +375,14 @@ async function main() {
       break;
     }
 
+    case 'tune-mcts':
+    case 'mcts-tune': {
+      // Parse MCTS tuning options
+      const mctsOptions = parseTuneMCTSArgs(args.slice(1));
+      await runTuneMCTS(mctsOptions);
+      break;
+    }
+
     case 'benchmark-suite':
     case 'suite': {
       // Parse benchmark suite options
@@ -474,6 +483,19 @@ async function main() {
       console.log('  bun src/index.ts tune                        # Quick local search');
       console.log('  bun src/index.ts tune --method evolve        # Evolutionary search');
       console.log('  bun src/index.ts tune --generations 30       # More iterations');
+      console.log('');
+      console.log('MCTS Hyperparameter Tuning (Phase 3.0):');
+      console.log('  tune-mcts               Tune MCTS parameters (C, depth, policy)');
+      console.log('  --method <type>         grid or coarse-to-fine (default: coarse-to-fine)');
+      console.log('  --games <n>             Games per config (default: 50)');
+      console.log('  --validation <n>        Validation games (default: 200)');
+      console.log('  --iterations <n>        MCTS iterations during tuning (default: 50)');
+      console.log('  --save                  Save results to weights.json');
+      console.log('');
+      console.log('MCTS Tuning Examples:');
+      console.log('  bun src/index.ts tune-mcts                   # Coarse-to-fine search');
+      console.log('  bun src/index.ts tune-mcts --method grid     # Full grid search');
+      console.log('  bun src/index.ts tune-mcts --games 100 --save  # Save results');
       console.log('');
       console.log('Benchmark Suite (Phase 2.5):');
       console.log('  suite                   Run bot comparison matrix');

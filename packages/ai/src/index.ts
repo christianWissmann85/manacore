@@ -92,6 +92,44 @@ export { LocalSearchOptimizer } from './tuning/LocalSearchOptimizer';
 export { EvolutionaryOptimizer } from './tuning/EvolutionaryOptimizer';
 export { TunableBot, normalizeWeights, weightsToCoefficients } from './tuning/TunableBot';
 
+// Acceptance criteria exports
+export type {
+  ConfidenceInterval,
+  AcceptanceThresholds,
+  AcceptanceCriteriaConfig,
+  ValidationResult,
+} from './tuning/AcceptanceCriteria';
+export {
+  wilsonConfidenceInterval,
+  areSignificantlyDifferent,
+  isSignificantlyBetter,
+  validateImprovement,
+  formatValidationResult,
+  isLikelyBetter,
+  calculateRequiredSampleSize,
+  DEFAULT_ACCEPTANCE_CONFIG,
+  RELAXED_ACCEPTANCE_CONFIG,
+  STRICT_ACCEPTANCE_CONFIG,
+} from './tuning/AcceptanceCriteria';
+
+// MCTS tuner exports
+export type {
+  MCTSHyperparams,
+  MCTSParamRanges,
+  MCTSConfigResult,
+  MCTSTuningProgress,
+  MCTSTuningResult,
+  MCTSTunerConfig,
+} from './tuning/MCTSTuner';
+export {
+  MCTSTuner,
+  formatMCTSTuningResult,
+  tuningResultToMCTSParams,
+  DEFAULT_TUNER_CONFIG,
+  DEFAULT_PARAM_RANGES,
+  COARSE_PARAM_RANGES,
+} from './tuning/MCTSTuner';
+
 if (!process.env.MANACORE_SILENT_INIT) {
   console.log(`✅ @manacore/ai v${AI_VERSION} loaded`);
 }

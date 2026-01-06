@@ -74,12 +74,12 @@ interface WeightsFile {
 
 #### Implementation Tasks
 
-- [ ] Create `packages/ai/data/` directory structure
-- [ ] Write initial `weights.json` with TUNED_WEIGHTS
-- [ ] Create `WeightLoader.ts` utility
-- [ ] Modify `evaluate.ts` to use WeightLoader
-- [ ] Add fallback to hardcoded defaults if JSON missing
-- [ ] Create `archiveWeights()` function for history
+- [x] Create `packages/ai/data/` directory structure
+- [x] Write initial `weights.json` with TUNED_WEIGHTS
+- [x] Create `WeightLoader.ts` utility
+- [x] Modify `evaluate.ts` to use WeightLoader
+- [x] Add fallback to hardcoded defaults if JSON missing
+- [x] Create `archiveWeights()` function for history
 
 ---
 
@@ -142,11 +142,11 @@ function validateImprovement(
 
 #### Implementation Tasks
 
-- [ ] Create `packages/ai/src/tuning/AcceptanceCriteria.ts`
-- [ ] Implement Wilson score confidence interval calculation
-- [ ] Create `validateImprovement()` function
-- [ ] Add validation step to tuning workflow
-- [ ] Create CLI flag `--validate-only` for testing without persisting
+- [x] Create `packages/ai/src/tuning/AcceptanceCriteria.ts`
+- [x] Implement Wilson score confidence interval calculation
+- [x] Create `validateImprovement()` function
+- [x] Add validation step to tuning workflow
+- [x] Create CLI flag `--validate-only` for testing without persisting
 
 ---
 
