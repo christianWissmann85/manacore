@@ -24,20 +24,18 @@ function parseBotType(arg: string): BotType {
   const lower = arg.toLowerCase();
   if (lower === 'greedy' || lower === 'g') return 'greedy';
 
-  // Random rollout variants (slow)
-  if (lower === 'mcts' || lower === 'm') return 'mcts';
-  if (lower === 'mcts-fast' || lower === 'mf') return 'mcts-fast';
-  if (lower === 'mcts-strong' || lower === 'ms') return 'mcts-strong';
-
   // Greedy rollout variants
   if (lower === 'mcts-greedy' || lower === 'mg') return 'mcts-greedy';
   if (lower === 'mcts-greedy-fast' || lower === 'mgf') return 'mcts-greedy-fast';
   if (lower === 'mcts-epsilon' || lower === 'me') return 'mcts-epsilon';
 
-  // No-rollout variants (FASTEST)
-  if (lower === 'mcts-eval' || lower === 'mev') return 'mcts-eval';
-  if (lower === 'mcts-eval-fast' || lower === 'mevf') return 'mcts-eval-fast';
-  if (lower === 'mcts-eval-strong' || lower === 'mevs') return 'mcts-eval-strong';
+  // No-rollout variants (FASTEST - recommended)
+  if (lower === 'mcts-eval' || lower === 'mev' || lower === 'mcts' || lower === 'm')
+    return 'mcts-eval';
+  if (lower === 'mcts-eval-fast' || lower === 'mevf' || lower === 'mcts-fast' || lower === 'mf')
+    return 'mcts-eval-fast';
+  if (lower === 'mcts-eval-strong' || lower === 'mevs' || lower === 'mcts-strong' || lower === 'ms')
+    return 'mcts-eval-strong';
   if (lower === 'mcts-eval-turbo' || lower === 'mevt') return 'mcts-eval-turbo';
 
   // Shallow greedy (best balance)
@@ -493,21 +491,20 @@ async function main() {
       console.log('  random, r               RandomBot - picks random legal actions');
       console.log('  greedy, g               GreedyBot - 1-ply lookahead');
       console.log('');
-      console.log('  MCTS with Random Rollouts (original):');
-      console.log('  mcts, m                 MCTSBot - 200 iterations');
-      console.log('  mcts-fast, mf           MCTSBot - 50 iterations');
-      console.log('  mcts-strong, ms         MCTSBot - 500 iterations');
+      console.log('  MCTS No-Rollout (FASTEST - uses evaluation function):');
+      console.log('  mcts, m, mcts-eval      MCTSBot - 200 iter, no rollout');
+      console.log('  mcts-fast, mf           MCTSBot - 50 iter, no rollout');
+      console.log('  mcts-strong, ms         MCTSBot - 500 iter, no rollout');
+      console.log('  mcts-eval-turbo, mevt   MCTSBot - 1000 iter, no rollout (RECOMMENDED)');
       console.log('');
       console.log('  MCTS with Greedy Rollouts:');
       console.log('  mcts-greedy, mg         MCTSBot - 100 iter, greedy rollout');
       console.log('  mcts-greedy-fast, mgf   MCTSBot - 25 iter, greedy rollout');
       console.log('  mcts-epsilon, me        MCTSBot - 100 iter, 90% greedy + 10% random');
       console.log('');
-      console.log('  MCTS No-Rollout (FASTEST - uses evaluation function):');
-      console.log('  mcts-eval, mev          MCTSBot - 200 iter, no rollout');
-      console.log('  mcts-eval-fast, mevf    MCTSBot - 50 iter, no rollout');
-      console.log('  mcts-eval-strong, mevs  MCTSBot - 500 iter, no rollout');
-      console.log('  mcts-eval-turbo, mevt   MCTSBot - 1000 iter, no rollout (RECOMMENDED)');
+      console.log('  MCTS Shallow Greedy (best speed/quality balance):');
+      console.log('  mcts-shallow, msh       MCTSBot - 100 iter, depth 3 greedy rollout');
+      console.log('  mcts-shallow-fast, mshf MCTSBot - 50 iter, depth 2 greedy rollout');
       console.log('');
       console.log('Output Verbosity (Phase 2.5 - NEW):');
       console.log('  --quiet, -q             Suppress all output (silent mode)');

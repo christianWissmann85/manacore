@@ -128,6 +128,10 @@ function determinize(state: GameState): GameState {
 
 ## Phase 3: Advanced MCTS
 
+**Status:** Planning Complete (January 6, 2026)
+**Implementation Order:** 3.4 → 3.1 → 3.2 → 3.3
+**See:** `packages/ai/docs/PHASE-3-PLAN.md` for detailed implementation plan
+
 ### ✅ 3.0: Use Tuning Data to improve MCTS Weights
 
 - Read: `packages/cli-client/docs/TUNING.md`
@@ -135,30 +139,46 @@ function determinize(state: GameState): GameState {
 - Discuss ongoing Strategy (How often to retune?)
 - See `packages/ai/docs/PHASE-3.0-PLAN.md` for Details
 
+### ✅ Cleanup: Remove Random Rollout Variants
+
+- [x] Removed `mcts`, `mcts-fast`, `mcts-strong` (random rollout) from botFactory
+- [x] Kept shortcuts (`m`, `mf`, `ms`) → now redirect to eval variants
+- [x] Updated benchmark presets
+
+### 3.4: Move Ordering (NEXT)
+
+- [ ] Type-based action priority during MCTS expansion
+- [ ] Spells > Abilities > Attacks > Blocks > Pass
+- [ ] No evaluation cost (just type sorting)
+- **Bot type:** `mcts-ordered`
+- **Benchmark:** `experiments/phase3.4-move-ordering.json`
+
 ### 3.1: ISMCTS (Information Set MCTS)
 
-- Evaluate existing MCTSBots implementations (Plain basic MCTS Bot is extremely slow and loses almost all games, maybe delete this one?)
-- Multiple determinizations per search
-- Aggregate results across possible worlds
-- Handle hidden information properly
+- [ ] Multiple determinizations per search (default: 10)
+- [ ] Aggregate statistics across possible worlds (sum visits/rewards)
+- [ ] Budget split: iterations / determinizations
+- **Bot type:** `mcts-ismcts`
+- **Benchmark:** `experiments/phase3.1-ismcts.json`
+- **Target:** +5% win rate vs GreedyBot
 
 ### 3.2: Transposition Tables
 
-- State hashing for position deduplication
-- Share statistics between equivalent positions
-- Memory-bounded table with LRU eviction
+- [ ] Hash relevant features only (life, board, phase, active player)
+- [ ] Ignore: instance IDs, library order, exact mana breakdown
+- [ ] LRU eviction, 100K entry default
+- **Bot type:** `mcts-transposition`
+- **Benchmark:** `experiments/phase3.2-transposition.json`
+- **Target:** 2x speedup, >20% cache hit rate
 
 ### 3.3: Parallel Search
 
-- Root parallelization (multiple trees)
-- Tree parallelization (shared tree with locks)
-- Web Worker implementation
-
-### 3.4: Move Ordering
-
-- Prioritize promising actions in expansion
-- Use evaluation function for action sorting
-- Killer move heuristic
+- [ ] Root parallelization (independent trees per worker)
+- [ ] Workers: `navigator.hardwareConcurrency` (all available cores)
+- [ ] Merge strategy: sum statistics at root
+- **Bot type:** `mcts-parallel`
+- **Benchmark:** `experiments/phase3.3-parallel.json`
+- **Target:** 3-4x speedup
 
 ## Phase 4: Bots
 

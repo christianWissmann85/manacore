@@ -1,0 +1,26 @@
+{
+  "command": "simulate",
+  "name": "phase3.4-move-ordering",
+  "description": "A/B test for Phase 3.4: Move Ordering. Compare MCTS with type-based action priority vs baseline.",
+  "games": 500,
+  "p1": {
+    "type": "mcts-eval-turbo",
+    "description": "Baseline: standard expansion order"
+  },
+  "p2": {
+    "type": "mcts-ordered",
+    "description": "New: type-based action priority during expansion"
+  },
+  "seed": 42424,
+  "parallel": true,
+  "output": {
+    "directory": "results/phase3",
+    "level": "minimal",
+    "formats": ["json"]
+  },
+  "notes": {
+    "hypothesis": "Move ordering should achieve same win rate with fewer iterations, or better win rate with same iterations",
+    "metrics": ["win_rate", "games_per_second", "avg_iterations_to_best_action"],
+    "success_criteria": "Same or better win rate, no performance regression"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "command": "simulate",
+  "name": "phase3.1-ismcts",
+  "description": "A/B test for Phase 3.1: Information Set MCTS. Compare ISMCTS (10 determinizations) vs single determinization.",
+  "games": 500,
+  "p1": {
+    "type": "mcts-eval-turbo",
+    "description": "Baseline: single determinization per search"
+  },
+  "p2": {
+    "type": "mcts-ismcts",
+    "description": "New: 10 determinizations, aggregated statistics",
+    "config": {
+      "determinizations": 10,
+      "iterationsPerDeterminization": 100
+    }
+  },
+  "seed": 42424,
+  "parallel": true,
+  "output": {
+    "directory": "results/phase3",
+    "level": "minimal",
+    "formats": ["json"]
+  },
+  "notes": {
+    "hypothesis": "ISMCTS should improve win rate vs GreedyBot by handling hidden information better",
+    "metrics": ["win_rate", "win_rate_vs_greedy", "decision_consistency"],
+    "success_criteria": "+5% win rate improvement vs GreedyBot (target: 45%+)"
+  }
+}

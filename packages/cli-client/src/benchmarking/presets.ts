@@ -41,7 +41,7 @@ export const BENCHMARK_PRESETS: Record<Exclude<BenchmarkPreset, 'custom'>, Prese
    * 6 bots = 36 matchups x 100 games = 3,600 games
    */
   standard: {
-    bots: ['random', 'greedy', 'mcts-fast', 'mcts-eval', 'mcts-shallow', 'mcts-epsilon'],
+    bots: ['random', 'greedy', 'mcts-eval-fast', 'mcts-eval', 'mcts-shallow', 'mcts-epsilon'],
     gamesPerMatchup: 100,
     description: 'Standard comparison (6 bots, ~3,600 games)',
     estimatedTime: '~30-60 min',
@@ -49,15 +49,12 @@ export const BENCHMARK_PRESETS: Record<Exclude<BenchmarkPreset, 'custom'>, Prese
 
   /**
    * Comprehensive preset - all bots
-   * 14 bots = 196 matchups x 100 games = 19,600 games
+   * 11 bots = 121 matchups x 100 games = 12,100 games
    */
   comprehensive: {
     bots: [
       'random',
       'greedy',
-      'mcts',
-      'mcts-fast',
-      'mcts-strong',
       'mcts-greedy',
       'mcts-greedy-fast',
       'mcts-epsilon',
@@ -69,8 +66,8 @@ export const BENCHMARK_PRESETS: Record<Exclude<BenchmarkPreset, 'custom'>, Prese
       'mcts-shallow-fast',
     ],
     gamesPerMatchup: 100,
-    description: 'Full comparison (14 bots, ~19,600 games)',
-    estimatedTime: '~2-4 hours',
+    description: 'Full comparison (11 bots, ~12,100 games)',
+    estimatedTime: '~1-2 hours',
   },
 };
 

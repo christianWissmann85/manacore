@@ -1,0 +1,31 @@
+{
+  "command": "benchmark",
+  "name": "phase3-final",
+  "description": "Comprehensive benchmark after all Phase 3 improvements. Compare all MCTS variants.",
+  "bots": [
+    "random",
+    "greedy",
+    "mcts-eval",
+    "mcts-eval-turbo",
+    "mcts-ordered",
+    "mcts-ismcts",
+    "mcts-transposition",
+    "mcts-parallel"
+  ],
+  "gamesPerMatchup": 100,
+  "seed": 42424,
+  "calculateElo": true,
+  "output": {
+    "directory": "results/phase3",
+    "level": "normal",
+    "formats": ["json", "markdown"]
+  },
+  "notes": {
+    "description": "Final Phase 3 benchmark comparing all improvements",
+    "expected_results": {
+      "mcts_vs_greedy": "60%+ win rate (up from ~40%)",
+      "games_per_second": "2+ (up from ~0.1)",
+      "best_variant": "mcts-parallel with all optimizations"
+    }
+  }
+}

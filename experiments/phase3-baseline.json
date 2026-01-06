@@ -1,0 +1,14 @@
+{
+  "command": "benchmark",
+  "name": "phase3-baseline",
+  "description": "Baseline benchmark before Phase 3 improvements. Run this first to establish comparison point.",
+  "bots": ["random", "greedy", "mcts-eval-fast", "mcts-eval", "mcts-eval-turbo", "mcts-shallow"],
+  "gamesPerMatchup": 100,
+  "seed": 42424,
+  "calculateElo": true,
+  "output": {
+    "directory": "results/phase3",
+    "level": "minimal",
+    "formats": ["json", "markdown"]
+  }
+}

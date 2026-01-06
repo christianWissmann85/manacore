@@ -1,0 +1,30 @@
+{
+  "command": "simulate",
+  "name": "phase3.2-transposition",
+  "description": "A/B test for Phase 3.2: Transposition Tables. Compare MCTS with state hashing vs baseline.",
+  "games": 500,
+  "p1": {
+    "type": "mcts-eval-turbo",
+    "description": "Baseline: no transposition table"
+  },
+  "p2": {
+    "type": "mcts-transposition",
+    "description": "New: transposition table with relevant feature hashing",
+    "config": {
+      "tableSize": 100000,
+      "hashFeatures": ["life", "board", "phase", "activePlayer"]
+    }
+  },
+  "seed": 42424,
+  "parallel": true,
+  "output": {
+    "directory": "results/phase3",
+    "level": "minimal",
+    "formats": ["json"]
+  },
+  "notes": {
+    "hypothesis": "Transposition tables should speed up search by reusing statistics for equivalent positions",
+    "metrics": ["games_per_second", "cache_hit_rate", "win_rate"],
+    "success_criteria": "2x speedup with no win rate regression"
+  }
+}

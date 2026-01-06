@@ -10,16 +10,16 @@ import {
 export type BotType =
   | 'random'
   | 'greedy'
-  | 'mcts'
-  | 'mcts-fast'
-  | 'mcts-strong'
+  // Greedy rollout variants
   | 'mcts-greedy'
   | 'mcts-greedy-fast'
   | 'mcts-epsilon'
+  // No-rollout variants (FASTEST - recommended)
   | 'mcts-eval'
   | 'mcts-eval-fast'
   | 'mcts-eval-strong'
   | 'mcts-eval-turbo'
+  // Shallow greedy (best balance)
   | 'mcts-shallow'
   | 'mcts-shallow-fast';
 
@@ -27,14 +27,6 @@ export function createBot(type: BotType, seed: number, debug = false): Bot {
   switch (type) {
     case 'greedy':
       return new GreedyBot(seed, debug);
-
-    // Random rollout MCTS variants (original - slow)
-    case 'mcts':
-      return new MCTSBot({ iterations: 200, rolloutDepth: 20, debug });
-    case 'mcts-fast':
-      return new MCTSBot({ iterations: 50, rolloutDepth: 15, debug, nameSuffix: 'fast' });
-    case 'mcts-strong':
-      return new MCTSBot({ iterations: 500, rolloutDepth: 25, debug, nameSuffix: 'strong' });
 
     // Greedy rollout MCTS variants (higher quality simulations)
     case 'mcts-greedy':
