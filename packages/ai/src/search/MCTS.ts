@@ -267,9 +267,8 @@ export function runMCTS(
     let evalState = currentState;
 
     if (cfg.rolloutDepth > 0 && !currentState.gameOver) {
-      // Clone once for rollout, then mutate via applyAction
-      let simState = structuredClone(currentState);
-      profile.cloneCount++;
+      // No need to clone - applyAction returns a new state via incrementalClone
+      let simState = currentState;
       let depth = 0;
 
       while (!simState.gameOver && depth < cfg.rolloutDepth) {
