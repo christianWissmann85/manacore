@@ -113,7 +113,7 @@ HAND: [Lightning Bolt] [Grizzly Bears] [Mountain]
 - **Expand card library to 20-30 working cards**
 - Build basic web UI
 
-### Task 4-5: The Stack
+### Task 1.1: The Stack
 
 **Tasks:**
 
@@ -150,7 +150,7 @@ Player A: Pass priority
 - ✅ Both players can respond to spells
 - ✅ Counterspell works correctly
 
-### Task 6: Proper Combat
+### Task 1.2: Proper Combat
 
 **Tasks:**
 
@@ -185,7 +185,7 @@ Player B declares blockers: Air Elemental (4/4 Flying)
 - ✅ First Strike damage happens before normal damage
 - ✅ Trample damage goes through to player
 
-### Task 7: State-Based Actions & Triggers
+### Task 1.3: State-Based Actions & Triggers
 
 **Tasks:**
 
@@ -212,7 +212,7 @@ Nekrataal (2BB) - 2/1, When ~ ETB: Destroy target nonblack creature
 - ✅ ETB triggers happen in correct order
 - ✅ Activated abilities can be used at instant speed
 
-### Task 9: Mana System ⚠️ CRITICAL
+### Task 1.4: Mana System ⚠️ CRITICAL
 
 **Tasks:**
 
@@ -259,7 +259,7 @@ Action: Cast Hill Giant (3R) - SUCCESS
 
 **Why Critical:** The game is literally unplayable without mana costs - you can currently cast anything for free!
 
-### Task 10: Targeting System ⚠️ CRITICAL
+### Task 1.5: Targeting System ⚠️ CRITICAL
 
 **Tasks:**
 
@@ -311,7 +311,7 @@ Stack: Lightning Bolt targeting Grizzly Bears
 
 **Why Critical:** Most Magic cards target something - without this, we can only play vanilla creatures!
 
-### Task 11: Card Library Expansion
+### Task 1.6: Card Library Expansion
 
 **Tasks:**
 
@@ -404,7 +404,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 - Add card advantage mechanics
 - Build replay system for debugging
 
-### Task 21-22: MCTS Core
+### Task 2.1: MCTS Core
 
 **Tasks:**
 
@@ -422,7 +422,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 - ✅ MCTS-Bot beats RandomBot 90%+ of games
 - ✅ MCTS-Bot beats GreedyBot 60%+ of games
 
-### Task 23: Evaluation Function
+### Task 2.2: Evaluation Function
 
 **Tasks:**
 
@@ -441,7 +441,7 @@ Llanowar Elves, Giant Growth, Erhnam Djinn, Force of Nature
 **Test:**
 Run 1000 games with different weight values, find optimal.
 
-### Task 26: Replay System & Stats
+### Task 2.3: Replay System & Stats
 
 **Tasks:**
 
@@ -472,7 +472,7 @@ Run 1000 games with different weight values, find optimal.
 - Maintain simulation performance (>100 games/second from Python)
 - Support both training and inference workflows
 
-### Task 24: FFI Layer (TypeScript → Python)
+### Task 2.5.1: FFI Layer (TypeScript → Python)
 
 **Tasks:**
 
@@ -515,7 +515,7 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
 - ✅ Overhead <5ms per game step
 - ✅ Handles 100+ games/second from Python
 
-### Task 25: Python Package Structure
+### Task 2.5.2: Python Package Structure
 
 **Tasks:**
 
@@ -572,7 +572,7 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
 - ✅ Can install via `pip install -e packages/python-gym/`
 - ✅ Type hints pass `mypy --strict`
 
-### Task 26: Gym Environment Implementation
+### Task 2.5.3: Gym Environment Implementation
 
 **Tasks:**
 
@@ -637,7 +637,7 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
 - ✅ Observation space is consistent across steps
 - ✅ Action masking works correctly
 
-### Task 27: Bun Server for Python Bridge
+### Task 2.5.4: Bun Server for Python Bridge
 
 **Tasks:**
 
@@ -713,7 +713,7 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
 - ✅ Can step games via POST /game/:id/step
 - ✅ Response time <10ms for simple states
 
-### Task 28: Python Bridge Client
+### Task 2.5.5: Python Bridge Client
 
 **Tasks:**
 
@@ -777,7 +777,7 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
 - ✅ Connection is stable (handles disconnects)
 - ✅ Error messages are clear and actionable
 
-### Task 29: Example Training Scripts
+### Task 2.5.6: Example Training Scripts
 
 **Tasks:**
 
@@ -854,7 +854,7 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
 - ✅ Can load and evaluate trained model
 - ✅ Training logs are visible in TensorBoard
 
-### Task 30: Testing & Validation
+### Task 2.5.7: Testing & Validation
 
 **Tasks:**
 
@@ -909,7 +909,7 @@ Option B: Bun CLI + Python Subprocess (SIMPLER)
 - ✅ Environment is deterministic (same seed → same result)
 - ✅ Memory usage is stable (no leaks)
 
-### Task 31: Documentation & Publishing
+### Task 2.5.8: Documentation & Publishing
 
 **Tasks:**
 
@@ -954,7 +954,7 @@ twine upload dist/*
 - ✅ Tutorial notebooks run without errors
 - ✅ Can install via `pip install manacore-gym`
 
-### Task 32: Advanced Features (Optional)
+### Task 2.5.9: Advanced Features
 
 **Tasks:**
 
@@ -1026,7 +1026,7 @@ twine upload dist/*
 - Impressive Huggingface Space `manacore-arena`. A user goes to the URL and sees two bots (e.g., "MCTS-Alpha" vs "GreedyBot") playing a match in real-time. They don't play; they watch the AI think.
 - Play against AI Mode
 
-### Task 27: Basic Web Dashboard
+### Task 3.1: Basic Web Dashboard
 
 **Tasks:**
 
@@ -1049,7 +1049,7 @@ twine upload dist/*
 
 **Deliverable:** Interactive research dashboard
 
-### Task 28-29: Visualization Polish
+### Task 3.2: Visualization Polish
 
 **Tasks:**
 
@@ -1059,7 +1059,7 @@ twine upload dist/*
 - [ ] Add "Targeting Mode" (click source -> click target)
 - [ ] Implement keyboard shortcuts for common actions (Space to pass)
 
-### Task 32: AI Configuration & Final Polish
+### Task 3.3: AI Configuration & Final Polish
 
 **Tasks:**
 
@@ -1101,7 +1101,7 @@ twine upload dist/*
 - MCTS visualization
 - Meta-game analysis
 
-### Task 33-34: Tournament Simulator
+### Task 4.1: Tournament Simulator
 
 **Tasks:**
 
@@ -1126,7 +1126,7 @@ twine upload dist/*
    Metric: Win% when card is in deck
 ```
 
-### Task 35-36: Deck Analytics
+### Task 4.2: Deck Analytics
 
 **Tasks:**
 
@@ -1160,7 +1160,7 @@ Weak Cards:
 Recommendation: Replace Goblin King with more removal
 ```
 
-### Task 37: MCTS Visualization
+### Task 4.3: MCTS Visualization
 
 **Tasks:**
 
@@ -1169,6 +1169,7 @@ Recommendation: Replace Goblin King with more removal
 - [ ] Highlight best path
 - [ ] Display win rate estimates
 - [ ] Animate tree growth in real-time
+- [ ] Add to `web-client`
 
 **Use Cases:**
 
@@ -1186,7 +1187,7 @@ Recommendation: Replace Goblin King with more removal
       [End: 200] [Attack: 200] ...      [Target A]  [Target B]
 ```
 
-### Task 38: A/B Testing Framework
+### Task 4.4: A/B Testing Framework
 
 **Tasks:**
 
@@ -1227,7 +1228,7 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 - Self-play training
 - Novel strategy discovery
 
-### Task 39-42: Neural Network Evaluation
+### Task 5.1: Neural Network Evaluation
 
 **Tasks:**
 
@@ -1247,7 +1248,7 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 - ✅ NN evaluation is faster than rollout
 - ✅ NN-MCTS beats Heuristic-MCTS by 10%+
 
-### Task 43-46: Genetic Algorithm Deck Builder
+### Task 5.2: Genetic Algorithm Deck Builder
 
 **Tasks:**
 
@@ -1273,7 +1274,7 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 3. How many generations to converge?
 ```
 
-### Task 47+: Self-Play & AlphaZero
+### Task 5.3: Self-Play & AlphaZero
 
 **Tasks:**
 
@@ -1288,7 +1289,7 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 
 ---
 
-### Phase 6: The "Power Creep" Experiment (Transfer Learning)
+## Phase 6: The "Power Creep" Experiment (Transfer Learning)
 
 **Research Question:** _Can an agent trained on a "fair" environment (6th Edition) adapt to a "broken" environment (Urza’s Block) without starting from scratch?_
 
