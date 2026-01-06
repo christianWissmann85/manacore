@@ -27,8 +27,9 @@ npm-debug.log*
 # Test coverage
 coverage/
 
-# Research results and exports
+# Research results and exports, Training Data
 results/
+packages/cli-client/training-data
 
 # Card images (downloaded via fetch-cards script)
 packages/web-client/public/assets/cards/*.jpg

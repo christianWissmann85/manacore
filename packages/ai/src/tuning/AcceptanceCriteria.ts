@@ -234,9 +234,9 @@ function inverseNormalCDF(p: number): number {
   const a1 = -3.969683028665376e1;
   const a2 = 2.209460984245205e2;
   const a3 = -2.759285104469687e2;
-  const a4 = 1.383577518672690e2;
+  const a4 = 1.38357751867269e2;
   const a5 = -3.066479806614716e1;
-  const a6 = 2.506628277459239e0;
+  const a6 = 2.506628277459239;
 
   const b1 = -5.447609879822406e1;
   const b2 = 1.615858368580409e2;
@@ -246,15 +246,15 @@ function inverseNormalCDF(p: number): number {
 
   const c1 = -7.784894002430293e-3;
   const c2 = -3.223964580411365e-1;
-  const c3 = -2.400758277161838e0;
-  const c4 = -2.549732539343734e0;
-  const c5 = 4.374664141464968e0;
-  const c6 = 2.938163982698783e0;
+  const c3 = -2.400758277161838;
+  const c4 = -2.549732539343734;
+  const c5 = 4.374664141464968;
+  const c6 = 2.938163982698783;
 
   const d1 = 7.784695709041462e-3;
   const d2 = 3.224671290700398e-1;
-  const d3 = 2.445134137142996e0;
-  const d4 = 3.754408661907416e0;
+  const d3 = 2.445134137142996;
+  const d4 = 3.754408661907416;
 
   const pLow = 0.02425;
   const pHigh = 1 - pLow;
@@ -293,7 +293,10 @@ function inverseNormalCDF(p: number): number {
  * Returns true if the intervals don't overlap, meaning we can be confident
  * the true proportions are different.
  */
-export function areSignificantlyDifferent(ci1: ConfidenceInterval, ci2: ConfidenceInterval): boolean {
+export function areSignificantlyDifferent(
+  ci1: ConfidenceInterval,
+  ci2: ConfidenceInterval,
+): boolean {
   // No overlap means significant difference
   return ci1.upper < ci2.lower || ci2.upper < ci1.lower;
 }
@@ -481,7 +484,9 @@ export function formatValidationResult(result: ValidationResult): string {
   lines.push('───────────────────────────────────────────────────────────────');
   lines.push(`  ${result.checks.sufficientGames ? '✓' : '✗'} Sufficient games played`);
   lines.push(`  ${result.checks.statisticallySignificant ? '✓' : '✗'} Statistically significant`);
-  lines.push(`  ${result.checks.meetsImprovementThreshold ? '✓' : '✗'} Meets improvement threshold`);
+  lines.push(
+    `  ${result.checks.meetsImprovementThreshold ? '✓' : '✗'} Meets improvement threshold`,
+  );
   lines.push(`  ${result.checks.noRegression ? '✓' : '✗'} No regression in metrics`);
   lines.push('');
 
@@ -545,7 +550,10 @@ export function calculateRequiredSampleSize(
   const pBar = (p1 + p2) / 2;
 
   // Sample size formula for comparing two proportions
-  const numerator = Math.pow(zAlpha * Math.sqrt(2 * pBar * (1 - pBar)) + zBeta * Math.sqrt(p1 * (1 - p1) + p2 * (1 - p2)), 2);
+  const numerator = Math.pow(
+    zAlpha * Math.sqrt(2 * pBar * (1 - pBar)) + zBeta * Math.sqrt(p1 * (1 - p1) + p2 * (1 - p2)),
+    2,
+  );
   const denominator = Math.pow(p2 - p1, 2);
 
   return Math.ceil(numerator / denominator);

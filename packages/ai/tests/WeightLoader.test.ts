@@ -161,11 +161,7 @@ describe('WeightLoader', () => {
       const normalized = normalizeWeights(weights);
 
       const sum =
-        normalized.life +
-        normalized.board +
-        normalized.cards +
-        normalized.mana +
-        normalized.tempo;
+        normalized.life + normalized.board + normalized.cards + normalized.mana + normalized.tempo;
 
       expect(sum).toBeCloseTo(1.0, 5);
     });

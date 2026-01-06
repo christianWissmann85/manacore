@@ -30,6 +30,7 @@ export default [
         __filename: 'readonly',
         Buffer: 'readonly',
         structuredClone: 'readonly',
+        performance: 'readonly',
         // Bun-specific
         Bun: 'readonly',
       },

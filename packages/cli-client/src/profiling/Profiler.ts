@@ -2,8 +2,6 @@
  * Profiler - Performance tracking for simulations
  */
 
-/* global performance */
-
 import type { ProfileData } from '../types';
 
 export class Profiler {

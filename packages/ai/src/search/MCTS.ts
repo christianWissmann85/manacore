@@ -5,8 +5,6 @@
  * Supports configurable rollout policies and iteration limits.
  */
 
-/* global performance */
-
 import type { GameState, Action, PlayerId } from '@manacore/engine';
 import { getLegalActions, applyAction } from '@manacore/engine';
 import {

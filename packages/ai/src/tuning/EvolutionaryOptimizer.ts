@@ -9,8 +9,6 @@
  * 5. Repeat for N generations
  */
 
-/* global performance */
-
 import type { EvaluationWeights } from '../evaluation/evaluate';
 import { DEFAULT_WEIGHTS } from '../evaluation/evaluate';
 import { FitnessEvaluator } from './FitnessEvaluator';

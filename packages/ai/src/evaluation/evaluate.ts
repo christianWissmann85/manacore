@@ -111,7 +111,7 @@ export const AGGRESSIVE_WEIGHTS: EvaluationWeights = {
   life: 0.2933,
   board: 0.4811,
   cards: 0.0861,
-  mana: 0.0930,
+  mana: 0.093,
   tempo: 0.0465,
 };
 
@@ -384,9 +384,6 @@ export function evaluateWithCurrentWeights(state: GameState, playerId: PlayerId)
  * This is the recommended function for production use as it
  * automatically uses the latest tuned coefficients.
  */
-export function quickEvaluateWithCurrentCoefficients(
-  state: GameState,
-  playerId: PlayerId,
-): number {
+export function quickEvaluateWithCurrentCoefficients(state: GameState, playerId: PlayerId): number {
   return quickEvaluateWithCoefficients(state, playerId, getCurrentCoefficients());
 }

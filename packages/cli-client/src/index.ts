@@ -15,6 +15,7 @@ import { runTuneMCTS, parseTuneMCTSArgs } from './commands/tune-mcts';
 import { runBenchmarkSuite, parseBenchmarkSuiteArgs } from './commands/benchmarkSuite';
 import { runPipeline, parsePipelineArgs } from './commands/pipeline';
 import { runReplayCommand, parseReplayArgs } from './commands/replay';
+import { runCollectTraining, parseCollectTrainingArgs } from './commands/collect-training';
 import { OutputLevel, type ExportFormat } from './types';
 import { createBot, type BotType } from './botFactory';
 
@@ -399,6 +400,14 @@ async function main() {
       break;
     }
 
+    case 'collect-training':
+    case 'collect': {
+      // Parse collect-training options
+      const collectOptions = parseCollectTrainingArgs(args.slice(1));
+      await runCollectTraining(collectOptions);
+      break;
+    }
+
     case 'help':
     default:
       console.log('🔬 ManaCore Research CLI\n');
@@ -415,6 +424,7 @@ async function main() {
       console.log('  tune                    Run weight tuning optimization (Phase 2.3)');
       console.log('  tune-mcts               Tune MCTS hyperparameters (Phase 3.0)');
       console.log('  pipeline                Complete tuning pipeline (Phase 3.0)');
+      console.log('  collect-training        Collect ML training data (Phase 3.0)');
       console.log('  help                    Show this help message');
       console.log('');
       console.log('Options:');
@@ -475,10 +485,16 @@ async function main() {
       console.log('  bun src/index.ts replay 12383 --verbose      # Re-run game with seed');
       console.log('');
       console.log('Replay Files (Phase 2.6):');
-      console.log('  bun src/index.ts replay game.replay.json              # Play back recorded game');
-      console.log('  bun src/index.ts replay game.replay.json --watch      # Watch mode (animated)');
+      console.log(
+        '  bun src/index.ts replay game.replay.json              # Play back recorded game',
+      );
+      console.log(
+        '  bun src/index.ts replay game.replay.json --watch      # Watch mode (animated)',
+      );
       console.log('  bun src/index.ts replay game.replay.json --turn 5     # Stop at turn 5');
-      console.log('  bun src/index.ts replay game.replay.json --verify     # Verify replay integrity');
+      console.log(
+        '  bun src/index.ts replay game.replay.json --verify     # Verify replay integrity',
+      );
       console.log('  bun src/index.ts replay game.replay.json --summary    # Show summary only');
       console.log('');
       console.log('Weight Tuning (Phase 2.3):');
@@ -528,6 +544,27 @@ async function main() {
       console.log('  bun src/index.ts pipeline --dry-run          # Preview mode');
       console.log('  bun src/index.ts pipeline --mcts-only        # Just MCTS tuning');
       console.log('  bun src/index.ts pipeline --weights-only     # Just weight tuning');
+      console.log('');
+      console.log('Training Data Collection (Phase 3.0):');
+      console.log('  collect-training        Collect ML training data with curriculum');
+      console.log('  collect                 Alias for collect-training');
+      console.log('  --games <n>             Total games to collect (default: 500)');
+      console.log('  --output <dir>          Output directory (default: training-data)');
+      console.log('  --seed <n>              Base seed for reproducibility');
+      console.log('  --iterations <n>        MCTS iterations (default: 100)');
+      console.log('  --phase <name>          Single phase only: easy, medium, hard');
+      console.log('  --no-json               Skip JSON export');
+      console.log('  --no-binary             Skip binary export');
+      console.log('');
+      console.log('  Curriculum Phases:');
+      console.log('    easy   - MCTSBot vs RandomBot (20% of games)');
+      console.log('    medium - MCTSBot vs GreedyBot (30% of games)');
+      console.log('    hard   - MCTSBot vs MCTSBot (50% of games)');
+      console.log('');
+      console.log('Collection Examples:');
+      console.log('  bun src/index.ts collect --games 1000         # Full curriculum');
+      console.log('  bun src/index.ts collect --phase hard         # Self-play only');
+      console.log('  bun src/index.ts collect --iterations 200     # Higher quality');
       console.log('');
       console.log('Benchmark Suite (Phase 2.5):');
       console.log('  suite                   Run bot comparison matrix');

@@ -12,13 +12,13 @@ Phase 3.0 transforms our ad-hoc tuning experiments into a proper ML/AI research 
 
 ### Key Decisions Made
 
-| Question | Decision |
-|----------|----------|
-| Tuning approach | Hierarchical: weights first, then MCTS hyperparameters |
-| GreedyBot as proxy? | Yes, with experimental validation |
-| MCTS fitness target | vs GreedyBot (target: 60%+ win rate) |
-| Retuning triggers | Engine changes, evaluation bugs, periodic, pre-experiment |
-| Data collection | Yes, enhanced replay for Phase 4 neural networks |
+| Question            | Decision                                                  |
+| ------------------- | --------------------------------------------------------- |
+| Tuning approach     | Hierarchical: weights first, then MCTS hyperparameters    |
+| GreedyBot as proxy? | Yes, with experimental validation                         |
+| MCTS fitness target | vs GreedyBot (target: 60%+ win rate)                      |
+| Retuning triggers   | Engine changes, evaluation bugs, periodic, pre-experiment |
+| Data collection     | Yes, enhanced replay for Phase 4 neural networks          |
 
 ---
 
@@ -43,8 +43,8 @@ packages/ai/
 
 ```typescript
 interface WeightsFile {
-  version: string;           // Semantic version
-  created: string;           // ISO date
+  version: string; // Semantic version
+  created: string; // ISO date
   source: {
     method: 'local' | 'evolutionary' | 'manual';
     games: number;
@@ -64,9 +64,9 @@ interface WeightsFile {
     epsilon?: number;
   };
   performance: {
-    vsRandom: number;        // Win rate [0,1]
-    vsGreedy: number;        // Win rate [0,1]
-    elo: number;             // Elo rating
+    vsRandom: number; // Win rate [0,1]
+    vsGreedy: number; // Win rate [0,1]
+    elo: number; // Elo rating
     gamesPlayed: number;
   };
 }
@@ -95,19 +95,19 @@ interface AcceptanceCriteria {
   minGames: 200;
 
   // Confidence level for comparison
-  confidenceLevel: 0.95;  // 95% confidence interval
+  confidenceLevel: 0.95; // 95% confidence interval
 
   // Improvement thresholds
   thresholds: {
-    vsGreedy: 0.02;       // Must be 2% better (absolute)
-    vsRandom: 0.01;       // Must be 1% better
-    eloDelta: 20;         // Must gain 20+ Elo points
+    vsGreedy: 0.02; // Must be 2% better (absolute)
+    vsRandom: 0.01; // Must be 1% better
+    eloDelta: 20; // Must gain 20+ Elo points
   };
 
   // Regression protection
   maxRegression: {
-    vsGreedy: 0.01;       // Can't lose more than 1%
-    vsRandom: 0.005;      // Can't lose more than 0.5%
+    vsGreedy: 0.01; // Can't lose more than 1%
+    vsRandom: 0.005; // Can't lose more than 0.5%
   };
 }
 ```
@@ -118,7 +118,7 @@ interface AcceptanceCriteria {
 function validateImprovement(
   oldWeights: WeightsFile,
   newWeights: WeightsFile,
-  criteria: AcceptanceCriteria
+  criteria: AcceptanceCriteria,
 ): ValidationResult {
   // Wilson score confidence intervals
   const oldCI = wilsonConfidenceInterval(old.vsGreedy, old.gamesPlayed, criteria.confidenceLevel);
@@ -128,14 +128,14 @@ function validateImprovement(
   const significant = newCI.lower > oldCI.upper;
 
   // Check improvement exceeds threshold
-  const improved = (new.vsGreedy - old.vsGreedy) >= criteria.thresholds.vsGreedy;
+  const improved = new.vsGreedy - old.vsGreedy >= criteria.thresholds.vsGreedy;
 
   // Check no regression in other metrics
-  const noRegression = (old.vsRandom - new.vsRandom) <= criteria.maxRegression.vsRandom;
+  const noRegression = old.vsRandom - new.vsRandom <= criteria.maxRegression.vsRandom;
 
   return {
     accepted: significant && improved && noRegression,
-    details: { significant, improved, noRegression, oldCI, newCI }
+    details: { significant, improved, noRegression, oldCI, newCI },
   };
 }
 ```
@@ -156,12 +156,12 @@ function validateImprovement(
 
 #### Parameters to Tune
 
-| Parameter | Range | Default | Impact |
-|-----------|-------|---------|--------|
-| `explorationConstant` | [0.5, 2.5] | 1.41 | Exploration vs exploitation |
-| `rolloutDepth` | [0, 30] | 20 | Simulation depth |
-| `rolloutPolicy` | enum | 'greedy' | How to simulate |
-| `epsilon` | [0.0, 0.3] | 0.1 | Random move probability |
+| Parameter             | Range      | Default  | Impact                      |
+| --------------------- | ---------- | -------- | --------------------------- |
+| `explorationConstant` | [0.5, 2.5] | 1.41     | Exploration vs exploitation |
+| `rolloutDepth`        | [0, 30]    | 20       | Simulation depth            |
+| `rolloutPolicy`       | enum       | 'greedy' | How to simulate             |
+| `epsilon`             | [0.0, 0.3] | 0.1      | Random move probability     |
 
 #### Speed Considerations
 
@@ -183,6 +183,7 @@ Recommendation: Use parallel execution + reduced game count
 #### Optimization Approaches
 
 **Approach A: Grid Search (Simple)**
+
 ```typescript
 const grid = {
   explorationConstant: [0.7, 1.0, 1.41, 2.0],
@@ -195,6 +196,7 @@ const grid = {
 ```
 
 **Approach B: Bayesian Optimization (Smart)**
+
 ```typescript
 // Uses Gaussian Process to model parameter space
 // Samples promising regions more densely
@@ -204,6 +206,7 @@ const grid = {
 ```
 
 **Approach C: Coarse-to-Fine (Practical)**
+
 ```typescript
 // Round 1: Coarse grid, 50 games each → find promising region
 // Round 2: Fine grid in promising region, 100 games each
@@ -216,7 +219,7 @@ const grid = {
 ```typescript
 interface MCTSTunerConfig {
   // Base MCTS settings
-  baseIterations: number;        // 50 for fast tuning
+  baseIterations: number; // 50 for fast tuning
 
   // Search space
   parameterRanges: {
@@ -227,13 +230,13 @@ interface MCTSTunerConfig {
   };
 
   // Evaluation settings
-  gamesPerConfig: number;        // 100 default
+  gamesPerConfig: number; // 100 default
   opponent: 'greedy' | 'random'; // 'greedy' recommended
-  maxTurns: number;              // 100 default
+  maxTurns: number; // 100 default
 
   // Optimization settings
   method: 'grid' | 'bayesian' | 'coarse-to-fine';
-  parallelWorkers: number;       // default: CPU count - 1
+  parallelWorkers: number; // default: CPU count - 1
 
   // Reproducibility
   seed: number;
@@ -244,13 +247,10 @@ class MCTSTuner {
 
   async tune(
     baseWeights: EvaluationWeights,
-    onProgress?: (progress: TuningProgress) => void
+    onProgress?: (progress: TuningProgress) => void,
   ): Promise<MCTSTuningResult>;
 
-  async validate(
-    params: MCTSParams,
-    games: number
-  ): Promise<ValidationResult>;
+  async validate(params: MCTSParams, games: number): Promise<ValidationResult>;
 }
 ```
 
@@ -400,13 +400,13 @@ Stage 6: Documentation
 
 #### Implementation Tasks
 
-- [ ] Create `packages/cli-client/src/commands/pipeline.ts`
-- [ ] Implement stage orchestration with progress tracking
-- [ ] Add stage skip/only flags
-- [ ] Create `TUNING_LOG.md` template and append logic
-- [ ] Add dry-run mode
-- [ ] Handle failures gracefully (resume from last stage?)
-- [ ] Export detailed results JSON
+- [x] Create `packages/cli-client/src/commands/pipeline.ts`
+- [x] Implement stage orchestration with progress tracking
+- [x] Add stage skip/only flags
+- [x] Create `TUNING_LOG.md` template and append logic
+- [x] Add dry-run mode
+- [x] Handle failures gracefully (resume from last stage?)
+- [x] Export detailed results JSON
 
 ---
 
@@ -427,9 +427,9 @@ interface TrainingExample {
 
   // Labels (what we want to predict)
   labels: {
-    outcome: 'win' | 'loss' | 'draw';  // Game result for this player
-    turnsRemaining: number;             // How many turns until game end
-    winProbability: number;             // Retrospective: did this player win?
+    outcome: 'win' | 'loss' | 'draw'; // Game result for this player
+    turnsRemaining: number; // How many turns until game end
+    winProbability: number; // Retrospective: did this player win?
   };
 
   // Context
@@ -437,14 +437,14 @@ interface TrainingExample {
     turn: number;
     phase: Phase;
     activePlayer: PlayerId;
-    actionTaken?: Action;               // What happened next
-    evaluation: number;                 // What our evaluator thought
+    actionTaken?: Action; // What happened next
+    evaluation: number; // What our evaluator thought
   };
 }
 
 interface StateFeatures {
   // Life totals (normalized)
-  myLife: number;           // 0-1, where 1 = 20 life
+  myLife: number; // 0-1, where 1 = 20 life
   opponentLife: number;
 
   // Board state
@@ -463,7 +463,7 @@ interface StateFeatures {
   myUntappedLands: number;
 
   // Game progress
-  turnNumber: number;       // Normalized 0-1 (0=early, 1=late)
+  turnNumber: number; // Normalized 0-1 (0=early, 1=late)
 
   // Advanced features (Phase 4.2+)
   // myCreatureTypes: number[];  // One-hot encoding
@@ -524,20 +524,20 @@ packages/ai/data/training/
 ```typescript
 interface DataCollectionConfig {
   // What to collect
-  collectEveryNTurns: number;      // 1 = every turn, 2 = every other
-  collectPhases: Phase[];           // ['main1', 'combat', 'main2']
+  collectEveryNTurns: number; // 1 = every turn, 2 = every other
+  collectPhases: Phase[]; // ['main1', 'combat', 'main2']
 
   // Storage
-  outputDir: string;                // 'packages/ai/data/training'
-  batchSize: number;                // Examples per file (10000)
-  format: 'jsonl' | 'parquet';      // JSONL for simplicity
+  outputDir: string; // 'packages/ai/data/training'
+  batchSize: number; // Examples per file (10000)
+  format: 'jsonl' | 'parquet'; // JSONL for simplicity
 
   // Filtering
-  minTurns: number;                 // Skip very short games
-  maxTurns: number;                 // Skip stalled games
+  minTurns: number; // Skip very short games
+  maxTurns: number; // Skip stalled games
 
   // Sampling
-  sampleRate: number;               // 1.0 = all, 0.1 = 10%
+  sampleRate: number; // 1.0 = all, 0.1 = 10%
 }
 ```
 
@@ -555,7 +555,7 @@ interface EnhancedReplayFile extends ReplayFile {
     turn: number;
     phase: Phase;
     player: PlayerId;
-    score: number;          // What evaluate() returned
+    score: number; // What evaluate() returned
     features: StateFeatures;
   }[];
 }
@@ -563,14 +563,14 @@ interface EnhancedReplayFile extends ReplayFile {
 
 #### Implementation Tasks
 
-- [ ] Create `packages/ai/src/training/StateFeatureExtractor.ts`
-- [ ] Create `packages/ai/src/training/TrainingDataCollector.ts`
-- [ ] Create `packages/ai/src/training/types.ts`
-- [ ] Enhance `ReplayRecorder` to capture evaluations
-- [ ] Add `--collect-training-data` flag to simulate command
-- [ ] Create batch writing logic (JSONL format)
-- [ ] Add manifest management
-- [ ] Create data validation/statistics tool
+- [x] Create `packages/ai/src/training/StateFeatureExtractor.ts`
+- [x] Create `packages/ai/src/training/TrainingDataCollector.ts`
+- [x] Create `packages/ai/src/training/types.ts`
+- [x] Enhance `ReplayRecorder` to capture evaluations
+- [x] Add `--collect-training-data` flag to simulate command
+- [x] Create batch writing logic (JSONL format)
+- [x] Add manifest management
+- [x] Create data validation/statistics tool
 
 ---
 
@@ -649,20 +649,20 @@ Once the pipeline is working:
 
 ## Appendix: File Locations
 
-| Component | Location |
-|-----------|----------|
-| Weight storage | `packages/ai/data/weights.json` |
-| Weight history | `packages/ai/data/weights-history/` |
-| Weight loader | `packages/ai/src/weights/WeightLoader.ts` |
-| Acceptance criteria | `packages/ai/src/tuning/AcceptanceCriteria.ts` |
-| MCTS tuner | `packages/ai/src/tuning/MCTSTuner.ts` |
-| Pipeline command | `packages/cli-client/src/commands/pipeline.ts` |
-| Feature extractor | `packages/ai/src/training/StateFeatureExtractor.ts` |
-| Training collector | `packages/ai/src/training/TrainingDataCollector.ts` |
-| Training data | `packages/ai/data/training/` |
-| Tuning log | `packages/ai/docs/TUNING_LOG.md` |
+| Component           | Location                                            |
+| ------------------- | --------------------------------------------------- |
+| Weight storage      | `packages/ai/data/weights.json`                     |
+| Weight history      | `packages/ai/data/weights-history/`                 |
+| Weight loader       | `packages/ai/src/weights/WeightLoader.ts`           |
+| Acceptance criteria | `packages/ai/src/tuning/AcceptanceCriteria.ts`      |
+| MCTS tuner          | `packages/ai/src/tuning/MCTSTuner.ts`               |
+| Pipeline command    | `packages/cli-client/src/commands/pipeline.ts`      |
+| Feature extractor   | `packages/ai/src/training/StateFeatureExtractor.ts` |
+| Training collector  | `packages/ai/src/training/TrainingDataCollector.ts` |
+| Training data       | `packages/ai/data/training/`                        |
+| Tuning log          | `packages/ai/docs/TUNING_LOG.md`                    |
 
 ---
 
-*Document created: January 6, 2026*
-*Ready for implementation!*
+_Document created: January 6, 2026_
+_Ready for implementation!_

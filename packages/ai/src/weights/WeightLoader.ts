@@ -177,7 +177,9 @@ export function loadWeights(forceReload = false): WeightsFile {
       return cachedWeights;
     }
   } catch (error) {
-    console.warn(`[WeightLoader] Failed to load weights.json: ${error}`);
+    console.warn(
+      `[WeightLoader] Failed to load weights.json: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 
   // Return defaults if file doesn't exist or failed to load

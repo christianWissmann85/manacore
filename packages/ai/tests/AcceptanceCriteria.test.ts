@@ -130,7 +130,7 @@ describe('AcceptanceCriteria', () => {
 
     test('accepts significant improvement', () => {
       const newMetrics: PerformanceMetrics = {
-        vsRandom: 0.90,
+        vsRandom: 0.9,
         vsGreedy: 0.72, // +20% improvement with enough games for significance
         elo: 1620,
         gamesPlayed: 500,
@@ -140,13 +140,13 @@ describe('AcceptanceCriteria', () => {
 
       expect(result.accepted).toBe(true);
       expect(result.checks.meetsImprovementThreshold).toBe(true);
-      expect(result.details.vsGreedyDelta).toBeCloseTo(0.20, 2);
+      expect(result.details.vsGreedyDelta).toBeCloseTo(0.2, 2);
     });
 
     test('rejects insufficient games', () => {
       const newMetrics: PerformanceMetrics = {
         vsRandom: 0.85,
-        vsGreedy: 0.60,
+        vsGreedy: 0.6,
         elo: 1580,
         gamesPlayed: 50, // Below minimum
       };
@@ -213,7 +213,7 @@ describe('AcceptanceCriteria', () => {
     test('provides detailed rejection reasons', () => {
       const newMetrics: PerformanceMetrics = {
         vsRandom: 0.75, // Regression
-        vsGreedy: 0.50, // Regression
+        vsGreedy: 0.5, // Regression
         elo: 1500,
         gamesPlayed: 50, // Insufficient
       };
@@ -234,7 +234,7 @@ describe('AcceptanceCriteria', () => {
         gamesPlayed: 200,
       };
       const newMetrics: PerformanceMetrics = {
-        vsRandom: 0.90,
+        vsRandom: 0.9,
         vsGreedy: 0.72, // Large improvement with many games for significance
         elo: 1620,
         gamesPlayed: 500,
@@ -257,7 +257,7 @@ describe('AcceptanceCriteria', () => {
       };
       const newMetrics: PerformanceMetrics = {
         vsRandom: 0.75,
-        vsGreedy: 0.50,
+        vsGreedy: 0.5,
         elo: 1500,
         gamesPlayed: 50,
       };
@@ -297,7 +297,7 @@ describe('AcceptanceCriteria', () => {
       };
       const newMetrics: PerformanceMetrics = {
         vsRandom: 0.85,
-        vsGreedy: 0.50, // Worse
+        vsGreedy: 0.5, // Worse
         elo: 1500, // Worse
         gamesPlayed: 200,
       };

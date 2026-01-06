@@ -2,7 +2,7 @@
  * MarkdownExporter - Generates benchmark reports in Markdown format
  */
 
-import type { BenchmarkResults, MatchupResult, BotRanking } from '../benchmarking/types';
+import type { BenchmarkResults } from '../benchmarking/types';
 
 /**
  * Format percentage

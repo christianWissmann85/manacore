@@ -74,7 +74,7 @@ describe('TrainingDataCollector', () => {
         instanceId: 'test-1',
         cardId: 'test',
         name: 'Test Creature',
-        types: ['creature'] as ('creature')[],
+        types: ['creature'] as 'creature'[],
         power: 3,
         toughness: 3,
         tapped: false,

@@ -12,7 +12,13 @@
  */
 
 import type { GameState, Action, PlayerId, CardInstance } from '@manacore/engine';
-import { getLegalActions } from '@manacore/engine';
+import {
+  CardLoader,
+  getEffectivePower,
+  getEffectiveToughness,
+  isCreature,
+  isLand,
+} from '@manacore/engine';
 import { writeFileSync, mkdirSync, existsSync } from 'fs';
 import { dirname } from 'path';
 
@@ -165,10 +171,13 @@ export function extractFeatures(state: GameState, perspectivePlayer: PlayerId): 
     let toughness = 0;
 
     for (const card of battlefield) {
-      if (card.types.includes('creature')) {
+      const template = CardLoader.getById(card.scryfallId);
+      if (template && isCreature(template)) {
         count++;
-        power += card.power ?? 0;
-        toughness += card.toughness ?? 0;
+        const basePower = parseInt(template.power || '0', 10) || 0;
+        const baseToughness = parseInt(template.toughness || '0', 10) || 0;
+        power += getEffectivePower(card, basePower);
+        toughness += getEffectiveToughness(card, baseToughness);
       }
     }
 
@@ -184,7 +193,8 @@ export function extractFeatures(state: GameState, perspectivePlayer: PlayerId): 
     let untapped = 0;
 
     for (const card of battlefield) {
-      if (card.types.includes('land')) {
+      const template = CardLoader.getById(card.scryfallId);
+      if (template && isLand(template)) {
         total++;
         if (!card.tapped) untapped++;
       }
@@ -197,18 +207,16 @@ export function extractFeatures(state: GameState, perspectivePlayer: PlayerId): 
   const opponentLands = countLands(opponent.battlefield);
 
   // Count attackers available (untapped creatures without summoning sickness)
-  const attackersAvailable = player.battlefield.filter(
-    (c) =>
-      c.types.includes('creature') &&
-      !c.tapped &&
-      !c.summoningSick &&
-      (c.abilities?.some((a) => a.type === 'haste') || !c.enteredBattlefieldThisTurn),
-  ).length;
+  const attackersAvailable = player.battlefield.filter((c) => {
+    const template = CardLoader.getById(c.scryfallId);
+    return template && isCreature(template) && !c.tapped && !c.summoningSick;
+  }).length;
 
   // Count blockers (untapped creatures)
-  const blockersAvailable = opponent.battlefield.filter(
-    (c) => c.types.includes('creature') && !c.tapped,
-  ).length;
+  const blockersAvailable = opponent.battlefield.filter((c) => {
+    const template = CardLoader.getById(c.scryfallId);
+    return template && isCreature(template) && !c.tapped;
+  }).length;
 
   return {
     // Life (normalized to [0, 1] where 20 = 1.0, capped at 2.0)
@@ -337,10 +345,7 @@ export class TrainingDataCollector {
     const playerId = action.playerId;
 
     // Check if we should record this player
-    if (
-      this.config.recordPlayer !== 'both' &&
-      this.config.recordPlayer !== playerId
-    ) {
+    if (this.config.recordPlayer !== 'both' && this.config.recordPlayer !== playerId) {
       return;
     }
 
@@ -355,18 +360,13 @@ export class TrainingDataCollector {
     }
 
     // Check max samples
-    if (
-      this.config.maxSamplesPerGame > 0 &&
-      this.samples.length >= this.config.maxSamplesPerGame
-    ) {
+    if (this.config.maxSamplesPerGame > 0 && this.samples.length >= this.config.maxSamplesPerGame) {
       return;
     }
 
     // Find action index among legal actions
     const actionJson = JSON.stringify(action);
-    const actionIndex = legalActions.findIndex(
-      (a) => JSON.stringify(a) === actionJson,
-    );
+    const actionIndex = legalActions.findIndex((a) => JSON.stringify(a) === actionJson);
 
     if (actionIndex === -1) {
       // Action not in legal actions - this shouldn't happen
@@ -392,10 +392,7 @@ export class TrainingDataCollector {
   /**
    * Finalize and build training data after game ends
    */
-  finalize(
-    finalState: GameState,
-    perspectivePlayer: PlayerId = 'player',
-  ): GameTrainingData {
+  finalize(finalState: GameState, perspectivePlayer: PlayerId = 'player'): GameTrainingData {
     // Determine outcome from perspective player's view
     let outcome: 1 | 0 | -1;
     if (finalState.winner === null) {

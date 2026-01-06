@@ -125,7 +125,7 @@ export function replayGame(replay: ReplayFile, options: ReplayOptions = {}): Rep
     return {
       finalState: null as unknown as GameState,
       outcomeMatched: false,
-      errors: [`Failed to load decks: ${e}`],
+      errors: [`Failed to load decks: ${e instanceof Error ? e.message : String(e)}`],
     };
   }
 
@@ -163,7 +163,7 @@ export function replayGame(replay: ReplayFile, options: ReplayOptions = {}): Rep
     try {
       state = applyAction(state, action);
     } catch (e) {
-      errors.push(`Action ${i} failed: ${e}`);
+      errors.push(`Action ${i} failed: ${e instanceof Error ? e.message : String(e)}`);
       break;
     }
 

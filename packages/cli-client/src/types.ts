@@ -96,7 +96,7 @@ export interface SimulationResults {
   gameRecords: GameRecord[];
   baseSeed: number;
   failedSeeds: number[];
-  profile: ProfileData;
+  profile?: ProfileData;
 }
 
 /**

@@ -20,16 +20,15 @@ The ManaCore AI package provides bot implementations for playing Magic: The Gath
 
 ---
 
-## Completed Work
 
-### Phase 1: Foundation (Complete)
+## ✅ Phase 1: Foundation (Complete)
 
 - [x] Bot interface (`Bot.ts`)
 - [x] RandomBot implementation
 - [x] Integration with CLI simulator
 - [x] 676 engine tests passing
 
-### Phase 2.1: Basic MCTS (Complete - January 5, 2026)
+## ✅ Phase 2.1: Basic MCTS (Complete)
 
 - [x] MCTSNode data structure with UCB1 formula
 - [x] MCTS core algorithm (select, expand, simulate, backprop)
@@ -54,9 +53,9 @@ The ManaCore AI package provides bot implementations for playing Magic: The Gath
 
 ---
 
-## Current Work
 
-### Phase 2.2: Performance & Hidden Information (In Progress)
+
+## ✅ Phase 2.2: Performance & Hidden Information
 
 **Goals:**
 
@@ -112,110 +111,57 @@ function determinize(state: GameState): GameState {
 }
 ```
 
----
-
-## Short-Term Goals (Next 1-2 Sessions)
-
-### Phase 2.3: Greedy Rollouts
+## ✅ Phase 2.3: Greedy Rollouts
 
 - [x] Implement `greedyRolloutPolicy` using GreedyBot's evaluation
 - [x] Compare rollout quality: random vs greedy
 - [x] Measure win rate improvement
 
-### Phase 2.4: Evaluation Tuning
+## ✅ Phase 2.4: Evaluation Tuning
 
 - [x] Self-play weight optimization
 - [x] Compare hand-tuned vs learned weights
 - [x] Document optimal weight configuration
 
-### Phase 2.5: Benchmarking Suite
+## ✅ Phase 2.5: Benchmarking Suite
 
 - [x] Automated bot comparison tests
 - [x] Win rate matrix (all bots vs all bots)
 - [x] Performance profiling dashboard
 
----
+## Phase 3: Advanced MCTS
 
-## Medium-Term Goals (Next Month)
+### ✅ 3.0: Use Tuning Data to improve MCTS Weights
 
-### Phase 3: Advanced MCTS
-
-**3.0: Use Tuning Data to improve MCTS Weights**
 - Read: `packages/cli-client/docs/TUNING.md`
 - Devise Strategy to find optimized weights through Auto Tuning / Self Play
 - Discuss ongoing Strategy (How often to retune?)
+- See `packages/ai/docs/PHASE-3.0-PLAN.md` for Details
 
-**3.1: ISMCTS (Information Set MCTS)**
+ ### 3.1: ISMCTS (Information Set MCTS)
 
+- Evaluate existing MCTSBots implementations
 - Multiple determinizations per search
 - Aggregate results across possible worlds
 - Handle hidden information properly
 
-**3.2: Transposition Tables**
+### 3.2: Transposition Tables
 
 - State hashing for position deduplication
 - Share statistics between equivalent positions
 - Memory-bounded table with LRU eviction
 
-**3.3: Parallel Search**
+### 3.3: Parallel Search
 
 - Root parallelization (multiple trees)
 - Tree parallelization (shared tree with locks)
 - Web Worker implementation
 
-**3.4: Move Ordering**
+### 3.4: Move Ordering
 
 - Prioritize promising actions in expansion
 - Use evaluation function for action sorting
 - Killer move heuristic
-
----
-
-## Long-Term Goals (Future Phases)
-
-### Phase 4: Neural Network Evaluation
-
-**4.1: Training Data Collection**
-
-- Record games with action + outcome pairs
-- Generate 100,000+ training examples
-- Balance across deck types and game stages
-
-**4.2: Network Architecture**
-
-```
-Input Layer:
-├── Board state encoding (creatures, lands, etc.)
-├── Hand information (card types, mana costs)
-├── Game phase and turn number
-└── Life totals and mana pools
-
-Hidden Layers:
-├── 3x Dense layers (512 → 256 → 128)
-├── ReLU activation
-└── Dropout for regularization
-
-Output Layer:
-└── Win probability [0, 1]
-```
-
-**4.3: Training Pipeline**
-
-- Supervised learning from expert games
-- Self-play reinforcement learning
-- AlphaZero-style training loop
-
-### Phase 5: Genetic Deck Building
-
-- Evolve deck compositions through tournament selection
-- Discover novel strategies
-- Meta-game analysis
-
-### Phase 6: Transfer Learning Experiments
-
-- Train on 6th Edition, test on Urza's Saga
-- Measure adaptation speed to new card pools
-- Research paper: "Plasticity of MCTS Agents in Evolving TCG Environments"
 
 ---
 
@@ -293,37 +239,3 @@ packages/ai/
    - Diminishing returns threshold?
 
 ---
-
-## CLI Quick Reference
-
-```bash
-# Bot benchmarks
-bun src/index.ts sim 100 --p1 mcts --p2 random
-bun src/index.ts sim 100 --p1 mcts-fast --p2 greedy
-bun src/index.ts sim 100 --p1 mcts-strong --p2 mcts
-
-# Debug mode (shows MCTS stats)
-bun src/index.ts sim 10 --p1 mcts --p2 random --debug
-
-# GreedyBot benchmark
-bun src/index.ts benchmark 100
-```
-
----
-
-## Contributing
-
-When working on the AI package:
-
-1. **Tests First** - Add tests before implementing features
-2. **Benchmark Changes** - Measure performance impact
-3. **Document Decisions** - Update this roadmap with learnings
-4. **Small Commits** - One feature per commit
-
----
-
-## References
-
-- [MCTS Survey Paper](https://www.cs.swarthmore.edu/~bryce/cs63/s16/reading/mcts.pdf)
-- [AlphaZero Paper](https://arxiv.org/abs/1712.01815)
-- [ISMCTS for Card Games](https://ieeexplore.ieee.org/document/6203567)

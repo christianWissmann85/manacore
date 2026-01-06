@@ -187,9 +187,7 @@ function getAcceptanceCriteria(level: string): AcceptanceCriteriaConfig {
 /**
  * Run the complete tuning pipeline
  */
-export async function runPipeline(
-  config: Partial<PipelineConfig> = {},
-): Promise<PipelineResult> {
+export async function runPipeline(config: Partial<PipelineConfig> = {}): Promise<PipelineResult> {
   const cfg = { ...DEFAULT_PIPELINE_CONFIG, ...config };
   const startTime = performance.now();
   let totalGamesPlayed = 0;
@@ -318,7 +316,9 @@ export async function runPipeline(
         durationMs: performance.now() - weightsStart,
       };
     }
-    printStageResult(result.stages.weights!);
+    if (result.stages.weights) {
+      printStageResult(result.stages.weights);
+    }
   }
 
   // ========== STAGE 3: TUNE MCTS ==========
@@ -362,7 +362,9 @@ export async function runPipeline(
         durationMs: performance.now() - mctsStart,
       };
     }
-    printStageResult(result.stages.mcts!);
+    if (result.stages.mcts) {
+      printStageResult(result.stages.mcts);
+    }
   }
 
   // ========== STAGE 4: VALIDATE ==========
@@ -414,7 +416,9 @@ export async function runPipeline(
       data: validation,
       durationMs: performance.now() - validateStart,
     };
-    printStageResult(result.stages.validate!);
+    if (result.stages.validate) {
+      printStageResult(result.stages.validate);
+    }
   } else if (cfg.skipValidation) {
     validationPassed = true; // Skip means accept
   }
@@ -447,7 +451,11 @@ export async function runPipeline(
       created: new Date().toISOString(),
       description: `Pipeline tuning run (${totalGamesPlayed} games)`,
       source: {
-        method: cfg.skipWeights ? 'mcts-tuned' : (cfg.weightMethod === 'evolve' ? 'evolutionary' : cfg.weightMethod),
+        method: cfg.skipWeights
+          ? 'mcts-tuned'
+          : cfg.weightMethod === 'evolve'
+            ? 'evolutionary'
+            : cfg.weightMethod,
         games: totalGamesPlayed,
         seed: cfg.seed,
       },
@@ -462,7 +470,10 @@ export async function runPipeline(
         : currentWeights.mcts,
       performance: {
         vsRandom: weightResult?.bestFitness.vsRandom ?? currentWeights.performance.vsRandom,
-        vsGreedy: mctsResult?.bestResult.winRate ?? weightResult?.bestFitness.vsGreedy ?? currentWeights.performance.vsGreedy,
+        vsGreedy:
+          mctsResult?.bestResult.winRate ??
+          weightResult?.bestFitness.vsGreedy ??
+          currentWeights.performance.vsGreedy,
         elo: weightResult?.bestFitness.elo ?? currentWeights.performance.elo,
         gamesPlayed: currentWeights.performance.gamesPlayed + totalGamesPlayed,
       },
@@ -511,7 +522,7 @@ export async function runPipeline(
     } catch (error) {
       result.stages.document = {
         success: false,
-        message: `Failed to update log: ${error}`,
+        message: `Failed to update log: ${error instanceof Error ? error.message : String(error)}`,
         durationMs: performance.now() - docStart,
       };
     }
@@ -634,35 +645,39 @@ export function parsePipelineArgs(args: string[]): Partial<PipelineConfig> {
       case '--seed':
         config.seed = parseInt(args[++i] || String(Date.now()), 10);
         break;
-      case '--weight-method':
+      case '--weight-method': {
         const wm = args[++i];
         if (wm === 'local' || wm === 'evolve') {
           config.weightMethod = wm;
         }
         break;
-      case '--mcts-method':
+      }
+      case '--mcts-method': {
         const mm = args[++i];
         if (mm === 'grid' || mm === 'coarse-to-fine') {
           config.mctsMethod = mm;
         }
         break;
+      }
       case '--generations':
         config.weightGenerations = parseInt(args[++i] || '10', 10);
         break;
-      case '--games':
+      case '--games': {
         const games = parseInt(args[++i] || '30', 10);
         config.weightGamesVsGreedy = games;
         config.mctsGamesPerConfig = games;
         break;
+      }
       case '--validation':
         config.validationGames = parseInt(args[++i] || '200', 10);
         break;
-      case '--acceptance':
+      case '--acceptance': {
         const level = args[++i];
         if (level === 'relaxed' || level === 'default' || level === 'strict') {
           config.acceptanceLevel = level;
         }
         break;
+      }
       case '--skip-weights':
         config.skipWeights = true;
         break;

@@ -21,7 +21,6 @@ import {
   greedyRolloutPolicy,
   epsilonGreedyRolloutPolicy,
 } from '../search/MCTS';
-import { getCurrentWeights } from '../evaluation/evaluate';
 import {
   validateImprovement,
   type AcceptanceCriteriaConfig,
@@ -273,11 +272,7 @@ export class MCTSTuner {
   /**
    * Evaluate a single MCTS configuration
    */
-  evaluateConfig(
-    params: MCTSHyperparams,
-    games: number,
-    baseSeed: number,
-  ): MCTSConfigResult {
+  evaluateConfig(params: MCTSHyperparams, games: number, baseSeed: number): MCTSConfigResult {
     const mctsBot = createMCTSBotFromParams(params, baseSeed);
     const greedyBot = new GreedyBot(baseSeed + 5000);
 
@@ -412,9 +407,7 @@ export class MCTSTuner {
    * Phase 2: Fine search around best region
    * Phase 3: Validate with more games
    */
-  runCoarseToFine(
-    onProgress?: (progress: MCTSTuningProgress) => void,
-  ): MCTSTuningResult {
+  runCoarseToFine(onProgress?: (progress: MCTSTuningProgress) => void): MCTSTuningResult {
     this.startTime = performance.now();
     this.gamesPlayed = 0;
 
@@ -427,11 +420,7 @@ export class MCTSTuner {
 
     for (let i = 0; i < coarseConfigs.length; i++) {
       const config = coarseConfigs[i]!;
-      const result = this.evaluateConfig(
-        config,
-        coarseGames,
-        this.config.seed + i * 10000,
-      );
+      const result = this.evaluateConfig(config, coarseGames, this.config.seed + i * 10000);
 
       coarseResults.push(result);
 
@@ -516,16 +505,8 @@ export class MCTSTuner {
     const d = center.rolloutDepth;
 
     return {
-      explorationConstant: [
-        Math.max(0.3, c - 0.3),
-        c,
-        Math.min(3.0, c + 0.3),
-      ],
-      rolloutDepth: [
-        Math.max(0, d - 5),
-        d,
-        Math.min(30, d + 5),
-      ],
+      explorationConstant: [Math.max(0.3, c - 0.3), c, Math.min(3.0, c + 0.3)],
+      rolloutDepth: [Math.max(0, d - 5), d, Math.min(30, d + 5)],
       rolloutPolicy: [center.rolloutPolicy], // Keep the winning policy
       epsilon: [center.epsilon],
       iterations: [center.iterations],
@@ -615,9 +596,7 @@ export class MCTSTuner {
   /**
    * Run full tuning pipeline
    */
-  tune(
-    onProgress?: (progress: MCTSTuningProgress) => void,
-  ): MCTSTuningResult {
+  tune(onProgress?: (progress: MCTSTuningProgress) => void): MCTSTuningResult {
     if (this.config.method === 'grid') {
       return this.runGridSearch(DEFAULT_PARAM_RANGES, onProgress);
     } else {
@@ -685,7 +664,9 @@ export function formatMCTSTuningResult(result: MCTSTuningResult): string {
   lines.push(`  Total Configurations:     ${result.allResults.length}`);
   lines.push(`  Total Games Played:       ${result.totalGamesPlayed}`);
   lines.push(`  Total Time:               ${(result.totalTimeMs / 1000).toFixed(1)}s`);
-  lines.push(`  Games per Second:         ${(result.totalGamesPlayed / (result.totalTimeMs / 1000)).toFixed(1)}`);
+  lines.push(
+    `  Games per Second:         ${(result.totalGamesPlayed / (result.totalTimeMs / 1000)).toFixed(1)}`,
+  );
   lines.push('');
 
   if (result.validated && result.validationResult) {

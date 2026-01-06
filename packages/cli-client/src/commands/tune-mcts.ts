@@ -15,7 +15,6 @@ import {
   type MCTSTuningProgress,
   type MCTSTuningResult,
   type MCTSTunerConfig,
-  DEFAULT_TUNER_CONFIG,
   loadWeights,
   saveWeights,
   bumpVersion,
@@ -81,11 +80,7 @@ function printDashboard(progress: MCTSTuningProgress): void {
 
   // Phase label
   const phaseLabel =
-    phase === 'grid'
-      ? 'Grid Search'
-      : phase === 'fine'
-        ? 'Fine Tuning'
-        : 'Validation';
+    phase === 'grid' ? 'Grid Search' : phase === 'fine' ? 'Fine Tuning' : 'Validation';
 
   // Build dashboard
   const lines: string[] = [];
@@ -95,8 +90,14 @@ function printDashboard(progress: MCTSTuningProgress): void {
 
   if (bestSoFar) {
     const p = bestSoFar.params;
-    lines.push(`│  Best Config: C=${p.explorationConstant} D=${p.rolloutDepth} P=${p.rolloutPolicy}`.padEnd(69) + '│');
-    lines.push(`│  Win Rate vs GreedyBot: ${(bestSoFar.winRate * 100).toFixed(1)}%`.padEnd(69) + '│');
+    lines.push(
+      `│  Best Config: C=${p.explorationConstant} D=${p.rolloutDepth} P=${p.rolloutPolicy}`.padEnd(
+        69,
+      ) + '│',
+    );
+    lines.push(
+      `│  Win Rate vs GreedyBot: ${(bestSoFar.winRate * 100).toFixed(1)}%`.padEnd(69) + '│',
+    );
     lines.push(`│  Avg Time/Game: ${bestSoFar.avgTimeMs.toFixed(0)}ms`.padEnd(69) + '│');
   } else {
     lines.push('│  Evaluating configurations...'.padEnd(69) + '│');
@@ -128,7 +129,9 @@ function printDashboard(progress: MCTSTuningProgress): void {
 function printInitialDashboard(method: string): void {
   const lines: string[] = [];
   lines.push('┌' + '─'.repeat(68) + '┐');
-  lines.push(`│  🎯 MCTS Tuning - ${method === 'grid' ? 'Grid Search' : 'Coarse-to-Fine'}`.padEnd(69) + '│');
+  lines.push(
+    `│  🎯 MCTS Tuning - ${method === 'grid' ? 'Grid Search' : 'Coarse-to-Fine'}`.padEnd(69) + '│',
+  );
   lines.push('├' + '─'.repeat(68) + '┤');
   lines.push('│  Initializing...'.padEnd(69) + '│');
   lines.push('│'.padEnd(69) + '│');
@@ -241,12 +244,13 @@ export function parseTuneMCTSArgs(args: string[]): Partial<TuneMCTSOptions> {
     const arg = args[i];
 
     switch (arg) {
-      case '--method':
+      case '--method': {
         const method = args[++i];
         if (method === 'grid' || method === 'coarse-to-fine') {
           options.method = method;
         }
         break;
+      }
       case '--games':
       case '--games-per-config':
         options.gamesPerConfig = parseInt(args[++i] || '50', 10);

@@ -7,8 +7,6 @@
  * 3. Reducing step size when no improvement found
  */
 
-/* global performance */
-
 import type { EvaluationWeights } from '../evaluation/evaluate';
 import { DEFAULT_WEIGHTS } from '../evaluation/evaluate';
 import { FitnessEvaluator } from './FitnessEvaluator';

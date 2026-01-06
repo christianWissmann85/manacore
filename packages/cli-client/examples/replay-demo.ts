@@ -102,7 +102,9 @@ async function main() {
   console.log(`  Winner: ${state.winner || 'draw'}`);
   console.log(`  Turns: ${state.turnCount}`);
   console.log(`  Actions: ${actionCount}`);
-  console.log(`  Final life: Player ${state.players.player.life}, Opponent ${state.players.opponent.life}`);
+  console.log(
+    `  Final life: Player ${state.players.player.life}, Opponent ${state.players.opponent.life}`,
+  );
 
   // =========================================================================
   // STEP 2: Save the replay to a file
@@ -159,8 +161,12 @@ async function main() {
   console.log(`  Final state matches:`);
   console.log(`    Winner: ${replayResult.finalState.winner} (expected: ${state.winner})`);
   console.log(`    Turns: ${replayResult.finalState.turnCount} (expected: ${state.turnCount})`);
-  console.log(`    Player life: ${replayResult.finalState.players.player.life} (expected: ${state.players.player.life})`);
-  console.log(`    Opponent life: ${replayResult.finalState.players.opponent.life} (expected: ${state.players.opponent.life})`);
+  console.log(
+    `    Player life: ${replayResult.finalState.players.player.life} (expected: ${state.players.player.life})`,
+  );
+  console.log(
+    `    Opponent life: ${replayResult.finalState.players.opponent.life} (expected: ${state.players.opponent.life})`,
+  );
 
   if (replayResult.errors.length > 0) {
     console.log('\n  Errors:');

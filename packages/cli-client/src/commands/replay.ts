@@ -9,13 +9,7 @@
  */
 
 import type { Action } from '@manacore/engine';
-import {
-  loadReplay,
-  replayGame,
-  replayToTurn,
-  getReplaySummary,
-  verifyReplay,
-} from '../replay';
+import { loadReplay, replayGame, replayToTurn, getReplaySummary, verifyReplay } from '../replay';
 import { renderGameState } from '../display/board';
 import type { ReplaySnapshot } from '../types';
 
@@ -67,7 +61,7 @@ export async function runReplayCommand(options: ReplayCommandOptions): Promise<v
   try {
     replay = loadReplay(filepath);
   } catch (e) {
-    console.error(`❌ Failed to load replay: ${e}`);
+    console.error(`❌ Failed to load replay: ${e instanceof Error ? e.message : String(e)}`);
     return;
   }
 
@@ -124,7 +118,7 @@ export async function runReplayCommand(options: ReplayCommandOptions): Promise<v
       const resultPromise = replayGame(replay, {
         stopAtTurn: turn,
         stopAtAction: action,
-        onAction: async (actionIndex: number, actionObj: unknown, snapshot: ReplaySnapshot) => {
+        onAction: (actionIndex: number, actionObj: unknown, snapshot: ReplaySnapshot) => {
           // Show turn header when turn changes
           if (snapshot.turn !== lastTurn) {
             lastTurn = snapshot.turn;
@@ -148,7 +142,7 @@ export async function runReplayCommand(options: ReplayCommandOptions): Promise<v
       });
 
       // Add delays between actions for watch effect
-      (async () => {
+      void (async () => {
         const actions = replay.actions as Action[];
         for (let i = 0; i < actions.length; i++) {
           if (turn !== undefined && i >= turn * 20) break; // Rough estimate
@@ -196,7 +190,9 @@ export async function runReplayCommand(options: ReplayCommandOptions): Promise<v
     const finalSnapshot = result.snapshots[result.snapshots.length - 1];
     if (finalSnapshot) {
       console.log(`   Final turn: ${finalSnapshot.turn}`);
-      console.log(`   Final life: Player ${finalSnapshot.playerLife}, Opponent ${finalSnapshot.opponentLife}`);
+      console.log(
+        `   Final life: Player ${finalSnapshot.playerLife}, Opponent ${finalSnapshot.opponentLife}`,
+      );
     }
   }
 }
