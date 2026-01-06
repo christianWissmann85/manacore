@@ -18,8 +18,11 @@ import {
   applyAction,
   createRedDeck,
   createGreenDeck,
+  CardLoader,
   type GameState,
   type Action,
+  type PlayerId,
+  type Zone,
 } from '@manacore/engine';
 
 // Helper to create a game state
@@ -69,17 +72,23 @@ describe('TrainingDataCollector', () => {
     test('correctly calculates board advantage', () => {
       const state = createTestState(42);
 
+      // Get a real creature card to use
+      const grizzlyBears = CardLoader.getByName('Grizzly Bears');
+      expect(grizzlyBears).toBeDefined();
+
       // Add some creatures to player's battlefield
       const mockCreature = {
         instanceId: 'test-1',
-        cardId: 'test',
-        name: 'Test Creature',
-        types: ['creature'] as 'creature'[],
-        power: 3,
-        toughness: 3,
+        scryfallId: grizzlyBears!.id,
+        controller: 'player' as PlayerId,
+        owner: 'player' as PlayerId,
+        zone: 'battlefield' as Zone,
         tapped: false,
         summoningSick: false,
-        enteredBattlefieldThisTurn: false,
+        damage: 0,
+        counters: {},
+        temporaryModifications: [],
+        attachments: [],
       };
 
       state.players.player.battlefield.push(mockCreature as any);
@@ -90,8 +99,9 @@ describe('TrainingDataCollector', () => {
       expect(features.playerCreatureCount).toBe(0.2); // 2/10
       expect(features.opponentCreatureCount).toBe(0);
       expect(features.boardAdvantage).toBe(0.2); // 2/10
-      expect(features.playerTotalPower).toBe(0.2); // 6/30
-      expect(features.playerTotalToughness).toBe(0.2); // 6/30
+      // Grizzly Bears has 2/2, so 2 creatures = 4 total power/toughness
+      expect(features.playerTotalPower).toBeCloseTo(4 / 30, 2); // 4/30 ≈ 0.133
+      expect(features.playerTotalToughness).toBeCloseTo(4 / 30, 2); // 4/30 ≈ 0.133
     });
   });
 

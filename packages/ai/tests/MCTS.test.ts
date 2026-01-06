@@ -11,6 +11,7 @@ import {
   DEFAULT_MCTS_CONFIG,
   orderActionsByPriority,
   ACTION_PRIORITY,
+  filterRepeatedAbilities,
 } from '../src/search/MCTS';
 import {
   createMCTSNode,
@@ -222,5 +223,85 @@ describe('Phase 3.4: Move Ordering', () => {
     expect(result.iterations).toBeGreaterThan(0);
     // The first expanded actions should be high-priority types
     // (Can't directly test expansion order, but we verify it runs without errors)
+  });
+
+  test('filterRepeatedAbilities prevents same ability from being activated twice', () => {
+    // Create mock actions
+    const abilityAction1: any = {
+      type: 'ACTIVATE_ABILITY',
+      playerId: 'player',
+      payload: { abilityId: 'card_123_pump_self', sourceId: 'card_123' },
+    };
+
+    const abilityAction2: any = {
+      type: 'ACTIVATE_ABILITY',
+      playerId: 'player',
+      payload: { abilityId: 'card_456_tap_mana', sourceId: 'card_456' },
+    };
+
+    const spellAction: any = {
+      type: 'CAST_SPELL',
+      playerId: 'player',
+      payload: { cardInstanceId: 'spell_789' },
+    };
+
+    const passAction: any = {
+      type: 'PASS_PRIORITY',
+      playerId: 'player',
+      payload: {},
+    };
+
+    const allActions = [abilityAction1, abilityAction2, spellAction, passAction];
+
+    // Filter when parent was the pump ability
+    const filtered = filterRepeatedAbilities(allActions, abilityAction1);
+
+    // Should exclude abilityAction1 but keep everything else
+    expect(filtered).toHaveLength(3);
+    expect(filtered).not.toContain(abilityAction1);
+    expect(filtered).toContain(abilityAction2);
+    expect(filtered).toContain(spellAction);
+    expect(filtered).toContain(passAction);
+  });
+
+  test('filterRepeatedAbilities keeps all actions when parent is not an ability', () => {
+    const abilityAction: any = {
+      type: 'ACTIVATE_ABILITY',
+      playerId: 'player',
+      payload: { abilityId: 'card_123_pump_self', sourceId: 'card_123' },
+    };
+
+    const spellAction: any = {
+      type: 'CAST_SPELL',
+      playerId: 'player',
+      payload: { cardInstanceId: 'spell_789' },
+    };
+
+    const allActions = [abilityAction, spellAction];
+
+    // Filter when parent was a spell (not an ability)
+    const filtered = filterRepeatedAbilities(allActions, spellAction);
+
+    // Should keep all actions
+    expect(filtered).toHaveLength(2);
+    expect(filtered).toContain(abilityAction);
+    expect(filtered).toContain(spellAction);
+  });
+
+  test('filterRepeatedAbilities keeps all actions when parent is null', () => {
+    const abilityAction: any = {
+      type: 'ACTIVATE_ABILITY',
+      playerId: 'player',
+      payload: { abilityId: 'card_123_pump_self', sourceId: 'card_123' },
+    };
+
+    const allActions = [abilityAction];
+
+    // Filter when parent is null (root node)
+    const filtered = filterRepeatedAbilities(allActions, null);
+
+    // Should keep all actions
+    expect(filtered).toHaveLength(1);
+    expect(filtered).toContain(abilityAction);
   });
 });

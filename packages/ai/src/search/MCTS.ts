@@ -95,6 +95,34 @@ export function orderActionsByPriority(actions: Action[]): Action[] {
 }
 
 /**
+ * Filter out repeated ability activations to prevent infinite loops
+ *
+ * This prevents MCTS from exploring paths where the same pump ability
+ * (like Dragon Engine's {2}: +1/+0) is activated multiple times in a row.
+ *
+ * @param actions - All available actions
+ * @param parentAction - The action that led to the current state
+ * @returns Filtered actions with repeated abilities removed
+ */
+export function filterRepeatedAbilities(actions: Action[], parentAction: Action | null): Action[] {
+  // If parent wasn't an ability activation, no filtering needed
+  if (!parentAction || parentAction.type !== 'ACTIVATE_ABILITY') {
+    return actions;
+  }
+
+  const parentAbilityId = parentAction.payload.abilityId;
+
+  // Remove the same ability activation from available actions
+  return actions.filter((action) => {
+    if (action.type !== 'ACTIVATE_ABILITY') {
+      return true; // Keep non-ability actions
+    }
+    // Filter out the same ability that was just activated
+    return action.payload.abilityId !== parentAbilityId;
+  });
+}
+
+/**
  * Determinize a game state by shuffling opponent's hidden information
  *
  * This makes MCTS "fair" by not letting it see the opponent's actual hand.
@@ -279,8 +307,12 @@ export function runMCTS(
       try {
         const newState = applyAction(currentState, action);
         profile.applyActionCount++;
-        const childActions = getLegalActions(newState, newState.priorityPlayer);
+        let childActions = getLegalActions(newState, newState.priorityPlayer);
         profile.getLegalActionsCount++;
+
+        // ANTI-LOOP FIX: Filter out repeated ability activations
+        // This prevents infinite loops with pump abilities like Dragon Engine
+        childActions = filterRepeatedAbilities(childActions, action);
 
         // Order child actions if move ordering is enabled
         const orderedChildActions = cfg.moveOrdering
@@ -453,7 +485,15 @@ export function greedyRolloutPolicy(state: GameState, playerId: PlayerId): Actio
   for (const action of actionsToEvaluate) {
     try {
       const newState = applyAction(state, action);
-      const score = quickEvaluateWithCoefficients(newState, playerId, TUNED_COEFFICIENTS);
+      let score = quickEvaluateWithCoefficients(newState, playerId, TUNED_COEFFICIENTS);
+
+      // ANTI-LOOP FIX: Penalize pump abilities (they cause infinite loops)
+      // Pump abilities like Dragon Engine's {2}: +1/+0 should not dominate simulations
+      if (action.type === 'ACTIVATE_ABILITY') {
+        // Heuristic: Avoid pump abilities unless clearly winning
+        // This prevents MCTS from wasting tree exploration on repeated pumps
+        score -= 5; // Small penalty to deprioritize ability spam
+      }
 
       if (score > bestScore) {
         bestScore = score;
