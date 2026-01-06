@@ -130,6 +130,26 @@ export {
   COARSE_PARAM_RANGES,
 } from './tuning/MCTSTuner';
 
+// Training data collection exports
+export type {
+  StateFeatures,
+  TrainingSample,
+  GameTrainingData,
+  CollectorConfig,
+  TensorData,
+} from './training';
+export {
+  TrainingDataCollector,
+  extractFeatures,
+  featuresToArray,
+  FEATURE_VECTOR_SIZE,
+  saveTrainingData,
+  saveTrainingDataCompact,
+  toTensorFormat,
+  mergeTrainingData,
+  DEFAULT_COLLECTOR_CONFIG,
+} from './training';
+
 if (!process.env.MANACORE_SILENT_INIT) {
   console.log(`✅ @manacore/ai v${AI_VERSION} loaded`);
 }

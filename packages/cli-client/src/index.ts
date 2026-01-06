@@ -13,6 +13,7 @@ import { playGame } from './commands/play';
 import { runTune } from './commands/tune';
 import { runTuneMCTS, parseTuneMCTSArgs } from './commands/tune-mcts';
 import { runBenchmarkSuite, parseBenchmarkSuiteArgs } from './commands/benchmarkSuite';
+import { runPipeline, parsePipelineArgs } from './commands/pipeline';
 import { runReplayCommand, parseReplayArgs } from './commands/replay';
 import { OutputLevel, type ExportFormat } from './types';
 import { createBot, type BotType } from './botFactory';
@@ -391,6 +392,13 @@ async function main() {
       break;
     }
 
+    case 'pipeline': {
+      // Parse pipeline options
+      const pipelineOptions = parsePipelineArgs(args.slice(1));
+      await runPipeline(pipelineOptions);
+      break;
+    }
+
     case 'help':
     default:
       console.log('🔬 ManaCore Research CLI\n');
@@ -405,6 +413,8 @@ async function main() {
       console.log('  replay <seed>           Replay a specific game by seed (re-run simulation)');
       console.log('  replay <file.json>      Play back a recorded game from replay file');
       console.log('  tune                    Run weight tuning optimization (Phase 2.3)');
+      console.log('  tune-mcts               Tune MCTS hyperparameters (Phase 3.0)');
+      console.log('  pipeline                Complete tuning pipeline (Phase 3.0)');
       console.log('  help                    Show this help message');
       console.log('');
       console.log('Options:');
@@ -496,6 +506,28 @@ async function main() {
       console.log('  bun src/index.ts tune-mcts                   # Coarse-to-fine search');
       console.log('  bun src/index.ts tune-mcts --method grid     # Full grid search');
       console.log('  bun src/index.ts tune-mcts --games 100 --save  # Save results');
+      console.log('');
+      console.log('Full Tuning Pipeline (Phase 3.0):');
+      console.log('  pipeline                Complete tuning workflow');
+      console.log('  --seed <n>              Random seed for reproducibility');
+      console.log('  --weight-method <type>  local or evolve (default: local)');
+      console.log('  --mcts-method <type>    grid or coarse-to-fine (default: coarse-to-fine)');
+      console.log('  --generations <n>       Weight tuning generations (default: 10)');
+      console.log('  --games <n>             Games per evaluation (default: 30)');
+      console.log('  --validation <n>        Validation games (default: 200)');
+      console.log('  --acceptance <level>    relaxed, default, or strict');
+      console.log('  --skip-weights          Skip weight tuning stage');
+      console.log('  --skip-mcts             Skip MCTS tuning stage');
+      console.log('  --weights-only          Alias for --skip-mcts');
+      console.log('  --mcts-only             Alias for --skip-weights');
+      console.log('  --dry-run               Show what would happen without saving');
+      console.log('  --force                 Persist even if validation fails');
+      console.log('');
+      console.log('Pipeline Examples:');
+      console.log('  bun src/index.ts pipeline                    # Full pipeline');
+      console.log('  bun src/index.ts pipeline --dry-run          # Preview mode');
+      console.log('  bun src/index.ts pipeline --mcts-only        # Just MCTS tuning');
+      console.log('  bun src/index.ts pipeline --weights-only     # Just weight tuning');
       console.log('');
       console.log('Benchmark Suite (Phase 2.5):');
       console.log('  suite                   Run bot comparison matrix');

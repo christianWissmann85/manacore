@@ -256,13 +256,13 @@ class MCTSTuner {
 
 #### Implementation Tasks
 
-- [ ] Create `packages/ai/src/tuning/MCTSTuner.ts`
-- [ ] Implement grid search (simplest first)
-- [ ] Add parallel game execution via worker threads
-- [ ] Create parameter space definition
-- [ ] Implement coarse-to-fine optimization
-- [ ] (Optional) Add Bayesian optimization
-- [ ] Add CLI command `bun tune-mcts [options]`
+- [x] Create `packages/ai/src/tuning/MCTSTuner.ts`
+- [x] Implement grid search (simplest first)
+- [x] Add parallel game execution via worker threads
+- [x] Create parameter space definition
+- [x] Implement coarse-to-fine optimization
+- [x] (Optional) Add Bayesian optimization
+- [x] Add CLI command `bun tune-mcts [options]`
 
 ---
 

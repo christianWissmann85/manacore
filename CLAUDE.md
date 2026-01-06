@@ -219,9 +219,9 @@ cd packages/engine && bun test          # Run all tests
 bun test --watch                        # Watch mode
 bun test -t "pattern"                   # Run specific tests
 
-                                  # Hides all successful and skipped tests to avoid bloating your logs.
-bun test:quiet                    # Only show failed tests, including the file name, the specific failure details, and the full stack trace.
-                                  # Always show the final summary (pass/fail/skip counts and total time).
+                                      # Hides all successful and skipped tests to avoid bloating your logs.
+cd packages/engine &&bun test:quiet   # Only show failed tests, including the file name, the specific failure details
+                                      # Always show the final summary (pass/fail/skip counts and total time).
 ```
 
 ### Simulations
