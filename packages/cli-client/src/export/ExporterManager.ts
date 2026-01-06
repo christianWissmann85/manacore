@@ -10,7 +10,7 @@ import { ResultsExporter } from './ResultsExporter';
 import { ConsoleExporter } from './ConsoleExporter';
 import { JsonExporter } from './JsonExporter';
 import { CsvExporter } from './CsvExporter';
-import { getSimulationResultPath, getRelativePath } from '../output/paths';
+import { getSimulationResultPath } from '../output/paths';
 
 export interface ExportConfig {
   formats: ExportFormat[];

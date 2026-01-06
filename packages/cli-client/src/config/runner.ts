@@ -80,8 +80,11 @@ export async function runExperiment(config: ExperimentConfig): Promise<void> {
       await runReplayExperiment(config);
       break;
 
-    default:
-      throw new Error(`Unknown command: ${(config as any).command}`);
+    default: {
+      // Type assertion for exhaustive check error message
+      const unknownConfig = config as { command: string };
+      throw new Error(`Unknown command: ${unknownConfig.command}`);
+    }
   }
 }
 

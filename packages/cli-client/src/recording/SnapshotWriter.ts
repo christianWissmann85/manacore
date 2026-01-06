@@ -11,7 +11,7 @@
 
 import type { GameState, Action } from '@manacore/engine';
 import { CardLoader, describeAction, getLegalActions } from '@manacore/engine';
-import { getErrorSnapshotPath, getCategoryDir, ensureDir } from '../output/paths';
+import { getErrorSnapshotPath } from '../output/paths';
 
 /**
  * Custom error class with game context

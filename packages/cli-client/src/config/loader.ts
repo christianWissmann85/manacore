@@ -5,8 +5,8 @@
  */
 
 import { readFileSync, existsSync } from 'fs';
-import { resolve, dirname } from 'path';
-import type { ExperimentConfig, ManaCoreConfig, OutputConfig, CONFIG_DEFAULTS } from './schema';
+import { resolve } from 'path';
+import type { ExperimentConfig, ManaCoreConfig, OutputConfig } from './schema';
 
 /**
  * Load configuration from a JSON file
@@ -121,8 +121,11 @@ function validateConfig(config: ExperimentConfig): void {
       }
       break;
 
-    default:
-      throw new Error(`Unknown command: ${(config as any).command}`);
+    default: {
+      // Type assertion for exhaustive check error message
+      const unknownConfig = config as { command: string };
+      throw new Error(`Unknown command: ${unknownConfig.command}`);
+    }
   }
 }
 
@@ -132,7 +135,8 @@ function validateConfig(config: ExperimentConfig): void {
 function applyDefaults(config: ExperimentConfig): ExperimentConfig {
   // Resolve seed (not all configs have seed)
   if ('seed' in config && (config.seed === 'timestamp' || config.seed === undefined)) {
-    (config as any).seed = Date.now();
+    // Type assertion needed since we're modifying a union type
+    (config as { seed: number }).seed = Date.now();
   }
 
   // Apply output defaults
@@ -143,7 +147,8 @@ function applyDefaults(config: ExperimentConfig): ExperimentConfig {
     timestamp: true,
   };
 
-  (config as any).output = {
+  // Type assertion needed since we're modifying a union type
+  (config as { output: OutputConfig }).output = {
     ...outputDefaults,
     ...(config.output || {}),
   };

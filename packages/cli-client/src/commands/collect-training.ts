@@ -27,14 +27,12 @@ import {
   getLegalActions,
   applyAction,
   ALL_TEST_DECKS,
-  type GameState,
-  type Action,
   type PlayerId,
   type CardTemplate,
 } from '@manacore/engine';
-import { writeFileSync, mkdirSync, existsSync, readdirSync, readFileSync } from 'fs';
+import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'fs';
 import { join, dirname } from 'path';
-import { getTrainingDataDir, getRelativePath } from '../output/paths';
+import { getTrainingDataDir } from '../output/paths';
 
 /**
  * Curriculum phase configuration
@@ -553,9 +551,8 @@ export async function runCollectTraining(
   console.log('\n📦 Merging and exporting...');
 
   const merged = mergeTrainingData(allGames);
-  const tensors = toTensorFormat({ samples: merged.samples, outcome: 1 } as GameTrainingData);
 
-  // Fix: toTensorFormat expects single game, we need to build tensors from merged data
+  // Build tensors from all games (toTensorFormat expects single game)
   const mergedTensors: TensorData = {
     features: [],
     actions: [],
@@ -654,12 +651,13 @@ export function parseCollectTrainingArgs(args: string[]): Partial<CollectTrainin
       case '--max-turns':
         options.maxTurns = parseInt(args[++i] || '100', 10);
         break;
-      case '--phase':
+      case '--phase': {
         const phase = args[++i];
         if (phase === 'easy' || phase === 'medium' || phase === 'hard') {
           options.phase = phase;
         }
         break;
+      }
       case '--no-json':
         options.noJsonExport = true;
         break;
