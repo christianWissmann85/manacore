@@ -27,7 +27,35 @@ export {
   TUNED_WEIGHTS,
   DEFAULT_COEFFICIENTS,
   TUNED_COEFFICIENTS,
+  // Dynamic loading functions
+  getCurrentWeights,
+  getCurrentCoefficients,
+  evaluateWithCurrentWeights,
+  quickEvaluateWithCurrentCoefficients,
 } from './evaluation/evaluate';
+
+// Weight storage exports
+export type {
+  WeightsFile,
+  MCTSParams,
+  PerformanceMetrics,
+  WeightSource,
+  ManifestEntry,
+} from './weights';
+export {
+  loadWeights,
+  saveWeights,
+  archiveWeights,
+  getEvaluationWeights,
+  getEvaluationCoefficients,
+  getMCTSParams,
+  getPerformanceMetrics,
+  getWeightsVersion,
+  getWeightHistory,
+  loadHistoricalWeights,
+  bumpVersion,
+  clearCache,
+} from './weights';
 
 // Search exports
 export type { MCTSNode } from './search/MCTSNode';

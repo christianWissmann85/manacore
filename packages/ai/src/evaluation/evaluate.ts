@@ -8,6 +8,9 @@
  *   - 0.0 = certain loss
  *
  * Used by GreedyBot for 1-ply lookahead and MCTS for leaf evaluation.
+ *
+ * Weights can be loaded dynamically from weights.json or use hardcoded defaults.
+ * See: packages/ai/src/weights/WeightLoader.ts
  */
 
 import type { GameState, PlayerId, CardInstance } from '@manacore/engine';
@@ -19,6 +22,12 @@ import {
   isCreature,
   CardLoader,
 } from '@manacore/engine';
+import {
+  getEvaluationWeights,
+  getEvaluationCoefficients,
+  type EvaluationWeights as LoadedWeights,
+  type EvaluationCoefficients as LoadedCoefficients,
+} from '../weights';
 
 /**
  * Evaluation weights - normalized to sum to 1.0
@@ -43,6 +52,9 @@ export interface EvaluationCoefficients {
   mana: number; // Multiplier for mana advantage
   stack: number; // Multiplier for creatures on stack (pending)
 }
+
+// Re-export weight types for convenience
+export type { LoadedWeights, LoadedCoefficients };
 
 /**
  * Default weights - tuned for aggressive play
@@ -326,4 +338,55 @@ function countUntapped(battlefield: CardInstance[]): number {
     }
   }
   return count;
+}
+
+// ============================================================================
+// Dynamic Weight Loading
+// ============================================================================
+
+/**
+ * Get the current evaluation weights from weights.json
+ * Falls back to TUNED_WEIGHTS if file is unavailable
+ */
+export function getCurrentWeights(): EvaluationWeights {
+  try {
+    return getEvaluationWeights();
+  } catch {
+    return TUNED_WEIGHTS;
+  }
+}
+
+/**
+ * Get the current evaluation coefficients from weights.json
+ * Falls back to TUNED_COEFFICIENTS if file is unavailable
+ */
+export function getCurrentCoefficients(): EvaluationCoefficients {
+  try {
+    return getEvaluationCoefficients();
+  } catch {
+    return TUNED_COEFFICIENTS;
+  }
+}
+
+/**
+ * Evaluate using dynamically loaded weights from weights.json
+ *
+ * This is the recommended function for production use as it
+ * automatically uses the latest tuned weights.
+ */
+export function evaluateWithCurrentWeights(state: GameState, playerId: PlayerId): number {
+  return evaluate(state, playerId, getCurrentWeights());
+}
+
+/**
+ * Quick evaluate using dynamically loaded coefficients from weights.json
+ *
+ * This is the recommended function for production use as it
+ * automatically uses the latest tuned coefficients.
+ */
+export function quickEvaluateWithCurrentCoefficients(
+  state: GameState,
+  playerId: PlayerId,
+): number {
+  return quickEvaluateWithCoefficients(state, playerId, getCurrentCoefficients());
 }

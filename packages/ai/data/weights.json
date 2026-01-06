@@ -1,0 +1,36 @@
+{
+  "version": "1.0.0",
+  "created": "2026-01-06T00:00:00.000Z",
+  "description": "Initial weights from Phase 2.3 tuning (4355 games via local search)",
+  "source": {
+    "method": "local",
+    "games": 4355,
+    "seed": 42424
+  },
+  "evaluation": {
+    "life": 0.31,
+    "board": 0.46,
+    "cards": 0.09,
+    "mana": 0.08,
+    "tempo": 0.05
+  },
+  "coefficients": {
+    "life": 2.2,
+    "board": 5.1,
+    "cards": 0.09,
+    "mana": 1.2,
+    "stack": 8.0
+  },
+  "mcts": {
+    "explorationConstant": 1.41,
+    "rolloutDepth": 20,
+    "rolloutPolicy": "greedy",
+    "epsilon": 0.1
+  },
+  "performance": {
+    "vsRandom": 0.80,
+    "vsGreedy": 0.52,
+    "elo": 1520,
+    "gamesPlayed": 4355
+  }
+}
