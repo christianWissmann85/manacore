@@ -253,30 +253,6 @@ if transpositionTable.has(stateHash):
 
 ---
 
-## Implementation Phases
-
-### Phase 2.1: Basic MCTS
-
-- Single determinization
-- Random rollout
-- No optimizations
-- Target: Beat RandomBot 80%+
-
-### Phase 2.2: ISMCTS
-
-- Multiple determinizations
-- Greedy rollout
-- Target: Beat RandomBot 90%+
-
-### Phase 2.3: Optimized MCTS
-
-- Transposition tables
-- Action caching
-- Parallel search
-- Target: Beat GreedyBot 70%+
-
----
-
 ## References
 
 1. Browne et al. "A Survey of Monte Carlo Tree Search Methods" (2012)
@@ -284,5 +260,3 @@ if transpositionTable.has(stateHash):
 3. Silver et al. "Mastering Chess and Shogi by Self-Play" (AlphaZero, 2017)
 
 ---
-
-**Next Steps:** Implement GreedyBot as the baseline before building MCTS.

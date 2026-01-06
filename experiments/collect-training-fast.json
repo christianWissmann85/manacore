@@ -1,0 +1,17 @@
+{
+  "command": "collect",
+  "name": "training-data-fast",
+  "games": 500,
+  "curriculum": "fast",
+  "seed": "timestamp",
+  "maxTurns": 100,
+  "export": {
+    "json": true,
+    "binary": true
+  },
+  "output": {
+    "directory": "training-data",
+    "level": "minimal",
+    "formats": ["json"]
+  }
+}

@@ -16,6 +16,7 @@ import { runBenchmarkSuite, parseBenchmarkSuiteArgs } from './commands/benchmark
 import { runPipeline, parsePipelineArgs } from './commands/pipeline';
 import { runReplayCommand, parseReplayArgs } from './commands/replay';
 import { runCollectTraining, parseCollectTrainingArgs } from './commands/collect-training';
+import { loadConfig, runExperiment } from './config';
 import { OutputLevel, type ExportFormat } from './types';
 import { createBot, type BotType } from './botFactory';
 
@@ -54,6 +55,35 @@ async function main() {
     case 'play': {
       const opponentBot = new RandomBot();
       await playGame(opponentBot);
+      break;
+    }
+
+    // NEW: Configuration-based experiment runner
+    case 'run': {
+      const configPath = args[1];
+      if (!configPath) {
+        console.error('❌ Error: Please specify a config file');
+        console.error('   Usage: bun cli run experiments/my-experiment.json');
+        console.error('');
+        console.error('   Available experiments in experiments/:');
+        try {
+          const { readdirSync } = await import('fs');
+          const { resolve } = await import('path');
+          const expDir = resolve(process.cwd(), '..', '..', 'experiments');
+          const files = readdirSync(expDir).filter((f: string) => f.endsWith('.json'));
+          files.forEach((f: string) => console.error(`     - experiments/${f}`));
+        } catch {
+          console.error('     (run from packages/cli-client)');
+        }
+        process.exit(1);
+      }
+      try {
+        const config = loadConfig(configPath);
+        await runExperiment(config);
+      } catch (error) {
+        console.error('❌ Error:', error instanceof Error ? error.message : error);
+        process.exit(1);
+      }
       break;
     }
 
@@ -411,7 +441,31 @@ async function main() {
     case 'help':
     default:
       console.log('🔬 ManaCore Research CLI\n');
-      console.log('Commands:');
+      console.log('═══════════════════════════════════════════════════════════════');
+      console.log('  RECOMMENDED: Use JSON config files for reproducible research');
+      console.log('═══════════════════════════════════════════════════════════════');
+      console.log('');
+      console.log('Config-Based Commands (NEW):');
+      console.log('  run <config.json>       Run experiment from config file');
+      console.log('');
+      console.log('  Examples:');
+      console.log('    bun cli run experiments/simulate-mcts-vs-greedy.json');
+      console.log('    bun cli run experiments/benchmark-all-bots.json');
+      console.log('    bun cli run experiments/collect-training-fast.json');
+      console.log('    bun cli run experiments/pipeline-full.json');
+      console.log('');
+      console.log('  Available experiment templates in experiments/:');
+      console.log('    simulate-mcts-vs-greedy.json  - Bot vs bot simulations');
+      console.log('    benchmark-all-bots.json       - Full bot comparison matrix');
+      console.log('    tune-weights-evolve.json      - Evaluation weight tuning');
+      console.log('    tune-mcts-grid.json           - MCTS hyperparameter search');
+      console.log('    pipeline-full.json            - Complete tuning workflow');
+      console.log('    collect-training-fast.json    - ML training data (fast)');
+      console.log('    collect-training-mcts.json    - ML training data (quality)');
+      console.log('');
+      console.log('───────────────────────────────────────────────────────────────');
+      console.log('');
+      console.log('Legacy Commands (still supported):');
       console.log('  play                    Start interactive debug session (Human vs Agent)');
       console.log('  simulate [count]        Run batch agent simulations (default: 100)');
       console.log('  sim [count]             Alias for simulate');

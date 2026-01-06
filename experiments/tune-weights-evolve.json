@@ -1,0 +1,15 @@
+{
+  "command": "tune-weights",
+  "name": "weight-evolution-v1",
+  "method": "evolve",
+  "generations": 20,
+  "population": 20,
+  "gamesRandom": 50,
+  "gamesGreedy": 50,
+  "seed": "timestamp",
+  "output": {
+    "directory": "results/tuning",
+    "level": "normal",
+    "formats": ["json"]
+  }
+}

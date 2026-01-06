@@ -68,16 +68,46 @@ bun run fetch-cards
 
 ### Running Simulations
 
+**Recommended: Use JSON config files for reproducible research**
+
 ```bash
-# Run a batch simulation of RandomBot vs RandomBot
-bun run cli simulate 100
+cd packages/cli-client
 
-# Run with data export for analysis
-bun run cli benchmark 100 --export-json --export-csv
-
-# Start an interactive debug session
-bun run cli play
+# Run experiments from config files
+bun src/index.ts run ../../experiments/simulate-mcts-vs-greedy.json
+bun src/index.ts run ../../experiments/benchmark-all-bots.json
+bun src/index.ts run ../../experiments/collect-training-fast.json
 ```
+
+See [`experiments/README.md`](experiments/README.md) for full documentation.
+
+**Quick Commands (legacy, still supported):**
+
+```bash
+# Bot vs bot simulation
+bun src/index.ts simulate 100 --p1 mcts-eval-fast --p2 greedy
+
+# Full bot comparison matrix
+bun src/index.ts suite --preset quick --elo
+
+# Collect ML training data
+bun src/index.ts collect --games 500 --fast
+
+# Interactive play
+bun src/index.ts play
+```
+
+### Experiment Templates
+
+| Template | Purpose |
+|----------|---------|
+| `simulate-mcts-vs-greedy.json` | Bot vs bot simulation |
+| `benchmark-all-bots.json` | Multi-bot comparison with Elo |
+| `tune-weights-evolve.json` | Evaluation weight optimization |
+| `tune-mcts-grid.json` | MCTS hyperparameter tuning |
+| `pipeline-full.json` | Complete tuning workflow |
+| `collect-training-fast.json` | ML training data (fast) |
+| `collect-training-mcts.json` | ML training data (quality) |
 
 ---
 
@@ -97,9 +127,13 @@ The engine is optimized for performance, capable of resolving complex board stat
 
 Compare different AI architectures:
 
-- **RandomBot**: Baseline stochastic behavior.
-- **GreedyBot**: 1-ply material evaluation.
-- **MCTS-Bot**: UCT-based search (Coming Soon).
+- **RandomBot**: Baseline stochastic behavior
+- **GreedyBot**: 1-ply material evaluation
+- **MCTSBot**: UCT-based search with multiple configurations:
+  - `mcts-eval-fast` - 50 iterations, no rollout (recommended for speed)
+  - `mcts-eval` - 200 iterations, no rollout
+  - `mcts-eval-turbo` - 1000 iterations, no rollout (strongest)
+  - `mcts-shallow` - Shallow greedy rollout (balanced)
 
 ---
 

@@ -138,7 +138,7 @@ function determinize(state: GameState): GameState {
 - Discuss ongoing Strategy (How often to retune?)
 - See `packages/ai/docs/PHASE-3.0-PLAN.md` for Details
 
- ### 3.1: ISMCTS (Information Set MCTS)
+### 3.1: ISMCTS (Information Set MCTS)
 
 - Evaluate existing MCTSBots implementations
 - Multiple determinizations per search
@@ -220,21 +220,42 @@ packages/ai/
 
 ---
 
-## Research Questions
+## Research Questions/Experiments (Post-Implementation)
 
-1. **Evaluation Function Design**
+Once the pipeline is working:
+
+1. **GreedyBot Proxy Validation**
+   - Tune weights via GreedyBot
+   - Validate on MCTS
+   - Compare: Do GreedyBot-optimal weights work for MCTS?
+
+2. **MCTS-Specific Weight Tuning**
+   - Tune weights using MCTSBot directly (slow but accurate)
+   - Compare: Are MCTS-optimal weights different from GreedyBot-optimal?
+
+3. **Hyperparameter Sensitivity**
+   - Vary each MCTS param while holding others fixed
+   - Plot: Win rate vs parameter value
+   - Find: Robust ranges vs sensitive parameters
+
+4. **Data Quality for Phase 4**
+   - Generate 100K+ training examples
+   - Analyze: Feature distributions, label balance
+   - Prepare: Training/validation/test splits
+
+5. **Evaluation Function Design**
    - What features matter most for MTG position evaluation?
    - Can we learn weights from self-play?
 
-2. **Hidden Information Handling**
+6. **Hidden Information Handling**
    - How many determinizations are needed for reliable decisions?
    - Does opponent modeling improve play?
 
-3. **Rollout Policy Impact**
+7. **Rollout Policy Impact**
    - Random vs Greedy vs Epsilon-Greedy rollouts?
    - Optimal rollout depth for MTG?
 
-4. **Scaling Behavior**
+8. **Scaling Behavior**
    - How does win rate scale with iterations?
    - Diminishing returns threshold?
 

@@ -1,0 +1,22 @@
+{
+  "command": "pipeline",
+  "name": "full-tuning-pipeline",
+  "seed": "timestamp",
+  "weights": {
+    "method": "evolve",
+    "generations": 20,
+    "skip": false
+  },
+  "mcts": {
+    "method": "coarse-to-fine",
+    "games": 50,
+    "validation": 100,
+    "skip": false
+  },
+  "acceptance": "default",
+  "output": {
+    "directory": "results/pipeline",
+    "level": "normal",
+    "formats": ["json"]
+  }
+}

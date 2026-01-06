@@ -1,0 +1,14 @@
+{
+  "command": "replay",
+  "name": "replay-game-12345",
+  "source": 12345,
+  "fromTurn": 1,
+  "watch": {
+    "enabled": false,
+    "delayMs": 500
+  },
+  "verify": true,
+  "output": {
+    "level": "verbose"
+  }
+}

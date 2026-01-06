@@ -1,0 +1,19 @@
+{
+  "command": "benchmark",
+  "name": "full-bot-comparison",
+  "bots": [
+    "random",
+    "greedy",
+    "mcts-eval-fast",
+    "mcts-eval",
+    "mcts-shallow-fast"
+  ],
+  "gamesPerMatchup": 50,
+  "seed": "timestamp",
+  "calculateElo": true,
+  "output": {
+    "directory": "results/benchmarks",
+    "level": "normal",
+    "formats": ["json", "markdown"]
+  }
+}

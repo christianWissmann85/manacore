@@ -1,0 +1,19 @@
+{
+  "command": "simulate",
+  "name": "mcts-vs-greedy-baseline",
+  "games": 100,
+  "p1": {
+    "type": "mcts-eval-fast"
+  },
+  "p2": {
+    "type": "greedy"
+  },
+  "seed": "timestamp",
+  "maxTurns": 100,
+  "parallel": true,
+  "output": {
+    "directory": "results",
+    "level": "minimal",
+    "formats": ["json"]
+  }
+}

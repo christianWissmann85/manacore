@@ -620,32 +620,7 @@ Phase 3.0 is complete when:
 - [ ] All tuning runs are reproducible via seed
 - [ ] TUNING_LOG.md documents all tuning sessions
 
----
-
-## Research Experiments (Post-Implementation)
-
-Once the pipeline is working:
-
-1. **GreedyBot Proxy Validation**
-   - Tune weights via GreedyBot
-   - Validate on MCTS
-   - Compare: Do GreedyBot-optimal weights work for MCTS?
-
-2. **MCTS-Specific Weight Tuning**
-   - Tune weights using MCTSBot directly (slow but accurate)
-   - Compare: Are MCTS-optimal weights different from GreedyBot-optimal?
-
-3. **Hyperparameter Sensitivity**
-   - Vary each MCTS param while holding others fixed
-   - Plot: Win rate vs parameter value
-   - Find: Robust ranges vs sensitive parameters
-
-4. **Data Quality for Phase 4**
-   - Generate 100K+ training examples
-   - Analyze: Feature distributions, label balance
-   - Prepare: Training/validation/test splits
-
----
+--
 
 ## Appendix: File Locations
 

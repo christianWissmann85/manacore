@@ -1,0 +1,19 @@
+{
+  "command": "tune-mcts",
+  "name": "mcts-grid-search",
+  "method": "grid",
+  "gamesPerConfig": 50,
+  "validationGames": 100,
+  "iterations": {
+    "min": 25,
+    "max": 200,
+    "step": 25
+  },
+  "seed": "timestamp",
+  "skipValidation": false,
+  "output": {
+    "directory": "results/tuning",
+    "level": "normal",
+    "formats": ["json"]
+  }
+}
