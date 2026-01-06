@@ -49,7 +49,7 @@ export const BENCHMARK_PRESETS: Record<Exclude<BenchmarkPreset, 'custom'>, Prese
 
   /**
    * Comprehensive preset - all bots
-   * 11 bots = 121 matchups x 100 games = 12,100 games
+   * 14 bots = 196 matchups x 100 games = 19,600 games
    */
   comprehensive: {
     bots: [
@@ -64,10 +64,14 @@ export const BENCHMARK_PRESETS: Record<Exclude<BenchmarkPreset, 'custom'>, Prese
       'mcts-eval-turbo',
       'mcts-shallow',
       'mcts-shallow-fast',
+      // Phase 3.4: Move ordering variants
+      'mcts-ordered',
+      'mcts-ordered-fast',
+      'mcts-ordered-turbo',
     ],
     gamesPerMatchup: 100,
-    description: 'Full comparison (11 bots, ~12,100 games)',
-    estimatedTime: '~1-2 hours',
+    description: 'Full comparison (14 bots, ~19,600 games)',
+    estimatedTime: '~2-4 hours',
   },
 };
 

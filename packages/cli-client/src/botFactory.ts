@@ -21,7 +21,11 @@ export type BotType =
   | 'mcts-eval-turbo'
   // Shallow greedy (best balance)
   | 'mcts-shallow'
-  | 'mcts-shallow-fast';
+  | 'mcts-shallow-fast'
+  // Phase 3.4: Move ordering variants
+  | 'mcts-ordered'
+  | 'mcts-ordered-fast'
+  | 'mcts-ordered-turbo';
 
 export function createBot(type: BotType, seed: number, debug = false): Bot {
   switch (type) {
@@ -88,6 +92,32 @@ export function createBot(type: BotType, seed: number, debug = false): Bot {
         { iterations: 50, rolloutDepth: 2, debug, nameSuffix: 'shallow-fast' },
         greedyRolloutPolicy,
       );
+
+    // PHASE 3.4: MOVE ORDERING - expand promising actions first
+    case 'mcts-ordered':
+      return new MCTSBot({
+        iterations: 200,
+        rolloutDepth: 0,
+        moveOrdering: true, // Enable type-based action priority
+        debug,
+        nameSuffix: 'ordered',
+      });
+    case 'mcts-ordered-fast':
+      return new MCTSBot({
+        iterations: 50,
+        rolloutDepth: 0,
+        moveOrdering: true,
+        debug,
+        nameSuffix: 'ordered-fast',
+      });
+    case 'mcts-ordered-turbo':
+      return new MCTSBot({
+        iterations: 1000,
+        rolloutDepth: 0,
+        moveOrdering: true,
+        debug,
+        nameSuffix: 'ordered-turbo',
+      });
 
     case 'random':
     default:

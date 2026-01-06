@@ -106,7 +106,7 @@ function printDashboard(progress: BenchmarkProgress): void {
     process.stdout.write('\x1b[' + lines.length + 'A');
     process.stdout.write('\x1b[0J');
   }
-  
+
   process.stdout.write(lines.join('\n') + '\n');
   dashboardPrinted = true;
 }

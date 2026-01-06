@@ -4,12 +4,12 @@
   "description": "A/B test for Phase 3.4: Move Ordering. Compare MCTS with type-based action priority vs baseline.",
   "games": 500,
   "p1": {
-    "type": "mcts-eval-turbo",
-    "description": "Baseline: standard expansion order"
+    "type": "mcts-eval",
+    "description": "Baseline: 200 iter, no move ordering"
   },
   "p2": {
     "type": "mcts-ordered",
-    "description": "New: type-based action priority during expansion"
+    "description": "New: 200 iter, type-based action priority during expansion"
   },
   "seed": 42424,
   "parallel": true,

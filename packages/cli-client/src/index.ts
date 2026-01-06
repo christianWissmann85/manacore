@@ -42,6 +42,11 @@ function parseBotType(arg: string): BotType {
   if (lower === 'mcts-shallow' || lower === 'msh') return 'mcts-shallow';
   if (lower === 'mcts-shallow-fast' || lower === 'mshf') return 'mcts-shallow-fast';
 
+  // Phase 3.4: Move ordering variants
+  if (lower === 'mcts-ordered' || lower === 'mo') return 'mcts-ordered';
+  if (lower === 'mcts-ordered-fast' || lower === 'mof') return 'mcts-ordered-fast';
+  if (lower === 'mcts-ordered-turbo' || lower === 'mot') return 'mcts-ordered-turbo';
+
   return 'random';
 }
 
@@ -505,6 +510,11 @@ async function main() {
       console.log('  MCTS Shallow Greedy (best speed/quality balance):');
       console.log('  mcts-shallow, msh       MCTSBot - 100 iter, depth 3 greedy rollout');
       console.log('  mcts-shallow-fast, mshf MCTSBot - 50 iter, depth 2 greedy rollout');
+      console.log('');
+      console.log('  MCTS with Move Ordering (Phase 3.4):');
+      console.log('  mcts-ordered, mo        MCTSBot - 200 iter, type-based action priority');
+      console.log('  mcts-ordered-fast, mof  MCTSBot - 50 iter, move ordering');
+      console.log('  mcts-ordered-turbo, mot MCTSBot - 1000 iter, move ordering');
       console.log('');
       console.log('Output Verbosity (Phase 2.5 - NEW):');
       console.log('  --quiet, -q             Suppress all output (silent mode)');

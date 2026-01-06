@@ -10,12 +10,12 @@
 
 Phase 3 focuses on four improvements to MCTS that will transform it from underperforming (~40% vs GreedyBot) to competitive (target: 60%+):
 
-| Phase | Feature | Expected Impact | Effort |
-|-------|---------|-----------------|--------|
-| 3.4 | Move Ordering | Faster convergence | Low |
-| 3.1 | ISMCTS | +5-10% win rate | Medium |
-| 3.2 | Transposition Tables | 2x speedup | Medium |
-| 3.3 | Parallel Search | 3-4x speedup | High |
+| Phase | Feature              | Expected Impact    | Effort |
+| ----- | -------------------- | ------------------ | ------ |
+| 3.4   | Move Ordering        | Faster convergence | Low    |
+| 3.1   | ISMCTS               | +5-10% win rate    | Medium |
+| 3.2   | Transposition Tables | 2x speedup         | Medium |
+| 3.3   | Parallel Search      | 3-4x speedup       | High   |
 
 **Implementation Order:** 3.4 → 3.1 → 3.2 → 3.3
 
@@ -25,11 +25,11 @@ Phase 3 focuses on four improvements to MCTS that will transform it from underpe
 
 ### Bot Performance
 
-| Bot | vs RandomBot | vs GreedyBot | Games/sec |
-|-----|--------------|--------------|-----------|
-| RandomBot | 50% | 36% | 50+ |
-| GreedyBot | 64% | 50% | 4-5 |
-| MCTSBot (eval-turbo) | ~57% | **~40%** | 0.7-0.8 |
+| Bot                  | vs RandomBot | vs GreedyBot | Games/sec |
+| -------------------- | ------------ | ------------ | --------- |
+| RandomBot            | 50%          | 36%          | 50+       |
+| GreedyBot            | 64%          | 50%          | 4-5       |
+| MCTSBot (eval-turbo) | ~57%         | **~40%**     | 0.7-0.8   |
 
 ### Key Issues
 
@@ -42,9 +42,11 @@ Phase 3 focuses on four improvements to MCTS that will transform it from underpe
 ## Phase 3.4: Move Ordering
 
 ### Problem
+
 MCTS expansion picks untried actions randomly. With MTG's high branching factor (~100 actions), many iterations are wasted exploring weak moves.
 
 ### Solution
+
 Sort untried actions by type-based priority before expansion.
 
 ### Implementation
@@ -87,13 +89,16 @@ interface MoveOrderingConfig {
 ```
 
 ### Bot Type
+
 - `mcts-ordered` - MCTS with type-based move ordering
 
 ### Success Criteria
+
 - Same or better win rate with fewer iterations
 - No performance regression (ordering is O(n log n) on action count)
 
 ### Benchmark
+
 ```bash
 bun src/index.ts run experiments/phase3.4-move-ordering.json
 ```
@@ -103,9 +108,11 @@ bun src/index.ts run experiments/phase3.4-move-ordering.json
 ## Phase 3.1: ISMCTS (Information Set MCTS)
 
 ### Problem
+
 Current MCTS determinizes once per search - shuffles opponent's hand at the start, then treats it as known. This creates variance and doesn't properly handle uncertainty.
 
 ### Solution
+
 Run multiple determinizations per search and aggregate statistics across all "possible worlds."
 
 ### Implementation
@@ -114,15 +121,11 @@ Run multiple determinizations per search and aggregate statistics across all "po
 
 ```typescript
 export interface ISMCTSConfig extends MCTSConfig {
-  determinizations: number;  // Default: 10
-  aggregation: 'sum' | 'average';  // Default: 'sum'
+  determinizations: number; // Default: 10
+  aggregation: 'sum' | 'average'; // Default: 'sum'
 }
 
-export function runISMCTS(
-  state: GameState,
-  playerId: PlayerId,
-  config: ISMCTSConfig
-): Action {
+export function runISMCTS(state: GameState, playerId: PlayerId, config: ISMCTSConfig): Action {
   // Aggregate action statistics across determinizations
   const actionStats = new Map<string, { visits: number; totalReward: number }>();
 
@@ -168,23 +171,26 @@ export function runISMCTS(
 
 ```typescript
 const DEFAULT_ISMCTS_CONFIG: ISMCTSConfig = {
-  iterations: 1000,           // Total budget
-  determinizations: 10,       // Split across 10 possible worlds
-  aggregation: 'sum',         // Sum visits/rewards before averaging
-  rolloutDepth: 0,            // Use evaluation function
+  iterations: 1000, // Total budget
+  determinizations: 10, // Split across 10 possible worlds
+  aggregation: 'sum', // Sum visits/rewards before averaging
+  rolloutDepth: 0, // Use evaluation function
   explorationConstant: 1.41,
-  determinize: true,          // Redundant but explicit
+  determinize: true, // Redundant but explicit
 };
 ```
 
 ### Bot Type
+
 - `mcts-ismcts` - MCTS with 10 determinizations
 
 ### Success Criteria
+
 - +5% win rate vs GreedyBot (target: 45%+)
 - More consistent decision-making under uncertainty
 
 ### Benchmark
+
 ```bash
 bun src/index.ts run experiments/phase3.1-ismcts.json
 ```
@@ -194,9 +200,11 @@ bun src/index.ts run experiments/phase3.1-ismcts.json
 ## Phase 3.2: Transposition Tables
 
 ### Problem
+
 MCTS re-explores equivalent positions. In MTG, passing priority creates many duplicate states.
 
 ### Solution
+
 Hash game states by relevant features and share statistics between equivalent positions.
 
 ### Implementation
@@ -207,8 +215,8 @@ Hash game states by relevant features and share statistics between equivalent po
 export interface TranspositionEntry {
   visits: number;
   totalReward: number;
-  depth: number;        // For age-based eviction
-  lastAccess: number;   // For LRU eviction
+  depth: number; // For age-based eviction
+  lastAccess: number; // For LRU eviction
 }
 
 export class TranspositionTable {
@@ -252,7 +260,7 @@ export class TranspositionTable {
 
   private hashZone(cards: CardInstance[]): string {
     return cards
-      .map(c => c.name)
+      .map((c) => c.name)
       .sort()
       .join(',');
   }
@@ -277,8 +285,7 @@ export class TranspositionTable {
 
   private evictLRU(): void {
     // Evict 10% of entries with oldest lastAccess
-    const entries = [...this.entries.entries()]
-      .sort((a, b) => a[1].lastAccess - b[1].lastAccess);
+    const entries = [...this.entries.entries()].sort((a, b) => a[1].lastAccess - b[1].lastAccess);
 
     const toEvict = Math.floor(this.maxSize * 0.1);
     for (let i = 0; i < toEvict; i++) {
@@ -326,21 +333,24 @@ table.store(hash, {
 ```typescript
 interface TranspositionConfig {
   enabled: boolean;
-  tableSize: number;           // Default: 100,000
-  hashFeatures: string[];      // Which features to hash
-  evictionPolicy: 'lru' | 'depth';  // Default: 'lru'
+  tableSize: number; // Default: 100,000
+  hashFeatures: string[]; // Which features to hash
+  evictionPolicy: 'lru' | 'depth'; // Default: 'lru'
 }
 ```
 
 ### Bot Type
+
 - `mcts-transposition` - MCTS with transposition table
 
 ### Success Criteria
+
 - 2x speedup (measured in games/sec)
 - Cache hit rate > 20% in typical games
 - No win rate regression
 
 ### Benchmark
+
 ```bash
 bun src/index.ts run experiments/phase3.2-transposition.json
 ```
@@ -350,9 +360,11 @@ bun src/index.ts run experiments/phase3.2-transposition.json
 ## Phase 3.3: Parallel Search
 
 ### Problem
+
 MCTS is single-threaded. Modern machines have 4-16+ cores sitting idle.
 
 ### Solution
+
 Root parallelization - run independent MCTS trees in parallel, merge at root.
 
 ### Implementation
@@ -363,18 +375,17 @@ Root parallelization - run independent MCTS trees in parallel, merge at root.
 import { Worker } from 'worker_threads';
 
 export interface ParallelMCTSConfig extends MCTSConfig {
-  workers: number | 'auto';  // 'auto' = navigator.hardwareConcurrency
-  mergeStrategy: 'sum' | 'majority';  // Default: 'sum'
+  workers: number | 'auto'; // 'auto' = navigator.hardwareConcurrency
+  mergeStrategy: 'sum' | 'majority'; // Default: 'sum'
 }
 
 export async function runParallelMCTS(
   state: GameState,
   playerId: PlayerId,
-  config: ParallelMCTSConfig
+  config: ParallelMCTSConfig,
 ): Promise<Action> {
-  const workerCount = config.workers === 'auto'
-    ? navigator.hardwareConcurrency || 4
-    : config.workers;
+  const workerCount =
+    config.workers === 'auto' ? navigator.hardwareConcurrency || 4 : config.workers;
 
   const iterationsPerWorker = Math.floor(config.iterations / workerCount);
 
@@ -384,7 +395,7 @@ export async function runParallelMCTS(
       ...config,
       iterations: iterationsPerWorker,
       seed: config.seed ? config.seed + i : undefined,
-    })
+    }),
   );
 
   // Wait for all workers to complete
@@ -410,11 +421,11 @@ export async function runParallelMCTS(
 async function runWorkerMCTS(
   state: GameState,
   playerId: PlayerId,
-  config: MCTSConfig
+  config: MCTSConfig,
 ): Promise<WorkerResult> {
   return new Promise((resolve, reject) => {
     const worker = new Worker('./mctsWorker.js', {
-      workerData: { state, playerId, config }
+      workerData: { state, playerId, config },
     });
 
     worker.on('message', resolve);
@@ -449,22 +460,25 @@ parentPort?.postMessage({ actionStats, bestAction: result.action });
 ```typescript
 const DEFAULT_PARALLEL_CONFIG: ParallelMCTSConfig = {
   iterations: 1000,
-  workers: 'auto',           // Use all available cores
-  mergeStrategy: 'sum',      // Sum statistics before selecting
+  workers: 'auto', // Use all available cores
+  mergeStrategy: 'sum', // Sum statistics before selecting
   rolloutDepth: 0,
   explorationConstant: 1.41,
 };
 ```
 
 ### Bot Type
+
 - `mcts-parallel` - Root-parallel MCTS using all cores
 
 ### Success Criteria
+
 - 3-4x speedup on 4-core machine
 - Near-linear scaling with core count
 - No win rate regression
 
 ### Benchmark
+
 ```bash
 bun src/index.ts run experiments/phase3.3-parallel.json
 ```
@@ -544,34 +558,34 @@ export type BotType =
   | 'greedy'
   // ... existing types ...
   // Phase 3 additions:
-  | 'mcts-ordered'        // 3.4: Move ordering
-  | 'mcts-ismcts'         // 3.1: Information Set MCTS
-  | 'mcts-transposition'  // 3.2: Transposition tables
-  | 'mcts-parallel';      // 3.3: Parallel search
+  | 'mcts-ordered' // 3.4: Move ordering
+  | 'mcts-ismcts' // 3.1: Information Set MCTS
+  | 'mcts-transposition' // 3.2: Transposition tables
+  | 'mcts-parallel'; // 3.3: Parallel search
 ```
 
 ---
 
 ## Timeline & Milestones
 
-| Phase | Milestone | Verification |
-|-------|-----------|--------------|
-| 3.4 | Move ordering implemented | A/B test passes |
-| 3.1 | ISMCTS with 10 det. | +5% vs GreedyBot |
-| 3.2 | Transposition table | 2x speedup, >20% hit rate |
-| 3.3 | Root parallelization | 3-4x speedup |
-| Final | All improvements | 60%+ vs GreedyBot, 2+ games/sec |
+| Phase | Milestone                 | Verification                    |
+| ----- | ------------------------- | ------------------------------- |
+| 3.4   | Move ordering implemented | A/B test passes                 |
+| 3.1   | ISMCTS with 10 det.       | +5% vs GreedyBot                |
+| 3.2   | Transposition table       | 2x speedup, >20% hit rate       |
+| 3.3   | Root parallelization      | 3-4x speedup                    |
+| Final | All improvements          | 60%+ vs GreedyBot, 2+ games/sec |
 
 ---
 
 ## Risk Assessment
 
-| Risk | Mitigation |
-|------|------------|
-| ISMCTS overhead exceeds benefit | Start with 10 det., tune down if needed |
-| Transposition collisions | Use comprehensive hash, monitor collision rate |
-| Worker communication overhead | Use SharedArrayBuffer if structuredClone too slow |
-| Parallel bugs (race conditions) | Root parallelization has no shared state |
+| Risk                            | Mitigation                                        |
+| ------------------------------- | ------------------------------------------------- |
+| ISMCTS overhead exceeds benefit | Start with 10 det., tune down if needed           |
+| Transposition collisions        | Use comprehensive hash, monitor collision rate    |
+| Worker communication overhead   | Use SharedArrayBuffer if structuredClone too slow |
+| Parallel bugs (race conditions) | Root parallelization has no shared state          |
 
 ---
 

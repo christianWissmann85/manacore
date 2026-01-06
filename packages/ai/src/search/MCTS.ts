@@ -53,6 +53,9 @@ export interface MCTSConfig {
 
   /** Enable determinization (shuffle opponent's hidden cards) */
   determinize: boolean;
+
+  /** Enable move ordering (sort untried actions by type priority) */
+  moveOrdering: boolean;
 }
 
 export const DEFAULT_MCTS_CONFIG: MCTSConfig = {
@@ -63,7 +66,33 @@ export const DEFAULT_MCTS_CONFIG: MCTSConfig = {
   debug: false,
   profile: false,
   determinize: true, // Default to fair play - don't cheat!
+  moveOrdering: false, // Default off for backwards compatibility
 };
+
+/**
+ * Action type priorities for move ordering (higher = expand first)
+ * Based on typical MTG importance: spells matter most, passing least
+ */
+export const ACTION_PRIORITY: Record<string, number> = {
+  CAST_SPELL: 100,
+  ACTIVATE_ABILITY: 80,
+  DECLARE_ATTACKERS: 60,
+  DECLARE_BLOCKERS: 50,
+  PLAY_LAND: 40,
+  PASS_PRIORITY: 0,
+};
+
+/**
+ * Order actions by type priority for more efficient MCTS expansion
+ * Higher priority actions are placed first and expanded earlier
+ */
+export function orderActionsByPriority(actions: Action[]): Action[] {
+  return [...actions].sort((a, b) => {
+    const priorityA = ACTION_PRIORITY[a.type] ?? 20;
+    const priorityB = ACTION_PRIORITY[b.type] ?? 20;
+    return priorityB - priorityA; // Descending order (highest first)
+  });
+}
 
 /**
  * Determinize a game state by shuffling opponent's hidden information
@@ -207,8 +236,11 @@ export function runMCTS(
     };
   }
 
-  // Create root node
-  const root = createMCTSNode(searchState, null, null, [...rootActions]);
+  // Create root node (apply move ordering if enabled)
+  const orderedRootActions = cfg.moveOrdering
+    ? orderActionsByPriority(rootActions)
+    : [...rootActions];
+  const root = createMCTSNode(searchState, null, null, orderedRootActions);
 
   let iterations = 0;
 
@@ -236,9 +268,12 @@ export function runMCTS(
     // 2. EXPANSION: Add a new child node if not terminal
     const expStart = performance.now();
     if (!isTerminal(node) && node.untriedActions.length > 0) {
-      // Pick a random untried action
-      const actionIndex = Math.floor(Math.random() * node.untriedActions.length);
-      const action = node.untriedActions.splice(actionIndex, 1)[0]!;
+      // Pick action to expand:
+      // - With move ordering: take first (highest priority)
+      // - Without: pick random
+      const action = cfg.moveOrdering
+        ? node.untriedActions.shift()!
+        : node.untriedActions.splice(Math.floor(Math.random() * node.untriedActions.length), 1)[0]!;
 
       // Apply action to get new state
       try {
@@ -247,8 +282,13 @@ export function runMCTS(
         const childActions = getLegalActions(newState, newState.priorityPlayer);
         profile.getLegalActionsCount++;
 
+        // Order child actions if move ordering is enabled
+        const orderedChildActions = cfg.moveOrdering
+          ? orderActionsByPriority(childActions)
+          : [...childActions];
+
         // Create child node
-        const child = createMCTSNode(newState, action, node, [...childActions]);
+        const child = createMCTSNode(newState, action, node, orderedChildActions);
         node.children.push(child);
         node = child;
         currentState = newState;

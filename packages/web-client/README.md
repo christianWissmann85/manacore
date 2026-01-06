@@ -1,5 +1,5 @@
 # @manacore/web-client
 
-Web client package for ManaCore 
+Web client package for ManaCore
 
-**Status:** Coming in Phase 4 
+**Status:** Coming in Phase 4

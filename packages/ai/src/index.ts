@@ -66,6 +66,9 @@ export {
   greedyRolloutPolicy,
   epsilonGreedyRolloutPolicy,
   DEFAULT_MCTS_CONFIG,
+  // Phase 3.4: Move ordering
+  ACTION_PRIORITY,
+  orderActionsByPriority,
 } from './search/MCTS';
 export {
   createMCTSNode,
