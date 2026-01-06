@@ -30,7 +30,7 @@ export const BENCHMARK_PRESETS: Record<Exclude<BenchmarkPreset, 'custom'>, Prese
    * 4 bots = 16 matchups (including mirrors) x 50 games = 800 games
    */
   quick: {
-    bots: ['random', 'greedy', 'mcts-eval-fast', 'mcts-shallow-fast'],
+    bots: ['random', 'greedy', 'mcts-eval-fast', 'mcts-eval'],
     gamesPerMatchup: 50,
     description: 'Quick comparison (4 bots, ~800 games)',
     estimatedTime: '~5-10 min',
@@ -38,40 +38,32 @@ export const BENCHMARK_PRESETS: Record<Exclude<BenchmarkPreset, 'custom'>, Prese
 
   /**
    * Standard preset - balanced comparison
-   * 6 bots = 36 matchups x 100 games = 3,600 games
+   * 5 bots = 25 matchups x 100 games = 2,500 games
    */
   standard: {
-    bots: ['random', 'greedy', 'mcts-eval-fast', 'mcts-eval', 'mcts-shallow', 'mcts-epsilon'],
+    bots: ['random', 'greedy', 'mcts-eval-fast', 'mcts-eval', 'mcts-eval-strong'],
     gamesPerMatchup: 100,
-    description: 'Standard comparison (6 bots, ~3,600 games)',
-    estimatedTime: '~30-60 min',
+    description: 'Standard comparison (5 bots, ~2,500 games)',
+    estimatedTime: '~20-40 min',
   },
 
   /**
    * Comprehensive preset - all bots
-   * 14 bots = 196 matchups x 100 games = 19,600 games
+   * 7 bots = 49 matchups x 100 games = 4,900 games
    */
   comprehensive: {
     bots: [
       'random',
       'greedy',
-      'mcts-greedy',
-      'mcts-greedy-fast',
-      'mcts-epsilon',
-      'mcts-eval',
       'mcts-eval-fast',
+      'mcts-eval',
       'mcts-eval-strong',
       'mcts-eval-turbo',
-      'mcts-shallow',
-      'mcts-shallow-fast',
-      // Phase 3.4: Move ordering variants
       'mcts-ordered',
-      'mcts-ordered-fast',
-      'mcts-ordered-turbo',
     ],
     gamesPerMatchup: 100,
-    description: 'Full comparison (14 bots, ~19,600 games)',
-    estimatedTime: '~2-4 hours',
+    description: 'Full comparison (7 bots, ~4,900 games)',
+    estimatedTime: '~1-2 hours',
   },
 };
 

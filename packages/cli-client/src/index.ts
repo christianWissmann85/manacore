@@ -22,40 +22,22 @@ import { createBot, type BotType } from './botFactory';
 
 function parseBotType(arg: string): BotType {
   const lower = arg.toLowerCase();
+
+  // Greedy bot
   if (lower === 'greedy' || lower === 'g') return 'greedy';
 
-  // Greedy rollout variants
-  if (lower === 'mcts-greedy' || lower === 'mg') return 'mcts-greedy';
-  if (lower === 'mcts-greedy-fast' || lower === 'mgf') return 'mcts-greedy-fast';
-  if (lower === 'mcts-epsilon' || lower === 'me') return 'mcts-epsilon';
-
-  // No-rollout variants (FASTEST - recommended)
-  if (lower === 'mcts-eval' || lower === 'mev' || lower === 'mcts' || lower === 'm')
-    return 'mcts-eval';
-  if (lower === 'mcts-eval-fast' || lower === 'mevf' || lower === 'mcts-fast' || lower === 'mf')
+  // MCTS eval variants (no rollout - FASTEST and most effective)
+  if (lower === 'mcts-eval-fast' || lower === 'mf' || lower === 'mcts-fast')
     return 'mcts-eval-fast';
-  if (lower === 'mcts-eval-strong' || lower === 'mevs' || lower === 'mcts-strong' || lower === 'ms')
+  if (lower === 'mcts-eval' || lower === 'm' || lower === 'mcts')
+    return 'mcts-eval';
+  if (lower === 'mcts-eval-strong' || lower === 'ms' || lower === 'mcts-strong')
     return 'mcts-eval-strong';
-  if (lower === 'mcts-eval-turbo' || lower === 'mevt') return 'mcts-eval-turbo';
+  if (lower === 'mcts-eval-turbo' || lower === 'mt' || lower === 'mcts-turbo')
+    return 'mcts-eval-turbo';
 
-  // Shallow greedy (best balance)
-  if (lower === 'mcts-shallow' || lower === 'msh') return 'mcts-shallow';
-  if (lower === 'mcts-shallow-fast' || lower === 'mshf') return 'mcts-shallow-fast';
-
-  // Phase 3.4: Move ordering variants
+  // MCTS with move ordering
   if (lower === 'mcts-ordered' || lower === 'mo') return 'mcts-ordered';
-  if (lower === 'mcts-ordered-fast' || lower === 'mof') return 'mcts-ordered-fast';
-  if (lower === 'mcts-ordered-turbo' || lower === 'mot') return 'mcts-ordered-turbo';
-
-  // Phase 3.1: ISMCTS variants (Information Set MCTS)
-  if (lower === 'mcts-ismcts' || lower === 'mi' || lower === 'ismcts') return 'mcts-ismcts';
-  if (lower === 'mcts-ismcts-fast' || lower === 'mif') return 'mcts-ismcts-fast';
-  if (lower === 'mcts-ismcts-strong' || lower === 'mis') return 'mcts-ismcts-strong';
-
-  // Phase 3.2: Transposition Table variants
-  if (lower === 'mcts-tt' || lower === 'mt' || lower === 'tt') return 'mcts-tt';
-  if (lower === 'mcts-tt-fast' || lower === 'mtf') return 'mcts-tt-fast';
-  if (lower === 'mcts-tt-strong' || lower === 'mts') return 'mcts-tt-strong';
 
   return 'random';
 }
@@ -506,35 +488,12 @@ async function main() {
       console.log('  random, r               RandomBot - picks random legal actions');
       console.log('  greedy, g               GreedyBot - 1-ply lookahead');
       console.log('');
-      console.log('  MCTS No-Rollout (FASTEST - uses evaluation function):');
-      console.log('  mcts, m, mcts-eval      MCTSBot - 200 iter, no rollout');
-      console.log('  mcts-fast, mf           MCTSBot - 50 iter, no rollout');
-      console.log('  mcts-strong, ms         MCTSBot - 500 iter, no rollout');
-      console.log('  mcts-eval-turbo, mevt   MCTSBot - 1000 iter, no rollout (RECOMMENDED)');
-      console.log('');
-      console.log('  MCTS with Greedy Rollouts:');
-      console.log('  mcts-greedy, mg         MCTSBot - 100 iter, greedy rollout');
-      console.log('  mcts-greedy-fast, mgf   MCTSBot - 25 iter, greedy rollout');
-      console.log('  mcts-epsilon, me        MCTSBot - 100 iter, 90% greedy + 10% random');
-      console.log('');
-      console.log('  MCTS Shallow Greedy (best speed/quality balance):');
-      console.log('  mcts-shallow, msh       MCTSBot - 100 iter, depth 3 greedy rollout');
-      console.log('  mcts-shallow-fast, mshf MCTSBot - 50 iter, depth 2 greedy rollout');
-      console.log('');
-      console.log('  MCTS with Move Ordering (Phase 3.4):');
-      console.log('  mcts-ordered, mo        MCTSBot - 200 iter, type-based action priority');
-      console.log('  mcts-ordered-fast, mof  MCTSBot - 50 iter, move ordering');
-      console.log('  mcts-ordered-turbo, mot MCTSBot - 1000 iter, move ordering');
-      console.log('');
-      console.log('  ISMCTS - Information Set MCTS (Phase 3.1):');
-      console.log('  mcts-ismcts, mi, ismcts ISMCTSBot - 10 dets x 50 iter, hidden info handling');
-      console.log('  mcts-ismcts-fast, mif   ISMCTSBot - 5 dets x 20 iter, faster');
-      console.log('  mcts-ismcts-strong, mis ISMCTSBot - 10 dets x 100 iter, stronger');
-      console.log('');
-      console.log('  MCTS with Transposition Table (Phase 3.2):');
-      console.log('  mcts-tt, mt, tt         MCTSBot - 200 iter, cached statistics');
-      console.log('  mcts-tt-fast, mtf       MCTSBot - 50 iter, smaller cache');
-      console.log('  mcts-tt-strong, mts     MCTSBot - 1000 iter, larger cache');
+      console.log('  MCTS Bots (uses evaluation function, no rollout):');
+      console.log('  mcts-eval-fast, mf      MCTSBot - 50 iter (quick)');
+      console.log('  mcts-eval, m, mcts      MCTSBot - 200 iter (balanced)');
+      console.log('  mcts-eval-strong, ms    MCTSBot - 500 iter (stronger)');
+      console.log('  mcts-eval-turbo, mt     MCTSBot - 1000 iter (RECOMMENDED)');
+      console.log('  mcts-ordered, mo        MCTSBot - 200 iter + move ordering');
       console.log('');
       console.log('Output Verbosity (Phase 2.5 - NEW):');
       console.log('  --quiet, -q             Suppress all output (silent mode)');
