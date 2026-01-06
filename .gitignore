@@ -28,7 +28,7 @@ npm-debug.log*
 coverage/
 
 # All experiment output (simulations, benchmarks, training data, tuning)
-output/
+/output/
 
 # Legacy output locations (deprecated - use output/ instead)
 results/
