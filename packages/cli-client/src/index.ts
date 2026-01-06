@@ -12,6 +12,7 @@ import { runSimulation, printResults, exportResults } from './commands/simulate'
 import { playGame } from './commands/play';
 import { runTune } from './commands/tune';
 import { runBenchmarkSuite, parseBenchmarkSuiteArgs } from './commands/benchmarkSuite';
+import { runReplayCommand, parseReplayArgs } from './commands/replay';
 import { OutputLevel, type ExportFormat } from './types';
 import { createBot, type BotType } from './botFactory';
 
@@ -153,13 +154,43 @@ async function main() {
       break;
     }
 
-    case 'replay': {
-      // Replay a specific failed game by seed
-      const gameSeed = parseInt(args[1]!, 10);
+    case 'replay':
+    case 'replay-file': {
+      const arg1 = args[1];
+
+      // Check if it's a file path (contains . or /) or a seed number
+      const isFilePath = arg1 && (arg1.includes('.') || arg1.includes('/'));
+
+      if (isFilePath) {
+        // New replay file mode
+        try {
+          const replayOptions = parseReplayArgs(args.slice(1));
+          await runReplayCommand(replayOptions);
+        } catch (e) {
+          console.error(`❌ Error: ${e}`);
+          console.log('\nUsage: bun src/index.ts replay <file.replay.json> [options]');
+          console.log('Options:');
+          console.log('  --turn <n>     Stop at specific turn');
+          console.log('  --action <n>   Stop at specific action');
+          console.log('  --watch, -w    Watch mode (show game progressing)');
+          console.log('  --delay <ms>   Delay between actions in watch mode (default: 500)');
+          console.log('  --verify       Verify replay integrity');
+          console.log('  --summary, -s  Show summary only');
+          console.log('  --verbose, -v  Verbose output');
+        }
+        break;
+      }
+
+      // Legacy: Replay by seed (re-run simulation with specific seed)
+      const gameSeed = parseInt(arg1!, 10);
       if (isNaN(gameSeed)) {
-        console.error('❌ Error: Please provide a valid seed number');
-        console.log('\nUsage: bun src/index.ts replay <seed>');
-        console.log('Example: bun src/index.ts replay 12383');
+        console.error('❌ Error: Please provide a valid seed number or replay file path');
+        console.log('\nUsage:');
+        console.log('  bun src/index.ts replay <seed>              # Re-run game with seed');
+        console.log('  bun src/index.ts replay <file.replay.json>  # Play back recorded game');
+        console.log('\nExamples:');
+        console.log('  bun src/index.ts replay 12383');
+        console.log('  bun src/index.ts replay results/replays/game-42-player.replay.json');
         break;
       }
 
@@ -175,7 +206,7 @@ async function main() {
 
       const debugMode = args.includes('--debug') || args.includes('-d');
 
-      console.log('🔄 ManaCore - Game Replay\n');
+      console.log('🔄 ManaCore - Game Replay (by seed)\n');
       console.log(`Replaying game with seed: ${gameSeed}\n`);
 
       const greedyBot = new GreedyBot(42, debugMode);
@@ -365,7 +396,8 @@ async function main() {
       console.log('  bench [count]           Alias for benchmark');
       console.log('  benchmark-suite         Run bot comparison matrix (Phase 2.5)');
       console.log('  suite                   Alias for benchmark-suite');
-      console.log('  replay <seed>           Replay a specific game by seed (for debugging)');
+      console.log('  replay <seed>           Replay a specific game by seed (re-run simulation)');
+      console.log('  replay <file.json>      Play back a recorded game from replay file');
       console.log('  tune                    Run weight tuning optimization (Phase 2.3)');
       console.log('  help                    Show this help message');
       console.log('');
@@ -427,7 +459,14 @@ async function main() {
       console.log('  bun src/index.ts benchmark 100 --quiet       # Silent mode');
       console.log('  bun src/index.ts benchmark 100 --minimal     # Summary only');
       console.log('  bun src/index.ts benchmark 1000 --profile');
-      console.log('  bun src/index.ts replay 12383 --verbose      # Replay failed game');
+      console.log('  bun src/index.ts replay 12383 --verbose      # Re-run game with seed');
+      console.log('');
+      console.log('Replay Files (Phase 2.6):');
+      console.log('  bun src/index.ts replay game.replay.json              # Play back recorded game');
+      console.log('  bun src/index.ts replay game.replay.json --watch      # Watch mode (animated)');
+      console.log('  bun src/index.ts replay game.replay.json --turn 5     # Stop at turn 5');
+      console.log('  bun src/index.ts replay game.replay.json --verify     # Verify replay integrity');
+      console.log('  bun src/index.ts replay game.replay.json --summary    # Show summary only');
       console.log('');
       console.log('Weight Tuning (Phase 2.3):');
       console.log('  tune                    Run weight optimization');

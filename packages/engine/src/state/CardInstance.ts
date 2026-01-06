@@ -147,7 +147,7 @@ export function addTemporaryModification(
   sourceId: string,
 ): void {
   card.temporaryModifications.push({
-    id: `mod_${Date.now()}_${Math.random()}`,
+    id: _getNextModificationId(),
     powerChange,
     toughnessChange,
     expiresAt,
@@ -169,8 +169,37 @@ export function clearTemporaryModifications(
 
 /**
  * Generate unique instance ID
+ * Uses counter-based IDs for determinism (critical for replays)
  */
 let instanceCounter = 0;
 function generateInstanceId(): string {
-  return `card_${Date.now()}_${instanceCounter++}`;
+  return `card_${instanceCounter++}`;
+}
+
+/**
+ * Reset instance counter (for test isolation)
+ * @internal - Only use in tests
+ */
+export function _resetInstanceCounter(): void {
+  instanceCounter = 0;
+}
+
+/**
+ * Counter for temporary modifications (for determinism)
+ */
+let modificationCounter = 0;
+
+/**
+ * Get next modification ID (deterministic)
+ */
+export function _getNextModificationId(): string {
+  return `mod_${modificationCounter++}`;
+}
+
+/**
+ * Reset modification counter (for test isolation)
+ * @internal - Only use in tests
+ */
+export function _resetModificationCounter(): void {
+  modificationCounter = 0;
 }

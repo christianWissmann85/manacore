@@ -130,15 +130,20 @@ function determinize(state: GameState): GameState {
 
 ### Phase 2.5: Benchmarking Suite
 
-- [ ] Automated bot comparison tests
-- [ ] Win rate matrix (all bots vs all bots)
-- [ ] Performance profiling dashboard
+- [x] Automated bot comparison tests
+- [x] Win rate matrix (all bots vs all bots)
+- [x] Performance profiling dashboard
 
 ---
 
 ## Medium-Term Goals (Next Month)
 
 ### Phase 3: Advanced MCTS
+
+**3.0: Use Tuning Data to improve MCTS Weights**
+- Read: `packages/cli-client/docs/TUNING.md`
+- Devise Strategy to find optimized weights through Auto Tuning / Self Play
+- Discuss ongoing Strategy (How often to retune?)
 
 **3.1: ISMCTS (Information Set MCTS)**
 

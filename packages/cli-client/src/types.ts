@@ -143,3 +143,99 @@ export interface ExportConfig {
   outputPath?: string;
   pretty?: boolean;
 }
+
+// =============================================================================
+// REPLAY SYSTEM TYPES
+// =============================================================================
+
+/**
+ * Deck specification for replay files
+ */
+export interface ReplayDeckSpec {
+  name: string;
+  cards?: string[]; // Card IDs (optional, for custom decks)
+}
+
+/**
+ * Game outcome information
+ */
+export interface ReplayOutcome {
+  winner: PlayerId | null;
+  turns: number;
+  reason: 'life' | 'decked' | 'concede' | 'timeout' | 'error';
+  finalLife?: {
+    player: number;
+    opponent: number;
+  };
+}
+
+/**
+ * Replay file format - contains everything needed to replay a game
+ */
+export interface ReplayFile {
+  /** Format version for backwards compatibility */
+  version: string;
+
+  /** Metadata */
+  metadata: {
+    timestamp: string; // ISO date
+    engineVersion: string;
+    description?: string;
+  };
+
+  /** Seeds for determinism */
+  seeds: {
+    game: number; // Seed for deck shuffling
+    instanceCounter: number; // Starting value for card instance counter (usually 0)
+  };
+
+  /** Deck specifications */
+  decks: {
+    player: ReplayDeckSpec;
+    opponent: ReplayDeckSpec;
+  };
+
+  /** Bot information (optional, for AI games) */
+  bots?: {
+    player?: { type: string; seed?: number };
+    opponent?: { type: string; seed?: number };
+  };
+
+  /** Complete action sequence */
+  actions: unknown[]; // Action[] - using unknown for JSON compatibility
+
+  /** Game outcome */
+  outcome: ReplayOutcome;
+}
+
+/**
+ * State snapshot at a specific point in the game
+ */
+export interface ReplaySnapshot {
+  turn: number;
+  phase: string;
+  actionIndex: number;
+  playerLife: number;
+  opponentLife: number;
+  playerHandSize: number;
+  opponentHandSize: number;
+  playerBoardSize: number;
+  opponentBoardSize: number;
+}
+
+/**
+ * Options for replay playback
+ */
+export interface ReplayOptions {
+  /** Stop at specific turn */
+  stopAtTurn?: number;
+
+  /** Stop at specific action index */
+  stopAtAction?: number;
+
+  /** Callback for each action */
+  onAction?: (actionIndex: number, action: unknown, snapshot: ReplaySnapshot) => void;
+
+  /** Validate each action (slower but catches issues) */
+  validateActions?: boolean;
+}

@@ -30,6 +30,9 @@ export {
   getEffectiveToughness,
   addTemporaryModification,
   clearTemporaryModifications,
+  // Test utilities for determinism
+  _resetInstanceCounter,
+  _resetModificationCounter,
 } from './state/CardInstance';
 
 // Card exports

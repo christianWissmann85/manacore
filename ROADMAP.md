@@ -445,13 +445,13 @@ Run 1000 games with different weight values, find optimal.
 
 **Tasks:**
 
-- [ ] Implement game replay (save actions + seed)
-- [ ] Build statistics dashboard:
+- [x] Implement game replay (save actions + seed)
+- [x] Build statistics dashboard:
   - Win rate by deck
   - Average game length
   - Cards played per game
   - Decision quality metrics
-- [ ] Add match history viewer
+- [x] Add match history viewer
 
 **Deliverable:**
 
