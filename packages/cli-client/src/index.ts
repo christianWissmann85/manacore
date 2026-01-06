@@ -47,6 +47,16 @@ function parseBotType(arg: string): BotType {
   if (lower === 'mcts-ordered-fast' || lower === 'mof') return 'mcts-ordered-fast';
   if (lower === 'mcts-ordered-turbo' || lower === 'mot') return 'mcts-ordered-turbo';
 
+  // Phase 3.1: ISMCTS variants (Information Set MCTS)
+  if (lower === 'mcts-ismcts' || lower === 'mi' || lower === 'ismcts') return 'mcts-ismcts';
+  if (lower === 'mcts-ismcts-fast' || lower === 'mif') return 'mcts-ismcts-fast';
+  if (lower === 'mcts-ismcts-strong' || lower === 'mis') return 'mcts-ismcts-strong';
+
+  // Phase 3.2: Transposition Table variants
+  if (lower === 'mcts-tt' || lower === 'mt' || lower === 'tt') return 'mcts-tt';
+  if (lower === 'mcts-tt-fast' || lower === 'mtf') return 'mcts-tt-fast';
+  if (lower === 'mcts-tt-strong' || lower === 'mts') return 'mcts-tt-strong';
+
   return 'random';
 }
 
@@ -515,6 +525,16 @@ async function main() {
       console.log('  mcts-ordered, mo        MCTSBot - 200 iter, type-based action priority');
       console.log('  mcts-ordered-fast, mof  MCTSBot - 50 iter, move ordering');
       console.log('  mcts-ordered-turbo, mot MCTSBot - 1000 iter, move ordering');
+      console.log('');
+      console.log('  ISMCTS - Information Set MCTS (Phase 3.1):');
+      console.log('  mcts-ismcts, mi, ismcts ISMCTSBot - 10 dets x 50 iter, hidden info handling');
+      console.log('  mcts-ismcts-fast, mif   ISMCTSBot - 5 dets x 20 iter, faster');
+      console.log('  mcts-ismcts-strong, mis ISMCTSBot - 10 dets x 100 iter, stronger');
+      console.log('');
+      console.log('  MCTS with Transposition Table (Phase 3.2):');
+      console.log('  mcts-tt, mt, tt         MCTSBot - 200 iter, cached statistics');
+      console.log('  mcts-tt-fast, mtf       MCTSBot - 50 iter, smaller cache');
+      console.log('  mcts-tt-strong, mts     MCTSBot - 1000 iter, larger cache');
       console.log('');
       console.log('Output Verbosity (Phase 2.5 - NEW):');
       console.log('  --quiet, -q             Suppress all output (silent mode)');

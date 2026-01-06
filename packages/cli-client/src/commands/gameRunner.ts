@@ -190,8 +190,8 @@ export async function runSingleGame(
     }
   }
 
-  // Determine winner
-  const winner = determineWinner(state);
+  // Determine winner and end reason
+  const { winner, endReason } = determineWinner(state, turnCount, maxTurns);
 
   return {
     winner,
@@ -200,28 +200,56 @@ export async function runSingleGame(
     opponentDeck: opponentDeckName,
     playerDeckCards: playerDeck,
     opponentDeckCards: opponentDeck,
+    endReason,
   };
 }
 
 /**
- * Determine winner based on game state
+ * Determine winner based on game state and provide end reason
  */
-function determineWinner(state: GameState): PlayerId | null {
-  if (state.gameOver && state.winner) {
-    return state.winner;
-  }
-
-  // Game didn't complete normally - check life totals
+function determineWinner(
+  state: GameState,
+  turnCount: number,
+  maxTurns: number,
+): { winner: PlayerId | null; endReason: string } {
   const playerLife = state.players.player.life;
   const opponentLife = state.players.opponent.life;
 
-  if (playerLife > opponentLife) {
-    return 'player';
-  } else if (opponentLife > playerLife) {
-    return 'opponent';
+  if (state.gameOver && state.winner) {
+    // Normal game ending
+    if (playerLife <= 0) {
+      return { winner: state.winner, endReason: 'Player life = 0' };
+    } else if (opponentLife <= 0) {
+      return { winner: state.winner, endReason: 'Opponent life = 0' };
+    } else if (state.players.player.library.length === 0) {
+      return { winner: state.winner, endReason: 'Player decked' };
+    } else if (state.players.opponent.library.length === 0) {
+      return { winner: state.winner, endReason: 'Opponent decked' };
+    }
+    return { winner: state.winner, endReason: 'Game over' };
   }
 
-  return null; // Draw
+  // Game didn't complete normally - hit turn limit
+  if (turnCount >= maxTurns) {
+    if (playerLife > opponentLife) {
+      return { winner: 'player', endReason: `Turn limit (${playerLife} vs ${opponentLife} life)` };
+    } else if (opponentLife > playerLife) {
+      return {
+        winner: 'opponent',
+        endReason: `Turn limit (${opponentLife} vs ${playerLife} life)`,
+      };
+    }
+    return { winner: null, endReason: `Turn limit (${playerLife} life each)` };
+  }
+
+  // Shouldn't reach here, but handle it
+  if (playerLife > opponentLife) {
+    return { winner: 'player', endReason: 'Life total comparison' };
+  } else if (opponentLife > playerLife) {
+    return { winner: 'opponent', endReason: 'Life total comparison' };
+  }
+
+  return { winner: null, endReason: 'Draw - equal life' };
 }
 
 /**

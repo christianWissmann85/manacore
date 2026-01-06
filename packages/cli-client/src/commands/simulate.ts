@@ -93,6 +93,7 @@ export async function runSimulation(
       options.gameCount,
       baseSeed,
       options.botTypes,
+      { p1: playerBot.getName(), p2: opponentBot.getName() },
       options.maxTurns || 100,
       options.debugVerbose || false,
       recorder,
@@ -139,6 +140,9 @@ export async function runSimulation(
           gameResult.playerDeck,
           gameResult.opponentDeck,
           gameResult.durationMs || 0,
+          playerBot.getName(),
+          opponentBot.getName(),
+          gameResult.endReason,
         );
 
         if (options.debugVerbose && !progressBar) {
@@ -190,6 +194,22 @@ export async function runSimulation(
   // Add profile data (always included)
   results.profile = profiler.getProfileData(results.gamesCompleted);
 
+  // Write summary statistics to log before finishing
+  logWriter.writeSummary({
+    totalGames: results.totalGames,
+    playerWins: results.playerWins,
+    opponentWins: results.opponentWins,
+    draws: results.draws,
+    errors: results.errors,
+    playerBotName: playerBot.getName(),
+    opponentBotName: opponentBot.getName(),
+    avgTurns: results.averageTurns,
+    minTurns: results.minTurns,
+    maxTurns: results.maxTurns,
+    totalDuration,
+    gamesPerSecond: results.gamesCompleted / (totalDuration / 1000),
+  });
+
   // Complete log file with actual duration
   logWriter.finish({
     totalDuration,
@@ -208,6 +228,7 @@ async function runParallelSimulation(
   gameCount: number,
   baseSeed: number,
   botTypes: { p1: string; p2: string },
+  botNames: { p1: string; p2: string },
   maxTurns: number,
   debug: boolean,
   recorder: ResultsRecorder,
@@ -277,6 +298,9 @@ async function runParallelSimulation(
               result.playerDeck,
               result.opponentDeck,
               result.durationMs || 0,
+              botNames.p1,
+              botNames.p2,
+              result.endReason,
             );
 
             recorder.recordGame(gameIndex + 1, seed, result);

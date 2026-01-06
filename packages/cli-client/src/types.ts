@@ -129,6 +129,7 @@ export interface GameResult {
   playerDeckCards?: CardTemplate[];
   opponentDeckCards?: CardTemplate[];
   durationMs?: number;
+  endReason?: string;
 }
 
 /**

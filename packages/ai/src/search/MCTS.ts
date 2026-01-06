@@ -22,6 +22,7 @@ import {
   TUNED_WEIGHTS,
   TUNED_COEFFICIENTS,
 } from '../evaluation/evaluate';
+import { TranspositionTable } from './TranspositionTable';
 
 /**
  * Rollout policy function type
@@ -56,6 +57,9 @@ export interface MCTSConfig {
 
   /** Enable move ordering (sort untried actions by type priority) */
   moveOrdering: boolean;
+
+  /** Transposition table for caching statistics (null = disabled) */
+  transpositionTable: TranspositionTable | null;
 }
 
 export const DEFAULT_MCTS_CONFIG: MCTSConfig = {
@@ -67,6 +71,7 @@ export const DEFAULT_MCTS_CONFIG: MCTSConfig = {
   profile: false,
   determinize: true, // Default to fair play - don't cheat!
   moveOrdering: false, // Default off for backwards compatibility
+  transpositionTable: null, // Default off - create explicitly to enable
 };
 
 /**
@@ -120,6 +125,48 @@ export function filterRepeatedAbilities(actions: Action[], parentAction: Action 
     // Filter out the same ability that was just activated
     return action.payload.abilityId !== parentAbilityId;
   });
+}
+
+/**
+ * Select an action using weighted random selection based on priority
+ *
+ * Higher priority actions are MORE LIKELY to be selected, but not guaranteed.
+ * This preserves MCTS exploration while biasing toward promising moves.
+ *
+ * Uses softmax-style weighting: P(action) ∝ exp(priority / temperature)
+ *
+ * @param actions - Actions to select from (will be mutated - selected action removed)
+ * @returns The selected action
+ */
+export function selectWeightedAction(actions: Action[]): Action {
+  if (actions.length === 1) {
+    return actions.shift()!;
+  }
+
+  // Temperature controls how strongly we bias toward high-priority actions
+  // Lower = more deterministic, Higher = more uniform
+  const temperature = 50;
+
+  // Calculate weights using softmax-style formula
+  const weights = actions.map((action) => {
+    const priority = ACTION_PRIORITY[action.type] ?? 20;
+    return Math.exp(priority / temperature);
+  });
+
+  // Sum of all weights
+  const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+
+  // Random selection weighted by priority
+  let random = Math.random() * totalWeight;
+  for (let i = 0; i < actions.length; i++) {
+    random -= weights[i]!;
+    if (random <= 0) {
+      return actions.splice(i, 1)[0]!;
+    }
+  }
+
+  // Fallback (shouldn't happen, but safety first)
+  return actions.shift()!;
 }
 
 /**
@@ -184,6 +231,10 @@ export interface MCTSProfile {
   applyActionCount: number;
   getLegalActionsCount: number;
   evaluateCount: number;
+  // Transposition table stats
+  ttHits: number;
+  ttMisses: number;
+  ttStores: number;
 }
 
 /**
@@ -242,7 +293,13 @@ export function runMCTS(
     applyActionCount: 0,
     getLegalActionsCount: 0,
     evaluateCount: 0,
+    ttHits: 0,
+    ttMisses: 0,
+    ttStores: 0,
   };
+
+  // Get transposition table reference for easy access
+  const tt = cfg.transpositionTable;
 
   // Get legal actions for root
   const rootActions = getLegalActions(searchState, playerId);
@@ -264,11 +321,9 @@ export function runMCTS(
     };
   }
 
-  // Create root node (apply move ordering if enabled)
-  const orderedRootActions = cfg.moveOrdering
-    ? orderActionsByPriority(rootActions)
-    : [...rootActions];
-  const root = createMCTSNode(searchState, null, null, orderedRootActions);
+  // Create root node
+  // Note: With weighted selection, we don't need to pre-sort - selection handles priority
+  const root = createMCTSNode(searchState, null, null, [...rootActions]);
 
   let iterations = 0;
 
@@ -297,10 +352,10 @@ export function runMCTS(
     const expStart = performance.now();
     if (!isTerminal(node) && node.untriedActions.length > 0) {
       // Pick action to expand:
-      // - With move ordering: take first (highest priority)
-      // - Without: pick random
+      // - With move ordering: weighted random (biased toward high-priority actions)
+      // - Without: uniform random
       const action = cfg.moveOrdering
-        ? node.untriedActions.shift()!
+        ? selectWeightedAction(node.untriedActions)
         : node.untriedActions.splice(Math.floor(Math.random() * node.untriedActions.length), 1)[0]!;
 
       // Apply action to get new state
@@ -314,13 +369,26 @@ export function runMCTS(
         // This prevents infinite loops with pump abilities like Dragon Engine
         childActions = filterRepeatedAbilities(childActions, action);
 
-        // Order child actions if move ordering is enabled
-        const orderedChildActions = cfg.moveOrdering
-          ? orderActionsByPriority(childActions)
-          : [...childActions];
-
         // Create child node
-        const child = createMCTSNode(newState, action, node, orderedChildActions);
+        // Note: With weighted selection, we don't need to pre-sort - selection handles priority
+        const child = createMCTSNode(newState, action, node, [...childActions]);
+
+        // TRANSPOSITION TABLE: Check if we've seen this state before
+        if (tt) {
+          const hash = tt.computeHash(newState, playerId);
+          const cached = tt.lookup(hash);
+
+          if (cached) {
+            // Use cached statistics as priors (virtual visits)
+            // This helps guide UCB selection toward previously successful paths
+            child.visits = cached.visits;
+            child.totalReward = cached.totalReward;
+            profile.ttHits++;
+          } else {
+            profile.ttMisses++;
+          }
+        }
+
         node.children.push(child);
         node = child;
         currentState = newState;
@@ -376,6 +444,23 @@ export function runMCTS(
     }
 
     backpropagate(node, reward, playerId);
+
+    // TRANSPOSITION TABLE: Store updated statistics
+    if (tt) {
+      // Store stats for the expanded node (not root - that doesn't help)
+      // We traverse up from the expanded node, storing at each level
+      let ttNode: MCTSNode | null = node;
+      let depth = 0;
+
+      while (ttNode && ttNode.parent) {
+        const hash = tt.computeHash(ttNode.state, playerId);
+        tt.store(hash, ttNode.visits, ttNode.totalReward, depth);
+        profile.ttStores++;
+        ttNode = ttNode.parent;
+        depth++;
+      }
+    }
+
     profile.backpropMs += performance.now() - backStart;
     iterations++;
   }
@@ -434,6 +519,13 @@ export function runMCTS(
     console.log(
       `  Clones: ${profile.cloneCount}, ApplyAction: ${profile.applyActionCount}, GetLegalActions: ${profile.getLegalActionsCount}, Evaluate: ${profile.evaluateCount}`,
     );
+    if (tt) {
+      const ttTotal = profile.ttHits + profile.ttMisses;
+      const ttHitRate = ttTotal > 0 ? ((profile.ttHits / ttTotal) * 100).toFixed(1) : '0.0';
+      console.log(
+        `  TT Hits: ${profile.ttHits}, Misses: ${profile.ttMisses}, Stores: ${profile.ttStores}, Hit Rate: ${ttHitRate}%`,
+      );
+    }
   }
 
   return {

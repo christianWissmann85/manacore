@@ -39,7 +39,7 @@ Phase 3 focuses on four improvements to MCTS that will transform it from underpe
 
 ---
 
-## Phase 3.4: Move Ordering
+## ✅ Phase 3.4: Move Ordering
 
 ### Problem
 
@@ -105,7 +105,7 @@ bun src/index.ts run experiments/phase3.4-move-ordering.json
 
 ---
 
-## Phase 3.1: ISMCTS (Information Set MCTS)
+## ✅ Phase 3.1: ISMCTS (Information Set MCTS)
 
 ### Problem
 

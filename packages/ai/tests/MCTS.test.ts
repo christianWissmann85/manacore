@@ -12,6 +12,7 @@ import {
   orderActionsByPriority,
   ACTION_PRIORITY,
   filterRepeatedAbilities,
+  selectWeightedAction,
 } from '../src/search/MCTS';
 import {
   createMCTSNode,
@@ -207,7 +208,46 @@ describe('Phase 3.4: Move Ordering', () => {
     expect(ordered[0].type).toBe('CAST_SPELL');
   });
 
-  test('MCTS with moveOrdering enabled expands high-priority actions first', () => {
+  test('selectWeightedAction biases toward high-priority actions', () => {
+    // Create many copies of actions to test distribution
+    const trials = 1000;
+    const counts: Record<string, number> = {
+      CAST_SPELL: 0,
+      PASS_PRIORITY: 0,
+    };
+
+    for (let i = 0; i < trials; i++) {
+      const actions = [
+        { type: 'PASS_PRIORITY' },
+        { type: 'CAST_SPELL', cardId: 'test1' },
+      ] as any[];
+
+      const selected = selectWeightedAction(actions);
+      counts[selected.type]++;
+    }
+
+    // CAST_SPELL (priority 100) should be selected more often than PASS_PRIORITY (priority 0)
+    // With softmax temperature=50: exp(100/50) ≈ 7.4, exp(0/50) = 1
+    // Expected ratio: ~88% CAST_SPELL, ~12% PASS_PRIORITY
+    expect(counts['CAST_SPELL']).toBeGreaterThan(counts['PASS_PRIORITY']);
+    // Should be significantly biased (at least 2:1 ratio)
+    expect(counts['CAST_SPELL']).toBeGreaterThan(counts['PASS_PRIORITY'] * 2);
+  });
+
+  test('selectWeightedAction removes selected action from array', () => {
+    const actions = [
+      { type: 'PASS_PRIORITY' },
+      { type: 'CAST_SPELL', cardId: 'test1' },
+    ] as any[];
+
+    const originalLength = actions.length;
+    selectWeightedAction(actions);
+
+    // Array should have one less element
+    expect(actions.length).toBe(originalLength - 1);
+  });
+
+  test('MCTS with moveOrdering enabled uses weighted selection', () => {
     const playerDeck = createRedDeck();
     const opponentDeck = createGreenDeck();
     const state = initializeGame(playerDeck, opponentDeck, 12345);

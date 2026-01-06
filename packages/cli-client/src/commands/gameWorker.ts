@@ -20,6 +20,7 @@ if (!parentPort) {
 parentPort.on('message', (msg: WorkerMessage) => {
   // Wrap in async IIFE to satisfy @typescript-eslint/no-misused-promises
   void (async () => {
+    const startTime = performance.now();
     try {
       // Dynamic imports to ensure env var is set before modules load
       const { runSingleGame } = await import('./gameRunner');
@@ -43,6 +44,9 @@ parentPort.on('message', (msg: WorkerMessage) => {
         seed,
       });
 
+      // Add duration to result
+      result.durationMs = performance.now() - startTime;
+
       parentPort!.postMessage({
         type: 'success',
         gameIndex,
@@ -55,8 +59,7 @@ parentPort.on('message', (msg: WorkerMessage) => {
         gameIndex: msg.gameIndex,
         seed: msg.seed,
         error: error instanceof Error ? error.message : String(error),
-        // We don't send the full error object or stack to avoid serialization issues
-        // and excessive noise, but recording the message is critical.
+        stack: error instanceof Error ? error.stack : undefined,
       });
     }
   })();

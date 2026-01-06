@@ -295,7 +295,7 @@ export interface ManaCoreConfig {
  */
 export const CONFIG_DEFAULTS = {
   output: {
-    directory: 'results',
+    directory: 'output',
     level: 'minimal' as OutputLevel,
     formats: ['json'] as ExportFormat[],
     timestamp: true,

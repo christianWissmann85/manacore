@@ -16,6 +16,7 @@ export type { Bot } from './bots/Bot';
 export { RandomBot } from './bots/RandomBot';
 export { GreedyBot } from './bots/GreedyBot';
 export { MCTSBot, createMCTSBot, MCTSBotPresets } from './bots/MCTSBot';
+export { ISMCTSBot, createISMCTSBot, ISMCTSBotPresets } from './bots/ISMCTSBot';
 
 // Evaluation exports
 export type { EvaluationWeights, EvaluationCoefficients } from './evaluation/evaluate';
@@ -69,7 +70,23 @@ export {
   // Phase 3.4: Move ordering
   ACTION_PRIORITY,
   orderActionsByPriority,
+  selectWeightedAction,
+  filterRepeatedAbilities,
+  // Determinization (used by ISMCTS)
+  determinize,
 } from './search/MCTS';
+
+// Phase 3.1: ISMCTS exports
+export type { ISMCTSConfig, ISMCTSResult } from './search/ISMCTS';
+export { runISMCTS, DEFAULT_ISMCTS_CONFIG } from './search/ISMCTS';
+
+// Phase 3.2: Transposition table exports
+export type {
+  TranspositionEntry,
+  TranspositionStats,
+  TranspositionConfig,
+} from './search/TranspositionTable';
+export { TranspositionTable, DEFAULT_TRANSPOSITION_CONFIG } from './search/TranspositionTable';
 export {
   createMCTSNode,
   isFullyExpanded,

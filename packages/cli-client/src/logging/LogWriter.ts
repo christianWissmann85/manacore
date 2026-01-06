@@ -61,7 +61,7 @@ export class LogWriter {
   }
 
   /**
-   * Write game completion
+   * Write game completion with detailed information
    */
   writeGameComplete(
     gameNumber: number,
@@ -70,10 +70,30 @@ export class LogWriter {
     playerDeck: string,
     opponentDeck: string,
     durationMs: number,
+    playerBotName?: string,
+    opponentBotName?: string,
+    endReason?: string,
   ): void {
-    this.writeLine(
-      `Game ${gameNumber}: ${winner} wins in ${turns} turns (${playerDeck} vs ${opponentDeck}) [${durationMs.toFixed(1)}ms]`,
-    );
+    // Format winner name
+    let winnerDisplay = winner;
+    if (winner === 'player' && playerBotName) {
+      winnerDisplay = `Player (${playerBotName})`;
+    } else if (winner === 'opponent' && opponentBotName) {
+      winnerDisplay = `Opponent (${opponentBotName})`;
+    } else if (winner === 'draw') {
+      winnerDisplay = 'Draw';
+    }
+
+    // Build log line
+    let logLine = `Game ${gameNumber}: ${winnerDisplay} wins in ${turns} turns | ${playerDeck} vs ${opponentDeck}`;
+    
+    if (endReason) {
+      logLine += ` | ${endReason}`;
+    }
+    
+    logLine += ` | ${durationMs.toFixed(1)}ms`;
+    
+    this.writeLine(logLine);
   }
 
   /**
@@ -90,13 +110,54 @@ export class LogWriter {
   }
 
   /**
+   * Write summary statistics
+   */
+  writeSummary(summary: {
+    totalGames: number;
+    playerWins: number;
+    opponentWins: number;
+    draws: number;
+    errors: number;
+    playerBotName: string;
+    opponentBotName: string;
+    avgTurns: number;
+    minTurns: number;
+    maxTurns: number;
+    totalDuration: number;
+    gamesPerSecond: number;
+  }): void {
+    this.writeLine('');
+    this.writeLine('═'.repeat(80));
+    this.writeLine('SIMULATION SUMMARY');
+    this.writeLine('═'.repeat(80));
+    this.writeLine('');
+    this.writeLine(`Total Games:     ${summary.totalGames}`);
+    this.writeLine(`Completed:       ${summary.totalGames - summary.errors}`);
+    if (summary.errors > 0) {
+      this.writeLine(`Errors:          ${summary.errors}`);
+    }
+    this.writeLine('');
+    this.writeLine('Results:');
+    this.writeLine(`  ${summary.playerBotName}: ${summary.playerWins} wins (${((summary.playerWins / summary.totalGames) * 100).toFixed(1)}%)`);
+    this.writeLine(`  ${summary.opponentBotName}: ${summary.opponentWins} wins (${((summary.opponentWins / summary.totalGames) * 100).toFixed(1)}%)`);
+    this.writeLine(`  Draws: ${summary.draws} (${((summary.draws / summary.totalGames) * 100).toFixed(1)}%)`);
+    this.writeLine('');
+    this.writeLine('Game Length:');
+    this.writeLine(`  Average: ${summary.avgTurns.toFixed(1)} turns`);
+    this.writeLine(`  Range: ${summary.minTurns}-${summary.maxTurns} turns`);
+    this.writeLine('');
+    this.writeLine('Performance:');
+    this.writeLine(`  Total time: ${(summary.totalDuration / 1000).toFixed(1)}s`);
+    this.writeLine(`  Speed: ${summary.gamesPerSecond.toFixed(2)} games/sec`);
+    this.writeLine('');
+  }
+
+  /**
    * Complete the log and close the stream
    */
   finish(results: { totalDuration: number }): void {
-    this.writeLine('');
     this.writeLine('═'.repeat(80));
     this.writeLine(`Simulation completed at: ${new Date().toISOString()}`);
-    this.writeLine(`Total duration: ${(results.totalDuration / 1000).toFixed(3)}s`);
     this.writeLine('═'.repeat(80));
 
     if (this.logStream) {

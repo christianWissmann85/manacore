@@ -2,8 +2,10 @@ import {
   RandomBot,
   GreedyBot,
   MCTSBot,
+  ISMCTSBot,
   greedyRolloutPolicy,
   epsilonGreedyRolloutPolicy,
+  TranspositionTable,
   type Bot,
 } from '@manacore/ai';
 
@@ -25,7 +27,15 @@ export type BotType =
   // Phase 3.4: Move ordering variants
   | 'mcts-ordered'
   | 'mcts-ordered-fast'
-  | 'mcts-ordered-turbo';
+  | 'mcts-ordered-turbo'
+  // Phase 3.1: ISMCTS variants
+  | 'mcts-ismcts'
+  | 'mcts-ismcts-fast'
+  | 'mcts-ismcts-strong'
+  // Phase 3.2: Transposition table variants
+  | 'mcts-tt'
+  | 'mcts-tt-fast'
+  | 'mcts-tt-strong';
 
 export function createBot(type: BotType, seed: number, debug = false): Bot {
   switch (type) {
@@ -117,6 +127,64 @@ export function createBot(type: BotType, seed: number, debug = false): Bot {
         moveOrdering: true,
         debug,
         nameSuffix: 'ordered-turbo',
+      });
+
+    // PHASE 3.1: ISMCTS - multiple determinizations for hidden information
+    case 'mcts-ismcts':
+      return new ISMCTSBot({
+        determinizations: 10,
+        iterations: 500, // 10 x 50 iterations per determinization
+        rolloutDepth: 0,
+        moveOrdering: true,
+        ismctsDebug: debug,
+        nameSuffix: 'ismcts',
+      });
+    case 'mcts-ismcts-fast':
+      return new ISMCTSBot({
+        determinizations: 5,
+        iterations: 100, // 5 x 20 iterations per determinization
+        rolloutDepth: 0,
+        moveOrdering: true,
+        ismctsDebug: debug,
+        nameSuffix: 'ismcts-fast',
+      });
+    case 'mcts-ismcts-strong':
+      return new ISMCTSBot({
+        determinizations: 10,
+        iterations: 1000, // 10 x 100 iterations per determinization
+        rolloutDepth: 0,
+        moveOrdering: true,
+        ismctsDebug: debug,
+        nameSuffix: 'ismcts-strong',
+      });
+
+    // PHASE 3.2: Transposition Table variants
+    case 'mcts-tt':
+      return new MCTSBot({
+        iterations: 200,
+        rolloutDepth: 0,
+        moveOrdering: true,
+        transpositionTable: new TranspositionTable({ maxSize: 50_000 }),
+        debug,
+        nameSuffix: 'tt',
+      });
+    case 'mcts-tt-fast':
+      return new MCTSBot({
+        iterations: 50,
+        rolloutDepth: 0,
+        moveOrdering: true,
+        transpositionTable: new TranspositionTable({ maxSize: 10_000 }),
+        debug,
+        nameSuffix: 'tt-fast',
+      });
+    case 'mcts-tt-strong':
+      return new MCTSBot({
+        iterations: 1000,
+        rolloutDepth: 0,
+        moveOrdering: true,
+        transpositionTable: new TranspositionTable({ maxSize: 100_000 }),
+        debug,
+        nameSuffix: 'tt-strong',
       });
 
     case 'random':

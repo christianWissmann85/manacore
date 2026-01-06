@@ -8,7 +8,7 @@
     "description": "Baseline: no transposition table"
   },
   "p2": {
-    "type": "mcts-transposition",
+    "type": "mcts-tt-strong",
     "description": "New: transposition table with relevant feature hashing",
     "config": {
       "tableSize": 100000,
