@@ -53,8 +53,9 @@ export async function runSimulation(
   // Always track simulation start time for log file
   const simulationStartTime = performance.now();
 
-  // Initialize log writer
-  const logWriter = new LogWriter(baseSeed);
+  // Initialize log writer with experiment name
+  const experimentName = options.experimentName || 'simulation';
+  const logWriter = new LogWriter(baseSeed, experimentName);
   logWriter.start({
     command: process.argv.join(' '),
     seed: baseSeed,

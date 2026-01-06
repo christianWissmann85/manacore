@@ -33,6 +33,8 @@ export interface SimulationOptions {
   autoExport?: boolean; // Auto-export JSON (default: true)
   botTypes?: { p1: string; p2: string };
   parallel?: boolean;
+  /** Experiment name for output filenames */
+  experimentName?: string;
 }
 
 /**

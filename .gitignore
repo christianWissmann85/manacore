@@ -27,9 +27,12 @@ npm-debug.log*
 # Test coverage
 coverage/
 
-# Research results and exports, Training Data
+# All experiment output (simulations, benchmarks, training data, tuning)
+output/
+
+# Legacy output locations (deprecated - use output/ instead)
 results/
-packages/cli-client/training-data
+packages/cli-client/training-data/
 
 # Card images (downloaded via fetch-cards script)
 packages/web-client/public/assets/cards/*.jpg

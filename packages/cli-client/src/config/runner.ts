@@ -16,14 +16,14 @@ import type {
 } from './schema';
 import { printConfigSummary } from './loader';
 import { createBot } from '../botFactory';
-import { runSimulation } from '../commands/simulate';
+import { runSimulation, exportResults } from '../commands/simulate';
 import { runBenchmarkSuite } from '../commands/benchmarkSuite';
 import { runTune } from '../commands/tune';
 import { runTuneMCTS } from '../commands/tune-mcts';
 import { runPipeline } from '../commands/pipeline';
 import { runCollectTraining } from '../commands/collect-training';
 import { runReplayCommand } from '../commands/replay';
-import { OutputLevel } from '../types';
+import { OutputLevel, type ExportFormat } from '../types';
 
 /**
  * Map output level string to enum
@@ -91,15 +91,40 @@ export async function runExperiment(config: ExperimentConfig): Promise<void> {
 async function runSimulateExperiment(config: SimulateConfig): Promise<void> {
   const p1Bot = createBot(config.p1.type, config.seed as number);
   const p2Bot = createBot(config.p2.type, config.seed as number);
+  const outputLevel = mapOutputLevel(config.output?.level);
 
-  // runSimulation handles all output internally
-  await runSimulation(p1Bot, p2Bot, {
+  const { results, logPath } = await runSimulation(p1Bot, p2Bot, {
     gameCount: config.games,
     seed: config.seed as number,
     maxTurns: config.maxTurns,
-    outputLevel: mapOutputLevel(config.output?.level),
+    outputLevel,
     parallel: config.parallel,
+    botTypes: { p1: config.p1.type, p2: config.p2.type },
+    experimentName: config.name, // Pass experiment name for output filenames
   });
+
+  // Determine export formats from config (always include console)
+  const formats: ExportFormat[] = ['console'];
+  const configFormats = config.output?.formats ?? ['json'];
+  for (const fmt of configFormats) {
+    if (fmt === 'json' || fmt === 'csv') {
+      formats.push(fmt);
+    }
+  }
+
+  // Export results (console output + files)
+  await exportResults(
+    results,
+    p1Bot.getName(),
+    p2Bot.getName(),
+    {
+      formats,
+      outputLevel,
+      pretty: true,
+      experimentName: config.name, // Use experiment name in output filenames
+    },
+    logPath,
+  );
 }
 
 /**
@@ -108,6 +133,7 @@ async function runSimulateExperiment(config: SimulateConfig): Promise<void> {
 async function runBenchmarkExperiment(config: BenchmarkConfig): Promise<void> {
   await runBenchmarkSuite({
     preset: 'quick', // Will be overridden by bots
+    name: config.name, // Use experiment name in output filenames
     bots: config.bots,
     gamesPerMatchup: config.gamesPerMatchup,
     seed: config.seed as number,
@@ -172,6 +198,7 @@ async function runPipelineExperiment(config: PipelineExperimentConfig): Promise<
 async function runCollectExperiment(config: CollectTrainingConfig): Promise<void> {
   await runCollectTraining({
     games: config.games,
+    name: config.name, // Use experiment name in output directory
     output: config.output?.directory || 'training-data',
     seed: config.seed as number,
     maxTurns: config.maxTurns,

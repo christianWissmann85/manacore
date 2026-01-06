@@ -2,6 +2,7 @@
  * ExporterManager - Manages multiple export formats
  *
  * Coordinates exporting results to multiple formats simultaneously.
+ * Uses centralized output paths from output/paths.ts
  */
 
 import type { SimulationResults, ExportFormat, OutputLevel } from '../types';
@@ -9,8 +10,7 @@ import { ResultsExporter } from './ResultsExporter';
 import { ConsoleExporter } from './ConsoleExporter';
 import { JsonExporter } from './JsonExporter';
 import { CsvExporter } from './CsvExporter';
-import * as path from 'path';
-import * as fs from 'fs';
+import { getSimulationResultPath, getRelativePath } from '../output/paths';
 
 export interface ExportConfig {
   formats: ExportFormat[];
@@ -18,11 +18,9 @@ export interface ExportConfig {
   pretty?: boolean;
   outputLevel?: OutputLevel;
   logPath?: string;
+  /** Experiment name for output filenames */
+  experimentName?: string;
 }
-
-// Default export directory: results/ in project root
-const PROJECT_ROOT = path.resolve(__dirname, '../../../..');
-const DEFAULT_RESULTS_DIR = path.join(PROJECT_ROOT, 'results');
 
 export class ExporterManager {
   private exporters: Map<ExportFormat, ResultsExporter>;
@@ -44,13 +42,8 @@ export class ExporterManager {
     opponentBotName: string,
     config: ExportConfig,
   ): Promise<void> {
-    // Ensure results directory exists (only if we're exporting to files)
-    const hasFileExports = config.formats.some((f) => f !== 'console');
-    if (hasFileExports && !config.outputPath) {
-      this.ensureResultsDir();
-    }
-
     const exports: Promise<string | void>[] = [];
+    const experimentName = config.experimentName || 'simulation';
 
     for (const format of config.formats) {
       const exporter = this.exporters.get(format);
@@ -60,7 +53,12 @@ export class ExporterManager {
       }
 
       // Generate output path for file formats
-      const outputPath = this.getOutputPath(format, config.outputPath, results.baseSeed);
+      const outputPath = this.getOutputPath(
+        format,
+        config.outputPath,
+        results.baseSeed,
+        experimentName,
+      );
 
       exports.push(
         exporter.export(results, playerBotName, opponentBotName, {
@@ -82,6 +80,7 @@ export class ExporterManager {
     format: ExportFormat,
     basePath: string | undefined,
     seed: number,
+    experimentName: string,
   ): string | undefined {
     if (format === 'console') return undefined;
 
@@ -93,25 +92,11 @@ export class ExporterManager {
       return `${basePath}.${format}`;
     }
 
-    // Default path: results/results-seed{seed}-{timestamp}.{format}
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    const filename = `results-seed${seed}-${timestamp}.${format}`;
-    return path.join(DEFAULT_RESULTS_DIR, filename);
-  }
-
-  /**
-   * Ensure results directory exists
-   */
-  private ensureResultsDir(): void {
-    try {
-      if (!fs.existsSync(DEFAULT_RESULTS_DIR)) {
-        fs.mkdirSync(DEFAULT_RESULTS_DIR, { recursive: true });
-        console.log(
-          `📁 Created results directory: ${path.relative(process.cwd(), DEFAULT_RESULTS_DIR)}/`,
-        );
-      }
-    } catch (err) {
-      console.error('⚠️  Failed to create results directory:', err);
+    // Use centralized output paths: output/simulations/{name}-{seed}.{format}
+    if (format === 'json' || format === 'csv') {
+      return getSimulationResultPath(experimentName, seed, format);
     }
+
+    return undefined;
   }
 }

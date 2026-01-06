@@ -18,16 +18,16 @@ bun src/index.ts run ../../experiments/simulate-mcts-vs-greedy.json
 
 ## Available Templates
 
-| Template | Command | Description |
-|----------|---------|-------------|
-| `simulate-mcts-vs-greedy.json` | simulate | Bot vs bot simulation |
-| `benchmark-all-bots.json` | benchmark | Multi-bot comparison matrix |
-| `tune-weights-evolve.json` | tune-weights | Evaluation weight optimization |
-| `tune-mcts-grid.json` | tune-mcts | MCTS hyperparameter tuning |
-| `pipeline-full.json` | pipeline | Complete tuning workflow |
-| `collect-training-fast.json` | collect | ML training data (fast, GreedyBot) |
-| `collect-training-mcts.json` | collect | ML training data (MCTS quality) |
-| `replay-game.json` | replay | Replay specific games |
+| Template                       | Command      | Description                        |
+| ------------------------------ | ------------ | ---------------------------------- |
+| `simulate-mcts-vs-greedy.json` | simulate     | Bot vs bot simulation              |
+| `benchmark-all-bots.json`      | benchmark    | Multi-bot comparison matrix        |
+| `tune-weights-evolve.json`     | tune-weights | Evaluation weight optimization     |
+| `tune-mcts-grid.json`          | tune-mcts    | MCTS hyperparameter tuning         |
+| `pipeline-full.json`           | pipeline     | Complete tuning workflow           |
+| `collect-training-fast.json`   | collect      | ML training data (fast, GreedyBot) |
+| `collect-training-mcts.json`   | collect      | ML training data (MCTS quality)    |
+| `replay-game.json`             | replay       | Replay specific games              |
 
 ---
 
@@ -39,13 +39,13 @@ All configs share these fields:
 
 ```json
 {
-  "command": "simulate",       // Required: command type
-  "name": "my-experiment",     // Required: experiment name (used in output)
-  "seed": "timestamp",         // Optional: number or "timestamp"
+  "command": "simulate", // Required: command type
+  "name": "my-experiment", // Required: experiment name (used in output)
+  "seed": "timestamp", // Optional: number or "timestamp"
   "output": {
-    "directory": "results",    // Output directory
-    "level": "minimal",        // quiet | minimal | normal | verbose
-    "formats": ["json"]        // json | csv | markdown
+    "directory": "results", // Output directory
+    "level": "minimal", // quiet | minimal | normal | verbose
+    "formats": ["json"] // json | csv | markdown
   }
 }
 ```
@@ -75,6 +75,7 @@ Run bot vs bot games.
 ```
 
 **Bot Types:**
+
 - `random` - Random legal actions
 - `greedy` - 1-ply lookahead
 - `mcts-eval-fast` - 50 iterations, no rollout (recommended)
@@ -129,6 +130,7 @@ Optimize evaluation function weights.
 ```
 
 **Methods:**
+
 - `local` - Hill climbing (fast, local optima)
 - `evolve` - Evolutionary search (slower, better exploration)
 
@@ -155,6 +157,7 @@ Optimize MCTS hyperparameters.
 ```
 
 **Methods:**
+
 - `grid` - Full grid search (thorough, slow)
 - `coarse-to-fine` - Adaptive search (faster, recommended)
 
@@ -189,6 +192,7 @@ Run complete tuning workflow (weights + MCTS + validation).
 ```
 
 **Acceptance Levels:**
+
 - `relaxed` - Lower thresholds for accepting changes
 - `default` - Standard thresholds
 - `strict` - Higher thresholds, more conservative
@@ -219,13 +223,15 @@ Generate ML training datasets with curriculum learning.
 ```
 
 **Curricula:**
+
 - `fast` - GreedyBot vs Random/Greedy (fast, ~1 game/sec)
 - `default` - MCTS-Eval vs Random/Greedy/MCTS (~3 sec/game)
 
 **Single Phase:**
+
 ```json
 {
-  "phase": "easy"  // easy | medium | hard | fast-easy | fast-medium
+  "phase": "easy" // easy | medium | hard | fast-easy | fast-medium
 }
 ```
 
@@ -253,6 +259,7 @@ Replay recorded games or re-run by seed.
 ```
 
 **Source:**
+
 - Number (seed): Re-runs simulation with that seed
 - String (path): Loads replay file from path
 
@@ -281,22 +288,37 @@ Examples:
 
 ## Output Structure
 
-All experiments output to configurable directories:
+All experiment output goes to a centralized `output/` directory at project root:
 
 ```
-results/
-├── logs/                    # Simulation logs
-├── benchmarks/              # Benchmark results
-├── tuning/                  # Tuning results
-└── *.json                   # Simulation results
-
-training-data/
-└── collection-{timestamp}/
-    ├── games/               # Individual game files
-    ├── tensors.json         # Merged tensor data
-    ├── tensors.bin.json     # Binary format
-    └── stats.json           # Collection statistics
+output/
+├── simulations/                    # simulate command
+│   ├── {name}-{seed}.json          # Results (uses experiment name!)
+│   └── logs/
+│       └── {name}-{seed}-{timestamp}.log
+│
+├── benchmarks/                     # benchmark command
+│   ├── {name}-{timestamp}.json
+│   └── {name}-{timestamp}.md
+│
+├── training-data/                  # collect-training command
+│   └── {name}-{timestamp}/
+│       ├── games/                  # Individual game files
+│       ├── tensors.json            # Merged tensor data
+│       ├── tensors.bin.json        # Binary format
+│       └── stats.json              # Collection statistics
+│
+├── tuning/                         # tune-weights, tune-mcts, pipeline
+│   ├── weights.json                # Copy of current best
+│   ├── weights-history/
+│   └── TUNING_LOG.md
+│
+├── errors/                         # Error snapshots for debugging
+│
+└── replays/                        # Saved game replays
 ```
+
+**Note**: The experiment `name` field is used in output filenames for easy identification!
 
 ---
 

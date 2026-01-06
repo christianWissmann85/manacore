@@ -20,7 +20,6 @@ The ManaCore AI package provides bot implementations for playing Magic: The Gath
 
 ---
 
-
 ## ✅ Phase 1: Foundation (Complete)
 
 - [x] Bot interface (`Bot.ts`)
@@ -52,8 +51,6 @@ The ManaCore AI package provides bot implementations for playing Magic: The Gath
 3. Backpropagation must correctly flip rewards based on player perspective
 
 ---
-
-
 
 ## ✅ Phase 2.2: Performance & Hidden Information
 
@@ -140,7 +137,7 @@ function determinize(state: GameState): GameState {
 
 ### 3.1: ISMCTS (Information Set MCTS)
 
-- Evaluate existing MCTSBots implementations
+- Evaluate existing MCTSBots implementations (Plain basic MCTS Bot is extremely slow and loses almost all games, maybe delete this one?)
 - Multiple determinizations per search
 - Aggregate results across possible worlds
 - Handle hidden information properly
@@ -162,6 +159,13 @@ function determinize(state: GameState): GameState {
 - Prioritize promising actions in expansion
 - Use evaluation function for action sorting
 - Killer move heuristic
+
+## Phase 4: Bots
+
+- Create GreedyBots for each Deck Type
+- Create MCTSBots for each Deck Type
+- Compare against Generalists
+- Organize this in a better way for Tuning, Simulation, Data Creation/Gathering, benchmarking, etc
 
 ---
 
@@ -217,46 +221,5 @@ packages/ai/
 | MCTSBot vs GreedyBot | 60%+   |
 | Games/second         | 0.5+   |
 | ms/decision          | <200   |
-
----
-
-## Research Questions/Experiments (Post-Implementation)
-
-Once the pipeline is working:
-
-1. **GreedyBot Proxy Validation**
-   - Tune weights via GreedyBot
-   - Validate on MCTS
-   - Compare: Do GreedyBot-optimal weights work for MCTS?
-
-2. **MCTS-Specific Weight Tuning**
-   - Tune weights using MCTSBot directly (slow but accurate)
-   - Compare: Are MCTS-optimal weights different from GreedyBot-optimal?
-
-3. **Hyperparameter Sensitivity**
-   - Vary each MCTS param while holding others fixed
-   - Plot: Win rate vs parameter value
-   - Find: Robust ranges vs sensitive parameters
-
-4. **Data Quality for Phase 4**
-   - Generate 100K+ training examples
-   - Analyze: Feature distributions, label balance
-   - Prepare: Training/validation/test splits
-
-5. **Evaluation Function Design**
-   - What features matter most for MTG position evaluation?
-   - Can we learn weights from self-play?
-
-6. **Hidden Information Handling**
-   - How many determinizations are needed for reliable decisions?
-   - Does opponent modeling improve play?
-
-7. **Rollout Policy Impact**
-   - Random vs Greedy vs Epsilon-Greedy rollouts?
-   - Optimal rollout depth for MTG?
-
-8. **Scaling Behavior**
-   - How does win rate scale with iterations?
-   - Diminishing returns threshold?
 
 ---

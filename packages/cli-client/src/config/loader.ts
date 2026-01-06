@@ -6,12 +6,7 @@
 
 import { readFileSync, existsSync } from 'fs';
 import { resolve, dirname } from 'path';
-import type {
-  ExperimentConfig,
-  ManaCoreConfig,
-  OutputConfig,
-  CONFIG_DEFAULTS,
-} from './schema';
+import type { ExperimentConfig, ManaCoreConfig, OutputConfig, CONFIG_DEFAULTS } from './schema';
 
 /**
  * Load configuration from a JSON file

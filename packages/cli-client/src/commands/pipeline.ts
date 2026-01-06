@@ -34,8 +34,9 @@ import {
   type WeightsFile,
   type PerformanceMetrics,
 } from '@manacore/ai';
-import { existsSync, appendFileSync, mkdirSync } from 'fs';
+import { existsSync, appendFileSync, mkdirSync, copyFileSync } from 'fs';
 import { join, dirname } from 'path';
+import { getTuningPaths } from '../output/paths';
 
 /**
  * Pipeline configuration
@@ -480,6 +481,14 @@ export async function runPipeline(config: Partial<PipelineConfig> = {}): Promise
     };
 
     saveWeights(newWeightsFile);
+
+    // Also copy to output/tuning/ for centralized output organization
+    const tuningPaths = getTuningPaths();
+    try {
+      copyFileSync(tuningPaths.aiWeightsJson, tuningPaths.weightsJson);
+    } catch {
+      // Non-fatal - ai package location is the primary one
+    }
 
     result.stages.persist = {
       success: true,

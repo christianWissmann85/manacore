@@ -5,16 +5,13 @@
  * - Generating detailed state snapshots
  * - Writing snapshots to disk (JSON and text formats)
  * - Managing snapshot storage location
+ *
+ * Error snapshots are stored in output/errors/
  */
 
 import type { GameState, Action } from '@manacore/engine';
 import { CardLoader, describeAction, getLegalActions } from '@manacore/engine';
-import * as fs from 'fs';
-import * as path from 'path';
-
-// Default snapshot directory: results/error-snapshots/ in project root
-const PROJECT_ROOT = path.resolve(__dirname, '../../../..');
-const DEFAULT_SNAPSHOT_DIR = path.join(PROJECT_ROOT, 'results', 'error-snapshots');
+import { getErrorSnapshotPath, getCategoryDir, ensureDir } from '../output/paths';
 
 /**
  * Custom error class with game context
@@ -68,10 +65,8 @@ export interface GameSnapshot {
 }
 
 export class SnapshotWriter {
-  private snapshotDir: string;
-
-  constructor(snapshotDir?: string) {
-    this.snapshotDir = snapshotDir || DEFAULT_SNAPSHOT_DIR;
+  constructor() {
+    // Directory creation is handled by getErrorSnapshotPath
   }
 
   /**
@@ -82,17 +77,11 @@ export class SnapshotWriter {
     error: GameError,
     verbose: boolean = false,
   ): Promise<{ textFile?: string; jsonFile?: string }> {
-    // Ensure directory exists
-    this.ensureSnapshotDir();
-
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const baseName = `game-${gameNumber}-seed-${error.seed ?? 'random'}-${timestamp}`;
-
     const results: { textFile?: string; jsonFile?: string } = {};
 
     // Always write JSON (structured, for automation)
     try {
-      const jsonPath = path.join(this.snapshotDir, `${baseName}.json`);
+      const jsonPath = getErrorSnapshotPath(gameNumber, error.seed, 'json');
       const jsonSnapshot = this.generateJsonSnapshot(gameNumber, error);
       await Bun.write(jsonPath, JSON.stringify(jsonSnapshot, null, 2));
       results.jsonFile = jsonPath;
@@ -103,7 +92,7 @@ export class SnapshotWriter {
     // Write text format if verbose
     if (verbose) {
       try {
-        const textPath = path.join(this.snapshotDir, `${baseName}.txt`);
+        const textPath = getErrorSnapshotPath(gameNumber, error.seed, 'txt');
         const textSnapshot = this.generateTextSnapshot(error.state, error.recentActions, error);
         const header = this.generateHeader(gameNumber, error.seed);
         await Bun.write(textPath, header + textSnapshot);
@@ -290,21 +279,5 @@ export class SnapshotWriter {
     lines.push('═'.repeat(80));
 
     return lines.join('\n');
-  }
-
-  /**
-   * Ensure snapshot directory exists
-   */
-  private ensureSnapshotDir(): void {
-    try {
-      if (!fs.existsSync(this.snapshotDir)) {
-        fs.mkdirSync(this.snapshotDir, { recursive: true });
-        console.log(
-          `📁 Created snapshot directory: ${path.relative(process.cwd(), this.snapshotDir)}/`,
-        );
-      }
-    } catch (err) {
-      console.error('Failed to create snapshot directory:', err);
-    }
   }
 }

@@ -20,6 +20,8 @@ import {
   bumpVersion,
   type WeightsFile,
 } from '@manacore/ai';
+import { copyFileSync } from 'fs';
+import { getTuningPaths } from '../output/paths';
 
 export interface TuneMCTSOptions {
   /** Optimization method: 'grid' or 'coarse-to-fine' */
@@ -179,6 +181,15 @@ function saveResults(result: MCTSTuningResult): void {
   };
 
   saveWeights(newWeights);
+
+  // Also copy to output/tuning/ for centralized output organization
+  const tuningPaths = getTuningPaths();
+  try {
+    copyFileSync(tuningPaths.aiWeightsJson, tuningPaths.weightsJson);
+  } catch {
+    // Non-fatal - ai package location is the primary one
+  }
+
   console.log(`\n✅ Saved to weights.json (v${newWeights.version})`);
 }
 

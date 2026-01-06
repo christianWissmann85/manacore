@@ -34,6 +34,7 @@ import {
 } from '@manacore/engine';
 import { writeFileSync, mkdirSync, existsSync, readdirSync, readFileSync } from 'fs';
 import { join, dirname } from 'path';
+import { getTrainingDataDir, getRelativePath } from '../output/paths';
 
 /**
  * Curriculum phase configuration
@@ -53,22 +54,22 @@ export const DEFAULT_CURRICULUM: CurriculumPhase[] = [
   {
     name: 'easy',
     description: 'MCTS-Eval-Fast vs RandomBot - Clear winning signals',
-    p1Bot: 'mcts-eval-fast',  // 50 iterations, no rollout
+    p1Bot: 'mcts-eval-fast', // 50 iterations, no rollout
     p2Bot: 'random',
     gamesRatio: 0.2, // 20% of games
   },
   {
     name: 'medium',
     description: 'MCTS-Eval-Fast vs GreedyBot - Competitive games',
-    p1Bot: 'mcts-eval-fast',  // 50 iterations, no rollout
+    p1Bot: 'mcts-eval-fast', // 50 iterations, no rollout
     p2Bot: 'greedy',
     gamesRatio: 0.3, // 30% of games
   },
   {
     name: 'hard',
     description: 'MCTS-Eval vs MCTS-Eval-Fast - High-quality play',
-    p1Bot: 'mcts-eval',       // 200 iterations, no rollout
-    p2Bot: 'mcts-eval-fast',  // 50 iterations, no rollout
+    p1Bot: 'mcts-eval', // 200 iterations, no rollout
+    p2Bot: 'mcts-eval-fast', // 50 iterations, no rollout
     gamesRatio: 0.5, // 50% of games
   },
 ];
@@ -100,7 +101,10 @@ export interface CollectTrainingOptions {
   /** Total games to collect */
   games: number;
 
-  /** Output directory */
+  /** Experiment name for output directory */
+  name?: string;
+
+  /** Output directory (legacy - use name instead) */
   output: string;
 
   /** Base seed for reproducibility */
@@ -136,7 +140,8 @@ export interface CollectTrainingOptions {
  */
 export const DEFAULT_COLLECT_OPTIONS: CollectTrainingOptions = {
   games: 500,
-  output: 'training-data',
+  name: 'training',
+  output: 'training-data', // Legacy, ignored when using centralized paths
   seed: Date.now(),
   mctsIterations: 100,
   maxTurns: 100,
@@ -177,7 +182,6 @@ function getSeededDeck(seed: number): CardTemplate[] {
   return ALL_TEST_DECKS[deckName]();
 }
 
-
 /**
  * Format duration
  */
@@ -205,15 +209,21 @@ function formatBytes(bytes: number): string {
 /**
  * Print progress bar
  */
-function printProgress(current: number, total: number, phase: string, stats: Partial<CollectionStats>): void {
+function printProgress(
+  current: number,
+  total: number,
+  phase: string,
+  stats: Partial<CollectionStats>,
+): void {
   const pct = Math.floor((current / total) * 100);
   const barWidth = 30;
   const filled = Math.floor((pct / 100) * barWidth);
   const bar = '█'.repeat(filled) + '░'.repeat(barWidth - filled);
 
-  const winRate = stats.p1Wins && stats.gamesCompleted
-    ? ((stats.p1Wins / stats.gamesCompleted) * 100).toFixed(0)
-    : '0';
+  const winRate =
+    stats.p1Wins && stats.gamesCompleted
+      ? ((stats.p1Wins / stats.gamesCompleted) * 100).toFixed(0)
+      : '0';
 
   process.stdout.write(
     `\r  [${bar}] ${pct}% | ${current}/${total} games | Phase: ${phase} | P1 Win: ${winRate}% | Samples: ${stats.totalSamples || 0}`,
@@ -235,12 +245,10 @@ function runGameWithCollection(
     let state = initializeGame(p1Deck, p2Deck, seed);
 
     // Create collector - we'll filter to winner's decisions at the end
-    const collector = new TrainingDataCollector(
-      seed,
-      p1Bot.getName(),
-      p2Bot.getName(),
-      { recordPlayer: 'both', skipPassPriority: true },
-    );
+    const collector = new TrainingDataCollector(seed, p1Bot.getName(), p2Bot.getName(), {
+      recordPlayer: 'both',
+      skipPassPriority: true,
+    });
 
     let actionCount = 0;
     const maxActions = maxTurns * 100; // Safety limit
@@ -251,7 +259,9 @@ function runGameWithCollection(
 
       if (legalActions.length === 0) {
         // No legal actions - this shouldn't happen but handle gracefully
-        console.error(`Warning: No legal actions for ${state.priorityPlayer} (phase=${state.phase})`);
+        console.error(
+          `Warning: No legal actions for ${state.priorityPlayer} (phase=${state.phase})`,
+        );
         break;
       }
 
@@ -266,7 +276,7 @@ function runGameWithCollection(
 
     // If there's a winner, filter samples to only include winner's decisions
     if (state.winner) {
-      const winnerSamples = fullData.samples.filter(s => s.playerId === state.winner);
+      const winnerSamples = fullData.samples.filter((s) => s.playerId === state.winner);
       fullData.samples = winnerSamples;
       fullData.totalActions = winnerSamples.length;
     } else {
@@ -362,7 +372,8 @@ function runPhase(
     }
   }
 
-  stats.avgSamplesPerGame = stats.gamesCompleted > 0 ? stats.totalSamples / stats.gamesCompleted : 0;
+  stats.avgSamplesPerGame =
+    stats.gamesCompleted > 0 ? stats.totalSamples / stats.gamesCompleted : 0;
   stats.avgTurns = stats.gamesCompleted > 0 ? totalTurns / stats.gamesCompleted : 0;
   stats.durationMs = performance.now() - startTime;
 
@@ -376,10 +387,7 @@ function runPhase(
 /**
  * Export to binary format (TypedArrays stored as base64)
  */
-export function exportBinaryFormat(
-  tensors: TensorData,
-  filepath: string,
-): void {
+export function exportBinaryFormat(tensors: TensorData, filepath: string): void {
   const numSamples = tensors.features.length;
   const featureSize = FEATURE_VECTOR_SIZE;
 
@@ -467,7 +475,7 @@ export async function runCollectTraining(
   const startTime = performance.now();
 
   // Determine curriculum
-  const baseCurriculum = opts.fast ? FAST_CURRICULUM : (opts.curriculum || DEFAULT_CURRICULUM);
+  const baseCurriculum = opts.fast ? FAST_CURRICULUM : opts.curriculum || DEFAULT_CURRICULUM;
   let curriculum = baseCurriculum;
   if (opts.phase) {
     // Filter from both curriculums if phase specified
@@ -491,10 +499,9 @@ export async function runCollectTraining(
     }
   }
 
-  // Setup output directory
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  const outputDir = join(opts.output, `collection-${timestamp}`);
-  mkdirSync(join(outputDir, 'games'), { recursive: true });
+  // Setup output directory using centralized paths
+  const experimentName = opts.name || 'training';
+  const outputDir = getTrainingDataDir(experimentName);
 
   // Header
   console.log('');
@@ -528,13 +535,7 @@ export async function runCollectTraining(
     console.log(`\n📊 Phase: ${phase.name} (${numGames} games)`);
     console.log(`   ${phase.description}`);
 
-    const { stats, games } = runPhase(
-      phase,
-      numGames,
-      opts.seed + seedOffset,
-      opts,
-      outputDir,
-    );
+    const { stats, games } = runPhase(phase, numGames, opts.seed + seedOffset, opts, outputDir);
 
     allStats.push(stats);
     allGames.push(...games);
@@ -613,8 +614,12 @@ export async function runCollectTraining(
   console.log('══════════════════════════════════════════════════════════════════');
   console.log(`  Total Games: ${allGames.length}`);
   console.log(`  Total Samples: ${merged.metadata.totalSamples}`);
-  console.log(`  Avg Samples/Game: ${(merged.metadata.totalSamples / Math.max(1, allGames.length)).toFixed(1)}`);
-  console.log(`  Win/Loss/Draw: ${merged.metadata.wins}/${merged.metadata.losses}/${merged.metadata.draws}`);
+  console.log(
+    `  Avg Samples/Game: ${(merged.metadata.totalSamples / Math.max(1, allGames.length)).toFixed(1)}`,
+  );
+  console.log(
+    `  Win/Loss/Draw: ${merged.metadata.wins}/${merged.metadata.losses}/${merged.metadata.draws}`,
+  );
   console.log(`  Total Duration: ${formatDuration(totalDuration)}`);
   console.log(`  Games/Second: ${(allGames.length / (totalDuration / 1000)).toFixed(1)}`);
   console.log('══════════════════════════════════════════════════════════════════');

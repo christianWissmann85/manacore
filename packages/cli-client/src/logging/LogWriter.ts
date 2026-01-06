@@ -2,24 +2,20 @@
  * LogWriter - Manages log file creation and writing
  *
  * Captures all simulation output to a log file for later reference.
+ * Logs are stored in output/simulations/logs/
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
-
-const PROJECT_ROOT = path.resolve(__dirname, '../../../..');
-const DEFAULT_LOG_DIR = path.join(PROJECT_ROOT, 'results', 'logs');
+import { getSimulationLogPath, getRelativePath } from '../output/paths';
 
 export class LogWriter {
   private logPath: string;
   private logStream: fs.WriteStream | null = null;
   private buffer: string[] = [];
 
-  constructor(seed: number, timestamp?: string) {
-    const ts = timestamp || new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    const filename = `run-seed${seed}-${ts}.log`;
-    this.logPath = path.join(DEFAULT_LOG_DIR, filename);
-    this.ensureLogDir();
+  constructor(seed: number, experimentName: string = 'simulation') {
+    this.logPath = getSimulationLogPath(experimentName, seed);
   }
 
   /**
@@ -121,19 +117,6 @@ export class LogWriter {
    * Get relative path from current working directory
    */
   getRelativePath(): string {
-    return path.relative(process.cwd(), this.logPath);
-  }
-
-  /**
-   * Ensure log directory exists
-   */
-  private ensureLogDir(): void {
-    try {
-      if (!fs.existsSync(DEFAULT_LOG_DIR)) {
-        fs.mkdirSync(DEFAULT_LOG_DIR, { recursive: true });
-      }
-    } catch (err) {
-      console.error('⚠️  Failed to create log directory:', err);
-    }
+    return getRelativePath(this.logPath);
   }
 }

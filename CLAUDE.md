@@ -278,25 +278,25 @@ bun run check                           # Full check (types + lint + format)
 cd packages/engine && bun test:quiet          # Run engine tests
 
 # AI Development
-cd packages/cli-client
-bun src/index.ts simulate 1000          # Run simulations
-bun src/index.ts play                   # Interactive play
+# From packages/cli-client/
+bun src/index.ts run ../../experiments/simulate-mcts-vs-greedy.json
 ```
 
 ### Key File Locations
 
-| What             | Where                                            |
-| ---------------- | ------------------------------------------------ |
-| Bot interface    | `packages/ai/src/bots/Bot.ts`                    |
-| RandomBot        | `packages/ai/src/bots/RandomBot.ts`              |
-| Game state types | `packages/engine/src/state/`                     |
-| Legal actions    | `packages/engine/src/actions/getLegalActions.ts` |
-| Action reducer   | `packages/engine/src/actions/reducer.ts`         |
-| Test decks       | `packages/engine/src/utils/gameInit.ts`          |
-| Card data        | `packages/engine/data/cards/6ed.json`            |
-| Engine tests     | `packages/engine/tests/`                         |
-| Card status      | `packages/engine/docs/CARD_STATUS.md`            |
-| Edge cases       | `packages/engine/docs/EDGE_CASES.md`             |
+| What                                                                | Where                                            |
+| ------------------------------------------------------------------- | ------------------------------------------------ |
+| Bot interface                                                       | `packages/ai/src/bots/Bot.ts`                    |
+| RandomBot                                                           | `packages/ai/src/bots/RandomBot.ts`              |
+| Game state types                                                    | `packages/engine/src/state/`                     |
+| Legal actions                                                       | `packages/engine/src/actions/getLegalActions.ts` |
+| Action reducer                                                      | `packages/engine/src/actions/reducer.ts`         |
+| Test decks                                                          | `packages/engine/src/utils/gameInit.ts`          |
+| Card data                                                           | `packages/engine/data/cards/6ed.json`            |
+| Engine tests                                                        | `packages/engine/tests/`                         |
+| Card status                                                         | `packages/engine/docs/CARD_STATUS.md`            |
+| Edge cases                                                          | `packages/engine/docs/EDGE_CASES.md`             |
+| Configuration-based experiment runner for reproducible AI research. | `experiments/README.md`                          |
 
 ---
 

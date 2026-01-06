@@ -15,14 +15,16 @@ import { BenchmarkRunner } from '../benchmarking/BenchmarkRunner';
 import { getPreset, parseBotList } from '../benchmarking/presets';
 import { exportMarkdown } from '../export/MarkdownExporter';
 import { OutputLevel } from '../types';
+import { getBenchmarkPath, getRelativePath } from '../output/paths';
 import * as fs from 'fs';
-import * as path from 'path';
 
 /**
  * Options for the benchmark suite command
  */
 export interface BenchmarkSuiteOptions {
   preset: BenchmarkPreset;
+  /** Experiment name for output filenames */
+  name?: string;
   bots?: BotType[];
   gamesPerMatchup?: number;
   maxTurns?: number;
@@ -236,17 +238,9 @@ function printSummary(results: BenchmarkResults): void {
 /**
  * Export results to JSON
  */
-function exportJsonFile(results: BenchmarkResults, outputPath?: string): string {
-  const resultsDir = path.resolve(__dirname, '../../../../results/benchmarks');
-
-  // Ensure directory exists
-  if (!fs.existsSync(resultsDir)) {
-    fs.mkdirSync(resultsDir, { recursive: true });
-  }
-
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  const filename = `benchmark-${results.metadata.preset || 'custom'}-${timestamp}.json`;
-  const filepath = outputPath || path.join(resultsDir, filename);
+function exportJsonFile(results: BenchmarkResults, name?: string, outputPath?: string): string {
+  const experimentName = name || results.metadata.preset || 'benchmark';
+  const filepath = outputPath || getBenchmarkPath(experimentName, 'json');
 
   fs.writeFileSync(filepath, JSON.stringify(results, null, 2));
 
@@ -256,17 +250,9 @@ function exportJsonFile(results: BenchmarkResults, outputPath?: string): string 
 /**
  * Export results to Markdown
  */
-function exportMarkdownFile(results: BenchmarkResults, outputPath?: string): string {
-  const resultsDir = path.resolve(__dirname, '../../../../results/benchmarks');
-
-  // Ensure directory exists
-  if (!fs.existsSync(resultsDir)) {
-    fs.mkdirSync(resultsDir, { recursive: true });
-  }
-
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  const filename = `benchmark-${results.metadata.preset || 'custom'}-${timestamp}.md`;
-  const filepath = outputPath?.replace(/\.json$/, '.md') || path.join(resultsDir, filename);
+function exportMarkdownFile(results: BenchmarkResults, name?: string, outputPath?: string): string {
+  const experimentName = name || results.metadata.preset || 'benchmark';
+  const filepath = outputPath?.replace(/\.json$/, '.md') || getBenchmarkPath(experimentName, 'md');
 
   const markdown = exportMarkdown(results);
   fs.writeFileSync(filepath, markdown);
@@ -346,14 +332,14 @@ export async function runBenchmarkSuite(options: BenchmarkSuiteOptions): Promise
 
   // Export JSON if requested (or by default)
   if (options.exportJson !== false) {
-    const jsonPath = exportJsonFile(results, options.exportPath);
-    console.log(`  JSON exported to: ${jsonPath}`);
+    const jsonPath = exportJsonFile(results, options.name, options.exportPath);
+    console.log(`  JSON exported to: ${getRelativePath(jsonPath)}`);
   }
 
   // Export Markdown if requested
   if (options.exportMarkdown) {
-    const mdPath = exportMarkdownFile(results, options.exportPath);
-    console.log(`  Markdown exported to: ${mdPath}`);
+    const mdPath = exportMarkdownFile(results, options.name, options.exportPath);
+    console.log(`  Markdown exported to: ${getRelativePath(mdPath)}`);
   }
 
   console.log();

@@ -1020,11 +1020,11 @@ twine upload dist/*
 ### Goals
 
 - Full web visualization dashboard
-- Deck construction lab
 - Multiple AI Agent configurations
 - Audio feedback for events
 - Interactive documentation
 - Impressive Huggingface Space `manacore-arena`. A user goes to the URL and sees two bots (e.g., "MCTS-Alpha" vs "GreedyBot") playing a match in real-time. They don't play; they watch the AI think.
+- Play against AI Mode
 
 ### Task 27: Basic Web Dashboard
 
@@ -1036,14 +1036,14 @@ twine upload dist/*
 - [ ] Create `Battlefield` grid layout
 - [ ] Implement basic click-to-play actions
 - [ ] Add "Inspector Panel" for viewing card JSON data
-- [ ] Use fetched Image Data from `packages/web-client/public/assets/cards/` folder
-  - Implement Placeholder if Data is not present
+- [ ] fetched Image Data from Scryfall API and cache locally in Users Browser (No Images hosted by us)
 
 **Success Criteria:**
 
 - ✅ Dashboard renders game state via React
 - ✅ Responsive grid layout works
-- ✅ Researcher can play a full game via UI controls
+- ✅ Cards are cached from Scryfall, Seamless fluid UX/UI
+- ✅ Researcher can play a full game against AI via UI controls
 - ✅ Can watch RandomBot, GreedyBot, MCTSBot watch Play against other Bots (with time slider)
 - ✅ Clean, scientific aesthetic (Dark mode, monospace fonts)
 
@@ -1058,30 +1058,6 @@ twine upload dist/*
 - [ ] Add "Mana Pool" visualization with charts
 - [ ] Add "Targeting Mode" (click source -> click target)
 - [ ] Implement keyboard shortcuts for common actions (Space to pass)
-
-### Task 30-31: Deck Lab
-
-**Tasks:**
-
-- [ ] Build deck construction UI:
-  - Browse all available cards
-  - Filter by color, type, CMC
-  - Configure Agent decks
-  - View mana curve chart
-  - Validate deck (60 cards minimum)
-- [ ] Save/load test configurations
-- [ ] Create 5-10 standard test decks:
-  - Red Aggro
-  - Blue Control
-  - Green Midrange
-  - White Weenie
-  - Black Disruption
-
-**Success Criteria:**
-
-- ✅ User can configure test decks quickly
-- ✅ Deck validation prevents illegal states
-- ✅ Mana curve visualization aids analysis
 
 ### Task 32: AI Configuration & Final Polish
 
@@ -1335,6 +1311,49 @@ Result: 54% vs 57% win rate (p < 0.05, significant!)
 - **The Deliverable (The Paper):**
 - **Title:** _"Plasticity of MCTS Agents in Evolving TCG Environments."_
 - **Hypothesis:** Pre-training on Core Sets creates "General Magic Intuition" that accelerates learning of Power Creep mechanics.
+
+---
+
+## Research Questions/Experiments (Post-Implementation)
+
+Once the pipeline is working:
+
+1. **GreedyBot Proxy Validation**
+   - Tune weights via GreedyBot
+   - Validate on MCTS
+   - Compare: Do GreedyBot-optimal weights work for MCTS?
+
+2. **MCTS-Specific Weight Tuning**
+   - Tune weights using MCTSBot directly (slow but accurate)
+   - Compare: Are MCTS-optimal weights different from GreedyBot-optimal?
+
+3. **Hyperparameter Sensitivity**
+   - Vary each MCTS param while holding others fixed
+   - Plot: Win rate vs parameter value
+   - Find: Robust ranges vs sensitive parameters
+
+4. **Data Quality for Phase 4**
+   - Generate 100K+ training examples
+   - Analyze: Feature distributions, label balance
+   - Prepare: Training/validation/test splits
+
+5. **Evaluation Function Design**
+   - What features matter most for MTG position evaluation?
+   - Can we learn weights from self-play?
+
+6. **Hidden Information Handling**
+   - How many determinizations are needed for reliable decisions?
+   - Does opponent modeling improve play?
+
+7. **Rollout Policy Impact**
+   - Random vs Greedy vs Epsilon-Greedy rollouts?
+   - Optimal rollout depth for MTG?
+
+8. **Scaling Behavior**
+   - How does win rate scale with iterations?
+   - Diminishing returns threshold?
+
+---
 
 ## Maintenance & Future Work
 
