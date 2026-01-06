@@ -56,6 +56,11 @@ function formatPercent(value: number): string {
 }
 
 /**
+ * Track if dashboard has been printed
+ */
+let dashboardPrinted = false;
+
+/**
  * Print progress dashboard
  */
 function printDashboard(progress: BenchmarkProgress): void {
@@ -96,10 +101,14 @@ function printDashboard(progress: BenchmarkProgress): void {
   lines.push(`\u2502  Elapsed: ${formatTime(elapsedMs)}`.padEnd(61) + '\u2502');
   lines.push('\u2514' + '\u2500'.repeat(60) + '\u2518');
 
-  // Move cursor up and clear
-  process.stdout.write('\x1b[' + lines.length + 'A');
-  process.stdout.write('\x1b[0J');
-  console.log(lines.join('\n'));
+  // Move cursor up and clear previous dashboard (if not first print)
+  if (dashboardPrinted) {
+    process.stdout.write('\x1b[' + lines.length + 'A');
+    process.stdout.write('\x1b[0J');
+  }
+  
+  process.stdout.write(lines.join('\n') + '\n');
+  dashboardPrinted = true;
 }
 
 /**
@@ -310,7 +319,8 @@ export async function runBenchmarkSuite(options: BenchmarkSuiteOptions): Promise
   }
   console.log('='.repeat(70) + '\n');
 
-  // Print initial dashboard
+  // Reset dashboard state and print initial dashboard
+  dashboardPrinted = false;
   printInitialDashboard();
 
   // Run benchmark with progress updates
