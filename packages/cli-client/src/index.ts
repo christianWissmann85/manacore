@@ -127,7 +127,6 @@ async function main() {
         exportJson: autoExport,
         exportCsv,
         exportPath,
-        profile,
         outputLevel,
         autoExport,
         botTypes: { p1: p1Type, p2: p2Type },
@@ -285,7 +284,6 @@ async function main() {
         console.log(`🎲 Base Seed: ${baseSeed}`);
         if (debugMode) console.log('Debug mode enabled');
         if (debugVerbose) console.log('Verbose debug mode enabled');
-        if (profile) console.log(`Profiling enabled${profile === 'detailed' ? ' (detailed)' : ''}`);
         console.log('');
       }
 
@@ -303,7 +301,6 @@ async function main() {
         exportJson: autoExport,
         exportCsv,
         exportPath,
-        profile,
         outputLevel,
         autoExport,
       });
@@ -443,8 +440,6 @@ async function main() {
       console.log('  --export-csv            Export results as CSV');
       console.log('  --export-path <path>    Specify custom output path (default: results/)');
       console.log('  --no-auto-export        Disable automatic JSON export');
-      console.log('  --profile               Enable basic performance profiling');
-      console.log('  --profile-detailed      Enable detailed performance profiling');
       console.log('  --serial                Run games sequentially (disable parallel execution)');
       console.log('');
       console.log('Debug Options:');
@@ -458,7 +453,6 @@ async function main() {
       console.log('  bun src/index.ts benchmark 100 --seed 12345');
       console.log('  bun src/index.ts benchmark 100 --quiet       # Silent mode');
       console.log('  bun src/index.ts benchmark 100 --minimal     # Summary only');
-      console.log('  bun src/index.ts benchmark 1000 --profile');
       console.log('  bun src/index.ts replay 12383 --verbose      # Re-run game with seed');
       console.log('');
       console.log('Replay Files (Phase 2.6):');

@@ -28,7 +28,6 @@ export interface SimulationOptions {
   exportJson?: boolean;
   exportCsv?: boolean;
   exportPath?: string;
-  profile?: boolean | 'detailed';
   logErrors?: boolean;
   outputLevel?: OutputLevel;
   autoExport?: boolean; // Auto-export JSON (default: true)
@@ -97,7 +96,7 @@ export interface SimulationResults {
   gameRecords: GameRecord[];
   baseSeed: number;
   failedSeeds: number[];
-  profile?: ProfileData;
+  profile: ProfileData;
 }
 
 /**

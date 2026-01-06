@@ -47,7 +47,11 @@ export async function runSimulation(
 
   const recorder = new ResultsRecorder(baseSeed, options.gameCount);
   const snapshotWriter = new SnapshotWriter();
-  const profiler = options.profile ? new Profiler(options.profile === 'detailed') : undefined;
+  // Always enable profiling
+  const profiler = new Profiler(false);
+
+  // Always track simulation start time for log file
+  const simulationStartTime = performance.now();
 
   // Initialize log writer
   const logWriter = new LogWriter(baseSeed);
@@ -59,9 +63,7 @@ export async function runSimulation(
     opponentBot: opponentBot.getName(),
   });
 
-  if (profiler) {
-    profiler.startSimulation();
-  }
+  profiler.startSimulation();
 
   // Only show header in non-quiet mode
   if (outputLevel > 0) {
@@ -117,7 +119,7 @@ export async function runSimulation(
       const seed = baseSeed + i;
 
       try {
-        if (profiler) profiler.startGame();
+        profiler.startGame();
 
         const gameResult = await runSingleGame(playerBot, opponentBot, {
           maxTurns: options.maxTurns || 100,
@@ -126,9 +128,7 @@ export async function runSimulation(
           seed,
         });
 
-        if (profiler) {
-          gameResult.durationMs = profiler.endGame();
-        }
+        gameResult.durationMs = profiler.endGame();
 
         // Log game completion
         logWriter.writeGameComplete(
@@ -183,14 +183,15 @@ export async function runSimulation(
   // Finalize results
   const results = recorder.finalize();
 
-  // Add profile data
-  if (profiler) {
-    results.profile = profiler.getProfileData(results.gamesCompleted);
-  }
+  // Calculate total duration
+  const totalDuration = performance.now() - simulationStartTime;
 
-  // Complete log file
+  // Add profile data (always included)
+  results.profile = profiler.getProfileData(results.gamesCompleted);
+
+  // Complete log file with actual duration
   logWriter.finish({
-    totalDuration: profiler ? profiler.getProfileData(results.gamesCompleted).totalMs : 0,
+    totalDuration,
   });
 
   // Store log path for export
@@ -212,7 +213,7 @@ async function runParallelSimulation(
   logWriter: LogWriter,
   snapshotWriter: SnapshotWriter,
   progressBar: ProgressBar | undefined,
-  profiler: Profiler | undefined,
+  profiler: Profiler,
   outputLevel: OutputLevel,
 ): Promise<void> {
   const workerCount = Math.max(1, os.cpus().length - 1);
@@ -241,7 +242,7 @@ async function runParallelSimulation(
       const gameIndex = nextGameIndex++;
       const seed = baseSeed + gameIndex;
 
-      if (profiler) profiler.startGame(); // Note: Profiling in parallel is approximate for individual games
+      profiler.startGame(); // Note: Profiling in parallel is approximate for individual games
 
       worker.postMessage({
         gameIndex,
