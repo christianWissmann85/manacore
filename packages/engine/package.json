@@ -8,7 +8,8 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "test": "bun test"
+    "test": "bun test",
+    "test:quiet": "bun ../../scripts/test-quiet.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"

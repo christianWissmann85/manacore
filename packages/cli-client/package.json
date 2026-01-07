@@ -9,7 +9,8 @@
   },
   "scripts": {
     "start": "bun run src/index.ts",
-    "test": "bun test"
+    "test": "bun test",
+    "test:quiet": "bun ../../scripts/test-quiet.ts"
   },
   "dependencies": {
     "@manacore/engine": "workspace:*",
