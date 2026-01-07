@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start": "bun run src/index.ts",
-    "test": "bun test",
+    "test": "bun test --preload ./tests/setup.ts",
     "test:quiet": "bun ../../scripts/test-quiet.ts"
   },
   "dependencies": {

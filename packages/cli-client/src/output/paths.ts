@@ -23,7 +23,13 @@ import * as path from 'path';
 
 // Project root is 4 levels up from this file
 const PROJECT_ROOT = path.resolve(__dirname, '../../../..');
-const OUTPUT_ROOT = path.join(PROJECT_ROOT, 'output');
+
+// Support test isolation via environment variable
+// Tests set MANACORE_OUTPUT_DIR to /tmp/manacore-test-output
+// Production uses default PROJECT_ROOT/output
+const OUTPUT_ROOT = process.env.MANACORE_OUTPUT_DIR
+  ? path.resolve(process.env.MANACORE_OUTPUT_DIR)
+  : path.join(PROJECT_ROOT, 'output');
 
 /**
  * Output directory types
