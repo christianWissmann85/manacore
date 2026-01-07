@@ -37,6 +37,16 @@ export interface WeightCandidate {
 }
 
 /**
+ * Deck tier weights for AI training (re-exported from engine)
+ */
+export interface DeckTierWeights {
+  mono: number;
+  twoColor: number;
+  competitive: number;
+  special: number;
+}
+
+/**
  * Configuration for the fitness evaluator
  */
 export interface FitnessConfig {
@@ -50,6 +60,8 @@ export interface FitnessConfig {
   maxTurns: number;
   /** Base seed for reproducibility */
   seed: number;
+  /** Deck selection weights (optional - defaults to uniform) */
+  deckWeights?: DeckTierWeights;
 }
 
 /**

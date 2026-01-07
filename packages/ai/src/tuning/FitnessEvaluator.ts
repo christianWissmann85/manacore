@@ -7,10 +7,11 @@
  * 3. Head-to-head tournament Elo
  */
 
-import type { PlayerId } from '@manacore/engine';
+import type { PlayerId, DeckTierWeights } from '@manacore/engine';
 import {
   initializeGame,
   getRandomTestDeck,
+  getWeightedRandomDeck,
   applyAction,
   getLegalActions,
   enableF6Mode,
@@ -38,9 +39,16 @@ interface GameResult {
 /**
  * Run a single game between two bots
  */
-function runGame(bot1: Bot, bot2: Bot, seed: number, maxTurns: number): GameResult {
-  const deck1 = getRandomTestDeck();
-  const deck2 = getRandomTestDeck();
+function runGame(
+  bot1: Bot,
+  bot2: Bot,
+  seed: number,
+  maxTurns: number,
+  deckWeights?: DeckTierWeights,
+): GameResult {
+  // Use weighted deck selection if weights provided, otherwise uniform random
+  const deck1 = deckWeights ? getWeightedRandomDeck(deckWeights) : getRandomTestDeck();
+  const deck2 = deckWeights ? getWeightedRandomDeck(deckWeights) : getRandomTestDeck();
   let state = initializeGame(deck1, deck2, seed);
 
   // Enable F6 auto-pass for faster AI simulations
@@ -208,7 +216,7 @@ export class FitnessEvaluator {
 
     for (let i = 0; i < games; i++) {
       const seed = baseSeed + i;
-      const result = runGame(bot1, bot2, seed, this.config.maxTurns);
+      const result = runGame(bot1, bot2, seed, this.config.maxTurns, this.config.deckWeights);
       this.gamesPlayed++;
 
       if (result.winner === 'player') wins++;
@@ -245,7 +253,7 @@ export class FitnessEvaluator {
         // Play multiple games
         for (let g = 0; g < this.config.tournamentGames; g++) {
           const gameSeed = seed + i * 10000 + j * 100 + g;
-          const result = runGame(bot1, bot2, gameSeed, this.config.maxTurns);
+          const result = runGame(bot1, bot2, gameSeed, this.config.maxTurns, this.config.deckWeights);
           this.gamesPlayed++;
 
           const elo1 = elos.get(c1.id)!;
