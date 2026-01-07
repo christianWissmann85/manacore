@@ -163,6 +163,7 @@ function runGame(
   bot2: Bot,
   seed: number,
   maxTurns: number,
+  timeoutMs: number = 60000, // 60 second timeout per game
 ): { winner: PlayerId | null; turns: number; timeMs: number } {
   const startTime = performance.now();
   const deck1 = getRandomTestDeck();
@@ -180,7 +181,12 @@ function runGame(
   let lastPriorityPlayer = state.priorityPlayer;
   let lastPhase = state.phase;
 
-  while (!state.gameOver && turnCount < maxTurns && actionCount < 10000) {
+  while (
+    !state.gameOver &&
+    turnCount < maxTurns &&
+    actionCount < 10000 &&
+    performance.now() - startTime < timeoutMs
+  ) {
     const bot = state.priorityPlayer === 'player' ? bot1 : bot2;
     const legalActions = getLegalActions(state, state.priorityPlayer);
 
@@ -296,8 +302,8 @@ export class MCTSTuner {
       // Alternate who goes first
       const mctsFirst = i % 2 === 0;
       const result = mctsFirst
-        ? runGame(mctsBot, greedyBot, seed, this.config.maxTurns)
-        : runGame(greedyBot, mctsBot, seed, this.config.maxTurns);
+        ? runGame(mctsBot, greedyBot, seed, this.config.maxTurns, 60000)
+        : runGame(greedyBot, mctsBot, seed, this.config.maxTurns, 60000);
 
       this.gamesPlayed++;
 
@@ -459,6 +465,12 @@ export class MCTSTuner {
     const fineResults: MCTSConfigResult[] = [];
     let bestFine = bestCoarse!;
 
+    // Calculate total games for accurate progress reporting
+    // Note: We estimate all fine configs will be evaluated (some may be skipped if duplicate)
+    const estimatedFineGames = fineConfigs.length * this.config.gamesPerConfig;
+    const totalGames = coarseConfigs.length * coarseGames + estimatedFineGames;
+    const coarseGamesPlayed = this.gamesPlayed;
+
     for (let i = 0; i < fineConfigs.length; i++) {
       const config = fineConfigs[i]!;
 
@@ -481,15 +493,21 @@ export class MCTSTuner {
 
       if (onProgress) {
         const elapsed = performance.now() - this.startTime;
+        const fineGamesPlayed = this.gamesPlayed - coarseGamesPlayed;
+        const estimatedRemainingMs =
+          estimatedFineGames > fineGamesPlayed
+            ? ((estimatedFineGames - fineGamesPlayed) / fineGamesPlayed) * elapsed
+            : 0;
+
         onProgress({
           phase: 'fine',
           currentConfig: i + 1,
           totalConfigs: fineConfigs.length,
           currentGames: this.gamesPlayed,
-          totalGames: this.gamesPlayed + (fineConfigs.length - i - 1) * this.config.gamesPerConfig,
+          totalGames: totalGames,
           bestSoFar: bestFine,
           elapsedMs: elapsed,
-          estimatedRemainingMs: 0,
+          estimatedRemainingMs: estimatedRemainingMs,
         });
       }
     }
