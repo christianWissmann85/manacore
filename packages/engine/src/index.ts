@@ -224,6 +224,7 @@ export {
 // Utilities
 export {
   shuffle,
+  aiOptimizedShuffle, // AI-optimized shuffle with guaranteed playable hands
   createSimpleDeck,
   initializeGame,
   createVanillaDeck,
