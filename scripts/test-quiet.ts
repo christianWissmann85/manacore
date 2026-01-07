@@ -8,38 +8,29 @@
  * When tests fail: shows failure details + summary
  */
 
-import { spawn } from 'bun';
+import { $ } from 'bun';
 
 const args = process.argv.slice(2);
-const proc = spawn(['bun', 'test', ...args], {
+
+// Strip ANSI escape codes
+function stripAnsi(str: string): string {
+  return str.replace(/\x1B\[[0-9;]*[a-zA-Z]/g, '');
+}
+
+// Run tests with output fully captured - use script -q to detach from TTY
+// This prevents bun test from writing directly to the terminal
+import { spawn } from 'bun';
+
+const proc = spawn(['script', '-qec', `bun test ${args.join(' ')}`, '/dev/null'], {
+  env: { ...process.env, FORCE_COLOR: '0', NODE_ENV: 'test-quiet' },
   stdout: 'pipe',
   stderr: 'pipe',
-  env: { ...process.env, FORCE_COLOR: '1' },
+  stdin: 'ignore',
 });
 
-let output = '';
-let hasFailures = false;
-
-// Collect all output
-const reader = proc.stdout.getReader();
-const decoder = new TextDecoder();
-
-while (true) {
-  const { done, value } = await reader.read();
-  if (done) break;
-  output += decoder.decode(value);
-}
-
-// Also capture stderr
-const stderrReader = proc.stderr.getReader();
-let stderr = '';
-while (true) {
-  const { done, value } = await stderrReader.read();
-  if (done) break;
-  stderr += decoder.decode(value);
-}
-
+const output = stripAnsi(await new Response(proc.stdout).text());
 const exitCode = await proc.exited;
+let hasFailures = false;
 
 // Parse and filter output
 const lines = output.split('\n');
@@ -49,11 +40,34 @@ let inFailure = false;
 let currentFile = '';
 
 for (const line of lines) {
+  // Skip setup/cleanup messages
+  if (line.includes('Test output directory') || line.includes('Cleaned up test output')) {
+    continue;
+  }
+
+  // Skip progress bars and game status
+  if (line.includes('⏳') || line.includes('🎮 Running') || /Progress: \d+\/\d+/.test(line)) {
+    continue;
+  }
+
+  // Skip CardLoader and engine initialization messages
+  if (
+    line.includes('CardLoader:') ||
+    line.includes('@manacore/engine') ||
+    line.includes('@manacore/ai') ||
+    line.includes('Registered') ||
+    line.includes('cards with abilities')
+  ) {
+    continue;
+  }
+
   // Detect summary lines (at the end)
   if (
     /^\s*\d+\s+(pass|fail|skip)/.test(line) ||
     /expect\(\) calls/.test(line) ||
-    /Ran \d+ tests/.test(line)
+    /Ran \d+ tests/.test(line) ||
+    /tests skipped:/.test(line) ||
+    /tests failed:/.test(line)
   ) {
     summaryLines.push(line);
     continue;
@@ -63,6 +77,11 @@ for (const line of lines) {
   if (/^[a-zA-Z].*\.ts:/.test(line) || /^packages\/.*\.ts:/.test(line)) {
     currentFile = line;
     inFailure = false;
+    continue;
+  }
+
+  // Skip passing test lines (✓ or (pass))
+  if (line.includes('✓') || line.includes('(pass)')) {
     continue;
   }
 
@@ -79,8 +98,8 @@ for (const line of lines) {
 
   // Continue capturing failure context
   if (inFailure && line.trim()) {
-    // Stop on next test (✓) or empty section
-    if (line.includes('✓') || /^\s*\d+\s+(pass|fail|skip)/.test(line)) {
+    // Stop on next summary line or empty section
+    if (/^\s*\d+\s+(pass|fail|skip)/.test(line)) {
       inFailure = false;
     } else {
       failureLines.push(line);
@@ -92,10 +111,6 @@ for (const line of lines) {
 if (hasFailures) {
   console.log(failureLines.join('\n'));
   console.log('');
-}
-
-if (stderr.trim()) {
-  console.error(stderr);
 }
 
 console.log(summaryLines.join('\n'));

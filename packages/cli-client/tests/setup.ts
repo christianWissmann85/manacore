@@ -16,7 +16,10 @@ import { afterAll } from 'bun:test';
 const TEST_OUTPUT_DIR = '/tmp/manacore-test-output';
 process.env.MANACORE_OUTPUT_DIR = TEST_OUTPUT_DIR;
 
-console.log(`\n📁 Test output directory: ${TEST_OUTPUT_DIR}\n`);
+// Don't log setup message during quiet tests
+if (process.env.NODE_ENV !== 'test-quiet') {
+  console.log(`\n📁 Test output directory: ${TEST_OUTPUT_DIR}\n`);
+}
 
 /**
  * Global cleanup - runs after ALL tests complete
