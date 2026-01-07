@@ -584,18 +584,56 @@ describe('Mana Sink Detection', () => {
     expect(manaAbilities.length).toBe(0);
   });
 
-  test('mana abilities are available when mana sinks exist', () => {
+  test('mana abilities are available when mana sinks exist and tapping helps', () => {
     const state = createTestState();
 
     // Add a creature spell to hand - this is a mana sink
     addToHand(state, 'player', 'Grizzly Bears'); // {1}{G}
 
-    // Add lands that could tap for mana
+    // Add TWO lands - enough to cast Grizzly Bears
+    addToBattlefield(state, 'player', 'Forest');
     addToBattlefield(state, 'player', 'Forest');
 
     const actions = getLegalActions(state, 'player');
 
     // Should have ACTIVATE_ABILITY actions for tapping lands
+    const manaAbilities = actions.filter((a) => a.type === 'ACTIVATE_ABILITY');
+    expect(manaAbilities.length).toBeGreaterThan(0);
+  });
+
+  test('mana abilities are filtered when tapping cannot enable any cast', () => {
+    const state = createTestState();
+
+    // Add a creature spell that costs {1}{G}
+    addToHand(state, 'player', 'Grizzly Bears');
+
+    // Add only ONE land - not enough to cast anything
+    addToBattlefield(state, 'player', 'Forest');
+
+    const actions = getLegalActions(state, 'player');
+
+    // Should NOT have mana ability actions since tapping 1 Forest
+    // can't enable casting Grizzly Bears ({1}{G})
+    const manaAbilities = actions.filter((a) => a.type === 'ACTIVATE_ABILITY');
+    expect(manaAbilities.length).toBe(0);
+
+    // Should only have PASS_PRIORITY
+    expect(actions.length).toBe(1);
+    expect(actions[0]?.type).toBe('PASS_PRIORITY');
+  });
+
+  test('mana abilities shown for X spells with colored requirement met', () => {
+    const state = createTestState();
+
+    // Add Blaze ({X}{R}) - can cast with just {R} for X=0
+    addToHand(state, 'player', 'Blaze');
+
+    // Add one Mountain - enough for X=0
+    addToBattlefield(state, 'player', 'Mountain');
+
+    const actions = getLegalActions(state, 'player');
+
+    // Should have mana abilities since Blaze can be cast with X=0
     const manaAbilities = actions.filter((a) => a.type === 'ACTIVATE_ABILITY');
     expect(manaAbilities.length).toBeGreaterThan(0);
   });

@@ -468,9 +468,13 @@ export function shouldAutoPass(state: GameState, playerId: PlayerId): boolean {
       }
 
       // Also check: if player has mana sinks and untapped mana sources,
-      // they might want to tap lands before casting. Don't auto-pass.
+      // they might want to tap lands before casting. But only if tapping
+      // could actually enable a cast - otherwise it's pointless.
       if (hasManaSink(state, playerId) && hasUntappedManaSource(state, playerId)) {
-        return false;
+        if (couldAffordAnySpell(state, playerId)) {
+          return false; // Tapping lands could enable a cast
+        }
+        // Tapping wouldn't help - can still auto-pass
       }
 
       // Otherwise, player has no plays - auto-pass is safe
@@ -494,6 +498,41 @@ function hasUntappedManaSource(state: GameState, playerId: PlayerId): boolean {
       if (ability.isManaAbility && ability.canActivate(state, permanent.instanceId, playerId)) {
         return true;
       }
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Check if player could afford to cast any spell if they tapped all mana sources
+ *
+ * This is used to determine if showing mana abilities is worthwhile.
+ * If tapping everything still can't enable any cast, mana abilities are pointless.
+ *
+ * Note: X spells (like Fireball) are treated as castable if the colored requirement is met,
+ * since X=0 is technically valid (though usually suboptimal).
+ */
+function couldAffordAnySpell(state: GameState, playerId: PlayerId): boolean {
+  const player = getPlayer(state, playerId);
+  const availableMana = calculateAvailableMana(state, playerId);
+
+  for (const card of player.hand) {
+    const template = CardLoader.getById(card.scryfallId);
+    if (!template) continue;
+
+    // Skip lands
+    if (template.type_line.includes('Land')) continue;
+
+    // Skip cards without mana cost (shouldn't happen, but safety check)
+    if (!template.mana_cost) continue;
+
+    const manaCost = parseManaCost(template.mana_cost);
+
+    // For X spells, check if we can pay the non-X portion (X=0 is valid)
+    // canPayManaCost with xValue=0 handles this correctly
+    if (canPayManaCost(availableMana, manaCost, 0)) {
+      return true;
     }
   }
 
