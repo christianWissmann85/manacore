@@ -110,31 +110,15 @@ describe('Stack Interactions', () => {
     // Player passes
     state = applyAction(state, { type: 'PASS_PRIORITY', playerId: 'player', payload: {} });
 
-    // P-Counter resolves, countering O-Counter.
-    // Stack: [Blast, O-Counter(countered)]
-    // Actually, `resolveTopOfStack` removes the resolved spell from stack.
-    // And `countered` spells are marked.
-    // Wait, let's check `resolveTopOfStack`:
-    // "Resolve spell... Remove from stack"
-    // "if (effect.type === 'counter') targetStackObj.countered = true"
-
-    // So P-Counter resolves, marks O-Counter as countered. P-Counter removed.
-    // Stack: [Blast, O-Counter(countered=true)]
-    expect(state.stack.length).toBe(2);
-    expect(state.stack[1].countered).toBe(true);
-
-    // 5. Resolve O-Counter (which is countered)
-    state = applyAction(state, { type: 'PASS_PRIORITY', playerId: 'player', payload: {} });
-    state = applyAction(state, { type: 'PASS_PRIORITY', playerId: 'opponent', payload: {} });
-
-    // O-Counter resolves (does nothing because it's countered). Removed from stack.
+    // P-Counter resolves, countering O-Counter and removing it from stack immediately.
     // Stack: [Blast]
     expect(state.stack.length).toBe(1);
-    expect(state.stack[0].countered).toBe(false);
+    expect(state.stack[0].card.scryfallId).toBe(lightningBlast.id);
 
-    // 6. Resolve Blast
-    state = applyAction(state, { type: 'PASS_PRIORITY', playerId: 'opponent', payload: {} });
+    // 5. Resolve Blast
+    // Priority is with active player (player) after resolution
     state = applyAction(state, { type: 'PASS_PRIORITY', playerId: 'player', payload: {} });
+    state = applyAction(state, { type: 'PASS_PRIORITY', playerId: 'opponent', payload: {} });
 
     // Refresh player ref
     const finalOpponent = getPlayer(state, 'opponent');

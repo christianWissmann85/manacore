@@ -342,9 +342,15 @@ function applySpellEffects(state: GameState, stackObj: StackObject): void {
       }
 
       case 'counter': {
-        const targetStackObj = state.stack.find((s) => s.id === targetId);
-        if (targetStackObj) {
-          targetStackObj.countered = true;
+        const targetStackIndex = state.stack.findIndex((s) => s.id === targetId);
+        if (targetStackIndex !== -1) {
+          const targetStackObj = state.stack[targetStackIndex]!;
+          // Move to graveyard immediately
+          targetStackObj.card.zone = 'graveyard';
+          const targetController = getPlayer(state, targetStackObj.controller);
+          targetController.graveyard.push(targetStackObj.card);
+          // Remove from stack
+          state.stack.splice(targetStackIndex, 1);
         }
         break;
       }

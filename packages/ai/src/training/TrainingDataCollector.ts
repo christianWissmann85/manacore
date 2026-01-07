@@ -345,7 +345,12 @@ export class TrainingDataCollector {
    * @param legalActions - All legal actions at this point
    * @param reasoning - Optional reasoning text
    */
-  recordDecision(state: GameState, action: Action, legalActions: Action[], reasoning?: string): void {
+  recordDecision(
+    state: GameState,
+    action: Action,
+    legalActions: Action[],
+    reasoning?: string,
+  ): void {
     const playerId = action.playerId;
 
     // Check if we should record this player

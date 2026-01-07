@@ -3,10 +3,7 @@
  */
 
 import { describe, test, expect, beforeEach } from 'bun:test';
-import {
-  TranspositionTable,
-  DEFAULT_TRANSPOSITION_CONFIG,
-} from '../src/search/TranspositionTable';
+import { TranspositionTable, DEFAULT_TRANSPOSITION_CONFIG } from '../src/search/TranspositionTable';
 import { MCTSBot } from '../src/bots/MCTSBot';
 import { initializeGame, createRedDeck, createGreenDeck, applyAction } from '@manacore/engine';
 

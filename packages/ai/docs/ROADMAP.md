@@ -145,7 +145,6 @@ function determinize(state: GameState): GameState {
 - [x] Kept shortcuts (`m`, `mf`, `ms`) → now redirect to eval variants
 - [x] Updated benchmark presets
 
-
 ---
 
 ## Architecture Overview

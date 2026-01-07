@@ -217,10 +217,7 @@ describe('Phase 3.4: Move Ordering', () => {
     };
 
     for (let i = 0; i < trials; i++) {
-      const actions = [
-        { type: 'PASS_PRIORITY' },
-        { type: 'CAST_SPELL', cardId: 'test1' },
-      ] as any[];
+      const actions = [{ type: 'PASS_PRIORITY' }, { type: 'CAST_SPELL', cardId: 'test1' }] as any[];
 
       const selected = selectWeightedAction(actions);
       counts[selected.type]++;
@@ -235,10 +232,7 @@ describe('Phase 3.4: Move Ordering', () => {
   });
 
   test('selectWeightedAction removes selected action from array', () => {
-    const actions = [
-      { type: 'PASS_PRIORITY' },
-      { type: 'CAST_SPELL', cardId: 'test1' },
-    ] as any[];
+    const actions = [{ type: 'PASS_PRIORITY' }, { type: 'CAST_SPELL', cardId: 'test1' }] as any[];
 
     const originalLength = actions.length;
     selectWeightedAction(actions);

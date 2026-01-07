@@ -29,8 +29,7 @@ function parseBotType(arg: string): BotType {
   // MCTS eval variants (no rollout - FASTEST and most effective)
   if (lower === 'mcts-eval-fast' || lower === 'mf' || lower === 'mcts-fast')
     return 'mcts-eval-fast';
-  if (lower === 'mcts-eval' || lower === 'm' || lower === 'mcts')
-    return 'mcts-eval';
+  if (lower === 'mcts-eval' || lower === 'm' || lower === 'mcts') return 'mcts-eval';
   if (lower === 'mcts-eval-strong' || lower === 'ms' || lower === 'mcts-strong')
     return 'mcts-eval-strong';
   if (lower === 'mcts-eval-turbo' || lower === 'mt' || lower === 'mcts-turbo')

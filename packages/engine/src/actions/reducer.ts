@@ -382,6 +382,15 @@ function applyPassPriority(state: GameState, action: PassPriorityAction): void {
 
   // Phase 0: During beginning phase, auto-advance to main1
   if (state.phase === 'beginning' && state.activePlayer === action.playerId) {
+    // Draw a card before moving to Main 1 (Skip for first player on Turn 1)
+    if (state.turnCount > 1) {
+      applyDrawCard(state, {
+        type: 'DRAW_CARD',
+        playerId: state.activePlayer,
+        payload: { count: 1 },
+      } as Action);
+    }
+
     state.phase = 'main1';
     state.step = 'main';
     // Reset priority passes

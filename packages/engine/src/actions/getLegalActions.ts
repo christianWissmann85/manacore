@@ -377,23 +377,11 @@ function getLegalAttackerDeclarations(
 
   if (potentialAttackers.length === 0) {
     // No attackers - can pass
-    actions.push({
-      type: 'DECLARE_ATTACKERS',
-      playerId,
-      payload: { attackers: [] },
-    });
     return actions;
   }
 
   // Generate all possible combinations of attackers
-  // For simplicity, we'll just generate: attack with all, attack with none, attack with each individually
-
-  // Attack with none
-  actions.push({
-    type: 'DECLARE_ATTACKERS',
-    playerId,
-    payload: { attackers: [] },
-  });
+  // For simplicity, we'll just generate: attack with each individually
 
   // Attack with each creature individually (unless it can't attack alone)
   for (const attacker of potentialAttackers) {
@@ -570,8 +558,11 @@ export function describeAction(action: Action, state: GameState): string {
 
     case 'DECLARE_ATTACKERS': {
       const count = action.payload.attackers.length;
-      if (count === 0) return 'Attack with no creatures';
-      if (count === 1) return 'Attack with 1 creature';
+      if (count === 1) {
+        const attacker = findCard(state, action.payload.attackers[0]!);
+        const name = attacker ? CardLoader.getById(attacker.scryfallId)?.name : 'creature';
+        return `Attack with ${name}`;
+      }
       return `Attack with ${count} creatures`;
     }
 

@@ -150,8 +150,14 @@ export class TranspositionTable {
 
       // Include temporary modifications if any (pump effects)
       if (card.temporaryModifications && card.temporaryModifications.length > 0) {
-        const totalPower = card.temporaryModifications.reduce((sum, mod) => sum + mod.powerChange, 0);
-        const totalToughness = card.temporaryModifications.reduce((sum, mod) => sum + mod.toughnessChange, 0);
+        const totalPower = card.temporaryModifications.reduce(
+          (sum, mod) => sum + mod.powerChange,
+          0,
+        );
+        const totalToughness = card.temporaryModifications.reduce(
+          (sum, mod) => sum + mod.toughnessChange,
+          0,
+        );
         if (totalPower !== 0 || totalToughness !== 0) {
           parts.push(`(${totalPower}/${totalToughness})`);
         }
@@ -233,9 +239,7 @@ export class TranspositionTable {
    */
   private evictLRU(count: number): void {
     // Sort by lastAccess ascending (oldest first)
-    const entries = [...this.entries.entries()].sort(
-      (a, b) => a[1].lastAccess - b[1].lastAccess,
-    );
+    const entries = [...this.entries.entries()].sort((a, b) => a[1].lastAccess - b[1].lastAccess);
 
     for (let i = 0; i < count && i < entries.length; i++) {
       this.entries.delete(entries[i]![0]);

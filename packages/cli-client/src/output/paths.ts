@@ -104,10 +104,7 @@ export function getSimulationLogPath(name: string, seed: number): string {
 /**
  * Get benchmark output path
  */
-export function getBenchmarkPath(
-  name: string,
-  format: 'json' | 'md' = 'json',
-): string {
+export function getBenchmarkPath(name: string, format: 'json' | 'md' = 'json'): string {
   const dir = getCategoryDir('benchmarks');
   ensureDir(dir);
 

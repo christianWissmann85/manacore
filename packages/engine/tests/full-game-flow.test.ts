@@ -128,6 +128,11 @@ describe('Full Game Flow Integration', () => {
     state = applyAction(state, passAction!);
     expect(state.phase).toBe('main1');
 
+    // VERIFY DRAW STEP (Turn 1: Player should NOT draw)
+    // Started with 37 cards in library (40 - 3 manually drawn)
+    const playerLibCountT1 = getPlayer(state, 'player').library.length;
+    expect(playerLibCountT1).toBe(37);
+
     // Main 1: Player plays Forest
     const forestCard = findCardInHand(state, 'player', 'Forest');
     state = applyAction(state, {
@@ -154,6 +159,11 @@ describe('Full Game Flow Integration', () => {
     state = applyAction(state, { type: 'PASS_PRIORITY', playerId: 'opponent', payload: {} });
     expect(state.phase).toBe('main1');
 
+    // VERIFY DRAW STEP (Turn 2: Opponent SHOULD draw)
+    // Started with 37 cards. Should have 36 now.
+    const opponentLibCountT2 = getPlayer(state, 'opponent').library.length;
+    expect(opponentLibCountT2).toBe(36);
+
     // Opponent plays Mountain
     const mountainCard = findCardInHand(state, 'opponent', 'Mountain');
     state = applyAction(state, {
@@ -172,6 +182,11 @@ describe('Full Game Flow Integration', () => {
     // Pass beginning
     state = applyAction(state, { type: 'PASS_PRIORITY', playerId: 'player', payload: {} });
     expect(state.phase).toBe('main1');
+
+    // VERIFY DRAW STEP (Turn 3: Player SHOULD draw)
+    // Was 37. Should be 36.
+    const playerLibCountT3 = getPlayer(state, 'player').library.length;
+    expect(playerLibCountT3).toBe(36);
 
     // Player plays 2nd Forest
     const forest2 = findCardInHand(state, 'player', 'Forest');

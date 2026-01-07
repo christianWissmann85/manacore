@@ -86,13 +86,13 @@ export class LogWriter {
 
     // Build log line
     let logLine = `Game ${gameNumber}: ${winnerDisplay} wins in ${turns} turns | ${playerDeck} vs ${opponentDeck}`;
-    
+
     if (endReason) {
       logLine += ` | ${endReason}`;
     }
-    
+
     logLine += ` | ${durationMs.toFixed(1)}ms`;
-    
+
     this.writeLine(logLine);
   }
 
@@ -138,9 +138,15 @@ export class LogWriter {
     }
     this.writeLine('');
     this.writeLine('Results:');
-    this.writeLine(`  ${summary.playerBotName}: ${summary.playerWins} wins (${((summary.playerWins / summary.totalGames) * 100).toFixed(1)}%)`);
-    this.writeLine(`  ${summary.opponentBotName}: ${summary.opponentWins} wins (${((summary.opponentWins / summary.totalGames) * 100).toFixed(1)}%)`);
-    this.writeLine(`  Draws: ${summary.draws} (${((summary.draws / summary.totalGames) * 100).toFixed(1)}%)`);
+    this.writeLine(
+      `  ${summary.playerBotName}: ${summary.playerWins} wins (${((summary.playerWins / summary.totalGames) * 100).toFixed(1)}%)`,
+    );
+    this.writeLine(
+      `  ${summary.opponentBotName}: ${summary.opponentWins} wins (${((summary.opponentWins / summary.totalGames) * 100).toFixed(1)}%)`,
+    );
+    this.writeLine(
+      `  Draws: ${summary.draws} (${((summary.draws / summary.totalGames) * 100).toFixed(1)}%)`,
+    );
     this.writeLine('');
     this.writeLine('Game Length:');
     this.writeLine(`  Average: ${summary.avgTurns.toFixed(1)} turns`);
@@ -155,7 +161,7 @@ export class LogWriter {
   /**
    * Complete the log and close the stream
    */
-  finish(results: { totalDuration: number }): void {
+  finish(): void {
     this.writeLine('═'.repeat(80));
     this.writeLine(`Simulation completed at: ${new Date().toISOString()}`);
     this.writeLine('═'.repeat(80));

@@ -10,11 +10,7 @@
 
 import type { Bot } from './Bot';
 import type { GameState, Action, PlayerId } from '@manacore/engine';
-import {
-  runISMCTS,
-  type ISMCTSConfig,
-  DEFAULT_ISMCTS_CONFIG,
-} from '../search/ISMCTS';
+import { runISMCTS, type ISMCTSConfig, DEFAULT_ISMCTS_CONFIG } from '../search/ISMCTS';
 import { type RolloutPolicy, randomRolloutPolicy } from '../search/MCTS';
 
 export interface ISMCTSBotConfig extends Partial<ISMCTSConfig> {

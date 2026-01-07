@@ -431,6 +431,11 @@ function validatePlayLand(state: GameState, action: PlayLandAction): string[] {
     errors.push('Already played a land this turn');
   }
 
+  // Check if stack is empty
+  if (state.stack.length > 0) {
+    errors.push('Cannot play lands while the stack is not empty');
+  }
+
   // Check if card is in hand
   const card = findCard(state, action.payload.cardInstanceId);
   if (!card) {
@@ -597,6 +602,11 @@ function validateDeclareAttackers(state: GameState, action: DeclareAttackersActi
   // Phase 1+: Must be in declare_attackers step
   if (state.phase !== 'main1' && state.step !== 'declare_attackers') {
     errors.push('Can only declare attackers in main1 or declare_attackers step');
+  }
+
+  // Check if stack is empty
+  if (state.stack.length > 0) {
+    errors.push('Cannot attack while the stack is not empty');
   }
 
   // Validate each attacker

@@ -205,7 +205,7 @@ export function runISMCTS(
       if (!child.action) continue;
 
       const key = actionKey(child.action);
-      let stats = actionStats.get(key);
+      const stats = actionStats.get(key);
 
       // Action might not be in our original legal actions (due to determinization)
       // In that case, skip it
@@ -236,7 +236,7 @@ export function runISMCTS(
 
   const topActions: ISMCTSResult['topActions'] = [];
 
-  for (const [_key, stats] of actionStats) {
+  for (const stats of actionStats.values()) {
     if (stats.visits === 0) continue;
 
     // Calculate average reward
@@ -273,10 +273,13 @@ export function runISMCTS(
   }
 
   const bestStats = actionStats.get(actionKey(bestAction));
-  const winRate = bestStats && bestStats.visits > 0 ? bestStats.totalReward / bestStats.visits : 0.5;
+  const winRate =
+    bestStats && bestStats.visits > 0 ? bestStats.totalReward / bestStats.visits : 0.5;
 
   if (cfg.ismctsDebug) {
-    console.log(`[ISMCTS] Complete: ${cfg.determinizations} determinizations, ${totalIterations} total iterations`);
+    console.log(
+      `[ISMCTS] Complete: ${cfg.determinizations} determinizations, ${totalIterations} total iterations`,
+    );
     console.log(`[ISMCTS] Best action: ${bestAction.type}, winRate=${(winRate * 100).toFixed(1)}%`);
     console.log('[ISMCTS] Top actions:');
     for (let i = 0; i < Math.min(5, topActions.length); i++) {
