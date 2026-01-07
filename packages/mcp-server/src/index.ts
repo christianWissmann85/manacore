@@ -1,12 +1,7 @@
 #!/usr/bin/env bun
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-  ErrorCode,
-  McpError,
-} from '@modelcontextprotocol/sdk/types.js';
+import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 import {
   initializeGame,
@@ -22,9 +17,9 @@ import {
   describeAction,
   type GameState,
   type Action,
-  type PlayerId,
 } from '@manacore/engine';
 import {
+  type Bot,
   GreedyBot,
   MCTSBot,
   RandomBot,
@@ -36,18 +31,28 @@ import { join } from 'path';
 
 // --- Game State Rendering (Adapted from cli-client) ---
 
-function renderGameState(state: GameState): string {
+function renderGameState(state: GameState, opponentActions?: string[]): string {
   const lines: string[] = [];
 
-  // Header
-  lines.push(`TURN ${state.turnCount} - ${state.activePlayer.toUpperCase()} (${state.phase})`);
-  lines.push(`Priority: ${state.priorityPlayer}`);
+  // Header - show whose turn it is more clearly
+  const isPlayerTurn = state.activePlayer === 'player';
+  lines.push(
+    `=== TURN ${state.turnCount} - ${isPlayerTurn ? 'YOUR TURN' : "OPPONENT'S TURN"} (${state.phase}) ===`,
+  );
+  lines.push(`Priority: ${state.priorityPlayer === 'player' ? 'You' : 'Opponent'}`);
   lines.push('');
+
+  // Show opponent actions summary if provided
+  if (opponentActions && opponentActions.length > 0) {
+    lines.push('Opponent actions this cycle:');
+    opponentActions.forEach((a) => lines.push(`  - ${a}`));
+    lines.push('');
+  }
 
   // Opponent
   const opponent = state.players.opponent;
   lines.push(
-    `OPPONENT: ❤️ ${opponent.life} | ✋ ${opponent.hand.length} cards | 📚 ${opponent.library.length}`,
+    `OPPONENT: Life ${opponent.life} | Hand ${opponent.hand.length} cards | Library ${opponent.library.length}`,
   );
   lines.push(`Battlefield:`);
   if (opponent.battlefield.length === 0) lines.push('  (empty)');
@@ -57,6 +62,8 @@ function renderGameState(state: GameState): string {
       const status = [];
       if (c.tapped) status.push('TAPPED');
       if (c.summoningSick) status.push('SICK');
+      if (c.attacking) status.push('ATTACKING');
+      if (c.blocking) status.push('BLOCKING');
       const stats = t?.power ? `(${t.power}/${t.toughness})` : '';
       lines.push(`  ${t?.name || '???'} ${stats} ${status.join(' ')}`);
     });
@@ -66,11 +73,12 @@ function renderGameState(state: GameState): string {
   // Player (You)
   const player = state.players.player;
   lines.push(
-    `YOU: ❤️ ${player.life} | ✋ ${player.hand.length} cards | 📚 ${player.library.length}`,
+    `YOU: Life ${player.life} | Hand ${player.hand.length} cards | Library ${player.library.length}`,
   );
-  lines.push(
-    `Lands: ${player.battlefield.filter((c) => CardLoader.getById(c.scryfallId)?.type_line.includes('Land')).length}`,
-  );
+  const landCount = player.battlefield.filter((c) =>
+    CardLoader.getById(c.scryfallId)?.type_line.includes('Land'),
+  ).length;
+  lines.push(`Lands: ${landCount} | Lands played this turn: ${player.landsPlayedThisTurn}`);
   lines.push(`Mana Pool: ${JSON.stringify(player.manaPool)}`);
   lines.push(`Battlefield:`);
   if (player.battlefield.length === 0) lines.push('  (empty)');
@@ -90,7 +98,7 @@ function renderGameState(state: GameState): string {
   lines.push(`Hand:`);
   player.hand.forEach((c, i) => {
     const t = CardLoader.getById(c.scryfallId);
-    lines.push(`  [${i}] ${t?.name || '???'} (${t?.mana_cost}) - ${t?.type_line}`);
+    lines.push(`  [${i}] ${t?.name || '???'} (${t?.mana_cost || 'no cost'}) - ${t?.type_line}`);
   });
 
   if (state.stack.length > 0) {
@@ -104,20 +112,51 @@ function renderGameState(state: GameState): string {
 
   if (state.gameOver) {
     lines.push('');
-    lines.push(`GAME OVER. Winner: ${state.winner}`);
+    lines.push(`=== GAME OVER. Winner: ${state.winner || 'Draw'} ===`);
   }
 
   return lines.join('\n');
+}
+
+/**
+ * Check if there are any attackers declared in combat
+ */
+function hasAttackers(state: GameState): boolean {
+  const attackingPlayer = state.activePlayer;
+  const attacker = state.players[attackingPlayer];
+  return attacker.battlefield.some((c) => c.attacking);
+}
+
+/**
+ * Filter out "Don't block" action if there are no attackers
+ */
+function filterBlockActions(actions: Action[], state: GameState): Action[] {
+  if (state.phase !== 'combat') return actions;
+
+  // If no attackers, remove DECLARE_BLOCKERS with empty blocks
+  if (!hasAttackers(state)) {
+    return actions.filter((a) => {
+      if (a.type === 'DECLARE_BLOCKERS') {
+        const blocks = a.payload.blocks || [];
+        return blocks.length > 0; // Only keep if actually blocking
+      }
+      return true;
+    });
+  }
+  return actions;
 }
 
 // --- Server Implementation ---
 
 class GameSession {
   state: GameState;
-  opponentBot: any; // Bot interface
+  opponentBot: Bot;
   collector: TrainingDataCollector;
   gameId: string;
   outputPath: string;
+  lastOpponentActions: string[] = [];
+  previousPlayerLife: number = 20;
+  previousOpponentLife: number = 20;
 
   constructor(opponentBotName: string, playerDeckName: string, opponentDeckName: string) {
     const seed = Date.now();
@@ -166,15 +205,24 @@ class GameSession {
       sampleRate: 1.0,
     });
 
+    this.previousPlayerLife = this.state.players.player.life;
+    this.previousOpponentLife = this.state.players.opponent.life;
+
     console.error(`Started game ${this.gameId} against ${opponentBotName}`);
   }
 
   getLegalActions() {
-    return getLegalActions(this.state, 'player');
+    const actions = getLegalActions(this.state, 'player');
+    // Filter out useless "Don't block" when no attackers
+    return filterBlockActions(actions, this.state);
   }
 
   async playAction(actionIndex: number, reasoning?: string): Promise<string> {
-    const legalActions = getLegalActions(this.state, 'player');
+    if (this.state.gameOver) {
+      return `Game is already over. Winner: ${this.state.winner}`;
+    }
+
+    const legalActions = this.getLegalActions();
 
     if (actionIndex < 0 || actionIndex >= legalActions.length) {
       throw new Error(
@@ -188,21 +236,51 @@ class GameSession {
     // Record BEFORE applying
     this.collector.recordDecision(this.state, action, legalActions, reasoning);
 
+    // Track life before action
+    this.previousPlayerLife = this.state.players.player.life;
+    this.previousOpponentLife = this.state.players.opponent.life;
+
     // Apply User Action
     this.state = applyAction(this.state, action);
+
+    // Clear opponent actions for new cycle
+    this.lastOpponentActions = [];
 
     // Run Game Loop (Opponent + Auto-Pass)
     await this.runGameLoop();
 
+    // Check for life changes and report
+    const lifeChangeInfo = this.getLifeChangeInfo();
+
     // Check Game Over
     if (this.state.gameOver) {
       this.saveData();
-      return `Game Over! Winner: ${this.state.winner}. Data saved.`;
+      return `Game Over! Winner: ${this.state.winner}. Training data saved.${lifeChangeInfo}`;
     }
 
-    return `Action applied. 
+    return `Action applied.${lifeChangeInfo}\n\n${renderGameState(this.state, this.lastOpponentActions)}`;
+  }
 
-${renderGameState(this.state)}`;
+  getLifeChangeInfo(): string {
+    const playerLifeChange = this.state.players.player.life - this.previousPlayerLife;
+    const opponentLifeChange = this.state.players.opponent.life - this.previousOpponentLife;
+
+    const changes: string[] = [];
+    if (playerLifeChange !== 0) {
+      changes.push(
+        `You ${playerLifeChange > 0 ? 'gained' : 'lost'} ${Math.abs(playerLifeChange)} life`,
+      );
+    }
+    if (opponentLifeChange !== 0) {
+      changes.push(
+        `Opponent ${opponentLifeChange > 0 ? 'gained' : 'lost'} ${Math.abs(opponentLifeChange)} life`,
+      );
+    }
+
+    if (changes.length > 0) {
+      return '\n\nLife changes: ' + changes.join(', ');
+    }
+    return '';
   }
 
   async runGameLoop() {
@@ -212,19 +290,36 @@ ${renderGameState(this.state)}`;
         const opponentActions = getLegalActions(this.state, 'opponent');
         if (opponentActions.length === 0) break; // Should not happen
 
+        const prevState = this.state;
         const botAction = this.opponentBot.chooseAction(this.state, 'opponent');
+
+        // Log the opponent's action
+        const actionDesc = describeAction(botAction, this.state);
+        if (botAction.type !== 'PASS_PRIORITY') {
+          this.lastOpponentActions.push(actionDesc);
+        }
+
         this.state = applyAction(this.state, botAction);
+
+        // Check for suspicious life changes (debugging)
+        const lifeDelta = prevState.players.player.life - this.state.players.player.life;
+        if (lifeDelta > 20) {
+          console.error(
+            `[WARNING] Large damage detected: ${lifeDelta} damage, action: ${actionDesc}`,
+          );
+          console.error(`[DEBUG] Turn: ${this.state.turnCount}, Phase: ${this.state.phase}`);
+        }
+
         continue;
       }
 
       // 2. If it's Player's priority, check for Auto-Pass
       if (this.state.priorityPlayer === 'player') {
-        const playerActions = getLegalActions(this.state, 'player');
+        const playerActions = this.getLegalActions();
 
         // If only 1 action available (usually Pass Priority), auto-apply it
         if (playerActions.length === 1) {
           const autoAction = playerActions[0];
-          // Optional: Log auto-action?
           this.state = applyAction(this.state, autoAction!);
           continue;
         }
@@ -235,9 +330,20 @@ ${renderGameState(this.state)}`;
     }
   }
 
-  async runOpponentLoop() {
-    // Deprecated in favor of runGameLoop
-    await this.runGameLoop();
+  resign(): string {
+    if (this.state.gameOver) {
+      return `Game is already over. Winner: ${this.state.winner}`;
+    }
+
+    // Mark game as over with opponent winning
+    this.state = {
+      ...this.state,
+      gameOver: true,
+      winner: 'opponent',
+    };
+
+    this.saveData();
+    return `You resigned. Opponent wins. Training data saved.`;
   }
 
   saveData() {
@@ -253,7 +359,7 @@ let activeSession: GameSession | null = null;
 const server = new Server(
   {
     name: 'manacore-server',
-    version: '0.1.0',
+    version: '0.3.0',
   },
   {
     capabilities: {
@@ -320,6 +426,25 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ['actionId'],
         },
       },
+      {
+        name: 'manacore_inspect_card',
+        description: 'Get detailed information about a card by name (oracle text, abilities, etc.)',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            cardName: {
+              type: 'string',
+              description: 'Name of the card to look up',
+            },
+          },
+          required: ['cardName'],
+        },
+      },
+      {
+        name: 'manacore_resign',
+        description: 'Resign the current game (opponent wins)',
+        inputSchema: { type: 'object', properties: {} },
+      },
     ],
   };
 });
@@ -337,8 +462,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { opponent, myDeck, opponentDeck } = schema.parse(args);
 
       activeSession = new GameSession(opponent, myDeck, opponentDeck);
-      // Ensure initial priority is handled (e.g. if player goes second, though usually player goes first in this engine setup unless specified)
-      // Also handle Auto-Pass for the first turn if applicable
+      // Handle Auto-Pass for the first turn if applicable
       await activeSession.runGameLoop();
 
       return {
@@ -348,13 +472,47 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       };
     }
 
+    if (name === 'manacore_inspect_card') {
+      const schema = z.object({
+        cardName: z.string(),
+      });
+      const { cardName } = schema.parse(args);
+
+      const card = CardLoader.getByName(cardName);
+      if (!card) {
+        return {
+          content: [{ type: 'text', text: `Card not found: "${cardName}"` }],
+          isError: true,
+        };
+      }
+
+      const info = [
+        `**${card.name}** ${card.mana_cost || ''}`,
+        `Type: ${card.type_line}`,
+        card.power !== undefined ? `Stats: ${card.power}/${card.toughness}` : null,
+        card.oracle_text ? `\nOracle Text:\n${card.oracle_text}` : null,
+        card.flavor_text ? `\n_${card.flavor_text}_` : null,
+      ]
+        .filter(Boolean)
+        .join('\n');
+
+      return {
+        content: [{ type: 'text', text: info }],
+      };
+    }
+
     if (!activeSession) {
       throw new Error("No active game. Start one with 'manacore_start_game'.");
     }
 
     if (name === 'manacore_get_state') {
       return {
-        content: [{ type: 'text', text: renderGameState(activeSession.state) }],
+        content: [
+          {
+            type: 'text',
+            text: renderGameState(activeSession.state, activeSession.lastOpponentActions),
+          },
+        ],
       };
     }
 
@@ -385,10 +543,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       };
     }
 
+    if (name === 'manacore_resign') {
+      const result = activeSession.resign();
+      activeSession = null;
+      return {
+        content: [{ type: 'text', text: result }],
+      };
+    }
+
     throw new Error(`Unknown tool: ${name}`);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
     return {
-      content: [{ type: 'text', text: `Error: ${error.message}` }],
+      content: [{ type: 'text', text: `Error: ${message}` }],
       isError: true,
     };
   }

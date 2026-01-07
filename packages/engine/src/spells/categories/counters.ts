@@ -21,6 +21,21 @@ import { isCreature } from '../../cards/CardTemplate';
 
 export const counterSpells: SpellImplementation[] = [
   {
+    cardName: 'Counterspell',
+    resolve: (state, stackObj) => {
+      // Counter target spell
+      const targetId = stackObj.targets[0];
+      if (!targetId) return;
+
+      const targetStackObj = state.stack.find((s) => s.id === targetId);
+      if (!targetStackObj) return;
+
+      // Mark as countered - it will be moved to graveyard when it resolves
+      targetStackObj.countered = true;
+    },
+  },
+
+  {
     cardName: 'Memory Lapse',
     resolve: (state, stackObj) => {
       // Counter target spell. Put it on top of its owner's library instead of

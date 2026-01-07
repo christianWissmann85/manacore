@@ -19,6 +19,7 @@ import {
   createWhiteDeck,
   _resetInstanceCounter,
   _resetModificationCounter,
+  _resetStackCounter,
 } from '../src/index';
 import type { GameState, Action } from '../src/index';
 
@@ -108,6 +109,7 @@ describe('Seed Determinism', () => {
   beforeEach(() => {
     _resetInstanceCounter();
     _resetModificationCounter();
+    _resetStackCounter();
   });
 
   test('same seed produces identical game initialization', () => {
@@ -238,6 +240,7 @@ describe('Seed Determinism', () => {
     // Reset counters before replay so card IDs match
     _resetInstanceCounter();
     _resetModificationCounter();
+    _resetStackCounter();
 
     // Replay: Initialize with same seed and apply same actions
     let replayState = initializeGame(playerDeck, opponentDeck, gameSeed);

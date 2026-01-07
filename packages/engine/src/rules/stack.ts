@@ -31,6 +31,19 @@ import {
 } from './effects';
 
 /**
+ * Counter for stack IDs (for determinism)
+ */
+let stackCounter = 0;
+
+/**
+ * Reset stack counter (for test isolation)
+ * @internal - Only use in tests
+ */
+export function _resetStackCounter(): void {
+  stackCounter = 0;
+}
+
+/**
  * Add a spell to the stack
  */
 export function pushToStack(
@@ -41,7 +54,7 @@ export function pushToStack(
   xValue?: number,
 ): void {
   const stackObj: StackObject = {
-    id: `stack_${Date.now()}_${Math.random()}`,
+    id: `stack_${stackCounter++}`,
     controller,
     card,
     targets,
@@ -342,15 +355,10 @@ function applySpellEffects(state: GameState, stackObj: StackObject): void {
       }
 
       case 'counter': {
-        const targetStackIndex = state.stack.findIndex((s) => s.id === targetId);
-        if (targetStackIndex !== -1) {
-          const targetStackObj = state.stack[targetStackIndex]!;
-          // Move to graveyard immediately
-          targetStackObj.card.zone = 'graveyard';
-          const targetController = getPlayer(state, targetStackObj.controller);
-          targetController.graveyard.push(targetStackObj.card);
-          // Remove from stack
-          state.stack.splice(targetStackIndex, 1);
+        const targetStackObj = state.stack.find((s) => s.id === targetId);
+        if (targetStackObj) {
+          // Mark the spell as countered - it will be moved to graveyard when it resolves
+          targetStackObj.countered = true;
         }
         break;
       }

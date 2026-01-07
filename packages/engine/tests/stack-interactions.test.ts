@@ -110,12 +110,23 @@ describe('Stack Interactions', () => {
     // Player passes
     state = applyAction(state, { type: 'PASS_PRIORITY', playerId: 'player', payload: {} });
 
-    // P-Counter resolves, countering O-Counter and removing it from stack immediately.
+    // P-Counter resolves, countering O-Counter but it stays on stack
+    // Stack: [Blast, O-Counter (countered)]
+    expect(state.stack.length).toBe(2);
+    expect(state.stack[0].card.scryfallId).toBe(lightningBlast.id);
+    expect(state.stack[1].countered).toBe(true);
+
+    // 5. Resolve O-Counter (countered spell)
+    // Both players pass to resolve the countered spell
+    state = applyAction(state, { type: 'PASS_PRIORITY', playerId: 'player', payload: {} });
+    state = applyAction(state, { type: 'PASS_PRIORITY', playerId: 'opponent', payload: {} });
+
+    // O-Counter resolves as countered (no effect), removed from stack
     // Stack: [Blast]
     expect(state.stack.length).toBe(1);
     expect(state.stack[0].card.scryfallId).toBe(lightningBlast.id);
 
-    // 5. Resolve Blast
+    // 6. Resolve Blast
     // Priority is with active player (player) after resolution
     state = applyAction(state, { type: 'PASS_PRIORITY', playerId: 'player', payload: {} });
     state = applyAction(state, { type: 'PASS_PRIORITY', playerId: 'opponent', payload: {} });

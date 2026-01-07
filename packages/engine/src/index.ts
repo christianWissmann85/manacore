@@ -35,6 +35,9 @@ export {
   _resetModificationCounter,
 } from './state/CardInstance';
 
+// Stack exports (including test utilities for determinism)
+export { _resetStackCounter } from './rules/stack';
+
 // Card exports
 export type { CardTemplate } from './cards/CardTemplate';
 export { CardLoader } from './cards/CardLoader';

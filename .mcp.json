@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "manacore": {
+      "type": "stdio",
+      "command": "bun",
+      "args": ["run", "/home/chris/manacore/packages/mcp-server/src/index.ts"],
+      "env": {
+        "MANACORE_SILENT_INIT": "1"
+      }
+    }
+  }
+}
