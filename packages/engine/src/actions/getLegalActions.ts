@@ -23,6 +23,7 @@ import type {
 import { getPlayer, findCard } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
 import {
+  type CardTemplate,
   isLand,
   isCreature,
   isInstant,
@@ -30,6 +31,7 @@ import {
   hasFlying,
   hasReach,
   hasDefender,
+  hasMenace,
 } from '../cards/CardTemplate';
 import { parseManaCost, hasXInCost, calculateMaxAffordableX } from '../utils/manaCosts';
 import { calculateAvailableMana } from './validators';
@@ -580,6 +582,121 @@ function getLegalAttackerDeclarations(
 }
 
 /**
+ * Check if a blocker can legally block an attacker (flying/reach check)
+ */
+function canBlock(blockerTemplate: CardTemplate, attackerTemplate: CardTemplate): boolean {
+  // Flying restriction: only flying/reach creatures can block flyers
+  if (hasFlying(attackerTemplate)) {
+    if (!hasFlying(blockerTemplate) && !hasReach(blockerTemplate)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Generate multi-block actions for attackers that benefit from gang-blocking
+ *
+ * Generates 2-3 blocker combinations for:
+ * - Menace creatures (MUST be blocked by 2+ creatures)
+ * - Large creatures (power >= 4) for strategic gang-blocking
+ *
+ * @param state - Current game state
+ * @param playerId - Defending player
+ * @param attackers - List of attacking creatures
+ * @param potentialBlockers - List of available blockers
+ * @returns Array of multi-block DeclareBlockersAction
+ */
+function generateMultiBlockActions(
+  state: GameState,
+  playerId: 'player' | 'opponent',
+  attackers: Array<{ instanceId: string; scryfallId: string }>,
+  potentialBlockers: Array<{ instanceId: string; scryfallId: string }>,
+): DeclareBlockersAction[] {
+  const actions: DeclareBlockersAction[] = [];
+  const LARGE_CREATURE_POWER_THRESHOLD = 4;
+
+  for (const attacker of attackers) {
+    const attackerTemplate = CardLoader.getById(attacker.scryfallId);
+    if (!attackerTemplate) continue;
+
+    // Check if this attacker qualifies for multi-blocking:
+    // - Has Menace (must be blocked by 2+)
+    // - Is a large creature (power >= 4, strategic gang-blocking)
+    const attackerPower = parseInt(attackerTemplate.power || '0', 10);
+    const needsMultiBlock =
+      hasMenace(attackerTemplate) || attackerPower >= LARGE_CREATURE_POWER_THRESHOLD;
+
+    if (!needsMultiBlock) continue;
+
+    // Find all blockers that can legally block this attacker
+    const validBlockers = potentialBlockers.filter((blocker) => {
+      const blockerTemplate = CardLoader.getById(blocker.scryfallId);
+      if (!blockerTemplate) return false;
+      return canBlock(blockerTemplate, attackerTemplate);
+    });
+
+    // Need at least 2 blockers for multi-blocking
+    if (validBlockers.length < 2) continue;
+
+    // Generate 2-blocker combinations
+    for (let i = 0; i < validBlockers.length - 1; i++) {
+      for (let j = i + 1; j < validBlockers.length; j++) {
+        const blocker1 = validBlockers[i]!;
+        const blocker2 = validBlockers[j]!;
+
+        const action: DeclareBlockersAction = {
+          type: 'DECLARE_BLOCKERS',
+          playerId,
+          payload: {
+            blocks: [
+              { blockerId: blocker1.instanceId, attackerId: attacker.instanceId },
+              { blockerId: blocker2.instanceId, attackerId: attacker.instanceId },
+            ],
+          },
+        };
+
+        // Validate before adding (handles Menace validation, etc.)
+        if (validateAction(state, action).length === 0) {
+          actions.push(action);
+        }
+      }
+    }
+
+    // Generate 3-blocker combinations (if enough blockers available)
+    if (validBlockers.length >= 3) {
+      for (let i = 0; i < validBlockers.length - 2; i++) {
+        for (let j = i + 1; j < validBlockers.length - 1; j++) {
+          for (let k = j + 1; k < validBlockers.length; k++) {
+            const blocker1 = validBlockers[i]!;
+            const blocker2 = validBlockers[j]!;
+            const blocker3 = validBlockers[k]!;
+
+            const action: DeclareBlockersAction = {
+              type: 'DECLARE_BLOCKERS',
+              playerId,
+              payload: {
+                blocks: [
+                  { blockerId: blocker1.instanceId, attackerId: attacker.instanceId },
+                  { blockerId: blocker2.instanceId, attackerId: attacker.instanceId },
+                  { blockerId: blocker3.instanceId, attackerId: attacker.instanceId },
+                ],
+              },
+            };
+
+            if (validateAction(state, action).length === 0) {
+              actions.push(action);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return actions;
+}
+
+/**
  * Get legal blocker declarations
  * Phase 1+: Defender can assign blockers to attackers
  *
@@ -654,6 +771,15 @@ function getLegalBlockerDeclarations(
       }
     }
   }
+
+  // Option 3: Multi-block combinations for Menace and large creatures
+  const multiBlockActions = generateMultiBlockActions(
+    state,
+    playerId,
+    attackers,
+    potentialBlockers,
+  );
+  actions.push(...multiBlockActions);
 
   return actions;
 }
@@ -747,8 +873,10 @@ export function describeAction(action: Action, state: GameState): string {
       const blocks = action.payload.blocks;
       if (blocks.length === 0) return "Don't block";
 
-      // Build descriptive blocking assignments with instance IDs
-      const blockDescriptions: string[] = [];
+      // Group blockers by attacker for cleaner multi-block descriptions
+      const blockersByAttacker = new Map<string, string[]>();
+      const attackerNames = new Map<string, string>();
+
       for (const block of blocks) {
         const blocker = findCard(state, block.blockerId);
         const attacker = findCard(state, block.attackerId);
@@ -756,12 +884,30 @@ export function describeAction(action: Action, state: GameState): string {
         const blockerName = blocker ? getCardDisplayName(blocker) : 'creature';
         const attackerName = attacker ? getCardDisplayName(attacker) : 'attacker';
 
-        blockDescriptions.push(`${blockerName} blocks ${attackerName}`);
+        // Store attacker name for later
+        if (!attackerNames.has(block.attackerId)) {
+          attackerNames.set(block.attackerId, attackerName);
+        }
+
+        // Group blockers by attacker
+        if (!blockersByAttacker.has(block.attackerId)) {
+          blockersByAttacker.set(block.attackerId, []);
+        }
+        blockersByAttacker.get(block.attackerId)!.push(blockerName);
       }
 
-      if (blocks.length === 1) {
-        return blockDescriptions[0]!;
+      // Build descriptions grouped by attacker
+      const blockDescriptions: string[] = [];
+      for (const [attackerId, blockerNames] of blockersByAttacker) {
+        const attackerName = attackerNames.get(attackerId) || 'attacker';
+        if (blockerNames.length === 1) {
+          blockDescriptions.push(`${blockerNames[0]} blocks ${attackerName}`);
+        } else {
+          // Multi-block: "A + B block X"
+          blockDescriptions.push(`${blockerNames.join(' + ')} block ${attackerName}`);
+        }
       }
+
       return blockDescriptions.join(', ');
     }
 

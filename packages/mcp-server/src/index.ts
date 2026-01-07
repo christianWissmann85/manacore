@@ -15,6 +15,8 @@ import {
   getLegalActions,
   describeAction,
   enableF6Mode,
+  formatManaPool,
+  getTotalMana,
   type GameState,
   type Action,
 } from '@manacore/engine';
@@ -65,8 +67,9 @@ function renderGameState(state: GameState, opponentActions?: string[]): string {
       if (c.attacking) status.push('ATTACKING');
       if (c.blocking) status.push('BLOCKING');
       const stats = t?.power ? `(${t.power}/${t.toughness})` : '';
+      const damageStr = c.damage > 0 ? ` [${c.damage} dmg]` : '';
       const statusStr = status.length > 0 ? ` ${status.join(' ')}` : '';
-      lines.push(`  [${c.instanceId}] ${t?.name || '???'} ${stats}${statusStr}`);
+      lines.push(`  [${c.instanceId}] ${t?.name || '???'} ${stats}${damageStr}${statusStr}`);
     });
   }
   lines.push('');
@@ -80,7 +83,8 @@ function renderGameState(state: GameState, opponentActions?: string[]): string {
     CardLoader.getById(c.scryfallId)?.type_line.includes('Land'),
   ).length;
   lines.push(`Lands: ${landCount} | Lands played this turn: ${player.landsPlayedThisTurn}`);
-  lines.push(`Mana Pool: ${JSON.stringify(player.manaPool)}`);
+  const manaDisplay = getTotalMana(player.manaPool) > 0 ? formatManaPool(player.manaPool) : 'Empty';
+  lines.push(`Mana Pool: ${manaDisplay}`);
   lines.push(`Battlefield:`);
   if (player.battlefield.length === 0) lines.push('  (empty)');
   else {
@@ -92,8 +96,9 @@ function renderGameState(state: GameState, opponentActions?: string[]): string {
       if (c.attacking) status.push('ATTACKING');
       if (c.blocking) status.push('BLOCKING');
       const stats = t?.power ? `(${t.power}/${t.toughness})` : '';
+      const damageStr = c.damage > 0 ? ` [${c.damage} dmg]` : '';
       const statusStr = status.length > 0 ? ` ${status.join(' ')}` : '';
-      lines.push(`  [${c.instanceId}] ${t?.name || '???'} ${stats}${statusStr}`);
+      lines.push(`  [${c.instanceId}] ${t?.name || '???'} ${stats}${damageStr}${statusStr}`);
     });
   }
   lines.push('');
@@ -423,13 +428,20 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
+        name: 'manacore_get_game',
+        description:
+          'Get current game state AND legal actions in one call (recommended - saves tokens)',
+        inputSchema: { type: 'object', properties: {} },
+      },
+      {
         name: 'manacore_get_state',
-        description: 'Get the current visible game board',
+        description: 'Get the current visible game board (use manacore_get_game instead)',
         inputSchema: { type: 'object', properties: {} },
       },
       {
         name: 'manacore_list_actions',
-        description: 'List all currently legal actions with their IDs',
+        description:
+          'List all currently legal actions with their IDs (use manacore_get_game instead)',
         inputSchema: { type: 'object', properties: {} },
       },
       {
@@ -527,6 +539,23 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
     if (!activeSession) {
       throw new Error("No active game. Start one with 'manacore_start_game'.");
+    }
+
+    if (name === 'manacore_get_game') {
+      // Combined state + actions in one call (recommended for token efficiency)
+      const stateText = renderGameState(activeSession.state, activeSession.lastOpponentActions);
+      const actions = activeSession.getLegalActions();
+      const actionList = actions
+        .map((a, i) => {
+          const desc = describeAction(a, activeSession!.state);
+          return `${i}: ${desc}`;
+        })
+        .join('\n');
+
+      const combinedText = `${stateText}\n\n=== LEGAL ACTIONS ===\n${actionList || 'No legal actions'}`;
+      return {
+        content: [{ type: 'text', text: combinedText }],
+      };
     }
 
     if (name === 'manacore_get_state') {
