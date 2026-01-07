@@ -256,6 +256,15 @@ export {
   getRandomMonoDeck,
   getTestDeck,
   getDeckDisplayName,
+  // Weighted deck selection (AI Training)
+  getWeightedRandomDeck,
+  getSpecialistRandomDeck,
+  getDeckTier,
+  DEFAULT_MCTS_WEIGHTS,
+  SIMPLE_WEIGHTS,
+  COMPLEX_WEIGHTS,
+  type DeckTierWeights,
+  // Deck registries
   TEST_DECKS,
   MONO_DECKS,
   TWO_COLOR_DECKS,

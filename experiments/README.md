@@ -22,12 +22,53 @@ bun src/index.ts run ../../experiments/simulate-mcts-vs-greedy.json
 | ------------------------------ | ------------ | ---------------------------------- |
 | `simulate-mcts-vs-greedy.json` | simulate     | Bot vs bot simulation              |
 | `benchmark-all-bots.json`      | benchmark    | Multi-bot comparison matrix        |
+| `baseline-all-decks.json`      | (script)     | All decks baseline (see below)     |
 | `tune-weights-evolve.json`     | tune-weights | Evaluation weight optimization     |
 | `tune-mcts-grid.json`          | tune-mcts    | MCTS hyperparameter tuning         |
 | `pipeline-full.json`           | pipeline     | Complete tuning workflow           |
 | `collect-training-fast.json`   | collect      | ML training data (fast, GreedyBot) |
 | `collect-training-mcts.json`   | collect      | ML training data (MCTS quality)    |
 | `replay-game.json`             | replay       | Replay specific games              |
+
+---
+
+## Special: Deck Baseline Benchmark
+
+The `baseline-all-decks.json` configuration documents a comprehensive deck benchmark that tests all 25+ deck archetypes against each other using GreedyBot. This provides baseline performance data.
+
+**Usage:**
+
+```bash
+# Run from project root
+bun scripts/benchmark-all-decks.ts
+
+# Options:
+bun scripts/benchmark-all-decks.ts --games 50     # Faster, fewer games
+bun scripts/benchmark-all-decks.ts --quick        # Quick test (10 games)
+bun scripts/benchmark-all-decks.ts --help         # Show all options
+```
+
+**What it does:**
+
+- Tests all 26 deck archetypes (mono, dual-color, competitive, special)
+- Runs each matchup with GreedyBot vs GreedyBot for consistency
+- Generates comprehensive statistics:
+  - Overall deck win rates
+  - Head-to-head matchup records
+  - Deck rankings by performance
+- Exports results in JSON, CSV, and Markdown formats
+
+**Output:**
+
+- `output/baseline/deck-baseline-{timestamp}.json` - Full results data
+- `output/baseline/deck-baseline-{timestamp}.md` - Readable report
+- `output/baseline/deck-baseline-{timestamp}.csv` - Spreadsheet format
+
+**Estimated time:**
+
+- 100 games per matchup: ~30-45 minutes (650 matchups × 100 games = 65,000 games)
+- 50 games per matchup: ~15-20 minutes
+- Quick mode (10 games): ~3-5 minutes
 
 ---
 
