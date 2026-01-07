@@ -52,6 +52,64 @@ function isUnblockable(template: { name?: string; oracle_text?: string }): boole
 }
 
 /**
+ * Check if player has any sorcery-speed options
+ *
+ * Returns true if the player can:
+ * - Play a land (if they haven't this turn)
+ * - Cast a creature, sorcery, enchantment, or artifact
+ *
+ * This is used to determine if we should auto-pass during main phase.
+ */
+export function hasSorcerySpeedOptions(state: GameState, playerId: PlayerId): boolean {
+  const player = getPlayer(state, playerId);
+  const availableMana = calculateAvailableMana(state, playerId);
+
+  // Check if player can play a land
+  if (player.landsPlayedThisTurn < 1) {
+    for (const card of player.hand) {
+      const template = CardLoader.getById(card.scryfallId);
+      if (template && template.type_line.includes('Land')) {
+        return true; // Can play a land
+      }
+    }
+  }
+
+  // Check for castable sorcery-speed spells
+  for (const card of player.hand) {
+    const template = CardLoader.getById(card.scryfallId);
+    if (!template) continue;
+
+    // Skip instants (handled by hasInstantSpeedOptions)
+    if (template.type_line.includes('Instant')) continue;
+    // Skip lands (handled above)
+    if (template.type_line.includes('Land')) continue;
+
+    // Check if we can afford it
+    const manaCost = parseManaCost(template.mana_cost);
+    if (canPayManaCost(availableMana, manaCost, 0)) {
+      // Check if it has valid targets (if targeting required)
+      const targetRequirements = parseTargetRequirements(template.oracle_text || '');
+      if (targetRequirements.length === 0) {
+        return true; // No targets needed, can cast
+      }
+
+      // Check if valid targets exist
+      const targetCombinations = getAllLegalTargetCombinations(
+        state,
+        targetRequirements,
+        playerId,
+        card,
+      );
+      if (targetCombinations.length > 0) {
+        return true; // Has valid targets
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
  * P1: Check if player has any instant-speed options
  *
  * Returns true if the player can:
@@ -299,16 +357,14 @@ export function shouldAutoPass(state: GameState, playerId: PlayerId): boolean {
     return false;
   }
 
-  // If stack is empty and it's our main phase, we might want to play sorcery-speed cards
-  // So only auto-pass if:
-  // 1. Stack is not empty (we're responding), OR
-  // 2. It's not our turn, OR
-  // 3. It's our turn but not main phase
+  // If stack is empty and it's our main phase, check for sorcery-speed options
   if (state.stack.length === 0) {
-    // If it's our main phase with empty stack, don't auto-pass
-    // (we might have sorcery-speed plays)
     if (state.activePlayer === playerId && (state.phase === 'main1' || state.phase === 'main2')) {
-      return false;
+      // Only skip auto-pass if player actually has sorcery-speed plays available
+      if (hasSorcerySpeedOptions(state, playerId)) {
+        return false;
+      }
+      // Otherwise, player has no plays - auto-pass is safe
     }
   }
 

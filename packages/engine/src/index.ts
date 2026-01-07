@@ -119,6 +119,7 @@ export { getLegalActions, describeAction } from './actions/getLegalActions';
 export {
   shouldAutoPass,
   hasInstantSpeedOptions,
+  hasSorcerySpeedOptions,
   hasValidBlockers,
   shouldAutoPassOnStack,
   getAutoPassAction,
