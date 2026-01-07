@@ -232,6 +232,24 @@ bun src/index.ts simulate 1000          # Run 1000 bot games
 bun src/index.ts play                   # Interactive play
 ```
 
+### MCP Server (Claude Code Integration)
+
+The MCP server at `packages/mcp-server/` allows Claude Code to play MTG games interactively.
+
+```bash
+# Configuration in .mcp.json (already set up)
+# Tools: manacore_start_game, manacore_get_state, manacore_list_actions,
+#        manacore_play_action, manacore_inspect_card, manacore_resign
+```
+
+**Important: Task Agent Limitations**
+
+MTG games are tool-call-heavy (~50-100+ tool calls per game). Task agents have token limits that cause them to terminate early without warning after ~7 turns.
+
+- **For short tests (5-7 turns)**: Task agents work fine
+- **For full games (15+ turns)**: Play in the main conversation directly
+- The MCP server itself works perfectly - it's the agent token budget that's limiting
+
 ---
 
 ## Performance Considerations
@@ -297,6 +315,7 @@ bun src/index.ts run ../../experiments/simulate-mcts-vs-greedy.json
 | Card status                                                         | `packages/engine/docs/CARD_STATUS.md`            |
 | Edge cases                                                          | `packages/engine/docs/EDGE_CASES.md`             |
 | Configuration-based experiment runner for reproducible AI research. | `experiments/README.md`                          |
+| MCP Server for Claude Code integration                              | `packages/mcp-server/src/index.ts`               |
 
 ---
 
