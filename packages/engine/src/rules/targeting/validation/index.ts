@@ -325,7 +325,12 @@ function validateTargetType(
 ): string | null {
   switch (targetType) {
     case 'any':
-      // Any permanent is valid (players handled separately)
+      // "Any target" in MTG means creature, player, or planeswalker
+      // Players are handled separately, so here we only validate creatures
+      // (Planeswalkers would be added here if implemented)
+      if (!isCreature(template)) {
+        return 'Target must be a creature or player';
+      }
       return null;
 
     case 'creature':

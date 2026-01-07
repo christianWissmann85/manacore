@@ -796,7 +796,7 @@ function getCardDisplayName(card: { instanceId: string; scryfallId: string }): s
 }
 
 /**
- * Get a human-readable name for a target
+ * Get a human-readable name for a target (with instance ID for cards)
  */
 function getTargetName(state: GameState, targetId: string): string {
   // Player targets
@@ -810,11 +810,10 @@ function getTargetName(state: GameState, targetId: string): string {
     return template?.name || 'spell';
   }
 
-  // Card targets
+  // Card targets - include instance ID for disambiguation
   const card = findCard(state, targetId);
   if (card) {
-    const template = CardLoader.getById(card.scryfallId);
-    return template?.name || 'permanent';
+    return getCardDisplayName(card);
   }
 
   return targetId;

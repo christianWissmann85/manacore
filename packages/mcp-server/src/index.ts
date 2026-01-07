@@ -17,6 +17,7 @@ import {
   enableF6Mode,
   formatManaPool,
   getTotalMana,
+  hasHaste,
   type GameState,
   type Action,
 } from '@manacore/engine';
@@ -63,7 +64,8 @@ function renderGameState(state: GameState, opponentActions?: string[]): string {
       const t = CardLoader.getById(c.scryfallId);
       const status = [];
       if (c.tapped) status.push('TAPPED');
-      if (c.summoningSick) status.push('SICK');
+      // Don't show SICK for creatures with Haste (they can act immediately)
+      if (c.summoningSick && t && !hasHaste(t)) status.push('SICK');
       if (c.attacking) status.push('ATTACKING');
       if (c.blocking) status.push('BLOCKING');
       const stats = t?.power ? `(${t.power}/${t.toughness})` : '';
@@ -92,7 +94,8 @@ function renderGameState(state: GameState, opponentActions?: string[]): string {
       const t = CardLoader.getById(c.scryfallId);
       const status = [];
       if (c.tapped) status.push('TAPPED');
-      if (c.summoningSick) status.push('SICK');
+      // Don't show SICK for creatures with Haste (they can act immediately)
+      if (c.summoningSick && t && !hasHaste(t)) status.push('SICK');
       if (c.attacking) status.push('ATTACKING');
       if (c.blocking) status.push('BLOCKING');
       const stats = t?.power ? `(${t.power}/${t.toughness})` : '';
@@ -336,11 +339,22 @@ class GameSession {
           continue;
         }
 
-        // Auto-pass when only PASS_PRIORITY and/or END_TURN are available
-        // These are non-decisions when there's nothing else to do
-        const meaningfulActions = playerActions.filter(
-          (a) => a.type !== 'PASS_PRIORITY' && a.type !== 'END_TURN',
-        );
+        // Filter out non-meaningful actions for auto-pass decisions:
+        // - PASS_PRIORITY and END_TURN are always auto-passable
+        // - ACTIVATE_ABILITY for mana abilities (tapping lands) during opponent's turn
+        const meaningfulActions = playerActions.filter((a) => {
+          if (a.type === 'PASS_PRIORITY' || a.type === 'END_TURN') return false;
+
+          // During opponent's turn, mana abilities are rarely useful
+          // (can't cast sorcery-speed spells anyway)
+          if (this.state.activePlayer === 'opponent' && a.type === 'ACTIVATE_ABILITY') {
+            const desc = describeAction(a, this.state);
+            // Filter out pure mana abilities like "Forest: Tap: Add {G}"
+            if (desc.includes('Tap: Add {')) return false;
+          }
+
+          return true;
+        });
 
         if (meaningfulActions.length === 0 && playerActions.length > 0) {
           // Prefer END_TURN to skip phases, otherwise PASS_PRIORITY
