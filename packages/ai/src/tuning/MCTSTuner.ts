@@ -11,7 +11,13 @@
  */
 
 import type { PlayerId } from '@manacore/engine';
-import { initializeGame, getRandomTestDeck, applyAction, getLegalActions } from '@manacore/engine';
+import {
+  initializeGame,
+  getRandomTestDeck,
+  applyAction,
+  getLegalActions,
+  enableF6Mode,
+} from '@manacore/engine';
 import { GreedyBot } from '../bots/GreedyBot';
 import { MCTSBot } from '../bots/MCTSBot';
 import type { Bot } from '../bots/Bot';
@@ -162,6 +168,10 @@ function runGame(
   const deck1 = getRandomTestDeck();
   const deck2 = getRandomTestDeck();
   let state = initializeGame(deck1, deck2, seed);
+
+  // Enable F6 auto-pass for faster AI simulations
+  // This eliminates forced non-decisions at the engine level
+  enableF6Mode(state, true);
 
   let turnCount = 0;
   let actionCount = 0;

@@ -56,6 +56,12 @@ export interface GameState {
 
   // Prevention effects (Phase 1.5.1)
   preventAllCombatDamage?: boolean; // Fog effect
+
+  // F6 Auto-Pass (Phase 2.5)
+  // When enabled, the engine automatically passes priority for players with no meaningful actions.
+  // This eliminates forced non-decisions and speeds up AI simulations (MCTS, GreedyBot).
+  // Disabled by default to maintain backward compatibility with tests.
+  enableF6AutoPass?: boolean;
 }
 
 /**
@@ -98,6 +104,22 @@ export function getPlayer(state: GameState, playerId: PlayerId): PlayerState {
  */
 export function getOpponent(state: GameState, playerId: PlayerId): PlayerState {
   return playerId === 'player' ? state.players.opponent : state.players.player;
+}
+
+/**
+ * Enable F6 Auto-Pass mode for AI efficiency
+ *
+ * When enabled, the engine automatically passes priority for players with no meaningful actions.
+ * This eliminates forced non-decisions (70% of total actions in typical games) and speeds up:
+ * - MCTS simulations (smaller game trees)
+ * - GreedyBot evaluation (fewer decisions to evaluate)
+ * - General gameplay (less waiting for "pass priority")
+ *
+ * @param state - Game state to modify
+ * @param enabled - Whether to enable F6 mode (default: true)
+ */
+export function enableF6Mode(state: GameState, enabled: boolean = true): void {
+  state.enableF6AutoPass = enabled;
 }
 
 /**

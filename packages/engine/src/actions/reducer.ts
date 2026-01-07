@@ -28,6 +28,7 @@ import {
   canResolveStack,
   bothPlayersPassedPriority,
 } from '../rules/stack';
+import { shouldAutoPass } from './autoPass';
 import { resolveCombatDamage, cleanupCombat } from '../rules/combat';
 import { checkStateBasedActions } from '../rules/stateBasedActions';
 import { registerTrigger, resolveTriggers } from '../rules/triggers';
@@ -374,6 +375,10 @@ function applyEndTurn(state: GameState, _action: EndTurnAction): void {
 
 /**
  * Pass priority
+ *
+ * F6 Mode: After priority switches, if the new priority player has no meaningful
+ * actions (shouldAutoPass returns true), we automatically pass for them. This
+ * eliminates forced non-decisions and speeds up AI simulations.
  */
 function applyPassPriority(state: GameState, action: PassPriorityAction): void {
   const player = getPlayer(state, action.playerId);
@@ -402,7 +407,8 @@ function applyPassPriority(state: GameState, action: PassPriorityAction): void {
   }
 
   // Switch priority to opponent
-  state.priorityPlayer = action.playerId === 'player' ? 'opponent' : 'player';
+  const newPriorityPlayer = action.playerId === 'player' ? 'opponent' : 'player';
+  state.priorityPlayer = newPriorityPlayer;
 
   // Check if both players passed
   if (bothPlayersPassedPriority(state)) {
@@ -415,7 +421,74 @@ function applyPassPriority(state: GameState, action: PassPriorityAction): void {
       // Stack is empty and both passed - advance to next phase/step
       advancePhase(state);
     }
+    // After resolution or phase advance, check F6 auto-pass for new priority player
+    if (state.enableF6AutoPass) {
+      applyF6AutoPass(state);
+    }
+  } else {
+    // Only one player passed - check F6 auto-pass for the new priority player
+    if (state.enableF6AutoPass) {
+      applyF6AutoPass(state);
+    }
   }
+}
+
+/**
+ * F6 Auto-Pass: Automatically pass priority for a player if they have no meaningful actions.
+ *
+ * This implements MTGO-style F6 behavior at the engine level, eliminating the need for
+ * bots to explicitly choose PASS_PRIORITY when they have no options.
+ *
+ * Safety: Limited recursion depth to prevent infinite loops in edge cases.
+ */
+function applyF6AutoPass(state: GameState, depth: number = 0): void {
+  // Safety limit to prevent infinite loops
+  const MAX_DEPTH = 20;
+  if (depth >= MAX_DEPTH) {
+    return;
+  }
+
+  // Don't auto-pass if game is over
+  if (state.gameOver) {
+    return;
+  }
+
+  const currentPlayer = state.priorityPlayer;
+
+  // Check if current priority player should auto-pass
+  if (shouldAutoPass(state, currentPlayer)) {
+    // Automatically pass for this player (with incremented depth)
+    applyF6AutoPassInternal(state, currentPlayer, depth + 1);
+  }
+}
+
+/**
+ * Internal F6 auto-pass that tracks recursion depth
+ */
+function applyF6AutoPassInternal(
+  state: GameState,
+  playerId: 'player' | 'opponent',
+  depth: number,
+): void {
+  const player = getPlayer(state, playerId);
+  player.hasPassedPriority = true;
+  player.consecutivePasses++;
+
+  // Switch priority to opponent
+  const newPriorityPlayer = playerId === 'player' ? 'opponent' : 'player';
+  state.priorityPlayer = newPriorityPlayer;
+
+  // Check if both players passed
+  if (bothPlayersPassedPriority(state)) {
+    if (canResolveStack(state)) {
+      resolveTopOfStack(state);
+    } else if (state.stack.length === 0) {
+      advancePhase(state);
+    }
+  }
+
+  // Continue F6 chain if needed
+  applyF6AutoPass(state, depth);
 }
 
 /**

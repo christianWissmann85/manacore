@@ -15,6 +15,7 @@ import {
   CardLoader,
   getLegalActions,
   describeAction,
+  enableF6Mode,
   type GameState,
   type Action,
 } from '@manacore/engine';
@@ -183,6 +184,11 @@ class GameSession {
     const opponentDeck = getDeck(opponentDeckName);
 
     this.state = initializeGame(playerDeck, opponentDeck, seed);
+
+    // Enable F6 auto-pass for faster gameplay
+    // This eliminates forced non-decisions at the engine level
+    enableF6Mode(this.state, true);
+
     this.gameId = `game-${seed}`;
     this.outputPath = join(process.cwd(), 'packages/ai/data/human-training');
     mkdirSync(this.outputPath, { recursive: true });

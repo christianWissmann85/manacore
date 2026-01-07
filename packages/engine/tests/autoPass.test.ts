@@ -535,3 +535,163 @@ describe('Action count reduction', () => {
     expect(blockActions.length).toBeLessThanOrEqual(1);
   });
 });
+
+describe('F6 Mode (opt-in engine-level auto-pass)', () => {
+  test('F6 mode is disabled by default', () => {
+    const state = createTestState();
+    expect(state.enableF6AutoPass).toBeUndefined();
+  });
+
+  test('enableF6Mode enables F6 auto-pass', async () => {
+    const { enableF6Mode } = await import('../src/state/GameState');
+    const state = createTestState();
+
+    enableF6Mode(state, true);
+    expect(state.enableF6AutoPass).toBe(true);
+
+    enableF6Mode(state, false);
+    expect(state.enableF6AutoPass).toBe(false);
+  });
+
+  test('F6 mode auto-resolves stack when neither player has responses', async () => {
+    const { enableF6Mode } = await import('../src/state/GameState');
+    const state = createTestState();
+    enableF6Mode(state, true);
+
+    // Give player mana to cast Lightning Blast
+    addToBattlefield(state, 'player', 'Mountain');
+    addToBattlefield(state, 'player', 'Mountain');
+    addToBattlefield(state, 'player', 'Mountain');
+    addToBattlefield(state, 'player', 'Mountain');
+    addToHand(state, 'player', 'Lightning Blast');
+
+    // Give opponent a creature to target (no instant-speed options)
+    const bearsId = addToBattlefield(state, 'opponent', 'Grizzly Bears');
+
+    // Clear opponent's hand so they have no responses
+    state.players.opponent.hand = [];
+
+    // Cast Lightning Blast targeting the creature (not the player)
+    const actions = getLegalActions(state, 'player');
+    const castAction = actions.find(
+      (a) =>
+        a.type === 'CAST_SPELL' &&
+        a.payload.cardInstanceId === state.players.player.hand[0]?.instanceId &&
+        a.payload.targets?.includes(bearsId),
+    );
+    expect(castAction).toBeDefined();
+
+    // Cast the spell - after casting, priority goes to opponent
+    let newState = applyAction(state, castAction!);
+
+    // Priority should be with opponent (they get chance to respond)
+    expect(newState.priorityPlayer).toBe('opponent');
+
+    // Opponent has no responses (empty hand, no abilities), so they pass
+    const oppPassAction = getLegalActions(newState, 'opponent').find(
+      (a) => a.type === 'PASS_PRIORITY',
+    );
+    expect(oppPassAction).toBeDefined();
+    newState = applyAction(newState, oppPassAction!);
+
+    // After opponent passes, priority goes back to player
+    // Player also has no responses at instant speed, so F6 auto-passes for player
+    // Then both have passed, so spell resolves
+
+    // With F6 mode, player auto-passes (no instant responses), spell resolves
+    // Stack should be empty after resolution
+    expect(newState.stack.length).toBe(0);
+
+    // Grizzly Bears should have taken 4 damage and died
+    expect(newState.players.opponent.battlefield.length).toBe(0);
+    expect(newState.players.opponent.graveyard.length).toBe(1);
+  });
+
+  test('F6 mode skips empty combat phases', async () => {
+    const { enableF6Mode } = await import('../src/state/GameState');
+    const state = createTestState();
+    enableF6Mode(state, true);
+
+    // Set to main1, empty hands and battlefields
+    state.phase = 'main1';
+    state.step = 'main';
+    state.players.player.hand = [];
+    state.players.opponent.hand = [];
+    state.players.player.battlefield = [];
+    state.players.opponent.battlefield = [];
+    state.players.player.landsPlayedThisTurn = 1; // Already played land
+
+    // Player should auto-pass (no options)
+    expect(shouldAutoPass(state, 'player')).toBe(true);
+
+    // Pass priority - with F6 mode, should skip through phases
+    let newState = applyAction(state, { type: 'PASS_PRIORITY', playerId: 'player', payload: {} });
+
+    // Should have advanced past main1 → combat (auto-skip) → main2
+    // Both players have no options, so F6 keeps passing
+    expect(newState.phase).not.toBe('main1');
+  });
+
+  test('F6 mode does NOT skip phases when player has options', async () => {
+    const { enableF6Mode } = await import('../src/state/GameState');
+    const state = createTestState();
+    enableF6Mode(state, true);
+
+    // Give player a creature that can attack
+    addToBattlefield(state, 'player', 'Grizzly Bears');
+
+    // Set to combat, declare_attackers
+    state.phase = 'combat';
+    state.step = 'declare_attackers';
+
+    // Player should NOT auto-pass because they have attackers
+    expect(shouldAutoPass(state, 'player')).toBe(false);
+  });
+
+  test('disabled F6 mode requires explicit passes', async () => {
+    const { enableF6Mode } = await import('../src/state/GameState');
+    const state = createTestState();
+    enableF6Mode(state, false); // Explicitly disabled
+
+    // Give player mana to cast Lightning Blast
+    addToBattlefield(state, 'player', 'Mountain');
+    addToBattlefield(state, 'player', 'Mountain');
+    addToBattlefield(state, 'player', 'Mountain');
+    addToBattlefield(state, 'player', 'Mountain');
+    addToHand(state, 'player', 'Lightning Blast');
+
+    // Give opponent a creature to target
+    addToBattlefield(state, 'opponent', 'Grizzly Bears');
+    state.players.opponent.hand = []; // No responses
+
+    // Cast Lightning Blast
+    const castAction = getLegalActions(state, 'player').find((a) => a.type === 'CAST_SPELL');
+    expect(castAction).toBeDefined();
+    let newState = applyAction(state, castAction!);
+
+    // After casting, priority goes to opponent (to respond)
+    expect(newState.priorityPlayer).toBe('opponent');
+
+    // Opponent passes priority (has no responses, but F6 is disabled so must explicitly pass)
+    const oppPassAction = getLegalActions(newState, 'opponent').find(
+      (a) => a.type === 'PASS_PRIORITY',
+    );
+    expect(oppPassAction).toBeDefined();
+    newState = applyAction(newState, oppPassAction!);
+
+    // After opponent passes, priority goes back to player
+    // Without F6 mode, player must explicitly pass too
+    expect(newState.stack.length).toBe(1);
+    expect(newState.priorityPlayer).toBe('player');
+
+    // Player passes priority
+    const playerPassAction = getLegalActions(newState, 'player').find(
+      (a) => a.type === 'PASS_PRIORITY',
+    );
+    expect(playerPassAction).toBeDefined();
+    newState = applyAction(newState, playerPassAction!);
+
+    // Now both have passed, spell resolves
+    expect(newState.stack.length).toBe(0);
+  });
+});
