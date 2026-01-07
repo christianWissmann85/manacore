@@ -584,7 +584,7 @@ describe('Mana Sink Detection', () => {
     expect(manaAbilities.length).toBe(0);
   });
 
-  test('mana abilities are available when mana sinks exist and tapping helps', () => {
+  test('mana abilities are hidden when CAST_SPELL is available (redundant)', () => {
     const state = createTestState();
 
     // Add a creature spell to hand - this is a mana sink
@@ -596,9 +596,14 @@ describe('Mana Sink Detection', () => {
 
     const actions = getLegalActions(state, 'player');
 
-    // Should have ACTIVATE_ABILITY actions for tapping lands
+    // CAST_SPELL should be available
+    const castSpells = actions.filter((a) => a.type === 'CAST_SPELL');
+    expect(castSpells.length).toBeGreaterThan(0);
+
+    // Mana abilities should be HIDDEN since CAST_SPELL auto-pays mana
+    // This reduces the action space for AI training
     const manaAbilities = actions.filter((a) => a.type === 'ACTIVATE_ABILITY');
-    expect(manaAbilities.length).toBeGreaterThan(0);
+    expect(manaAbilities.length).toBe(0);
   });
 
   test('mana abilities are filtered when tapping cannot enable any cast', () => {
@@ -622,7 +627,7 @@ describe('Mana Sink Detection', () => {
     expect(actions[0]?.type).toBe('PASS_PRIORITY');
   });
 
-  test('mana abilities shown for X spells with colored requirement met', () => {
+  test('X spells can be cast with X=0 when colored requirement is met', () => {
     const state = createTestState();
 
     // Add Blaze ({X}{R}) - can cast with just {R} for X=0
@@ -633,9 +638,13 @@ describe('Mana Sink Detection', () => {
 
     const actions = getLegalActions(state, 'player');
 
-    // Should have mana abilities since Blaze can be cast with X=0
+    // Should have CAST_SPELL for Blaze (can cast with X=0)
+    const castSpells = actions.filter((a) => a.type === 'CAST_SPELL');
+    expect(castSpells.length).toBeGreaterThan(0);
+
+    // Mana abilities should be HIDDEN since CAST_SPELL is available
     const manaAbilities = actions.filter((a) => a.type === 'ACTIVATE_ABILITY');
-    expect(manaAbilities.length).toBeGreaterThan(0);
+    expect(manaAbilities.length).toBe(0);
   });
 });
 

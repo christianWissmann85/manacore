@@ -55,6 +55,60 @@ function cantAttackAlone(template: { name?: string; oracle_text?: string }): boo
 }
 
 /**
+ * Filter out redundant mana abilities when CAST_SPELL actions are available.
+ *
+ * When a player can cast a spell, the CAST_SPELL action automatically handles
+ * mana payment by tapping lands. Showing manual "Tap Forest for {G}" options
+ * alongside "Cast Grizzly Bears" is redundant and clutters the action space.
+ *
+ * This filter removes mana abilities when:
+ * 1. At least one CAST_SPELL action is available
+ * 2. The mana ability is a pure mana ability (just adds mana, no other effects)
+ *
+ * This optimization reduces the action space for AI training and simplifies UX.
+ */
+function filterRedundantManaAbilities(
+  actions: Action[],
+  state: GameState,
+  playerId: 'player' | 'opponent',
+): Action[] {
+  // Check if there's at least one CAST_SPELL action
+  const hasCastSpell = actions.some((a) => a.type === 'CAST_SPELL');
+
+  if (!hasCastSpell) {
+    // No spell to cast - keep all actions (mana abilities might be useful for abilities)
+    return actions;
+  }
+
+  // Filter out pure mana abilities
+  return actions.filter((action) => {
+    if (action.type !== 'ACTIVATE_ABILITY') {
+      return true; // Keep non-ability actions
+    }
+
+    // Find the source permanent and ability
+    const player = getPlayer(state, playerId);
+    const permanent = player.battlefield.find((c) => c.instanceId === action.payload.sourceId);
+    if (!permanent) {
+      return true; // Keep if we can't find the source
+    }
+
+    const abilities = getActivatedAbilities(permanent, state);
+    const ability = abilities.find((a) => a.id === action.payload.abilityId);
+    if (!ability) {
+      return true; // Keep if we can't find the ability
+    }
+
+    // Filter out pure mana abilities (they're redundant when CAST_SPELL is available)
+    if (ability.isManaAbility) {
+      return false; // Remove this action
+    }
+
+    return true; // Keep non-mana abilities
+  });
+}
+
+/**
  * Get all legal actions for a player
  */
 export function getLegalActions(state: GameState, playerId: 'player' | 'opponent'): Action[] {
@@ -128,7 +182,9 @@ export function getLegalActions(state: GameState, playerId: 'player' | 'opponent
     }
   }
 
-  return actions;
+  // Post-processing: Hide redundant mana abilities when CAST_SPELL is available
+  // If we can cast a spell, the mana tapping is automatic - no need to show manual tap options
+  return filterRedundantManaAbilities(actions, state, playerId);
 }
 
 /**
