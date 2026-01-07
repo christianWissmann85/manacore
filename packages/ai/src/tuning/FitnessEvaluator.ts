@@ -253,7 +253,13 @@ export class FitnessEvaluator {
         // Play multiple games
         for (let g = 0; g < this.config.tournamentGames; g++) {
           const gameSeed = seed + i * 10000 + j * 100 + g;
-          const result = runGame(bot1, bot2, gameSeed, this.config.maxTurns, this.config.deckWeights);
+          const result = runGame(
+            bot1,
+            bot2,
+            gameSeed,
+            this.config.maxTurns,
+            this.config.deckWeights,
+          );
           this.gamesPlayed++;
 
           const elo1 = elos.get(c1.id)!;

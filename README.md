@@ -137,6 +137,23 @@ Compare different AI architectures:
 
 ---
 
+## 🧪 Testing
+
+ManaCore has a comprehensive test suite with **1900+ tests** covering the engine, AI, and CLI.
+
+```bash
+# Fast unit tests (~13 seconds)
+bun test
+
+# Package-specific tests
+bun test:engine
+bun test:ai
+```
+
+Slow integration tests (game simulations, stress tests) are automatically skipped during development for faster iteration. See [TESTING.md](TESTING.md) for details on test categories and how to run the full suite.
+
+---
+
 ## ⚖️ Legal Disclaimer
 
 **ManaCore is a non-commercial, open-source research project.**

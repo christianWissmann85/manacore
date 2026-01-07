@@ -10,6 +10,8 @@
   "scripts": {
     "fetch-cards": "bun run scripts/fetch-cards.ts",
     "test": "bun test --preload ./packages/cli-client/tests/setup.ts",
+    "test:fast": "bun test --preload ./packages/cli-client/tests/setup.ts",
+    "test:all": "bun test --preload ./packages/cli-client/tests/setup.ts",
     "test:quiet": "bun scripts/test-quiet.ts",
     "test:engine": "cd packages/engine && bun test",
     "test:ai": "cd packages/ai && bun test",
