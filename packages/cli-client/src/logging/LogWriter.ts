@@ -161,15 +161,21 @@ export class LogWriter {
   /**
    * Complete the log and close the stream
    */
-  finish(): void {
+  finish(): Promise<void> {
     this.writeLine('═'.repeat(80));
     this.writeLine(`Simulation completed at: ${new Date().toISOString()}`);
     this.writeLine('═'.repeat(80));
 
-    if (this.logStream) {
-      this.logStream.end();
-      this.logStream = null;
-    }
+    return new Promise((resolve) => {
+      if (this.logStream) {
+        this.logStream.end(() => {
+          this.logStream = null;
+          resolve();
+        });
+      } else {
+        resolve();
+      }
+    });
   }
 
   /**

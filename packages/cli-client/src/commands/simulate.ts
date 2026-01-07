@@ -211,7 +211,7 @@ export async function runSimulation(
   });
 
   // Complete log file with actual duration
-  logWriter.finish();
+  await logWriter.finish();
 
   // Store log path for export
   const logPath = logWriter.getRelativePath();

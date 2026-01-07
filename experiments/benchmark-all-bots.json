@@ -1,7 +1,15 @@
 {
   "command": "benchmark",
   "name": "full-bot-comparison",
-  "bots": ["random", "greedy", "mcts-eval-fast", "mcts-eval", "mcts-eval-strong", "mcts-eval-turbo", "mcts-ordered"],
+  "bots": [
+    "random",
+    "greedy",
+    "mcts-eval-fast",
+    "mcts-eval",
+    "mcts-eval-strong",
+    "mcts-eval-turbo",
+    "mcts-ordered"
+  ],
   "gamesPerMatchup": 100,
   "seed": "timestamp",
   "calculateElo": true,
