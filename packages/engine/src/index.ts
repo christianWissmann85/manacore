@@ -227,7 +227,6 @@ export {
   aiOptimizedShuffle, // AI-optimized shuffle with guaranteed playable hands
   createSimpleDeck,
   initializeGame,
-  createVanillaDeck,
   // Mono-colored test decks
   createWhiteDeck,
   createBlueDeck,
@@ -251,6 +250,7 @@ export {
   createArtifactsDeck2,
   createSpellsDeck,
   createCreaturesDeck,
+  createUncoveredDeck,
   // Deck registries
   getRandomTestDeck,
   getRandomMonoDeck,

@@ -345,7 +345,6 @@ export {
   createBlackDeck,
   createRedDeck,
   createGreenDeck,
-  createVanillaDeck,
   // Phase 1.5: Two-color test decks
   createAzoriusDeck,
   createOrzhovDeck,
@@ -363,6 +362,7 @@ export {
   createArtifactsDeck2,
   createSpellsDeck,
   createCreaturesDeck,
+  createUncoveredDeck,
   // Competitive decks
   createWhiteWeenie,
   createBlueControl,

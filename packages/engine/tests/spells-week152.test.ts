@@ -19,7 +19,7 @@ import {
   CardLoader,
   getPlayer,
   initializeGame,
-  createVanillaDeck,
+  createGreenDeck,
   type GameState,
   type CastSpellAction,
   type PlayerId,
@@ -52,8 +52,8 @@ function setupGameWithMana(
 
 // Helper to create a proper game state with libraries
 function createTestGameState(): GameState {
-  const deck1 = createVanillaDeck();
-  const deck2 = createVanillaDeck();
+  const deck1 = createGreenDeck();
+  const deck2 = createGreenDeck();
   return initializeGame(deck1, deck2);
 }
 

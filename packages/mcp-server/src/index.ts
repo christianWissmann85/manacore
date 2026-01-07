@@ -6,7 +6,6 @@ import { z } from 'zod';
 import {
   initializeGame,
   applyAction,
-  createVanillaDeck,
   createWhiteDeck,
   createBlueDeck,
   createBlackDeck,
@@ -176,7 +175,7 @@ class GameSession {
         case 'green':
           return createGreenDeck();
         default:
-          return createVanillaDeck();
+          return createGreenDeck();
       }
     };
 

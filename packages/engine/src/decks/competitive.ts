@@ -22,8 +22,9 @@ export function createWhiteWeenie(): CardTemplate[] {
     { name: 'Standing Troops', count: 4 }, // 2/4 Vigilance for 2W
     { name: 'Samite Healer', count: 4 }, // 1/1 with damage prevention for 1W
     // Spells (12)
-    { name: 'Disenchant', count: 8 }, // Artifact/Enchantment removal
+    { name: 'Disenchant', count: 4 }, // Artifact/Enchantment removal
     { name: 'Pacifism', count: 4 }, // Creature lockdown
+    { name: 'Exile', count: 4 }, // Exile attacking creature, gain life
   ]);
 }
 
@@ -65,7 +66,8 @@ export function createBlackAggro(): CardTemplate[] {
     { name: 'Python', count: 4 }, // 3/2 for 1BB
     { name: 'Bog Wraith', count: 4 }, // 3/3 Swampwalk for 3B
     // Spells (16)
-    { name: 'Terror', count: 8 }, // Premium removal
+    { name: 'Terror', count: 4 }, // Premium removal
+    { name: 'Dry Spell', count: 4 }, // 1 damage to each creature/player
     { name: 'Raise Dead', count: 4 }, // Recursion
     { name: 'Regeneration', count: 4 }, // Protection aura
   ]);
@@ -85,9 +87,12 @@ export function createRedBurn(): CardTemplate[] {
     { name: 'Balduvian Barbarians', count: 4 }, // 3/2 for 1RR
     { name: 'Hulking Cyclops', count: 4 }, // 5/5 for 3RR
     // Spells (24)
-    { name: 'Shock', count: 8 }, // 2 damage for R
-    { name: 'Lightning Blast', count: 12 }, // 4 damage for 3R
+    { name: 'Shock', count: 4 }, // 2 damage for R
+    { name: 'Lightning Blast', count: 4 }, // 4 damage for 3R
+    { name: 'Hammer of Bogardan', count: 4 }, // 3 damage, returns to hand
+    { name: 'Spitting Earth', count: 4 }, // damage = mountains
     { name: 'Stone Rain', count: 4 }, // Land destruction
+    { name: 'Pyrotechnics', count: 4 }, // 4R - 4 damage divided
   ]);
 }
 
@@ -104,9 +109,9 @@ export function createGreenMidrange(): CardTemplate[] {
     { name: 'Birds of Paradise', count: 4 }, // Mana dork (any color)
     { name: 'Grizzly Bears', count: 4 }, // 2/2 for 1G
     { name: 'River Boa', count: 4 }, // 2/1 Islandwalk, regenerate for 1G
-    { name: 'Gorilla Chieftain', count: 4 }, // 3/3 for 2GG
+    { name: 'Gorilla Chieftain', count: 4 }, // 3/3 Regenerate for 2GG
+    { name: 'Stalking Tiger', count: 4 }, // 3/3 can't be blocked by 1 creature
     { name: 'Scaled Wurm', count: 4 }, // 7/6 for 7G
-    { name: 'Gorilla Chieftain', count: 4 }, // 3/3 for 2GG
     // Spells (12)
     { name: 'Giant Growth', count: 4 }, // +3/+3 instant
     { name: 'Hurricane', count: 4 }, // Board wipe

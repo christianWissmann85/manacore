@@ -105,7 +105,8 @@ describe('Mono-Colored Test Decks', () => {
       expect(cardNames.filter((n) => n === 'Bog Rats').length).toBe(4);
       expect(cardNames.filter((n) => n === 'Drudge Skeletons').length).toBe(4);
       expect(cardNames.filter((n) => n === 'Bog Imp').length).toBe(4);
-      expect(cardNames.filter((n) => n === 'Terror').length).toBe(8);
+      expect(cardNames.filter((n) => n === 'Terror').length).toBe(4);
+      expect(cardNames.filter((n) => n === 'Dry Spell').length).toBe(4);
     });
   });
 
@@ -129,10 +130,11 @@ describe('Mono-Colored Test Decks', () => {
       const cardNames = deck.map((c) => c.name);
 
       expect(cardNames.filter((n) => n === 'Mountain').length).toBe(22);
-      expect(cardNames.filter((n) => n === 'Balduvian Barbarians').length).toBe(10);
-      expect(cardNames.filter((n) => n === 'Anaba Shaman').length).toBe(8);
-      expect(cardNames.filter((n) => n === 'Lightning Blast').length).toBe(10);
-      expect(cardNames.filter((n) => n === 'Shock').length).toBe(10);
+      expect(cardNames.filter((n) => n === 'Raging Goblin').length).toBe(4);
+      expect(cardNames.filter((n) => n === 'Balduvian Barbarians').length).toBe(4);
+      expect(cardNames.filter((n) => n === 'Anaba Shaman').length).toBe(4);
+      expect(cardNames.filter((n) => n === 'Lightning Blast').length).toBe(4);
+      expect(cardNames.filter((n) => n === 'Shock').length).toBe(4);
     });
   });
 
@@ -156,10 +158,10 @@ describe('Mono-Colored Test Decks', () => {
       const cardNames = deck.map((c) => c.name);
 
       expect(cardNames.filter((n) => n === 'Forest').length).toBe(20);
-      expect(cardNames.filter((n) => n === 'Llanowar Elves').length).toBe(8);
-      expect(cardNames.filter((n) => n === 'Birds of Paradise').length).toBe(8);
-      expect(cardNames.filter((n) => n === 'Grizzly Bears').length).toBe(16);
-      expect(cardNames.filter((n) => n === 'Giant Growth').length).toBe(8);
+      expect(cardNames.filter((n) => n === 'Llanowar Elves').length).toBe(4);
+      expect(cardNames.filter((n) => n === 'Birds of Paradise').length).toBe(4);
+      expect(cardNames.filter((n) => n === 'Grizzly Bears').length).toBe(4);
+      expect(cardNames.filter((n) => n === 'Giant Growth').length).toBe(4);
     });
   });
 });

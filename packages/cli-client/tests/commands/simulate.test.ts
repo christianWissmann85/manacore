@@ -17,7 +17,7 @@ import { describe, test, expect, beforeEach, afterAll, mock, spyOn } from 'bun:t
 import { runSimulation, printResults, exportResults } from '../../src/commands/simulate';
 import { runSingleGame } from '../../src/commands/gameRunner';
 import { RandomBot, GreedyBot } from '@manacore/ai';
-import { initializeGame, createVanillaDeck, getLegalActions, applyAction } from '@manacore/engine';
+import { initializeGame, createGreenDeck, getLegalActions, applyAction } from '@manacore/engine';
 import type { GameState, Action, PlayerId } from '@manacore/engine';
 import type { Bot } from '@manacore/ai';
 import type { SimulationOptions, SimulationResults, OutputLevel } from '../../src/types';
@@ -72,8 +72,8 @@ function createPassingBot(name: string): Bot {
  * Creates a test game state
  */
 function createTestGameState(seed: number = 12345): GameState {
-  const playerDeck = createVanillaDeck();
-  const opponentDeck = createVanillaDeck();
+  const playerDeck = createGreenDeck();
+  const opponentDeck = createGreenDeck();
   return initializeGame(playerDeck, opponentDeck, seed);
 }
 

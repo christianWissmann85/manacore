@@ -1,19 +1,9 @@
 import { CardTemplate } from '../cards/CardTemplate';
 import { createSimpleDeck } from './utils';
 
-/**
- * Create a vanilla creature deck for testing
- * Aggressive deck with low-cost creatures to ensure games finish quickly
- */
-export function createVanillaDeck(): CardTemplate[] {
-  return createSimpleDeck([
-    { name: 'Forest', count: 20 },
-    { name: 'Grizzly Bears', count: 40 }, // 2/2 for 1G - very aggressive
-  ]);
-}
-
 // =============================================================================
-// MONO-COLORED TEST DECKS (Week 11)
+// MONO-COLORED TEST DECKS
+// All decks follow the 4-card maximum rule for non-basic lands
 // =============================================================================
 
 /**
@@ -88,7 +78,8 @@ export function createBlackDeck(): CardTemplate[] {
     // 4-drops (4)
     { name: 'Bog Wraith', count: 4 }, // 3B 3/3 Swampwalk
     // Removal (8)
-    { name: 'Terror', count: 8 }, // 1B - Destroy nonblack nonartifact creature
+    { name: 'Terror', count: 4 }, // 1B - Destroy nonblack nonartifact creature
+    { name: 'Dry Spell', count: 4 }, // 1B - 1 damage to each creature/player
   ]);
 }
 
@@ -101,11 +92,17 @@ export function createRedDeck(): CardTemplate[] {
     // Lands (22)
     { name: 'Mountain', count: 22 },
     // Creatures (18)
-    { name: 'Balduvian Barbarians', count: 10 }, // 3/2 aggressive
-    { name: 'Anaba Shaman', count: 8 }, // 2/2 with tap for damage
+    { name: 'Raging Goblin', count: 4 }, // R 1/1 Haste
+    { name: 'Balduvian Barbarians', count: 4 }, // 1RR 3/2
+    { name: 'Anaba Shaman', count: 4 }, // 2RR 2/2 tap for damage
+    { name: 'Goblin Hero', count: 4 }, // 2R 2/2
+    { name: 'Fire Elemental', count: 2 }, // 3RR 5/4
     // Spells (20)
-    { name: 'Lightning Blast', count: 10 }, // 4 damage
-    { name: 'Shock', count: 10 }, // 2 damage
+    { name: 'Lightning Blast', count: 4 }, // 3R 4 damage
+    { name: 'Shock', count: 4 }, // R 2 damage
+    { name: 'Hammer of Bogardan', count: 4 }, // 1RR 3 damage, returns to hand
+    { name: 'Spitting Earth', count: 4 }, // 1R damage = mountains
+    { name: 'Stone Rain', count: 4 }, // 2R land destruction
   ]);
 }
 
@@ -118,11 +115,17 @@ export function createGreenDeck(): CardTemplate[] {
     // Lands (20)
     { name: 'Forest', count: 20 },
     // Creatures (32)
-    { name: 'Llanowar Elves', count: 8 }, // Mana acceleration
-    { name: 'Birds of Paradise', count: 8 }, // Mana acceleration (any color)
-    { name: 'Grizzly Bears', count: 16 }, // 2/2 for 1G
+    { name: 'Llanowar Elves', count: 4 }, // G 1/1 tap for G
+    { name: 'Birds of Paradise', count: 4 }, // G 0/1 Flying, tap for any color
+    { name: 'Grizzly Bears', count: 4 }, // 1G 2/2
+    { name: 'River Boa', count: 4 }, // 1G 2/1 Islandwalk, Regenerate
+    { name: 'Gorilla Chieftain', count: 4 }, // 2GG 3/3 Regenerate
+    { name: 'Giant Spider', count: 4 }, // 3G 2/4 Reach
+    { name: 'Stalking Tiger', count: 4 }, // 3G 3/3 can't be blocked by 1 creature
+    { name: 'Scaled Wurm', count: 4 }, // 7G 7/6
     // Spells (8)
-    { name: 'Giant Growth', count: 8 }, // +3/+3 combat trick
+    { name: 'Giant Growth', count: 4 }, // G +3/+3
+    { name: 'Untamed Wilds', count: 4 }, // 2G search for basic land
   ]);
 }
 

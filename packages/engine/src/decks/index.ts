@@ -7,7 +7,6 @@ import {
   createBlackDeck,
   createRedDeck,
   createGreenDeck,
-  createVanillaDeck,
 } from './mono';
 import {
   TwoColorDeck,
@@ -40,6 +39,7 @@ import {
   createArtifactsDeck2,
   createSpellsDeck,
   createCreaturesDeck,
+  createUncoveredDeck,
 } from './special';
 
 // Re-export specific deck creators
@@ -50,7 +50,6 @@ export {
   createBlackDeck,
   createRedDeck,
   createGreenDeck,
-  createVanillaDeck,
   createAzoriusDeck,
   createOrzhovDeck,
   createBorosDeck,
@@ -71,6 +70,7 @@ export {
   createArtifactsDeck2,
   createSpellsDeck,
   createCreaturesDeck,
+  createUncoveredDeck,
 };
 
 // Re-export types

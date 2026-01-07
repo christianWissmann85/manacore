@@ -7,7 +7,7 @@
 import { describe, test, expect } from 'bun:test';
 import { createBot, type BotType } from '../src/botFactory';
 import { RandomBot, GreedyBot, MCTSBot } from '@manacore/ai';
-import { initializeGame, createVanillaDeck, getLegalActions } from '@manacore/engine';
+import { initializeGame, createGreenDeck, getLegalActions } from '@manacore/engine';
 
 // =============================================================================
 // TEST UTILITIES
@@ -17,8 +17,8 @@ import { initializeGame, createVanillaDeck, getLegalActions } from '@manacore/en
  * Creates a basic game state for testing bot decisions
  */
 function createTestGameState() {
-  const playerDeck = createVanillaDeck();
-  const opponentDeck = createVanillaDeck();
+  const playerDeck = createGreenDeck();
+  const opponentDeck = createGreenDeck();
   return initializeGame(playerDeck, opponentDeck, 12345);
 }
 

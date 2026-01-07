@@ -18,7 +18,7 @@ import type { GameState, Action, PlayerId, CardInstance } from '@manacore/engine
 import type { Bot } from '@manacore/ai';
 import {
   initializeGame,
-  createVanillaDeck,
+  createGreenDeck,
   getLegalActions,
   applyAction,
   describeAction,
@@ -37,8 +37,8 @@ import { createMockBot, createSpyBot, createSequentialBot, cleanupAllTempDirs } 
  * Creates a test game state with vanilla decks
  */
 function createTestGameState(seed: number = 12345): GameState {
-  const playerDeck = createVanillaDeck();
-  const opponentDeck = createVanillaDeck();
+  const playerDeck = createGreenDeck();
+  const opponentDeck = createGreenDeck();
   return initializeGame(playerDeck, opponentDeck, seed);
 }
 

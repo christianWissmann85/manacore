@@ -899,8 +899,8 @@ describe('Bot Factory', () => {
   });
 
   test('bots can choose actions', () => {
-    const { initializeGame, createVanillaDeck, getLegalActions } = require('@manacore/engine');
-    const deck = createVanillaDeck();
+    const { initializeGame, createGreenDeck, getLegalActions } = require('@manacore/engine');
+    const deck = createGreenDeck();
     const state = initializeGame(deck, deck, 12345);
 
     const bot = createBot('random', 12345);

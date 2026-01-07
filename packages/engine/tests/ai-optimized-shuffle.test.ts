@@ -18,7 +18,6 @@ import {
   createBlueDeck,
   createWhiteDeck,
   createBlackDeck,
-  createVanillaDeck,
   isLand,
   CardLoader,
   _resetInstanceCounter,
@@ -165,20 +164,6 @@ describe('AI-Optimized Shuffle', () => {
         expect(playableCount).toBeGreaterThanOrEqual(2);
       }
     });
-
-    test('vanilla deck still gets 2-3 lands in opener', () => {
-      // Vanilla deck: 20 Forest + 40 Grizzly Bears
-      const deck = createVanillaDeck();
-
-      for (let seed = 0; seed < 50; seed++) {
-        const shuffled = aiOptimizedShuffle([...deck], seed);
-        const hand = getOpeningHand(shuffled);
-        const landCount = countLands(hand);
-
-        expect(landCount).toBeGreaterThanOrEqual(2);
-        expect(landCount).toBeLessThanOrEqual(3);
-      }
-    });
   });
 
   describe('Library Mana Weaving Constraints', () => {
@@ -247,7 +232,7 @@ describe('AI-Optimized Shuffle', () => {
     });
 
     test('shuffled deck length is 60 cards', () => {
-      const decks = [createGreenDeck(), createRedDeck(), createBlueDeck(), createVanillaDeck()];
+      const decks = [createGreenDeck(), createRedDeck(), createBlueDeck(), createWhiteDeck()];
 
       for (const deck of decks) {
         const shuffled = aiOptimizedShuffle([...deck], 999);

@@ -6,7 +6,7 @@ import type { Bot } from '@manacore/ai';
 import type { GameState, Action } from '@manacore/engine';
 import {
   initializeGame,
-  createVanillaDeck,
+  createGreenDeck,
   applyAction,
   getLegalActions,
   describeAction,
@@ -27,8 +27,8 @@ export async function playGame(opponentBot: Bot): Promise<void> {
   console.log('  quit     - Exit game\n');
 
   // Create decks
-  const playerDeck = createVanillaDeck();
-  const opponentDeck = createVanillaDeck();
+  const playerDeck = createGreenDeck();
+  const opponentDeck = createGreenDeck();
 
   // Initialize game
   let state = initializeGame(playerDeck, opponentDeck);

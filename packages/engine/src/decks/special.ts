@@ -178,9 +178,50 @@ export function createCreaturesDeck(): CardTemplate[] {
 }
 
 /**
+ * Uncovered Cards Deck
+ * Tests implemented cards not covered by other decks
+ * Includes: Abyssal Specter, Archangel, Fog Elemental, Gravedigger, Prodigal Sorcerer, etc.
+ */
+export function createUncoveredDeck(): CardTemplate[] {
+  return createSimpleDeck([
+    // Lands (24) - 5-color base
+    { name: 'Plains', count: 4 },
+    { name: 'Island', count: 4 },
+    { name: 'Swamp', count: 6 },
+    { name: 'Mountain', count: 2 },
+    { name: 'Forest', count: 2 },
+    { name: 'City of Brass', count: 4 },
+    { name: 'Brushland', count: 2 },
+    // Creatures (20) - Uncovered creatures
+    { name: 'Abyssal Specter', count: 4 }, // 2BB 2/3 Flying, discard trigger
+    { name: 'Archangel', count: 2 }, // 5WW 5/5 Flying, Vigilance
+    { name: 'Fog Elemental', count: 4 }, // 2U 4/4 Flying
+    { name: 'Gravedigger', count: 4 }, // 3B 2/2 ETB: Return creature
+    { name: 'Prodigal Sorcerer', count: 4 }, // 2U 1/1 {T}: 1 damage
+    { name: "D'Avenant Archer", count: 2 }, // 2W 1/2 {T}: 1 damage to attacker
+    // Spells (10) - Uncovered spells
+    { name: 'Coercion', count: 2 }, // 2B - Discard (you choose)
+    { name: "Nature's Resurgence", count: 2 }, // 2GG - Return creatures from graveyards
+    { name: 'Shatterstorm', count: 2 }, // 2RR - Destroy all artifacts
+    { name: "Warrior's Honor", count: 4 }, // 2W - +1/+1 to your creatures
+    // Enchantments (4) - Uncovered enchantments
+    { name: "Hero's Resolve", count: 2 }, // 1W - +1/+5
+    { name: "Serra's Blessing", count: 2 }, // 1W - Creatures have vigilance
+    // Artifacts (2) - Expensive uncovered artifacts
+    { name: "Ashnod's Altar", count: 2 }, // 3 - Sac creature: Add {C}{C}
+  ]);
+}
+
+/**
  * Special coverage decks
  */
-export type SpecialDeck = 'artifact' | 'colorhate' | 'artifacts2' | 'spells' | 'creatures';
+export type SpecialDeck =
+  | 'artifact'
+  | 'colorhate'
+  | 'artifacts2'
+  | 'spells'
+  | 'creatures'
+  | 'uncovered';
 
 export const SPECIAL_DECKS: Record<SpecialDeck, () => CardTemplate[]> = {
   artifact: createArtifactDeck,
@@ -188,4 +229,5 @@ export const SPECIAL_DECKS: Record<SpecialDeck, () => CardTemplate[]> = {
   artifacts2: createArtifactsDeck2,
   spells: createSpellsDeck,
   creatures: createCreaturesDeck,
+  uncovered: createUncoveredDeck,
 };
