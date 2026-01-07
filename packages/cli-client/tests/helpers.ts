@@ -154,7 +154,9 @@ export function createSequentialBot(name: string, actions: Action[]): Bot {
  * Creates a mock bot that tracks all calls for inspection
  * @param name - Bot name for display
  */
-export function createSpyBot(name: string): Bot & { calls: Array<{ state: GameState; playerId: PlayerId }> } {
+export function createSpyBot(
+  name: string,
+): Bot & { calls: Array<{ state: GameState; playerId: PlayerId }> } {
   const calls: Array<{ state: GameState; playerId: PlayerId }> = [];
   return {
     getName: () => name,
@@ -378,9 +380,7 @@ export function createReplayOutcome(overrides: Partial<ReplayOutcome> = {}): Rep
  * Creates a mock ReplayFile with default values
  * @param overrides - Partial fields to override defaults
  */
-export function createReplayFile(
-  overrides: Partial<ReplayFile> = {},
-): ReplayFile {
+export function createReplayFile(overrides: Partial<ReplayFile> = {}): ReplayFile {
   return {
     version: '1.0.0',
     metadata: {
@@ -471,7 +471,9 @@ export function assertValidJsonExport(
 ): void {
   for (const field of requiredFields) {
     if (!(field in jsonContent)) {
-      throw new Error(`Missing required field: ${field}. Found: ${Object.keys(jsonContent).join(', ')}`);
+      throw new Error(
+        `Missing required field: ${field}. Found: ${Object.keys(jsonContent).join(', ')}`,
+      );
     }
   }
 }
@@ -513,7 +515,9 @@ export function assertValidSimulationResults(results: SimulationResults): void {
   // Min/max turns should be sensible
   if (results.gamesCompleted > 0) {
     if (results.minTurns > results.maxTurns) {
-      throw new Error(`minTurns (${results.minTurns}) cannot be greater than maxTurns (${results.maxTurns})`);
+      throw new Error(
+        `minTurns (${results.minTurns}) cannot be greater than maxTurns (${results.maxTurns})`,
+      );
     }
     if (results.averageTurns < results.minTurns || results.averageTurns > results.maxTurns) {
       throw new Error(
