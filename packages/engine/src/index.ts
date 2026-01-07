@@ -121,6 +121,7 @@ export {
   hasInstantSpeedOptions,
   hasSorcerySpeedOptions,
   hasValidBlockers,
+  hasAttackers,
   shouldAutoPassOnStack,
   getAutoPassAction,
   getNoBlockAction,

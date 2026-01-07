@@ -23,6 +23,39 @@ import { canPayManaCost, parseManaCost } from '../utils/manaCosts';
 import { parseTargetRequirements, getAllLegalTargetCombinations } from '../rules/targeting';
 
 /**
+ * Check if player has any creatures that can attack
+ *
+ * Returns true if the player has at least one untapped, non-summoning-sick creature
+ * without defender that could potentially attack.
+ */
+export function hasAttackers(state: GameState, playerId: PlayerId): boolean {
+  const player = getPlayer(state, playerId);
+
+  for (const permanent of player.battlefield) {
+    const template = CardLoader.getById(permanent.scryfallId);
+    if (!template) continue;
+
+    // Must be a creature
+    if (!template.type_line.includes('Creature')) continue;
+
+    // Must be untapped
+    if (permanent.tapped) continue;
+
+    // Must not have summoning sickness
+    if (permanent.summoningSick) continue;
+
+    // Must not have Defender (Walls can't attack)
+    if (template.type_line.includes('Wall')) continue;
+    if (template.keywords?.includes('Defender')) continue;
+
+    // Found a potential attacker
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * Check if attacker is completely unblockable
  * (True unblockable like Phantom Warrior, not conditional like landwalk)
  */
@@ -346,9 +379,13 @@ export function shouldAutoPass(state: GameState, playerId: PlayerId): boolean {
   }
 
   // During declare_attackers step, the active player might want to declare attackers
+  // But if they have no creatures that can attack, they should auto-pass
   if (state.phase === 'combat' && state.step === 'declare_attackers') {
     if (playerId === state.activePlayer) {
-      return false; // Let normal attack declaration handle this
+      if (hasAttackers(state, playerId)) {
+        return false; // Has potential attackers, let normal attack declaration handle this
+      }
+      // No attackers available, can auto-pass through combat
     }
   }
 
