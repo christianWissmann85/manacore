@@ -536,6 +536,71 @@ describe('Action count reduction', () => {
   });
 });
 
+describe('Mana Sink Detection', () => {
+  test('hasManaSink returns true when player has spells in hand', async () => {
+    const { hasManaSink } = await import('../src/actions/autoPass');
+    const state = createTestState();
+
+    // Add a spell to hand
+    addToHand(state, 'player', 'Giant Growth');
+
+    expect(hasManaSink(state, 'player')).toBe(true);
+  });
+
+  test('hasManaSink returns false when hand is empty', async () => {
+    const { hasManaSink } = await import('../src/actions/autoPass');
+    const state = createTestState();
+
+    state.players.player.hand = [];
+
+    expect(hasManaSink(state, 'player')).toBe(false);
+  });
+
+  test('hasManaSink returns false when hand only contains lands', async () => {
+    const { hasManaSink } = await import('../src/actions/autoPass');
+    const state = createTestState();
+
+    state.players.player.hand = [];
+    addToHand(state, 'player', 'Forest');
+    addToHand(state, 'player', 'Mountain');
+
+    expect(hasManaSink(state, 'player')).toBe(false);
+  });
+
+  test('mana abilities are filtered when no mana sinks exist', () => {
+    const state = createTestState();
+
+    // Clear hand - no spells to cast
+    state.players.player.hand = [];
+
+    // Add some lands that could tap for mana
+    addToBattlefield(state, 'player', 'Forest');
+    addToBattlefield(state, 'player', 'Mountain');
+
+    const actions = getLegalActions(state, 'player');
+
+    // Should NOT have ACTIVATE_ABILITY actions for tapping lands
+    const manaAbilities = actions.filter((a) => a.type === 'ACTIVATE_ABILITY');
+    expect(manaAbilities.length).toBe(0);
+  });
+
+  test('mana abilities are available when mana sinks exist', () => {
+    const state = createTestState();
+
+    // Add a creature spell to hand - this is a mana sink
+    addToHand(state, 'player', 'Grizzly Bears'); // {1}{G}
+
+    // Add lands that could tap for mana
+    addToBattlefield(state, 'player', 'Forest');
+
+    const actions = getLegalActions(state, 'player');
+
+    // Should have ACTIVATE_ABILITY actions for tapping lands
+    const manaAbilities = actions.filter((a) => a.type === 'ACTIVATE_ABILITY');
+    expect(manaAbilities.length).toBeGreaterThan(0);
+  });
+});
+
 describe('F6 Mode (opt-in engine-level auto-pass)', () => {
   test('F6 mode is disabled by default', () => {
     const state = createTestState();

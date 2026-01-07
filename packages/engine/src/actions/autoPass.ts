@@ -143,6 +143,71 @@ export function hasSorcerySpeedOptions(state: GameState, playerId: PlayerId): bo
 }
 
 /**
+ * Check if player has any "mana sinks" - things they could spend mana on
+ *
+ * Returns true if:
+ * - Player has spells in hand that cost mana
+ * - Player has non-mana activated abilities that cost mana
+ *
+ * This is used to filter out tap-for-mana actions when they'd be pointless.
+ * Unlike hasSorcerySpeedOptions/hasInstantSpeedOptions, this doesn't check
+ * if the player can CURRENTLY afford to cast - just whether tapping lands
+ * would ever be useful.
+ */
+export function hasManaSink(state: GameState, playerId: PlayerId): boolean {
+  const player = getPlayer(state, playerId);
+
+  // Check hand for any spells that cost mana
+  for (const card of player.hand) {
+    const template = CardLoader.getById(card.scryfallId);
+    if (!template) continue;
+
+    // Skip lands
+    if (template.type_line.includes('Land')) continue;
+
+    // Any non-land spell with a mana cost is a potential sink
+    if (template.mana_cost && template.mana_cost !== '') {
+      return true;
+    }
+  }
+
+  // Check for non-mana activated abilities that cost mana
+  for (const permanent of player.battlefield) {
+    const abilities = getActivatedAbilities(permanent, state);
+
+    for (const ability of abilities) {
+      // Skip mana abilities - we're looking for things to SPEND mana on
+      if (ability.isManaAbility) continue;
+
+      // Check if this ability costs mana
+      if (ability.cost.mana && ability.cost.mana !== '') {
+        // Check if the ability can be activated (might require tap, targets, etc.)
+        if (ability.canActivate(state, permanent.instanceId, playerId)) {
+          return true;
+        }
+      }
+    }
+  }
+
+  // Check graveyard abilities that cost mana (e.g., Necrosavant)
+  for (const card of player.graveyard) {
+    const abilities = getGraveyardAbilities(card, state);
+
+    for (const ability of abilities) {
+      if (ability.isManaAbility) continue;
+
+      if (ability.cost.mana && ability.cost.mana !== '') {
+        if (ability.canActivate(state, card.instanceId, playerId)) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
  * P1: Check if player has any instant-speed options
  *
  * Returns true if the player can:
@@ -401,9 +466,36 @@ export function shouldAutoPass(state: GameState, playerId: PlayerId): boolean {
       if (hasSorcerySpeedOptions(state, playerId)) {
         return false;
       }
+
+      // Also check: if player has mana sinks and untapped mana sources,
+      // they might want to tap lands before casting. Don't auto-pass.
+      if (hasManaSink(state, playerId) && hasUntappedManaSource(state, playerId)) {
+        return false;
+      }
+
       // Otherwise, player has no plays - auto-pass is safe
     }
   }
 
   return true;
+}
+
+/**
+ * Helper: Check if player has any untapped mana sources
+ */
+function hasUntappedManaSource(state: GameState, playerId: PlayerId): boolean {
+  const player = getPlayer(state, playerId);
+
+  for (const permanent of player.battlefield) {
+    if (permanent.tapped) continue;
+
+    const abilities = getActivatedAbilities(permanent, state);
+    for (const ability of abilities) {
+      if (ability.isManaAbility && ability.canActivate(state, permanent.instanceId, playerId)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }

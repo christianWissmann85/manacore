@@ -34,7 +34,13 @@ import {
 import { validateAction } from './validators';
 import { getActivatedAbilities, getGraveyardAbilities } from '../rules/activatedAbilities';
 import { parseTargetRequirements, getAllLegalTargetCombinations } from '../rules/targeting';
-import { shouldAutoPass, hasValidBlockers, getAutoPassAction, getNoBlockAction } from './autoPass';
+import {
+  shouldAutoPass,
+  hasValidBlockers,
+  hasManaSink,
+  getAutoPassAction,
+  getNoBlockAction,
+} from './autoPass';
 
 /**
  * Helper: Check if a creature can't attack alone
@@ -232,6 +238,10 @@ function getLegalHandActions(state: GameState, playerId: 'player' | 'opponent'):
 /**
  * Get legal ability activations
  * Phase 1+: Can activate abilities any time you have priority
+ *
+ * Mana ability filtering: If the player has no "mana sinks" (spells to cast,
+ * abilities to activate), we filter out pure mana abilities to reduce the
+ * action space for AI training.
  */
 function getLegalAbilityActivations(
   state: GameState,
@@ -240,11 +250,19 @@ function getLegalAbilityActivations(
   const actions: ActivateAbilityAction[] = [];
   const player = getPlayer(state, playerId);
 
+  // Check if we should filter out mana abilities (no mana sinks available)
+  const filterManaAbilities = !hasManaSink(state, playerId);
+
   // Check each permanent on the battlefield
   for (const permanent of player.battlefield) {
     const abilities = getActivatedAbilities(permanent, state);
 
     for (const ability of abilities) {
+      // Filter out mana abilities if nothing to spend mana on
+      if (filterManaAbilities && ability.isManaAbility) {
+        continue;
+      }
+
       // Check if this ability can be activated
       if (!ability.canActivate(state, permanent.instanceId, playerId)) {
         continue;
