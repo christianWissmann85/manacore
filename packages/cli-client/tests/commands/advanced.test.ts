@@ -148,9 +148,7 @@ describe('StatisticsCalculator', () => {
     });
 
     test('calculates ratings for simple matchup', () => {
-      const matches = [
-        { bot1: 'A', bot2: 'B', bot1Wins: 10, bot2Wins: 0, draws: 0 },
-      ];
+      const matches = [{ bot1: 'A', bot2: 'B', bot1Wins: 10, bot2Wins: 0, draws: 0 }];
 
       const ratings = calculateEloRatings(matches);
       expect(ratings).toHaveLength(2);
@@ -164,9 +162,7 @@ describe('StatisticsCalculator', () => {
     });
 
     test('ratings converge for balanced matchup', () => {
-      const matches = [
-        { bot1: 'A', bot2: 'B', bot1Wins: 50, bot2Wins: 50, draws: 0 },
-      ];
+      const matches = [{ bot1: 'A', bot2: 'B', bot1Wins: 50, bot2Wins: 50, draws: 0 }];
 
       const ratings = calculateEloRatings(matches);
       const botA = ratings.find((r) => r.bot === 'A');
@@ -177,9 +173,7 @@ describe('StatisticsCalculator', () => {
     });
 
     test('handles draws correctly', () => {
-      const matches = [
-        { bot1: 'A', bot2: 'B', bot1Wins: 0, bot2Wins: 0, draws: 100 },
-      ];
+      const matches = [{ bot1: 'A', bot2: 'B', bot1Wins: 0, bot2Wins: 0, draws: 100 }];
 
       const ratings = calculateEloRatings(matches);
       const botA = ratings.find((r) => r.bot === 'A');
@@ -205,9 +199,7 @@ describe('StatisticsCalculator', () => {
     });
 
     test('tracks games played', () => {
-      const matches = [
-        { bot1: 'A', bot2: 'B', bot1Wins: 10, bot2Wins: 5, draws: 5 },
-      ];
+      const matches = [{ bot1: 'A', bot2: 'B', bot1Wins: 10, bot2Wins: 5, draws: 5 }];
 
       const ratings = calculateEloRatings(matches);
       const botA = ratings.find((r) => r.bot === 'A');
@@ -219,9 +211,7 @@ describe('StatisticsCalculator', () => {
     });
 
     test('uses custom base Elo', () => {
-      const matches = [
-        { bot1: 'A', bot2: 'B', bot1Wins: 50, bot2Wins: 50, draws: 0 },
-      ];
+      const matches = [{ bot1: 'A', bot2: 'B', bot1Wins: 50, bot2Wins: 50, draws: 0 }];
 
       const ratings = calculateEloRatings(matches, 1000);
       const avgElo = (ratings[0].elo + ratings[1].elo) / 2;
@@ -257,7 +247,7 @@ describe('StatisticsCalculator', () => {
   describe('recommendedGames', () => {
     test('recommends more games for smaller margin of error', () => {
       const games5pct = recommendedGames(0.05);
-      const games10pct = recommendedGames(0.10);
+      const games10pct = recommendedGames(0.1);
 
       expect(games5pct).toBeGreaterThan(games10pct);
     });
@@ -383,13 +373,13 @@ describe('Benchmark Presets', () => {
   describe('BENCHMARK_PRESETS', () => {
     test('quick preset has fewer bots than standard', () => {
       expect(BENCHMARK_PRESETS.quick.bots.length).toBeLessThanOrEqual(
-        BENCHMARK_PRESETS.standard.bots.length
+        BENCHMARK_PRESETS.standard.bots.length,
       );
     });
 
     test('standard preset has fewer bots than comprehensive', () => {
       expect(BENCHMARK_PRESETS.standard.bots.length).toBeLessThanOrEqual(
-        BENCHMARK_PRESETS.comprehensive.bots.length
+        BENCHMARK_PRESETS.comprehensive.bots.length,
       );
     });
 
@@ -732,9 +722,12 @@ describe('parseBenchmarkSuiteArgs', () => {
 
   test('parses multiple arguments', () => {
     const options = parseBenchmarkSuiteArgs([
-      '--preset', 'standard',
-      '--games', '100',
-      '--seed', '12345',
+      '--preset',
+      'standard',
+      '--games',
+      '100',
+      '--seed',
+      '12345',
       '--elo',
       '--export-markdown',
     ]);
@@ -827,11 +820,16 @@ describe('parseTuneMCTSArgs', () => {
 
   test('parses multiple arguments', () => {
     const options = parseTuneMCTSArgs([
-      '--method', 'grid',
-      '--games', '50',
-      '--validation', '100',
-      '--iterations', '25',
-      '--seed', '99999',
+      '--method',
+      'grid',
+      '--games',
+      '50',
+      '--validation',
+      '100',
+      '--iterations',
+      '25',
+      '--seed',
+      '99999',
       '--save',
       '--verbose',
     ]);
@@ -1247,7 +1245,7 @@ describe('Integration Tests', () => {
 
     expect(runner.getTotalMatchups()).toBe(preset!.bots.length * preset!.bots.length);
     expect(runner.getTotalGames()).toBe(
-      preset!.bots.length * preset!.bots.length * preset!.gamesPerMatchup
+      preset!.bots.length * preset!.bots.length * preset!.gamesPerMatchup,
     );
   });
 });

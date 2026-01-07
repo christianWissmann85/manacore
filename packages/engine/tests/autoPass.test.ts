@@ -1,0 +1,537 @@
+/**
+ * Auto-Pass Optimization Tests
+ *
+ * Tests for the AI training efficiency optimizations:
+ * - P1: Auto-pass when no instant-speed options available
+ * - P2: Auto-skip blocking when no valid blockers exist
+ * - P3: Auto-pass on stack when no responses possible
+ *
+ * These optimizations reduce the action space for AI bots by eliminating
+ * forced non-decisions that add no strategic value.
+ */
+
+import { test, expect, describe, beforeEach, beforeAll } from 'bun:test';
+import {
+  hasInstantSpeedOptions,
+  hasValidBlockers,
+  shouldAutoPass,
+  shouldAutoPassOnStack,
+  getAutoPassAction,
+  getNoBlockAction,
+} from '../src/actions/autoPass';
+import { getLegalActions } from '../src/actions/getLegalActions';
+import { applyAction } from '../src/actions/reducer';
+import { CardLoader } from '../src/cards/CardLoader';
+import { createGameState, getPlayer } from '../src/state/GameState';
+import { createCardInstance, _resetInstanceCounter } from '../src/state/CardInstance';
+import { _resetStackCounter } from '../src/rules/stack';
+import type { GameState } from '../src/state/GameState';
+import type { PlayerId } from '../src/state/Zone';
+
+// Ensure cards are loaded
+beforeAll(() => {
+  CardLoader.initialize();
+});
+
+/**
+ * Helper to create a test game state with specific cards
+ */
+function createTestState(): GameState {
+  _resetInstanceCounter();
+  _resetStackCounter();
+
+  const forest = CardLoader.getByName('Forest')!;
+  const mountain = CardLoader.getByName('Mountain')!;
+
+  const playerLibrary = Array.from({ length: 30 }, () =>
+    createCardInstance(forest.id, 'player', 'library'),
+  );
+  const opponentLibrary = Array.from({ length: 30 }, () =>
+    createCardInstance(mountain.id, 'opponent', 'library'),
+  );
+
+  const state = createGameState(playerLibrary, opponentLibrary, 12345);
+
+  // Set up main phase with empty stack
+  state.phase = 'main1';
+  state.step = 'main';
+  state.priorityPlayer = 'player';
+  state.activePlayer = 'player';
+
+  return state;
+}
+
+/**
+ * Helper to add a card to a player's hand
+ */
+function addToHand(state: GameState, playerId: PlayerId, cardName: string): void {
+  const template = CardLoader.getByName(cardName);
+  if (!template) throw new Error(`Card not found: ${cardName}`);
+  const card = createCardInstance(template.id, playerId, 'hand');
+  state.players[playerId].hand.push(card);
+}
+
+/**
+ * Helper to add a card to a player's battlefield (as a non-summoning-sick creature)
+ */
+function addToBattlefield(
+  state: GameState,
+  playerId: PlayerId,
+  cardName: string,
+  options: { tapped?: boolean; attacking?: boolean; summoningSick?: boolean } = {},
+): string {
+  const template = CardLoader.getByName(cardName);
+  if (!template) throw new Error(`Card not found: ${cardName}`);
+  const card = createCardInstance(template.id, playerId, 'battlefield');
+  card.tapped = options.tapped ?? false;
+  card.attacking = options.attacking ?? false;
+  card.summoningSick = options.summoningSick ?? false;
+  state.players[playerId].battlefield.push(card);
+  return card.instanceId;
+}
+
+describe('P1: hasInstantSpeedOptions', () => {
+  test('returns false when hand is empty and no abilities', () => {
+    const state = createTestState();
+    state.players.player.hand = [];
+
+    expect(hasInstantSpeedOptions(state, 'player')).toBe(false);
+  });
+
+  test('returns false when hand has only sorcery-speed cards', () => {
+    const state = createTestState();
+    state.players.player.hand = [];
+    addToHand(state, 'player', 'Grizzly Bears'); // Creature - sorcery speed
+    addToHand(state, 'player', 'Forest'); // Land - sorcery speed
+
+    expect(hasInstantSpeedOptions(state, 'player')).toBe(false);
+  });
+
+  test('returns true when hand has instant spell with enough mana', () => {
+    const state = createTestState();
+    state.players.player.hand = [];
+    addToHand(state, 'player', 'Giant Growth'); // {G} instant
+
+    // Add a Forest for mana
+    addToBattlefield(state, 'player', 'Forest');
+
+    // Giant Growth targets a creature, so we need one
+    addToBattlefield(state, 'player', 'Grizzly Bears');
+
+    expect(hasInstantSpeedOptions(state, 'player')).toBe(true);
+  });
+
+  test('returns false when instant spell cannot be afforded', () => {
+    const state = createTestState();
+    state.players.player.hand = [];
+    addToHand(state, 'player', 'Giant Growth'); // {G} instant
+
+    // No mana sources
+    state.players.player.battlefield = [];
+
+    expect(hasInstantSpeedOptions(state, 'player')).toBe(false);
+  });
+
+  test('returns true when creature has activatable ability', () => {
+    const state = createTestState();
+    state.players.player.hand = [];
+
+    // Prodigal Sorcerer has "{T}: Prodigal Sorcerer deals 1 damage to any target."
+    addToBattlefield(state, 'player', 'Prodigal Sorcerer');
+
+    expect(hasInstantSpeedOptions(state, 'player')).toBe(true);
+  });
+
+  test('returns false when mana ability is the only option (no use for mana)', () => {
+    const state = createTestState();
+    state.players.player.hand = [];
+
+    // Only land with mana ability
+    addToBattlefield(state, 'player', 'Forest');
+
+    // Mana abilities alone should not count as instant-speed options
+    expect(hasInstantSpeedOptions(state, 'player')).toBe(false);
+  });
+
+  test('returns false when instant has no valid targets', () => {
+    const state = createTestState();
+    state.players.player.hand = [];
+    addToHand(state, 'player', 'Terror'); // Destroy target nonartifact, nonblack creature
+
+    // Add mana
+    addToBattlefield(state, 'player', 'Swamp');
+    addToBattlefield(state, 'player', 'Swamp');
+
+    // No creatures on battlefield to target
+    expect(hasInstantSpeedOptions(state, 'player')).toBe(false);
+  });
+
+  test('returns true when instant has valid target', () => {
+    const state = createTestState();
+    state.players.player.hand = [];
+    addToHand(state, 'player', 'Terror'); // Destroy target nonartifact, nonblack creature
+
+    // Add mana
+    addToBattlefield(state, 'player', 'Swamp');
+    addToBattlefield(state, 'player', 'Swamp');
+
+    // Add a targetable creature
+    addToBattlefield(state, 'opponent', 'Grizzly Bears');
+
+    expect(hasInstantSpeedOptions(state, 'player')).toBe(true);
+  });
+});
+
+describe('P2: hasValidBlockers', () => {
+  test('returns false when no creatures on battlefield', () => {
+    const state = createTestState();
+    state.phase = 'combat';
+    state.step = 'declare_blockers';
+
+    // Add attacker
+    addToBattlefield(state, 'player', 'Grizzly Bears', { attacking: true });
+
+    expect(hasValidBlockers(state, 'opponent')).toBe(false);
+  });
+
+  test('returns false when all blockers are tapped', () => {
+    const state = createTestState();
+    state.phase = 'combat';
+    state.step = 'declare_blockers';
+
+    // Add attacker
+    addToBattlefield(state, 'player', 'Grizzly Bears', { attacking: true });
+
+    // Add tapped blocker (Cat Warriors is 2/2)
+    addToBattlefield(state, 'opponent', 'Cat Warriors', { tapped: true });
+
+    expect(hasValidBlockers(state, 'opponent')).toBe(false);
+  });
+
+  test('returns true when valid blocker exists', () => {
+    const state = createTestState();
+    state.phase = 'combat';
+    state.step = 'declare_blockers';
+
+    // Add attacker
+    addToBattlefield(state, 'player', 'Grizzly Bears', { attacking: true });
+
+    // Add untapped blocker
+    addToBattlefield(state, 'opponent', 'Cat Warriors');
+
+    expect(hasValidBlockers(state, 'opponent')).toBe(true);
+  });
+
+  test('returns false when attacker has flying and no flyers/reach to block', () => {
+    const state = createTestState();
+    state.phase = 'combat';
+    state.step = 'declare_blockers';
+
+    // Add flying attacker (Air Elemental has flying)
+    addToBattlefield(state, 'player', 'Air Elemental', { attacking: true });
+
+    // Add ground blocker
+    addToBattlefield(state, 'opponent', 'Grizzly Bears');
+
+    expect(hasValidBlockers(state, 'opponent')).toBe(false);
+  });
+
+  test('returns true when flying attacker can be blocked by flyer', () => {
+    const state = createTestState();
+    state.phase = 'combat';
+    state.step = 'declare_blockers';
+
+    // Add flying attacker
+    addToBattlefield(state, 'player', 'Air Elemental', { attacking: true });
+
+    // Add flying blocker (Fog Elemental has flying)
+    addToBattlefield(state, 'opponent', 'Fog Elemental');
+
+    expect(hasValidBlockers(state, 'opponent')).toBe(true);
+  });
+
+  test('returns true when flying attacker can be blocked by reach creature', () => {
+    const state = createTestState();
+    state.phase = 'combat';
+    state.step = 'declare_blockers';
+
+    // Add flying attacker
+    addToBattlefield(state, 'player', 'Air Elemental', { attacking: true });
+
+    // Add reach blocker (Giant Spider has reach)
+    addToBattlefield(state, 'opponent', 'Giant Spider');
+
+    expect(hasValidBlockers(state, 'opponent')).toBe(true);
+  });
+
+  test('returns false when attacker is unblockable', () => {
+    const state = createTestState();
+    state.phase = 'combat';
+    state.step = 'declare_blockers';
+
+    // Add unblockable attacker (Phantom Warrior)
+    addToBattlefield(state, 'player', 'Phantom Warrior', { attacking: true });
+
+    // Add potential blocker
+    addToBattlefield(state, 'opponent', 'Grizzly Bears');
+
+    expect(hasValidBlockers(state, 'opponent')).toBe(false);
+  });
+
+  test('returns false when no attackers exist', () => {
+    const state = createTestState();
+    state.phase = 'combat';
+    state.step = 'declare_blockers';
+
+    // No attackers
+    addToBattlefield(state, 'opponent', 'Grizzly Bears');
+
+    expect(hasValidBlockers(state, 'opponent')).toBe(false);
+  });
+});
+
+describe('P3: shouldAutoPassOnStack', () => {
+  test('returns false when stack is empty', () => {
+    const state = createTestState();
+    state.stack = [];
+
+    expect(shouldAutoPassOnStack(state, 'player')).toBe(false);
+  });
+
+  test('returns true when stack has spell and no instant options', () => {
+    const state = createTestState();
+    state.players.player.hand = [];
+    state.players.player.battlefield = [];
+
+    // Simulate spell on stack
+    const template = CardLoader.getByName('Grizzly Bears')!;
+    const card = createCardInstance(template.id, 'opponent', 'stack');
+    state.stack.push({
+      id: 'stack_0',
+      controller: 'opponent',
+      card,
+      targets: [],
+      resolved: false,
+      countered: false,
+    });
+
+    expect(shouldAutoPassOnStack(state, 'player')).toBe(true);
+  });
+
+  test('returns false when stack has spell but player has counterspell', () => {
+    const state = createTestState();
+    state.players.player.hand = [];
+
+    // Add Counterspell to hand
+    addToHand(state, 'player', 'Counterspell');
+
+    // Add mana for counterspell
+    addToBattlefield(state, 'player', 'Island');
+    addToBattlefield(state, 'player', 'Island');
+
+    // Simulate spell on stack
+    const template = CardLoader.getByName('Grizzly Bears')!;
+    const card = createCardInstance(template.id, 'opponent', 'stack');
+    state.stack.push({
+      id: 'stack_0',
+      controller: 'opponent',
+      card,
+      targets: [],
+      resolved: false,
+      countered: false,
+    });
+
+    expect(shouldAutoPassOnStack(state, 'player')).toBe(false);
+  });
+});
+
+describe('shouldAutoPass (master function)', () => {
+  test('returns false when player does not have priority', () => {
+    const state = createTestState();
+    state.priorityPlayer = 'opponent';
+
+    expect(shouldAutoPass(state, 'player')).toBe(false);
+  });
+
+  test('returns false during beginning phase', () => {
+    const state = createTestState();
+    state.phase = 'beginning';
+
+    expect(shouldAutoPass(state, 'player')).toBe(false);
+  });
+
+  test('returns false in main phase with sorcery-speed options', () => {
+    const state = createTestState();
+    state.phase = 'main1';
+    state.priorityPlayer = 'player';
+    state.activePlayer = 'player';
+
+    // Add playable card
+    addToHand(state, 'player', 'Grizzly Bears');
+    addToBattlefield(state, 'player', 'Forest');
+    addToBattlefield(state, 'player', 'Forest');
+
+    // Should not auto-pass since can play sorcery-speed cards
+    expect(shouldAutoPass(state, 'player')).toBe(false);
+  });
+
+  test('returns true when opponent has priority and no instant options', () => {
+    const state = createTestState();
+    state.phase = 'main1';
+    state.priorityPlayer = 'opponent';
+    state.activePlayer = 'player';
+    state.players.opponent.hand = [];
+    state.players.opponent.battlefield = [];
+
+    expect(shouldAutoPass(state, 'opponent')).toBe(true);
+  });
+
+  test('returns true during combat with no options', () => {
+    const state = createTestState();
+    state.phase = 'combat';
+    state.step = 'declare_attackers';
+    state.priorityPlayer = 'opponent';
+    state.activePlayer = 'player';
+    state.players.opponent.hand = [];
+    state.players.opponent.battlefield = [];
+
+    expect(shouldAutoPass(state, 'opponent')).toBe(true);
+  });
+});
+
+describe('Integration: getLegalActions with auto-pass', () => {
+  test('returns only PASS_PRIORITY when shouldAutoPass is true', () => {
+    const state = createTestState();
+    state.phase = 'main1';
+    state.priorityPlayer = 'opponent';
+    state.activePlayer = 'player';
+    state.players.opponent.hand = [];
+    state.players.opponent.battlefield = [];
+
+    const actions = getLegalActions(state, 'opponent');
+
+    expect(actions.length).toBe(1);
+    expect(actions[0]!.type).toBe('PASS_PRIORITY');
+  });
+
+  test('returns only "dont block" when no valid blockers exist', () => {
+    const state = createTestState();
+    state.phase = 'combat';
+    state.step = 'declare_blockers';
+    state.activePlayer = 'player';
+    state.priorityPlayer = 'opponent';
+
+    // Add flying attacker
+    addToBattlefield(state, 'player', 'Air Elemental', { attacking: true });
+
+    // Add ground creature (can't block flying)
+    addToBattlefield(state, 'opponent', 'Grizzly Bears');
+
+    const actions = getLegalActions(state, 'opponent');
+
+    // Should only have one action: don't block
+    const blockActions = actions.filter((a) => a.type === 'DECLARE_BLOCKERS');
+    expect(blockActions.length).toBe(1);
+    expect(blockActions[0]!.payload.blocks).toEqual([]);
+  });
+
+  test('returns multiple blocking options when valid blockers exist', () => {
+    const state = createTestState();
+    state.phase = 'combat';
+    state.step = 'declare_blockers';
+    state.activePlayer = 'player';
+    state.priorityPlayer = 'opponent';
+
+    // Add ground attacker
+    addToBattlefield(state, 'player', 'Grizzly Bears', { attacking: true });
+
+    // Add ground blocker
+    addToBattlefield(state, 'opponent', 'Cat Warriors');
+
+    const actions = getLegalActions(state, 'opponent');
+
+    // Should have multiple options: don't block + block with Cat Warriors
+    const blockActions = actions.filter((a) => a.type === 'DECLARE_BLOCKERS');
+    expect(blockActions.length).toBeGreaterThan(1);
+  });
+
+  test('auto-pass does not prevent sorcery-speed plays in main phase', () => {
+    const state = createTestState();
+    state.phase = 'main1';
+    state.priorityPlayer = 'player';
+    state.activePlayer = 'player';
+
+    // Clear hand and add playable sorcery-speed card
+    state.players.player.hand = [];
+    addToHand(state, 'player', 'Grizzly Bears');
+
+    // Add mana
+    addToBattlefield(state, 'player', 'Forest');
+    addToBattlefield(state, 'player', 'Forest');
+
+    const actions = getLegalActions(state, 'player');
+
+    // Should have CAST_SPELL option for Grizzly Bears
+    const castActions = actions.filter((a) => a.type === 'CAST_SPELL');
+    expect(castActions.length).toBeGreaterThan(0);
+  });
+});
+
+describe('Action helpers', () => {
+  test('getAutoPassAction returns correct action structure', () => {
+    const action = getAutoPassAction('player');
+
+    expect(action.type).toBe('PASS_PRIORITY');
+    expect(action.playerId).toBe('player');
+    expect(action.payload).toEqual({});
+  });
+
+  test('getNoBlockAction returns correct action structure', () => {
+    const action = getNoBlockAction('opponent');
+
+    expect(action.type).toBe('DECLARE_BLOCKERS');
+    expect(action.playerId).toBe('opponent');
+    expect(action.payload.blocks).toEqual([]);
+  });
+});
+
+describe('Action count reduction', () => {
+  test('demonstrates reduction in forced non-decisions', () => {
+    const state = createTestState();
+
+    // Simulate opponent's turn, player has no options
+    state.phase = 'main1';
+    state.activePlayer = 'opponent';
+    state.priorityPlayer = 'player';
+    state.players.player.hand = [];
+    state.players.player.battlefield = [];
+
+    const actions = getLegalActions(state, 'player');
+
+    // Before optimization: would have PASS_PRIORITY + potentially END_TURN
+    // After optimization: only PASS_PRIORITY
+    expect(actions.length).toBe(1);
+    expect(actions[0]!.type).toBe('PASS_PRIORITY');
+  });
+
+  test('blocking with no blockers is single action', () => {
+    const state = createTestState();
+    state.phase = 'combat';
+    state.step = 'declare_blockers';
+    state.activePlayer = 'player';
+    state.priorityPlayer = 'opponent';
+
+    // Add attacker
+    addToBattlefield(state, 'player', 'Grizzly Bears', { attacking: true });
+
+    // No blockers
+    state.players.opponent.battlefield = [];
+
+    const actions = getLegalActions(state, 'opponent');
+
+    // Should be exactly 1 action: pass priority (if shouldAutoPass triggers)
+    // or just the "don't block" if in blockers step
+    const blockActions = actions.filter((a) => a.type === 'DECLARE_BLOCKERS');
+    expect(blockActions.length).toBeLessThanOrEqual(1);
+  });
+});

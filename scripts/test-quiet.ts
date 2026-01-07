@@ -50,9 +50,11 @@ let currentFile = '';
 
 for (const line of lines) {
   // Detect summary lines (at the end)
-  if (/^\s*\d+\s+(pass|fail|skip)/.test(line) ||
-      /expect\(\) calls/.test(line) ||
-      /Ran \d+ tests/.test(line)) {
+  if (
+    /^\s*\d+\s+(pass|fail|skip)/.test(line) ||
+    /expect\(\) calls/.test(line) ||
+    /Ran \d+ tests/.test(line)
+  ) {
     summaryLines.push(line);
     continue;
   }

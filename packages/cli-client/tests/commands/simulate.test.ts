@@ -598,11 +598,7 @@ describe('Simulate Command', () => {
       const p1 = new RandomBot(12345);
       const p2 = new RandomBot(54321);
 
-      const output = await runSimulation(
-        p1,
-        p2,
-        createTestOptions({ gameCount: 3, maxTurns: 10 }),
-      );
+      const output = await runSimulation(p1, p2, createTestOptions({ gameCount: 3, maxTurns: 10 }));
 
       // All games should respect turn limit
       for (const record of output.results.gameRecords) {
@@ -628,11 +624,7 @@ describe('Simulate Command', () => {
 
       let output;
       try {
-        output = await runSimulation(
-          p1,
-          p2,
-          createTestOptions({ gameCount: 2, outputLevel: 0 }),
-        );
+        output = await runSimulation(p1, p2, createTestOptions({ gameCount: 2, outputLevel: 0 }));
         expect(output.results.gamesCompleted).toBe(2);
 
         // Should have minimal or no console output in quiet mode
@@ -872,11 +864,7 @@ describe('Simulate Command', () => {
       const p1 = new RandomBot(12345);
       const p2 = new RandomBot(54321);
 
-      const output = await runSimulation(
-        p1,
-        p2,
-        createTestOptions({ gameCount: 1, seed: 99999 }),
-      );
+      const output = await runSimulation(p1, p2, createTestOptions({ gameCount: 1, seed: 99999 }));
 
       const logContent = fs.readFileSync(output.logPath, 'utf-8');
 
@@ -953,7 +941,13 @@ describe('Simulate Command', () => {
       });
 
       // Should not throw - just call it and check it completes
-      await exportResults(results, 'Bot1', 'Bot2', { formats: ['console'], outputLevel: 0 }, 'test.log');
+      await exportResults(
+        results,
+        'Bot1',
+        'Bot2',
+        { formats: ['console'], outputLevel: 0 },
+        'test.log',
+      );
       // If we reach here, no error was thrown
       expect(true).toBe(true);
     });
@@ -1016,11 +1010,19 @@ describe('Seed handling', () => {
 
     const p1a = new RandomBot(1);
     const p2a = new RandomBot(2);
-    const output1 = await runSimulation(p1a, p2a, createTestOptions({ gameCount: 10, seed: seed1 }));
+    const output1 = await runSimulation(
+      p1a,
+      p2a,
+      createTestOptions({ gameCount: 10, seed: seed1 }),
+    );
 
     const p1b = new RandomBot(1);
     const p2b = new RandomBot(2);
-    const output2 = await runSimulation(p1b, p2b, createTestOptions({ gameCount: 10, seed: seed2 }));
+    const output2 = await runSimulation(
+      p1b,
+      p2b,
+      createTestOptions({ gameCount: 10, seed: seed2 }),
+    );
 
     // With enough games and different seeds, at least some results should differ
     // (This is probabilistic, but very likely with 10 games)
@@ -1081,11 +1083,7 @@ describe('Multiple games', () => {
     const p2 = new RandomBot(54321);
 
     // Run 20 games (not too many to avoid slow tests)
-    const output = await runSimulation(
-      p1,
-      p2,
-      createTestOptions({ gameCount: 20, maxTurns: 30 }),
-    );
+    const output = await runSimulation(p1, p2, createTestOptions({ gameCount: 20, maxTurns: 30 }));
 
     expect(output.results.totalGames).toBe(20);
     expect(output.results.gamesCompleted).toBe(20);
@@ -1179,11 +1177,7 @@ describe('Progress reporting', () => {
     const p1 = new RandomBot(12345);
     const p2 = new RandomBot(54321);
 
-    const output = await runSimulation(
-      p1,
-      p2,
-      createTestOptions({ gameCount: 3, outputLevel: 1 }),
-    );
+    const output = await runSimulation(p1, p2, createTestOptions({ gameCount: 3, outputLevel: 1 }));
 
     expect(output.results.gamesCompleted).toBe(3);
 
@@ -1197,11 +1191,7 @@ describe('Progress reporting', () => {
     const p1 = new RandomBot(12345);
     const p2 = new RandomBot(54321);
 
-    const output = await runSimulation(
-      p1,
-      p2,
-      createTestOptions({ gameCount: 3, outputLevel: 3 }),
-    );
+    const output = await runSimulation(p1, p2, createTestOptions({ gameCount: 3, outputLevel: 3 }));
 
     expect(output.results.gamesCompleted).toBe(3);
 

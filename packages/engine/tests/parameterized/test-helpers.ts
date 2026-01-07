@@ -82,9 +82,7 @@ export function setupGameWithMana(
   for (const [color, count] of Object.entries(playerMana)) {
     const land = landMap[color as keyof typeof landMap];
     for (let i = 0; i < (count ?? 0); i++) {
-      state.players.player.battlefield.push(
-        createCardInstance(land.id, 'player', 'battlefield'),
-      );
+      state.players.player.battlefield.push(createCardInstance(land.id, 'player', 'battlefield'));
     }
   }
 
@@ -240,10 +238,7 @@ export function castAndResolve(
 /**
  * Declare attackers and get the resulting state
  */
-export function declareAttackers(
-  state: GameState,
-  attackerIds: string[],
-): GameState {
+export function declareAttackers(state: GameState, attackerIds: string[]): GameState {
   return applyAction(state, {
     type: 'DECLARE_ATTACKERS',
     playerId: 'player',
@@ -268,10 +263,7 @@ export function declareBlockers(
 /**
  * Perform a full combat with attacker going unblocked
  */
-export function performUnblockedAttack(
-  state: GameState,
-  attackerIds: string[],
-): GameState {
+export function performUnblockedAttack(state: GameState, attackerIds: string[]): GameState {
   let newState = declareAttackers(state, attackerIds);
   newState = declareBlockers(newState, []);
   return newState;
@@ -342,9 +334,7 @@ export function isOnBattlefield(
   instanceId: string,
   controller: 'player' | 'opponent',
 ): boolean {
-  return state.players[controller].battlefield.some(
-    (c) => c.instanceId === instanceId,
-  );
+  return state.players[controller].battlefield.some((c) => c.instanceId === instanceId);
 }
 
 /**
@@ -355,9 +345,7 @@ export function isInGraveyard(
   instanceId: string,
   controller: 'player' | 'opponent',
 ): boolean {
-  return state.players[controller].graveyard.some(
-    (c) => c.instanceId === instanceId,
-  );
+  return state.players[controller].graveyard.some((c) => c.instanceId === instanceId);
 }
 
 /**
@@ -368,9 +356,7 @@ export function isInHand(
   instanceId: string,
   controller: 'player' | 'opponent',
 ): boolean {
-  return state.players[controller].hand.some(
-    (c) => c.instanceId === instanceId,
-  );
+  return state.players[controller].hand.some((c) => c.instanceId === instanceId);
 }
 
 /**
@@ -381,9 +367,7 @@ export function getCreatureOnBattlefield(
   instanceId: string,
   controller: 'player' | 'opponent',
 ): CardInstance | undefined {
-  return state.players[controller].battlefield.find(
-    (c) => c.instanceId === instanceId,
-  );
+  return state.players[controller].battlefield.find((c) => c.instanceId === instanceId);
 }
 
 // ============================================

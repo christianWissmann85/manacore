@@ -27,12 +27,7 @@ import {
   CardLoader,
 } from '@manacore/engine';
 import { renderGameState, printError, printSuccess, printInfo } from '../../src/display/board';
-import {
-  createMockBot,
-  createSpyBot,
-  createSequentialBot,
-  cleanupAllTempDirs,
-} from '../helpers';
+import { createMockBot, createSpyBot, createSequentialBot, cleanupAllTempDirs } from '../helpers';
 
 // =============================================================================
 // TEST UTILITIES
@@ -68,7 +63,10 @@ function createActionSequenceBot(name: string, actions: Action[]): Bot {
  * Simulates player input parsing logic
  * This is extracted logic from getHumanAction for testing
  */
-function parsePlayerInput(input: string, legalActions: Action[]): {
+function parsePlayerInput(
+  input: string,
+  legalActions: Action[],
+): {
   type: 'quit' | 'list' | 'state' | 'action' | 'invalid';
   actionIndex?: number;
 } {
@@ -208,10 +206,7 @@ describe('Play Command - Game Initialization', () => {
   describe('Deck composition', () => {
     test('vanilla deck contains lands', () => {
       const state = createTestGameState();
-      const allCards = [
-        ...state.players.player.hand,
-        ...state.players.player.library,
-      ];
+      const allCards = [...state.players.player.hand, ...state.players.player.library];
 
       const lands = allCards.filter((card) => {
         const template = CardLoader.getById(card.scryfallId);
@@ -223,10 +218,7 @@ describe('Play Command - Game Initialization', () => {
 
     test('vanilla deck contains creatures', () => {
       const state = createTestGameState();
-      const allCards = [
-        ...state.players.player.hand,
-        ...state.players.player.library,
-      ];
+      const allCards = [...state.players.player.hand, ...state.players.player.library];
 
       const creatures = allCards.filter((card) => {
         const template = CardLoader.getById(card.scryfallId);
@@ -406,7 +398,7 @@ describe('Play Command - Turn Structure', () => {
         // Player should not have sorcery-speed actions
         const playerActions = getLegalActions(state, 'player');
         const sorceryActions = playerActions.filter(
-          (a) => a.type === 'PLAY_LAND' || a.type === 'END_TURN'
+          (a) => a.type === 'PLAY_LAND' || a.type === 'END_TURN',
         );
         expect(sorceryActions.length).toBe(0);
       }
@@ -524,7 +516,7 @@ describe('Play Command - Action Processing', () => {
       for (const action of castActions) {
         if (action.type === 'CAST_SPELL') {
           const card = state.players.player.hand.find(
-            (c) => c.instanceId === action.payload.cardInstanceId
+            (c) => c.instanceId === action.payload.cardInstanceId,
           );
           if (card) {
             const template = CardLoader.getById(card.scryfallId);
@@ -557,8 +549,7 @@ describe('Play Command - Action Processing', () => {
         // Tap land for mana
         actions = getLegalActions(state, 'player');
         const manaAbility = actions.find(
-          (a) => a.type === 'ACTIVATE_ABILITY' &&
-          a.payload.abilityId?.includes('mana')
+          (a) => a.type === 'ACTIVATE_ABILITY' && a.payload.abilityId?.includes('mana'),
         );
         if (manaAbility) {
           state = applyAction(state, manaAbility);
@@ -574,10 +565,9 @@ describe('Play Command - Action Processing', () => {
         state = applyAction(state, castAction);
 
         // Card should be on stack or resolved
-        expect(
-          state.players.player.hand.length < initialHandSize ||
-          state.stack.length > 0
-        ).toBe(true);
+        expect(state.players.player.hand.length < initialHandSize || state.stack.length > 0).toBe(
+          true,
+        );
       }
     });
   });
@@ -590,9 +580,9 @@ describe('Play Command - Action Processing', () => {
       for (let turn = 0; turn < 10 && !state.gameOver; turn++) {
         const actions = getLegalActions(state, state.priorityPlayer);
         // Prefer playing lands and casting creatures
-        const playAction = actions.find((a) =>
-          a.type === 'PLAY_LAND' || a.type === 'CAST_SPELL'
-        ) || actions.find((a) => a.type === 'PASS_PRIORITY' || a.type === 'END_TURN');
+        const playAction =
+          actions.find((a) => a.type === 'PLAY_LAND' || a.type === 'CAST_SPELL') ||
+          actions.find((a) => a.type === 'PASS_PRIORITY' || a.type === 'END_TURN');
 
         if (playAction) {
           state = applyAction(state, playAction);
@@ -601,7 +591,7 @@ describe('Play Command - Action Processing', () => {
 
       // Check if player has creatures that can attack
       const attackActions = getLegalActions(state, 'player').filter(
-        (a) => a.type === 'DECLARE_ATTACKERS'
+        (a) => a.type === 'DECLARE_ATTACKERS',
       );
 
       // May or may not have attackers depending on game state
@@ -681,7 +671,7 @@ describe('Play Command - Bot Opponent', () => {
 
         // Bot's action should be legal
         const isLegal = legalActions.some(
-          (legal) => JSON.stringify(legal) === JSON.stringify(action)
+          (legal) => JSON.stringify(legal) === JSON.stringify(action),
         );
         expect(isLegal).toBe(true);
       }
@@ -915,9 +905,7 @@ describe('Play Command - Input Parsing', () => {
     });
 
     test('rejects invalid action indices', () => {
-      const actions: Action[] = [
-        { type: 'PASS_PRIORITY', playerId: 'player', payload: {} },
-      ];
+      const actions: Action[] = [{ type: 'PASS_PRIORITY', playerId: 'player', payload: {} }];
 
       expect(parsePlayerInput('-1', actions).type).toBe('invalid');
       expect(parsePlayerInput('1', actions).type).toBe('invalid'); // Out of range
@@ -925,9 +913,7 @@ describe('Play Command - Input Parsing', () => {
     });
 
     test('rejects non-numeric input', () => {
-      const actions: Action[] = [
-        { type: 'PASS_PRIORITY', playerId: 'player', payload: {} },
-      ];
+      const actions: Action[] = [{ type: 'PASS_PRIORITY', playerId: 'player', payload: {} }];
 
       expect(parsePlayerInput('abc', actions).type).toBe('invalid');
       expect(parsePlayerInput('', actions).type).toBe('invalid');
@@ -1270,9 +1256,10 @@ describe('Play Command - Integration', () => {
         const actions = getLegalActions(state, state.priorityPlayer);
 
         // Prefer ending turn or passing priority to advance quickly
-        const action = actions.find((a) => a.type === 'END_TURN') ||
-                       actions.find((a) => a.type === 'PASS_PRIORITY') ||
-                       actions[0];
+        const action =
+          actions.find((a) => a.type === 'END_TURN') ||
+          actions.find((a) => a.type === 'PASS_PRIORITY') ||
+          actions[0];
 
         if (action) {
           state = applyAction(state, action);
@@ -1302,9 +1289,7 @@ describe('Play Command - Integration', () => {
       if (!state.gameOver) {
         // Some aspect of state should have changed
         expect(
-          state.phase !== initialPhase ||
-          state.priorityPlayer !== 'player' ||
-          state.turnCount > 1
+          state.phase !== initialPhase || state.priorityPlayer !== 'player' || state.turnCount > 1,
         ).toBe(true);
       }
     });

@@ -363,23 +363,11 @@ export function getCreaturesWithKeyword(keyword: string): KeywordCreatureTestDat
 
 export const ALL_KEYWORD_CREATURES: KeywordCreatureTestData[] = [
   ...FLYING_CREATURES,
-  ...FIRST_STRIKE_CREATURES.filter(
-    (c) => !FLYING_CREATURES.some((f) => f.name === c.name),
-  ),
-  ...VIGILANCE_CREATURES.filter(
-    (c) => !FLYING_CREATURES.some((f) => f.name === c.name),
-  ),
-  ...HASTE_CREATURES.filter(
-    (c) => !FLYING_CREATURES.some((f) => f.name === c.name),
-  ),
-  ...REACH_CREATURES.filter(
-    (c) => !FIRST_STRIKE_CREATURES.some((f) => f.name === c.name),
-  ),
-  ...DEFENDER_CREATURES.filter(
-    (c) => !FLYING_CREATURES.some((f) => f.name === c.name),
-  ),
+  ...FIRST_STRIKE_CREATURES.filter((c) => !FLYING_CREATURES.some((f) => f.name === c.name)),
+  ...VIGILANCE_CREATURES.filter((c) => !FLYING_CREATURES.some((f) => f.name === c.name)),
+  ...HASTE_CREATURES.filter((c) => !FLYING_CREATURES.some((f) => f.name === c.name)),
+  ...REACH_CREATURES.filter((c) => !FIRST_STRIKE_CREATURES.some((f) => f.name === c.name)),
+  ...DEFENDER_CREATURES.filter((c) => !FLYING_CREATURES.some((f) => f.name === c.name)),
   ...FEAR_CREATURES,
-  ...MENACE_CREATURES.filter(
-    (c) => !FLYING_CREATURES.some((f) => f.name === c.name),
-  ),
+  ...MENACE_CREATURES.filter((c) => !FLYING_CREATURES.some((f) => f.name === c.name)),
 ];

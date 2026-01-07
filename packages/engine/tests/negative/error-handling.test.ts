@@ -800,7 +800,9 @@ describe('State Consistency After Rejected Actions', () => {
     expect(errors.length).toBeGreaterThan(0);
 
     // State should be unchanged
-    expect(getPlayer(state, 'player').hand.length).toBe(getPlayer(stateBefore, 'player').hand.length);
+    expect(getPlayer(state, 'player').hand.length).toBe(
+      getPlayer(stateBefore, 'player').hand.length,
+    );
     expect(getPlayer(state, 'player').battlefield.length).toBe(
       getPlayer(stateBefore, 'player').battlefield.length,
     );
@@ -1315,7 +1317,9 @@ describe('getLegalActions Returns Only Valid Actions', () => {
 
     // Should not have any CAST_SPELL for the creature (no mana)
     const castActions = legalActions.filter(
-      (a) => a.type === 'CAST_SPELL' && (a as CastSpellAction).payload.cardInstanceId === creature.instanceId,
+      (a) =>
+        a.type === 'CAST_SPELL' &&
+        (a as CastSpellAction).payload.cardInstanceId === creature.instanceId,
     );
     expect(castActions.length).toBe(0);
   });

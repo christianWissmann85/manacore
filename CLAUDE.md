@@ -217,7 +217,7 @@ bun install                   # Install dependencies
 ```bash
 cd packages/engine && bun test          # Run all tests
 bun test --watch                        # Watch mode
-bun test -t "pattern"                   # Run specific tests                                        
+bun test -t "pattern"                   # Run specific tests
 bun test:quiet                          # Hides all successful and skipped tests to avoid bloating your logs.
 ```
 

@@ -2,6 +2,11 @@
  * Generate all legal actions for the current game state
  *
  * This is used by both the CLI (to show options) and AI (to choose moves)
+ *
+ * Auto-pass optimizations are applied to reduce the action space for AI training:
+ * - P1: Auto-pass when no instant-speed options available
+ * - P2: Auto-skip blocking when no valid blockers exist
+ * - P3: Auto-pass on stack when no responses possible
  */
 
 import type { GameState } from '../state/GameState';
@@ -29,6 +34,7 @@ import {
 import { validateAction } from './validators';
 import { getActivatedAbilities, getGraveyardAbilities } from '../rules/activatedAbilities';
 import { parseTargetRequirements, getAllLegalTargetCombinations } from '../rules/targeting';
+import { shouldAutoPass, hasValidBlockers, getAutoPassAction, getNoBlockAction } from './autoPass';
 
 /**
  * Helper: Check if a creature can't attack alone
@@ -57,6 +63,12 @@ export function getLegalActions(state: GameState, playerId: 'player' | 'opponent
       payload: {},
     } as PassPriorityAction);
     return actions;
+  }
+
+  // P1 + P3: Auto-pass optimization for AI training efficiency
+  // When player has no meaningful options, return only PASS_PRIORITY
+  if (shouldAutoPass(state, playerId)) {
+    return [getAutoPassAction(playerId)];
   }
 
   // Phase 1+: Can always pass priority when it's your priority
@@ -429,6 +441,9 @@ function getLegalAttackerDeclarations(
 /**
  * Get legal blocker declarations
  * Phase 1+: Defender can assign blockers to attackers
+ *
+ * P2 Optimization: If no valid blocking assignments exist, return only
+ * the "don't block" action to reduce AI decision overhead.
  */
 function getLegalBlockerDeclarations(
   state: GameState,
@@ -438,6 +453,12 @@ function getLegalBlockerDeclarations(
   const player = getPlayer(state, playerId);
   const activePlayerId = state.activePlayer;
   const activePlayer = getPlayer(state, activePlayerId);
+
+  // P2: Auto-skip blocking optimization
+  // If no valid blockers exist, return only "don't block" action
+  if (!hasValidBlockers(state, playerId)) {
+    return [getNoBlockAction(playerId)];
+  }
 
   // Find potential blockers
   const potentialBlockers = player.battlefield.filter((card) => {

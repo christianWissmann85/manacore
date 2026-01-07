@@ -198,7 +198,9 @@ describe('Performance Benchmarks', () => {
       const elapsed = performance.now() - start;
       const avgTime = elapsed / iterations;
 
-      console.log(`  getLegalActions (simple): ${avgTime.toFixed(3)}ms avg over ${iterations} runs`);
+      console.log(
+        `  getLegalActions (simple): ${avgTime.toFixed(3)}ms avg over ${iterations} runs`,
+      );
 
       // Target: <1ms per call (generous margin for CI variance)
       expect(avgTime).toBeLessThan(1);
@@ -502,7 +504,9 @@ describe('Performance Benchmarks', () => {
       const elapsed = performance.now() - startTime;
       const gamesPerSecond = (gameCount / elapsed) * 1000;
 
-      console.log(`  Throughput: ${gamesPerSecond.toFixed(0)} games/second over ${elapsed.toFixed(0)}ms`);
+      console.log(
+        `  Throughput: ${gamesPerSecond.toFixed(0)} games/second over ${elapsed.toFixed(0)}ms`,
+      );
 
       // Target: 50+ games/second (very conservative for CI)
       // Actual performance is typically 70-200+ games/second

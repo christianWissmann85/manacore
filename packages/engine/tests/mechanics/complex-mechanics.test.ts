@@ -657,7 +657,11 @@ describe('Triggered Abilities', () => {
       const state = setupGameWithMana({ B: 4 });
 
       // Put creature in graveyard
-      const deadBears = createCardInstance(CardLoader.getByName('Grizzly Bears')!.id, 'player', 'graveyard');
+      const deadBears = createCardInstance(
+        CardLoader.getByName('Grizzly Bears')!.id,
+        'player',
+        'graveyard',
+      );
       state.players.player.graveyard.push(deadBears);
 
       const gravedigger = createCardInHand(state, 'Gravedigger', 'player');
@@ -665,7 +669,9 @@ describe('Triggered Abilities', () => {
       const newState = castAndResolve(state, 'player', gravedigger.instanceId);
 
       // Dead creature should be in hand
-      expect(newState.players.player.hand.find((c) => c.instanceId === deadBears.instanceId)).toBeDefined();
+      expect(
+        newState.players.player.hand.find((c) => c.instanceId === deadBears.instanceId),
+      ).toBeDefined();
       expect(newState.players.player.graveyard.length).toBe(0);
     });
 

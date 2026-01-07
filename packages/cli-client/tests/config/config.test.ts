@@ -8,12 +8,7 @@
 import { describe, test, expect, beforeEach, afterEach, afterAll } from 'bun:test';
 import { writeFileSync, mkdirSync, existsSync, rmSync } from 'fs';
 import { join } from 'path';
-import {
-  createTempDir,
-  cleanupTempDir,
-  cleanupAllTempDirs,
-  readJsonFile,
-} from '../helpers';
+import { createTempDir, cleanupTempDir, cleanupAllTempDirs, readJsonFile } from '../helpers';
 import {
   loadConfig,
   loadRootConfig,
