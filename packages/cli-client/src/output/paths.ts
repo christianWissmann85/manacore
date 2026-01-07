@@ -61,10 +61,10 @@ export function ensureDir(dirPath: string): void {
 
 /**
  * Format a timestamp for use in filenames
- * Output: 2026-01-06T14-30-45
+ * Output: 2026-01-06T14-30-45-123
  */
 export function formatTimestamp(date: Date = new Date()): string {
-  return date.toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  return date.toISOString().replace(/[:.]/g, '-').slice(0, 23);
 }
 
 /**

@@ -346,7 +346,14 @@ export function payCosts(
 
   const player = state.players[controller];
 
-  // Check if we can pay the mana cost first
+  // --- VALIDATION PHASE ---
+
+  // Check tap cost
+  if (cost.tap) {
+    if (card.tapped) return false;
+  }
+
+  // Check mana cost
   if (cost.mana) {
     const manaCost = parseManaCost(cost.mana);
     if (!canPayManaCost(player.manaPool, manaCost)) {
@@ -354,9 +361,15 @@ export function payCosts(
     }
   }
 
+  // Check life cost
+  if (cost.life) {
+    if (player.life < cost.life) return false;
+  }
+
+  // --- PAYMENT PHASE ---
+
   // Pay tap cost
   if (cost.tap) {
-    if (card.tapped) return false;
     card.tapped = true;
   }
 
@@ -368,7 +381,6 @@ export function payCosts(
 
   // Pay life cost
   if (cost.life) {
-    if (player.life < cost.life) return false;
     player.life -= cost.life;
   }
 

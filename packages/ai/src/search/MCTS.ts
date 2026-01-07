@@ -582,9 +582,29 @@ export function greedyRolloutPolicy(state: GameState, playerId: PlayerId): Actio
       // ANTI-LOOP FIX: Penalize pump abilities (they cause infinite loops)
       // Pump abilities like Dragon Engine's {2}: +1/+0 should not dominate simulations
       if (action.type === 'ACTIVATE_ABILITY') {
-        // Heuristic: Avoid pump abilities unless clearly winning
-        // This prevents MCTS from wasting tree exploration on repeated pumps
-        score -= 5; // Small penalty to deprioritize ability spam
+        // Check recent history for repetition
+        const lastActionJson = state.actionHistory[state.actionHistory.length - 1];
+        if (lastActionJson) {
+          try {
+            const lastAction = JSON.parse(lastActionJson) as Action;
+            if (
+              lastAction &&
+              lastAction.type === 'ACTIVATE_ABILITY' &&
+              lastAction.payload &&
+              lastAction.payload.abilityId === action.payload.abilityId
+            ) {
+              // Same ability activated immediately before - penalize HEAVILY
+              score -= 1000;
+            } else {
+              // Heuristic: Avoid pump abilities unless clearly winning
+              score -= 5;
+            }
+          } catch {
+            score -= 5;
+          }
+        } else {
+          score -= 5;
+        }
       }
 
       if (score > bestScore) {

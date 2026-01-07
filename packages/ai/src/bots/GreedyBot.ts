@@ -109,6 +109,11 @@ export class GreedyBot implements Bot {
             const penalty = Math.pow(10, sameAbilityCount + 1);
             score -= penalty;
 
+            // Hard cutoff for potential infinite loops
+            if (sameAbilityCount > 5) {
+              score = -Infinity;
+            }
+
             if (this.debug && sameAbilityCount >= 2) {
               console.log(
                 `[GreedyBot] Penalizing repeated ability ${action.payload.abilityId}: ` +

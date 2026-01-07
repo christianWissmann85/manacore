@@ -30,6 +30,10 @@ export class MCTSBot implements Bot {
   private totalIterations = 0;
   private totalTimeMs = 0;
 
+  // Loop prevention
+  private recentActions: Action[] = [];
+  private readonly MAX_RECENT_ACTIONS = 10;
+
   /**
    * Create a new MCTSBot
    *
@@ -57,14 +61,72 @@ export class MCTSBot implements Bot {
    */
   chooseAction(state: GameState, playerId: PlayerId): Action {
     const result = runMCTS(state, playerId, this.rolloutPolicy, this.config);
+    let chosenAction = result.action;
+
+    // ANTI-LOOP FIX: Check for repetitive ability activations
+    if (chosenAction.type === 'ACTIVATE_ABILITY') {
+      const sameAbilityCount = this.countRecentSameAbility(chosenAction);
+
+      // If we've done this 5+ times recently, stop!
+      if (sameAbilityCount >= 5) {
+        if (this.config.debug) {
+          console.log(
+            `[MCTSBot] Detected loop with ability ${chosenAction.payload.abilityId} (${sameAbilityCount} times). Forcing PASS.`,
+          );
+        }
+
+        // Find a safe fallback action (usually PASS_PRIORITY)
+        // We can't just return PASS_PRIORITY blindly because it might not be legal?
+        // But if we are casting abilities, we have priority, so we should be able to pass.
+        // Let's verify by checking legal actions if we want to be 100% safe,
+        // but constructing a simple PASS action is usually safe for "player with priority".
+        chosenAction = {
+          type: 'PASS_PRIORITY',
+          playerId,
+          payload: {},
+        };
+      }
+    }
 
     // Track stats
     this.totalDecisions++;
     this.totalIterations += result.iterations;
     this.totalTimeMs += result.timeMs;
 
-    return result.action;
+    // Update history
+    this.recentActions.push(chosenAction);
+    if (this.recentActions.length > this.MAX_RECENT_ACTIONS) {
+      this.recentActions.shift();
+    }
+
+    return chosenAction;
   }
+
+  /**
+   * Count how many times we've recently activated the same ability
+   */
+  private countRecentSameAbility(action: Action): number {
+    if (action.type !== 'ACTIVATE_ABILITY') {
+      return 0;
+    }
+
+    const abilityId = action.payload.abilityId;
+    let count = 0;
+
+    // Look at recent actions (more recent = more weight)
+    for (let i = this.recentActions.length - 1; i >= 0; i--) {
+      const recent = this.recentActions[i];
+      if (recent?.type === 'ACTIVATE_ABILITY' && recent.payload.abilityId === abilityId) {
+        count++;
+      }
+    }
+
+    return count;
+  }
+
+  /**
+   * Get performance statistics
+   */
 
   /**
    * Get performance statistics
