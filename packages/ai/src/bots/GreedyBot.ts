@@ -143,12 +143,20 @@ export class GreedyBot implements Bot {
       );
     }
 
+    // Filter out NaN scores (can happen with edge cases)
+    const validActions = scoredActions.filter((sa) => !Number.isNaN(sa.score));
+
+    // If all scores are NaN, fall back to first legal action
+    if (validActions.length === 0) {
+      return actionsToEvaluate[0]!;
+    }
+
     // Sort by score (descending)
-    scoredActions.sort((a, b) => b.score - a.score);
+    validActions.sort((a, b) => b.score - a.score);
 
     // Get all actions with the best score (for tie-breaking)
-    const bestScore = scoredActions[0]!.score;
-    const bestActions = scoredActions.filter((sa) => sa.score === bestScore);
+    const bestScore = validActions[0]!.score;
+    const bestActions = validActions.filter((sa) => sa.score === bestScore);
 
     // Random tie-break among equally good actions
     const index = Math.floor(this.rng() * bestActions.length);

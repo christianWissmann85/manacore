@@ -21,17 +21,25 @@ import {
 
 /**
  * Normalize weights to sum to 1.0
+ * Returns DEFAULT_WEIGHTS if input contains NaN or sums to 0
  */
 export function normalizeWeights(weights: EvaluationWeights): EvaluationWeights {
-  const sum = weights.life + weights.board + weights.cards + weights.mana + weights.tempo;
-  if (sum === 0) return DEFAULT_WEIGHTS;
+  // Handle undefined/NaN values by falling back to defaults
+  const life = Number.isFinite(weights.life) ? weights.life : DEFAULT_WEIGHTS.life;
+  const board = Number.isFinite(weights.board) ? weights.board : DEFAULT_WEIGHTS.board;
+  const cards = Number.isFinite(weights.cards) ? weights.cards : DEFAULT_WEIGHTS.cards;
+  const mana = Number.isFinite(weights.mana) ? weights.mana : DEFAULT_WEIGHTS.mana;
+  const tempo = Number.isFinite(weights.tempo) ? weights.tempo : DEFAULT_WEIGHTS.tempo;
+
+  const sum = life + board + cards + mana + tempo;
+  if (sum === 0 || !Number.isFinite(sum)) return DEFAULT_WEIGHTS;
 
   return {
-    life: weights.life / sum,
-    board: weights.board / sum,
-    cards: weights.cards / sum,
-    mana: weights.mana / sum,
-    tempo: weights.tempo / sum,
+    life: life / sum,
+    board: board / sum,
+    cards: cards / sum,
+    mana: mana / sum,
+    tempo: tempo / sum,
   };
 }
 
@@ -132,12 +140,20 @@ export class TunableBot implements Bot {
       }
     }
 
+    // Filter out NaN scores (can happen with invalid coefficients)
+    const validActions = scoredActions.filter((sa) => !Number.isNaN(sa.score));
+
+    // If all scores are NaN, fall back to first legal action
+    if (validActions.length === 0) {
+      return actionsToEvaluate[0]!;
+    }
+
     // Sort by score descending
-    scoredActions.sort((a, b) => b.score - a.score);
+    validActions.sort((a, b) => b.score - a.score);
 
     // Tie-break randomly
-    const bestScore = scoredActions[0]!.score;
-    const bestActions = scoredActions.filter((sa) => sa.score === bestScore);
+    const bestScore = validActions[0]!.score;
+    const bestActions = validActions.filter((sa) => sa.score === bestScore);
     const index = Math.floor(this.rng() * bestActions.length);
     const chosenAction = bestActions[index]!.action;
 
