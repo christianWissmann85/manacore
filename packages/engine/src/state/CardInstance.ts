@@ -170,10 +170,14 @@ export function clearTemporaryModifications(
 /**
  * Generate unique instance ID
  * Uses counter-based IDs for determinism (critical for replays)
+ * Format: 4-character base36 ID (e.g., "a1b2", "0000", "zzzz")
+ * Provides 1,679,616 unique IDs which is sufficient for any game
  */
 let instanceCounter = 0;
 function generateInstanceId(): string {
-  return `card_${instanceCounter++}`;
+  const id = instanceCounter++;
+  // Convert to base36 and pad to 4 characters
+  return id.toString(36).padStart(4, '0');
 }
 
 /**

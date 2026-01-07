@@ -65,7 +65,8 @@ function renderGameState(state: GameState, opponentActions?: string[]): string {
       if (c.attacking) status.push('ATTACKING');
       if (c.blocking) status.push('BLOCKING');
       const stats = t?.power ? `(${t.power}/${t.toughness})` : '';
-      lines.push(`  ${t?.name || '???'} ${stats} ${status.join(' ')}`);
+      const statusStr = status.length > 0 ? ` ${status.join(' ')}` : '';
+      lines.push(`  [${c.instanceId}] ${t?.name || '???'} ${stats}${statusStr}`);
     });
   }
   lines.push('');
@@ -91,7 +92,8 @@ function renderGameState(state: GameState, opponentActions?: string[]): string {
       if (c.attacking) status.push('ATTACKING');
       if (c.blocking) status.push('BLOCKING');
       const stats = t?.power ? `(${t.power}/${t.toughness})` : '';
-      lines.push(`  ${t?.name || '???'} ${stats} ${status.join(' ')}`);
+      const statusStr = status.length > 0 ? ` ${status.join(' ')}` : '';
+      lines.push(`  [${c.instanceId}] ${t?.name || '???'} ${stats}${statusStr}`);
     });
   }
   lines.push('');
@@ -329,7 +331,24 @@ class GameSession {
           continue;
         }
 
-        // If multiple choices, stop and wait for User Input
+        // Auto-pass when only PASS_PRIORITY and/or END_TURN are available
+        // These are non-decisions when there's nothing else to do
+        const meaningfulActions = playerActions.filter(
+          (a) => a.type !== 'PASS_PRIORITY' && a.type !== 'END_TURN',
+        );
+
+        if (meaningfulActions.length === 0 && playerActions.length > 0) {
+          // Prefer END_TURN to skip phases, otherwise PASS_PRIORITY
+          const autoAction =
+            playerActions.find((a) => a.type === 'END_TURN') ||
+            playerActions.find((a) => a.type === 'PASS_PRIORITY');
+          if (autoAction) {
+            this.state = applyAction(this.state, autoAction);
+            continue;
+          }
+        }
+
+        // If multiple meaningful choices, stop and wait for User Input
         break;
       }
     }

@@ -659,6 +659,17 @@ function getLegalBlockerDeclarations(
 }
 
 /**
+ * Get a card name with instance ID suffix for disambiguation
+ * Format: "Giant Spider [0a1b]" when ID is needed, or just "Giant Spider" otherwise
+ */
+function getCardDisplayName(card: { instanceId: string; scryfallId: string }): string {
+  const template = CardLoader.getById(card.scryfallId);
+  const name = template?.name || 'creature';
+  // Always include instance ID for clarity - helps distinguish multiple copies
+  return `${name} [${card.instanceId}]`;
+}
+
+/**
  * Get a human-readable name for a target
  */
 function getTargetName(state: GameState, targetId: string): string {
@@ -726,17 +737,32 @@ export function describeAction(action: Action, state: GameState): string {
       const count = action.payload.attackers.length;
       if (count === 1) {
         const attacker = findCard(state, action.payload.attackers[0]!);
-        const name = attacker ? CardLoader.getById(attacker.scryfallId)?.name : 'creature';
+        const name = attacker ? getCardDisplayName(attacker) : 'creature';
         return `Attack with ${name}`;
       }
       return `Attack with ${count} creatures`;
     }
 
     case 'DECLARE_BLOCKERS': {
-      const count = action.payload.blocks.length;
-      if (count === 0) return "Don't block";
-      if (count === 1) return 'Block with 1 creature';
-      return `Block with ${count} creatures`;
+      const blocks = action.payload.blocks;
+      if (blocks.length === 0) return "Don't block";
+
+      // Build descriptive blocking assignments with instance IDs
+      const blockDescriptions: string[] = [];
+      for (const block of blocks) {
+        const blocker = findCard(state, block.blockerId);
+        const attacker = findCard(state, block.attackerId);
+
+        const blockerName = blocker ? getCardDisplayName(blocker) : 'creature';
+        const attackerName = attacker ? getCardDisplayName(attacker) : 'attacker';
+
+        blockDescriptions.push(`${blockerName} blocks ${attackerName}`);
+      }
+
+      if (blocks.length === 1) {
+        return blockDescriptions[0]!;
+      }
+      return blockDescriptions.join(', ');
     }
 
     case 'END_TURN':
