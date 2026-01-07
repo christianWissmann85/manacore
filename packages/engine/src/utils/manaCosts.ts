@@ -347,3 +347,52 @@ export function getMinimumXValue(_manaCostString: string | undefined): number {
   // In the future, we could parse oracle text to find minimum useful X
   return 0;
 }
+
+/**
+ * Maximum X value to enumerate during action generation.
+ * This prevents action space explosion for players with huge mana pools.
+ * 15 is reasonable: most games don't exceed this, and X=15 Fireball is usually lethal.
+ */
+export const X_MAX_CAP = 15;
+
+/**
+ * Calculate the maximum X value a player can afford for a given spell.
+ *
+ * For a spell like Blaze ({X}{R}), if player has 5 mana available (including R),
+ * the max X they can afford is 4 (1R for the base cost, 4 for X).
+ *
+ * @param availableMana - Total mana available (from pool + untapped sources)
+ * @param cost - Parsed mana cost of the spell
+ * @returns Maximum X value affordable (capped at X_MAX_CAP)
+ */
+export function calculateMaxAffordableX(availableMana: ManaPool, cost: ManaCost): number {
+  // If no X in cost, return 0
+  if (cost.x === 0) return 0;
+
+  // Calculate total mana available
+  const totalAvailable = getTotalMana(availableMana);
+
+  // Calculate the base cost (colored + generic, excluding X)
+  const baseCost = getConvertedManaCost(cost);
+
+  // Check if we can pay the colored requirements
+  if (availableMana.white < cost.white) return -1; // Can't afford at all
+  if (availableMana.blue < cost.blue) return -1;
+  if (availableMana.black < cost.black) return -1;
+  if (availableMana.red < cost.red) return -1;
+  if (availableMana.green < cost.green) return -1;
+  if (availableMana.colorless < cost.colorless) return -1;
+
+  // Remaining mana after paying base cost can go to X
+  // Each X symbol in the cost requires xValue mana
+  // So total X cost = cost.x * xValue
+  // We want: baseCost + cost.x * xValue <= totalAvailable
+  // Solving: xValue <= (totalAvailable - baseCost) / cost.x
+  const remainingForX = totalAvailable - baseCost;
+  if (remainingForX < 0) return -1; // Can't even pay base cost
+
+  const maxX = Math.floor(remainingForX / cost.x);
+
+  // Cap at X_MAX_CAP to prevent action space explosion
+  return Math.min(maxX, X_MAX_CAP);
+}

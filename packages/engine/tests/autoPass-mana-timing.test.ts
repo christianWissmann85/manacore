@@ -9,13 +9,7 @@
  */
 
 import { describe, it, expect } from 'bun:test';
-import {
-  initializeGame,
-  getLegalActions,
-  applyAction,
-  getPlayer,
-  enableF6Mode,
-} from '../src';
+import { initializeGame, getLegalActions, applyAction, getPlayer, enableF6Mode } from '../src';
 import type { GameState } from '../src/state/GameState';
 import type { PlayerId } from '../src/state/Zone';
 import type { CardInstance } from '../src/state/CardInstance';
@@ -23,7 +17,11 @@ import { CardLoader } from '../src/cards/CardLoader';
 import { hasManaSink } from '../src/actions/autoPass';
 
 // Helper to create a card instance
-function createCard(name: string, owner: PlayerId, zone: CardInstance['zone'] = 'hand'): CardInstance {
+function createCard(
+  name: string,
+  owner: PlayerId,
+  zone: CardInstance['zone'] = 'hand',
+): CardInstance {
   const template = CardLoader.getByName(name);
   if (!template) throw new Error(`Card not found: ${name}`);
   return {
@@ -96,7 +94,7 @@ function setupState(config: {
 }
 
 describe('Mana ability timing filtering', () => {
-  describe('during opponent\'s turn', () => {
+  describe("during opponent's turn", () => {
     it('should NOT show mana abilities when player only has sorceries in hand', () => {
       // Setup: Opponent's combat phase, player has Forest + Grizzly Bears in hand
       const state = setupState({
@@ -156,7 +154,7 @@ describe('Mana ability timing filtering', () => {
     });
   });
 
-  describe('during player\'s own turn', () => {
+  describe("during player's own turn", () => {
     it('should show mana abilities during own main phase with castable spells', () => {
       const state = setupState({
         playerHand: ['Grizzly Bears'],

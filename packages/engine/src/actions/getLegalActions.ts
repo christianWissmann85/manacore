@@ -31,6 +31,8 @@ import {
   hasReach,
   hasDefender,
 } from '../cards/CardTemplate';
+import { parseManaCost, hasXInCost, calculateMaxAffordableX } from '../utils/manaCosts';
+import { calculateAvailableMana } from './validators';
 import { validateAction } from './validators';
 import { getActivatedAbilities, getGraveyardAbilities } from '../rules/activatedAbilities';
 import { parseTargetRequirements, getAllLegalTargetCombinations } from '../rules/targeting';
@@ -241,6 +243,28 @@ function getLegalHandActions(state: GameState, playerId: 'player' | 'opponent'):
     const spellActions: CastSpellAction[] = [];
     const targetRequirements = parseTargetRequirements(template.oracle_text || '');
 
+    // Check if this is an X spell - if so, enumerate X values
+    const isXSpell = hasXInCost(template.mana_cost);
+    let xValues: number[] = [0]; // Default: single action with no X
+
+    if (isXSpell) {
+      // Calculate max affordable X and enumerate all values
+      const availableMana = calculateAvailableMana(state, playerId);
+      const manaCost = parseManaCost(template.mana_cost);
+      const maxX = calculateMaxAffordableX(availableMana, manaCost);
+
+      if (maxX < 0) {
+        // Can't afford even X=0 (missing colored mana)
+        continue;
+      }
+
+      // Generate X values from 0 to maxX
+      xValues = [];
+      for (let x = 0; x <= maxX; x++) {
+        xValues.push(x);
+      }
+    }
+
     if (targetRequirements.length > 0) {
       // Generate actions for each valid target combination
       const targetCombinations = getAllLegalTargetCombinations(
@@ -251,32 +275,40 @@ function getLegalHandActions(state: GameState, playerId: 'player' | 'opponent'):
       );
 
       for (const targets of targetCombinations) {
+        // For X spells, generate one action per X value per target
+        for (const xValue of xValues) {
+          const action: CastSpellAction = {
+            type: 'CAST_SPELL',
+            playerId,
+            payload: {
+              cardInstanceId: card.instanceId,
+              targets,
+              ...(isXSpell ? { xValue } : {}),
+            },
+          };
+
+          if (validateAction(state, action).length === 0) {
+            spellActions.push(action);
+          }
+        }
+      }
+    } else {
+      // No targets required
+      // For X spells, generate one action per X value
+      for (const xValue of xValues) {
         const action: CastSpellAction = {
           type: 'CAST_SPELL',
           playerId,
           payload: {
             cardInstanceId: card.instanceId,
-            targets,
+            targets: [],
+            ...(isXSpell ? { xValue } : {}),
           },
         };
 
         if (validateAction(state, action).length === 0) {
           spellActions.push(action);
         }
-      }
-    } else {
-      // No targets required
-      const action: CastSpellAction = {
-        type: 'CAST_SPELL',
-        playerId,
-        payload: {
-          cardInstanceId: card.instanceId,
-          targets: [],
-        },
-      };
-
-      if (validateAction(state, action).length === 0) {
-        spellActions.push(action);
       }
     }
 
@@ -640,13 +672,17 @@ export function describeAction(action: Action, state: GameState): string {
         const template = CardLoader.getById(card.scryfallId);
         const spellName = template?.name || 'spell';
 
+        // Include X value for X spells
+        const xValue = action.payload.xValue;
+        const xSuffix = xValue !== undefined ? ` (X=${xValue})` : '';
+
         // Include targets in description
         const targets = action.payload.targets || [];
         if (targets.length > 0) {
           const targetNames = targets.map((t) => getTargetName(state, t)).join(', ');
-          return `Cast ${spellName} targeting ${targetNames}`;
+          return `Cast ${spellName}${xSuffix} targeting ${targetNames}`;
         }
-        return `Cast ${spellName}`;
+        return `Cast ${spellName}${xSuffix}`;
       }
       return 'Cast spell';
     }
