@@ -28,7 +28,7 @@ import {
   canResolveStack,
   bothPlayersPassedPriority,
 } from '../rules/stack';
-import { shouldAutoPass } from './autoPass';
+import { shouldAutoPass, hasAttackers } from './autoPass';
 import { resolveCombatDamage, cleanupCombat } from '../rules/combat';
 import { checkStateBasedActions } from '../rules/stateBasedActions';
 import { registerTrigger, resolveTriggers } from '../rules/triggers';
@@ -107,6 +107,14 @@ export function applyAction(state: GameState, action: Action): GameState {
     if (checkStateBasedActions(newState)) {
       actionsPerformed = true;
     }
+  }
+
+  // F6 Auto-Pass: After any action that might change priority, check if the
+  // new priority player should auto-pass. This aggressively chains through
+  // forced non-decisions (e.g., opponent has no responses to our spell).
+  // Note: We skip this for PASS_PRIORITY since it already calls applyF6AutoPass internally.
+  if (newState.enableF6AutoPass && action.type !== 'PASS_PRIORITY' && !newState.gameOver) {
+    applyF6AutoPass(newState);
   }
 
   return newState;
@@ -504,10 +512,22 @@ function advancePhase(state: GameState): void {
   // Handle phase/step transitions
   if (state.phase === 'combat') {
     if (state.step === 'declare_attackers') {
-      // Move to declare blockers
-      state.step = 'declare_blockers';
-      // Priority goes to defending player
-      state.priorityPlayer = state.activePlayer === 'player' ? 'opponent' : 'player';
+      // Check if any creatures are actually attacking
+      const hasAttackingCreatures =
+        state.players.player.battlefield.some((c) => c.attacking) ||
+        state.players.opponent.battlefield.some((c) => c.attacking);
+
+      if (!hasAttackingCreatures) {
+        // No attackers declared - skip directly to main2 (no blocking needed)
+        state.phase = 'main2';
+        state.step = 'main';
+        state.priorityPlayer = state.activePlayer;
+      } else {
+        // Move to declare blockers
+        state.step = 'declare_blockers';
+        // Priority goes to defending player
+        state.priorityPlayer = state.activePlayer === 'player' ? 'opponent' : 'player';
+      }
     } else if (state.step === 'declare_blockers') {
       // Resolve combat damage
       resolveCombatDamage(state);
@@ -519,13 +539,19 @@ function advancePhase(state: GameState): void {
       state.priorityPlayer = state.activePlayer;
     }
   } else if (state.phase === 'main1') {
-    // Main 1 -> Combat
-    state.phase = 'combat';
-    state.step = 'declare_attackers';
-    // Priority goes to active player to declare attackers?
-    // Actually, declaring attackers is a specific action that doesn't use the stack in the same way.
-    // But usually priority is with active player at start of step.
-    state.priorityPlayer = state.activePlayer;
+    // Main 1 -> Combat (or skip to Main 2 if no attackers)
+    // Optimization: If active player has no creatures that can attack, skip combat entirely
+    if (!hasAttackers(state, state.activePlayer)) {
+      // No potential attackers - skip directly to main2
+      state.phase = 'main2';
+      state.step = 'main';
+      state.priorityPlayer = state.activePlayer;
+    } else {
+      // Has potential attackers - enter combat normally
+      state.phase = 'combat';
+      state.step = 'declare_attackers';
+      state.priorityPlayer = state.activePlayer;
+    }
   } else if (state.phase === 'main2') {
     // Main 2 -> End Turn
     // Automatically apply end turn logic

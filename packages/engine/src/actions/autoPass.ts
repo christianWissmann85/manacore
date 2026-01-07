@@ -16,7 +16,14 @@ import type { PlayerId } from '../state/Zone';
 import type { PassPriorityAction, DeclareBlockersAction } from './Action';
 import { getPlayer } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
-import { isInstant, isCreature, hasKeyword, hasFlying, hasReach } from '../cards/CardTemplate';
+import {
+  isInstant,
+  isCreature,
+  hasKeyword,
+  hasFlying,
+  hasReach,
+  hasHaste,
+} from '../cards/CardTemplate';
 import { getActivatedAbilities, getGraveyardAbilities } from '../rules/activatedAbilities';
 import { calculateAvailableMana } from './validators';
 import { canPayManaCost, parseManaCost } from '../utils/manaCosts';
@@ -41,8 +48,8 @@ export function hasAttackers(state: GameState, playerId: PlayerId): boolean {
     // Must be untapped
     if (permanent.tapped) continue;
 
-    // Must not have summoning sickness
-    if (permanent.summoningSick) continue;
+    // Must not have summoning sickness (unless has Haste)
+    if (permanent.summoningSick && !hasHaste(template)) continue;
 
     // Must not have Defender (Walls can't attack)
     if (template.type_line.includes('Wall')) continue;

@@ -102,6 +102,39 @@ describe('Oracle Text Parsing', () => {
     expect(requiresTargets('Draw three cards.')).toBe(false);
     expect(requiresTargets(undefined)).toBe(false);
   });
+
+  test('filters out activated ability targeting from oracle text', () => {
+    // Anaba Shaman: Creature with "{R}, {T}: This creature deals 1 damage to any target."
+    // When CASTING this creature, it should NOT require a target
+    const oracleText = '{R}, {T}: This creature deals 1 damage to any target.';
+    const requirements = parseTargetRequirements(oracleText);
+
+    // Should be empty - activated ability targets are filtered out
+    expect(requirements.length).toBe(0);
+  });
+
+  test('filters out triggered ability targeting from oracle text', () => {
+    // When a creature with "When ~ enters the battlefield, destroy target creature" is cast,
+    // the spell itself doesn't require a target - the trigger does
+    const oracleText =
+      'When Nekrataal enters the battlefield, destroy target nonartifact, nonblack creature.';
+    const requirements = parseTargetRequirements(oracleText);
+
+    // Should be empty - triggered ability targets are filtered out
+    expect(requirements.length).toBe(0);
+  });
+
+  test('parses cast targets but not ability targets in mixed oracle text', () => {
+    // A hypothetical card with both a cast effect and an activated ability
+    // Only the cast effect should be parsed for targeting
+    const oracleText =
+      'Shock deals 2 damage to any target.\n{R}: Do something else to target creature.';
+    const requirements = parseTargetRequirements(oracleText);
+
+    // Should only find the main spell target, not the activated ability target
+    expect(requirements.length).toBe(1);
+    expect(requirements[0]!.targetType).toBe('any');
+  });
 });
 
 describe('Target Validation', () => {
@@ -115,6 +148,26 @@ describe('Target Validation', () => {
     const errors = validateTargets(state, ['opponent'], requirements, 'player');
 
     expect(errors.length).toBe(0);
+  });
+
+  test('rejects land as target for "any target" damage spell', () => {
+    const mountain = CardLoader.getByName('Mountain');
+    const playerLibrary = [createCardInstance(mountain!.id, 'player', 'library')];
+    const opponentLibrary = [createCardInstance(mountain!.id, 'opponent', 'library')];
+    const state = createGameState(playerLibrary, opponentLibrary);
+
+    // Add a land on the battlefield
+    const landCard = createCardInstance(mountain!.id, 'opponent', 'battlefield');
+    state.players.opponent.battlefield.push(landCard);
+
+    // Try to target the land with "any target" (damage spell)
+    const requirements = parseTargetRequirements('Shock deals 2 damage to any target.');
+    const errors = validateTargets(state, [landCard.instanceId], requirements, 'player');
+
+    // Should reject - lands can't be dealt damage (treated as nonland restriction)
+    expect(errors.length).toBeGreaterThan(0);
+    // The error says "Target must be a creature or player" for 'any' target type with nonland restriction
+    expect(errors[0]).toBeDefined();
   });
 
   test('rejects creature target for player-only requirement', () => {

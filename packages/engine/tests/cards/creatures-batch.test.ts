@@ -284,12 +284,22 @@ describe('Keyword Creatures - Batch Verification', () => {
       const goblin = createCreatureOnBattlefield(state, 'Raging Goblin', 'player');
       goblin.summoningSick = true; // Just entered
 
-      // But Haste overrides summoning sickness
+      // Verify the card has haste
       const card = CardLoader.getByName('Raging Goblin')!;
       expect(hasHaste(card)).toBe(true);
 
-      // Engine should allow attack despite summoningSick due to Haste
-      // (This behavior is handled in validators.ts)
+      // Haste should allow the creature to attack despite summoning sickness
+      const attackState = applyAction(state, {
+        type: 'DECLARE_ATTACKERS',
+        playerId: 'player',
+        payload: { attackers: [goblin.instanceId] },
+      });
+
+      // Attack should succeed - creature should be marked as attacking
+      const attackingGoblin = attackState.players.player.battlefield.find(
+        (c) => c.instanceId === goblin.instanceId,
+      );
+      expect(attackingGoblin?.attacking).toBe(true);
     });
   });
 });

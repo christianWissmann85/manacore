@@ -33,13 +33,23 @@ export function parseTargetRequirements(oracleText: string): TargetRequirement[]
 
   const requirements: TargetRequirement[] = [];
 
-  // Filter out triggered ability text - these have their own targeting
-  // Triggered abilities start with "When", "Whenever", or "At"
+  // Filter out ability text - these have their own targeting when activated/triggered
+  // - Triggered abilities start with "When", "Whenever", or "At"
+  // - Activated abilities start with a cost (e.g., "{R}, {T}:") followed by a colon
   const sentences = oracleText.split(/[.\n]/);
   const spellText = sentences
     .filter((s) => {
       const trimmed = s.trim().toLowerCase();
-      return !trimmed.startsWith('when') && !trimmed.startsWith('at ');
+      // Filter triggered abilities
+      if (trimmed.startsWith('when') || trimmed.startsWith('at ')) {
+        return false;
+      }
+      // Filter activated abilities - they start with {cost}: pattern
+      // e.g., "{R}, {T}: Deal 1 damage..." or "{2}: Do something..."
+      if (/^\{[^}]+\}.*:/.test(trimmed)) {
+        return false;
+      }
+      return true;
     })
     .join('. ');
 

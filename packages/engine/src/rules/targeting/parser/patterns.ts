@@ -397,11 +397,15 @@ export const TARGET_PATTERNS: TargetPattern[] = [
       createRequirement(idx, 'artifact_or_enchantment', 'target artifact or enchantment', {}),
   },
 
-  // "any target" / "to any target" (creature, player, or planeswalker)
+  // "any target" / "to any target" (creature, player, or planeswalker - NOT lands)
+  // In MTG, "any target" means any target that can be dealt damage
   {
     regex: /(?:any target|to any target)/i,
     priority: 65,
-    handler: (match, idx) => createRequirement(idx, 'any', 'any target', {}),
+    handler: (match, idx) =>
+      createRequirement(idx, 'any', 'any target', {
+        restrictions: [{ type: 'nonland' }],
+      }),
   },
 
   // "target artifact"

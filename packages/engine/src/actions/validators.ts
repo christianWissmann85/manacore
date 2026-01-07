@@ -27,6 +27,7 @@ import {
   hasFear,
   hasIntimidate,
   hasMenace,
+  hasHaste,
   getLandwalkTypes,
   isArtifact,
 } from '../cards/CardTemplate';
@@ -618,6 +619,9 @@ function validateDeclareAttackers(state: GameState, action: DeclareAttackersActi
       continue;
     }
 
+    // Load template early so we can check haste for summoning sickness
+    const template = CardLoader.getById(attacker.scryfallId);
+
     if (attacker.controller !== action.playerId) {
       errors.push(`You do not control ${attackerId}`);
     }
@@ -630,7 +634,8 @@ function validateDeclareAttackers(state: GameState, action: DeclareAttackersActi
       errors.push(`${attackerId} is tapped`);
     }
 
-    if (attacker.summoningSick) {
+    // Check summoning sickness (skip if creature has haste)
+    if (attacker.summoningSick && (!template || !hasHaste(template))) {
       errors.push(`${attackerId} has summoning sickness`);
     }
 
@@ -652,7 +657,6 @@ function validateDeclareAttackers(state: GameState, action: DeclareAttackersActi
     }
 
     // Check if it's a creature
-    const template = CardLoader.getById(attacker.scryfallId);
     if (template && !isCreature(template)) {
       errors.push(`${attackerId} is not a creature`);
     }
