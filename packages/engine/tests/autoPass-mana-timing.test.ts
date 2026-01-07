@@ -34,6 +34,7 @@ function createCard(
     summoningSick: false,
     counters: {},
     attachedTo: null,
+    attachments: [],
     damage: 0,
     temporaryModifications: [],
   };

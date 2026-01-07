@@ -28,6 +28,7 @@ function createCard(name: string, owner: PlayerId, zone: CardInstance['zone']): 
     summoningSick: false,
     counters: {},
     attachedTo: null,
+    attachments: [],
     damage: 0,
     temporaryModifications: [],
   };

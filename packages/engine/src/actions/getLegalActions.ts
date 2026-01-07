@@ -57,15 +57,18 @@ function cantAttackAlone(template: { name?: string; oracle_text?: string }): boo
 }
 
 /**
- * Filter out redundant mana abilities when CAST_SPELL actions are available.
+ * Filter out redundant mana abilities in situations where they're not useful.
  *
- * When a player can cast a spell, the CAST_SPELL action automatically handles
- * mana payment by tapping lands. Showing manual "Tap Forest for {G}" options
- * alongside "Cast Grizzly Bears" is redundant and clutters the action space.
+ * Mana abilities are filtered in two scenarios:
  *
- * This filter removes mana abilities when:
- * 1. At least one CAST_SPELL action is available
- * 2. The mana ability is a pure mana ability (just adds mana, no other effects)
+ * 1. When CAST_SPELL is available:
+ *    The CAST_SPELL action automatically handles mana payment by tapping lands.
+ *    Showing manual "Tap Forest for {G}" alongside "Cast Grizzly Bears" is redundant.
+ *
+ * 2. During non-sorcery-speed timing with no instant-speed options:
+ *    If it's not our main phase (or stack has items or it's opponent's turn),
+ *    and we have no instant-speed spells or abilities, tapping for mana is pointless.
+ *    Example: During opponent's combat with only Grizzly Bears in hand.
  *
  * This optimization reduces the action space for AI training and simplifies UX.
  */
@@ -77,8 +80,40 @@ function filterRedundantManaAbilities(
   // Check if there's at least one CAST_SPELL action
   const hasCastSpell = actions.some((a) => a.type === 'CAST_SPELL');
 
-  if (!hasCastSpell) {
-    // No spell to cast - keep all actions (mana abilities might be useful for abilities)
+  // Check if we're at sorcery speed
+  const canPlaySorcerySpeed =
+    state.activePlayer === playerId &&
+    (state.phase === 'main1' || state.phase === 'main2') &&
+    state.stack.length === 0;
+
+  // Determine if we should filter mana abilities
+  let shouldFilterMana = false;
+
+  if (hasCastSpell) {
+    // Case 1: CAST_SPELL available - mana abilities are redundant
+    shouldFilterMana = true;
+  } else if (!canPlaySorcerySpeed) {
+    // Case 2: Not at sorcery speed - check if there are instant-speed options
+    // If no instant-speed options, mana abilities are pointless
+    const hasNonManaAbility = actions.some((a) => {
+      if (a.type !== 'ACTIVATE_ABILITY') return false;
+
+      const player = getPlayer(state, playerId);
+      const permanent = player.battlefield.find((c) => c.instanceId === a.payload.sourceId);
+      if (!permanent) return false;
+
+      const abilities = getActivatedAbilities(permanent, state);
+      const ability = abilities.find((ab) => ab.id === a.payload.abilityId);
+      return ability && !ability.isManaAbility;
+    });
+
+    // If there are no non-mana abilities and no spells to cast, filter mana abilities
+    if (!hasNonManaAbility) {
+      shouldFilterMana = true;
+    }
+  }
+
+  if (!shouldFilterMana) {
     return actions;
   }
 
@@ -101,7 +136,7 @@ function filterRedundantManaAbilities(
       return true; // Keep if we can't find the ability
     }
 
-    // Filter out pure mana abilities (they're redundant when CAST_SPELL is available)
+    // Filter out pure mana abilities
     if (ability.isManaAbility) {
       return false; // Remove this action
     }
