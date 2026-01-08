@@ -66,8 +66,10 @@ all = [
 
 [project.urls]
 Homepage = "https://github.com/christianWissmann85/manacore"
-Documentation = "https://github.com/christianWissmann85/manacore/blob/main/packages/python-gym/README.md"
+Documentation = "https://github.com/christianWissmann85/manacore/tree/main/packages/python-gym"
 Repository = "https://github.com/christianWissmann85/manacore"
+Issues = "https://github.com/christianWissmann85/manacore/issues"
+Changelog = "https://github.com/christianWissmann85/manacore/blob/main/packages/python-gym/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["manacore_gym"]
