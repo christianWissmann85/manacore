@@ -1,0 +1,30 @@
+{
+  "batchId": "batch-2026-01-08-jjiuv2",
+  "startedAt": "2026-01-08T12:12:24.594Z",
+  "config": {
+    "totalGames": 1,
+    "parallelWorkers": 1,
+    "matchups": [
+      "white-random"
+    ]
+  },
+  "stats": {
+    "completed": 1,
+    "failed": 0,
+    "pending": 0,
+    "running": 0
+  },
+  "games": {
+    "game-1767874344594": {
+      "id": "game-1767874344594",
+      "deck": "white",
+      "opponent": "random",
+      "seed": 1767874344594,
+      "status": "completed",
+      "startedAt": "2026-01-08T12:12:24.602Z",
+      "completedAt": "2026-01-08T12:16:52.629Z",
+      "durationMs": 268027,
+      "file": "game-1767874350072.json"
+    }
+  }
+}

@@ -105,7 +105,7 @@ bun src/index.ts play
 | `benchmark-all-bots.json`      | Multi-bot comparison with Elo  |
 | `tune-weights-evolve.json`     | Evaluation weight optimization |
 | `tune-mcts-grid.json`          | MCTS hyperparameter tuning     |
-| `pipeline-full.json`           | Complete tuning workflow       |
+| `mcts-greedy-tuning-pipeline.json`           | Complete tuning workflow       |
 | `collect-training-fast.json`   | ML training data (fast)        |
 | `collect-training-mcts.json`   | ML training data (quality)     |
 

@@ -316,10 +316,33 @@ bun src/index.ts run ../../experiments/simulate-mcts-vs-greedy.json
 
 ---
 
+## Training Data Generation
+
+Generate high-quality MTG training data using Claude 4.5 as the "human" player:
+
+```bash
+# Generate training games (Claude plays via MCP)
+bun scripts/generate-training-data.ts --games 100 --parallel 3
+
+# Check coverage and quality
+bun scripts/generate-coverage-report.ts
+```
+
+Each game captures:
+
+- **25-dimensional state features** (normalized for ML)
+- **Action selection** with legal action context
+- **Strategic reasoning** explaining each decision
+
+See **docs/TRAINING_DATA_PIPELINE.md** for full documentation.
+
+---
+
 ## Documentation
 
 - **ROADMAP.md**: Full project roadmap and phase details
 - **ARCHITECTURE.md**: Detailed architecture documentation
+- **docs/TRAINING_DATA_PIPELINE.md**: Training data generation pipeline
 - **packages/engine/docs/CARD_STATUS.md**: Card implementation status
 - **packages/engine/docs/EDGE_CASES.md**: Known limitations and quirks
 

@@ -446,14 +446,14 @@ async function main() {
       console.log('    bun cli run experiments/simulate-mcts-vs-greedy.json');
       console.log('    bun cli run experiments/benchmark-all-bots.json');
       console.log('    bun cli run experiments/collect-training-fast.json');
-      console.log('    bun cli run experiments/pipeline-full.json');
+      console.log('    bun cli run experiments/mcts-greedy-tuning-pipeline.json');
       console.log('');
       console.log('  Available experiment templates in experiments/:');
       console.log('    simulate-mcts-vs-greedy.json  - Bot vs bot simulations');
       console.log('    benchmark-all-bots.json       - Full bot comparison matrix');
       console.log('    tune-weights-evolve.json      - Evaluation weight tuning');
       console.log('    tune-mcts-grid.json           - MCTS hyperparameter search');
-      console.log('    pipeline-full.json            - Complete tuning workflow');
+      console.log('    mcts-greedy-tuning-pipeline.json            - Complete tuning workflow');
       console.log('    collect-training-fast.json    - ML training data (fast)');
       console.log('    collect-training-mcts.json    - ML training data (quality)');
       console.log('');

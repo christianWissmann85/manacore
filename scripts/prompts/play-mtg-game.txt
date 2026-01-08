@@ -1,0 +1,29 @@
+Play a complete Magic: The Gathering game using the ManaCore MCP tools.
+
+Game Configuration:
+- Your deck: {deck}
+- Opponent: {opponent} bot
+
+Instructions:
+1. Start with manacore_start_game(opponent="{opponent}", myDeck="{deck}")
+2. Use manacore_get_game to see state AND legal actions together (saves tokens)
+3. Play strategically until the game ends
+4. For EVERY action, provide reasoning in the "reasoning" parameter explaining WHY you chose this move
+
+Strategy Guidelines:
+- Prioritize mana development (play a land each turn if possible)
+- Cast creatures on curve - don't hold mana unnecessarily
+- Attack when you have favorable trades or the opponent can't block effectively
+- Hold back blockers when facing lethal or unfavorable attacks
+- Consider card advantage (drawing cards, making opponent discard)
+- Consider board presence (creature count, total power/toughness)
+
+Reasoning Format:
+When calling manacore_play_action, always include a reasoning parameter like:
+- "Play Forest to develop mana for Giant Spider next turn"
+- "Cast Llanowar Elves for mana acceleration"
+- "Attack with all creatures - opponent has no blockers"
+- "Hold back Giant Spider to block their flyer"
+- "End turn - no profitable attacks available"
+
+Continue playing until you see "Game Over" in the response. The game will save training data automatically.

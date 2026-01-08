@@ -25,7 +25,7 @@ bun src/index.ts run ../../experiments/simulate-mcts-vs-greedy.json
 | `baseline-all-decks.json`      | (script)     | All decks baseline (see below)     |
 | `tune-weights-evolve.json`     | tune-weights | Evaluation weight optimization     |
 | `tune-mcts-grid.json`          | tune-mcts    | MCTS hyperparameter tuning         |
-| `pipeline-full.json`           | pipeline     | Complete tuning workflow           |
+| `mcts-greedy-tuning-pipeline.json`           | pipeline     | Complete tuning workflow           |
 | `collect-training-fast.json`   | collect      | ML training data (fast, GreedyBot) |
 | `collect-training-mcts.json`   | collect      | ML training data (MCTS quality)    |
 | `replay-game.json`             | replay       | Replay specific games              |
