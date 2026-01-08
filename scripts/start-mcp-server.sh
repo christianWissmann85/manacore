@@ -11,6 +11,12 @@ if ! command -v bun &> /dev/null; then
     exit 1
 fi
 
-# Run the server
+# Run the server with hot reload if DEV mode is enabled
 cd "$PROJECT_ROOT"
-exec bun run packages/mcp-server/src/index.ts
+
+if [ "$MANACORE_DEV" = "1" ]; then
+    echo "Starting MCP server in HOT RELOAD mode..." >&2
+    exec bun --watch packages/mcp-server/src/index.ts
+else
+    exec bun run packages/mcp-server/src/index.ts
+fi
