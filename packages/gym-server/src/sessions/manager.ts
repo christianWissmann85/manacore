@@ -5,7 +5,7 @@
  * Sessions are stored in memory and auto-cleaned after inactivity.
  */
 
-import type { GameState, PlayerId, CardTemplate } from '@manacore/engine';
+import type { GameState, CardTemplate } from '@manacore/engine';
 import {
   initializeGame,
   applyAction,
@@ -16,7 +16,7 @@ import {
 } from '@manacore/engine';
 import type { AllDeckTypes } from '@manacore/engine';
 import type { Bot } from '@manacore/ai';
-import { RandomBot, GreedyBot, MCTSBot, MCTSBotPresets } from '@manacore/ai';
+import { RandomBot, GreedyBot, MCTSBotPresets } from '@manacore/ai';
 
 export interface GameSession {
   id: string;
@@ -52,13 +52,13 @@ export function createBot(botType: string): Bot {
       return new GreedyBot();
     case 'mcts':
     case 'mcts-eval':
-      return new MCTSBot(MCTSBotPresets.standard);
+      return MCTSBotPresets.standard();
     case 'mcts-fast':
     case 'mcts-eval-fast':
-      return new MCTSBot(MCTSBotPresets.fast);
+      return MCTSBotPresets.fast();
     case 'mcts-strong':
     case 'mcts-eval-strong':
-      return new MCTSBot(MCTSBotPresets.strong);
+      return MCTSBotPresets.strong();
     default:
       console.warn(`Unknown bot type: ${botType}, defaulting to greedy`);
       return new GreedyBot();
@@ -107,10 +107,10 @@ export function getDeck(deckName: string): CardTemplate[] {
   // Handle common aliases
   const aliases: Record<string, AllDeckTypes> = {
     vanilla: 'red',
-    aggro: 'RedBurn',
-    control: 'BlueControl',
-    burn: 'RedBurn',
-    weenie: 'WhiteWeenie',
+    aggro: 'red_burn',
+    control: 'blue_control',
+    burn: 'red_burn',
+    weenie: 'white_weenie',
   };
 
   const aliasMatch = aliases[normalizedName];
@@ -218,6 +218,9 @@ export class SessionManager {
 
     // Apply player action
     const action = legalActions[actionIndex];
+    if (!action) {
+      throw new Error(`Action at index ${actionIndex} not found`);
+    }
     session.state = applyAction(session.state, action);
 
     // Run opponent moves until player has priority again or game ends
@@ -229,7 +232,7 @@ export class SessionManager {
     // Auto-pass forced moves for player
     while (!session.state.gameOver && session.state.priorityPlayer === 'player') {
       const playerActions = getLegalActions(session.state, 'player');
-      if (playerActions.length === 1) {
+      if (playerActions.length === 1 && playerActions[0]) {
         // Forced move - auto apply
         session.state = applyAction(session.state, playerActions[0]);
 
@@ -259,7 +262,7 @@ export class SessionManager {
       truncated,
       info: {
         stepCount: session.stepCount,
-        turn: session.state.turnNumber,
+        turn: session.state.turnCount,
         phase: session.state.phase,
         winner: session.state.winner,
       },

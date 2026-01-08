@@ -9,6 +9,30 @@ import { Hono } from 'hono';
 import type { SessionManager } from '../sessions/manager';
 import { createCompactState } from '../serialization/state';
 
+interface CreateBatchBody {
+  count?: number;
+  opponent?: string;
+  deck?: string;
+  opponentDeck?: string;
+}
+
+interface BatchStep {
+  gameId: string;
+  action: number;
+}
+
+interface StepBatchBody {
+  steps: unknown;
+}
+
+interface ResetBatchBody {
+  gameIds: unknown;
+}
+
+interface DeleteBatchBody {
+  gameIds: unknown;
+}
+
 export function createBatchRoutes(sessionManager: SessionManager): Hono {
   const app = new Hono();
 
@@ -18,8 +42,13 @@ export function createBatchRoutes(sessionManager: SessionManager): Hono {
    */
   app.post('/create', async (c) => {
     try {
-      const body = await c.req.json();
-      const { count = 1, opponent = 'greedy', deck = 'vanilla', opponentDeck = 'vanilla' } = body;
+      const body: unknown = await c.req.json();
+      const {
+        count = 1,
+        opponent = 'greedy',
+        deck = 'vanilla',
+        opponentDeck = 'vanilla',
+      } = body as CreateBatchBody;
 
       if (count < 1 || count > 100) {
         return c.json({ error: 'count must be between 1 and 100' }, 400);
@@ -55,8 +84,8 @@ export function createBatchRoutes(sessionManager: SessionManager): Hono {
    */
   app.post('/step', async (c) => {
     try {
-      const body = await c.req.json();
-      const { steps } = body;
+      const body: unknown = await c.req.json();
+      const { steps } = body as StepBatchBody;
 
       if (!Array.isArray(steps)) {
         return c.json({ error: 'steps must be an array' }, 400);
@@ -68,7 +97,7 @@ export function createBatchRoutes(sessionManager: SessionManager): Hono {
 
       const results = [];
 
-      for (const step of steps) {
+      for (const step of steps as BatchStep[]) {
         const { gameId, action } = step;
 
         try {
@@ -110,8 +139,8 @@ export function createBatchRoutes(sessionManager: SessionManager): Hono {
    */
   app.post('/reset', async (c) => {
     try {
-      const body = await c.req.json();
-      const { gameIds } = body;
+      const body: unknown = await c.req.json();
+      const { gameIds } = body as ResetBatchBody;
 
       if (!Array.isArray(gameIds)) {
         return c.json({ error: 'gameIds must be an array' }, 400);
@@ -123,7 +152,7 @@ export function createBatchRoutes(sessionManager: SessionManager): Hono {
 
       const results = [];
 
-      for (const gameId of gameIds) {
+      for (const gameId of gameIds as string[]) {
         try {
           const session = sessionManager.reset(gameId);
           results.push({
@@ -152,8 +181,8 @@ export function createBatchRoutes(sessionManager: SessionManager): Hono {
    */
   app.post('/delete', async (c) => {
     try {
-      const body = await c.req.json();
-      const { gameIds } = body;
+      const body: unknown = await c.req.json();
+      const { gameIds } = body as DeleteBatchBody;
 
       if (!Array.isArray(gameIds)) {
         return c.json({ error: 'gameIds must be an array' }, 400);
@@ -161,7 +190,7 @@ export function createBatchRoutes(sessionManager: SessionManager): Hono {
 
       const results = [];
 
-      for (const gameId of gameIds) {
+      for (const gameId of gameIds as string[]) {
         const deleted = sessionManager.deleteSession(gameId);
         results.push({ gameId, deleted });
       }

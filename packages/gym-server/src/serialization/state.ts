@@ -7,7 +7,7 @@
  * - Compact JSON for API transfer
  */
 
-import type { GameState, PlayerId, Action } from '@manacore/engine';
+import type { GameState, PlayerId } from '@manacore/engine';
 import { getLegalActions, describeAction } from '@manacore/engine';
 import { extractFeatures, featuresToArray, FEATURE_VECTOR_SIZE } from '@manacore/ai';
 
@@ -107,7 +107,7 @@ export function serializeObservation(
  */
 export function createActionMask(state: GameState, playerId: PlayerId = 'player'): boolean[] {
   const legalActions = getLegalActions(state, playerId);
-  const mask = new Array(MAX_ACTIONS).fill(false);
+  const mask: boolean[] = new Array(MAX_ACTIONS).fill(false) as boolean[];
 
   // Mark legal actions as true
   for (let i = 0; i < Math.min(legalActions.length, MAX_ACTIONS); i++) {
@@ -126,11 +126,13 @@ export function serializeLegalActions(
 ): ActionInfo[] {
   const actions = getLegalActions(state, playerId);
 
-  return actions.slice(0, MAX_ACTIONS).map((action, index) => ({
-    index,
-    type: action.type,
-    description: describeAction(action, state),
-  }));
+  return actions.slice(0, MAX_ACTIONS).map(
+    (action, index): ActionInfo => ({
+      index,
+      type: action.type,
+      description: describeAction(action, state),
+    }),
+  );
 }
 
 /**
@@ -155,7 +157,7 @@ export function createStepResponse(
     done,
     truncated,
     info: {
-      turn: state.turnNumber,
+      turn: state.turnCount,
       phase: state.phase,
       playerLife: player.life,
       opponentLife: opponent.life,

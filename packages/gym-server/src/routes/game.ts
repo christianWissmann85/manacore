@@ -13,6 +13,21 @@ import {
   serializeLegalActions,
 } from '../serialization/state';
 
+interface CreateGameBody {
+  opponent?: string;
+  deck?: string;
+  opponentDeck?: string;
+  seed?: number;
+}
+
+interface StepGameBody {
+  action: unknown;
+}
+
+interface ResetGameBody {
+  seed?: number;
+}
+
 export function createGameRoutes(sessionManager: SessionManager): Hono {
   const app = new Hono();
 
@@ -22,8 +37,13 @@ export function createGameRoutes(sessionManager: SessionManager): Hono {
    */
   app.post('/create', async (c) => {
     try {
-      const body = await c.req.json().catch(() => ({}));
-      const { opponent = 'greedy', deck = 'vanilla', opponentDeck = 'vanilla', seed } = body;
+      const body: unknown = await c.req.json().catch(() => ({}));
+      const {
+        opponent = 'greedy',
+        deck = 'vanilla',
+        opponentDeck = 'vanilla',
+        seed,
+      } = body as CreateGameBody;
 
       const session = sessionManager.createSession(opponent, deck, opponentDeck, seed);
 
@@ -54,8 +74,8 @@ export function createGameRoutes(sessionManager: SessionManager): Hono {
   app.post('/:id/step', async (c) => {
     try {
       const gameId = c.req.param('id');
-      const body = await c.req.json();
-      const { action } = body;
+      const body: unknown = await c.req.json();
+      const { action } = body as StepGameBody;
 
       if (typeof action !== 'number') {
         return c.json({ error: 'action must be a number (action index)' }, 400);
@@ -85,8 +105,8 @@ export function createGameRoutes(sessionManager: SessionManager): Hono {
   app.post('/:id/reset', async (c) => {
     try {
       const gameId = c.req.param('id');
-      const body = await c.req.json().catch(() => ({}));
-      const { seed } = body;
+      const body: unknown = await c.req.json().catch(() => ({}));
+      const { seed } = body as ResetGameBody;
 
       const session = sessionManager.reset(gameId, seed);
 
@@ -127,7 +147,7 @@ export function createGameRoutes(sessionManager: SessionManager): Hono {
         actionMask: createActionMask(session.state, 'player'),
         legalActions: serializeLegalActions(session.state, 'player'),
         done: session.state.gameOver,
-        turn: session.state.turnNumber,
+        turn: session.state.turnCount,
         phase: session.state.phase,
       });
     } catch (error) {

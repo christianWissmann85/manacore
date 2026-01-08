@@ -38,14 +38,15 @@ function parseArgs(): { port: number; host: string } {
   let host = '0.0.0.0';
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === '--port' && args[i + 1]) {
-      port = parseInt(args[i + 1], 10);
+    const nextArg = args[i + 1];
+    if (args[i] === '--port' && nextArg !== undefined) {
+      port = parseInt(nextArg, 10);
       i++;
-    } else if (args[i] === '--host' && args[i + 1]) {
-      host = args[i + 1];
+    } else if (args[i] === '--host' && nextArg !== undefined) {
+      host = nextArg;
       i++;
-    } else if (args[i] === '-p' && args[i + 1]) {
-      port = parseInt(args[i + 1], 10);
+    } else if (args[i] === '-p' && nextArg !== undefined) {
+      port = parseInt(nextArg, 10);
       i++;
     } else if (args[i] === '-h' || args[i] === '--help') {
       console.log(`
