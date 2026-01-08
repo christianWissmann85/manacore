@@ -1,50 +1,82 @@
 # Training Data Generation Pipeline
 
-Generate high-quality MTG training data using Claude 4.5 (Opus) as the "human" player via the MCP Server. Each game captures strategic reasoning for every decision.
+Generate high-quality MTG training data using Claude models as the "human" player via the MCP Server. Each game captures strategic reasoning for every decision.
 
 ## Overview
 
 ```
-┌─────────────────────────────────────────────────────┐
-│           Batch Orchestrator                         │
-│  (scripts/generate-training-data.ts)                │
-│  • Generates game queue (deck × opponent)           │
-│  • Spawns Claude CLI in parallel                    │
-│  • Tracks progress for resume capability            │
-└──────────────────────┬──────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│           Batch Orchestrator                             │
+│  (scripts/generate-training-data.ts)                    │
+│  • Generates game queue (deck × opponent × model)       │
+│  • Spawns Claude CLI in parallel                        │
+│  • Tracks progress for resume capability                │
+└──────────────────────┬──────────────────────────────────┘
                        │
                        ▼
-┌─────────────────────────────────────────────────────┐
-│           Claude Code CLI (--print mode)            │
-│  • Plays game via MCP tools                         │
-│  • Provides reasoning for each decision             │
-└──────────────────────┬──────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│           Claude Code CLI (--print mode)                │
+│  • Plays game via MCP tools                             │
+│  • Provides reasoning for each decision                 │
+└──────────────────────┬──────────────────────────────────┘
                        │
                        ▼
-┌─────────────────────────────────────────────────────┐
-│           MCP Server + TrainingDataCollector        │
-│  • Records (state, action, reasoning) per move      │
-│  • Auto-saves to packages/ai/data/human-training/   │
-└─────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│           MCP Server + TrainingDataCollector            │
+│  • Records (state, action, reasoning) per move          │
+│  • Auto-saves to packages/ai/data/human-training/       │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ## Quick Start
 
 ```bash
-# Generate 15 games (test run)
+# Generate 15 games (test run with default sonnet)
 bun scripts/generate-training-data.ts --games 15 --parallel 1
 
-# Generate 100 games (small batch)
-bun scripts/generate-training-data.ts --games 100 --parallel 3
+# Generate 100 games with opus (highest quality)
+bun scripts/generate-training-data.ts --games 100 --model opus
 
-# Generate 1000 games (full dataset)
-bun scripts/generate-training-data.ts --games 1000 --parallel 3
+# Generate 100 games with haiku (fast & cheap)
+bun scripts/generate-training-data.ts --games 100 --model haiku
+
+# Generate 1000 games with mixed models (balanced cost/quality)
+bun scripts/generate-training-data.ts --games 1000 --model mix
+
+# Custom mix ratio (10% opus, 50% sonnet, 40% haiku)
+bun scripts/generate-training-data.ts --games 1000 --model mix --mix-ratio 10:50:40
 
 # Check progress (can resume if interrupted)
 cat packages/ai/data/human-training/batch-progress.json | jq '.stats'
 
 # Generate coverage report
 bun scripts/generate-coverage-report.ts
+```
+
+## Model Selection
+
+Choose the right model for your use case:
+
+| Model  | Quality | Speed  | Cost/Game | Best For                        |
+| ------ | ------- | ------ | --------- | ------------------------------- |
+| opus   | Highest | Slow   | ~$0.20    | High-quality reasoning samples  |
+| sonnet | Great   | Medium | ~$0.10    | Balanced quality/cost (default) |
+| haiku  | Good    | Fast   | ~$0.02    | Large datasets, quick iteration |
+| mix    | Varied  | Varied | ~$0.06    | Cost-effective diverse data     |
+
+### Mix Mode
+
+Mix mode distributes models across games based on a ratio. Default is `20:40:40` (opus:sonnet:haiku).
+
+```bash
+# Default mix: 20% opus, 40% sonnet, 40% haiku
+bun scripts/generate-training-data.ts --games 1000 --model mix
+
+# Custom mix: 10% opus, 60% sonnet, 30% haiku
+bun scripts/generate-training-data.ts --games 1000 --model mix --mix-ratio 10:60:30
+
+# Heavy haiku for speed: 5% opus, 15% sonnet, 80% haiku
+bun scripts/generate-training-data.ts --games 1000 --model mix --mix-ratio 5:15:80
 ```
 
 ## Configuration Matrix
@@ -118,16 +150,20 @@ Main orchestrator script.
 bun scripts/generate-training-data.ts [options]
 
 Options:
-  -g, --games <n>     Number of games (default: 15)
-  -p, --parallel <n>  Parallel workers (default: 3)
-  -h, --help          Show help
+  -g, --games <n>       Number of games (default: 15)
+  -p, --parallel <n>    Parallel workers (default: 3)
+  -m, --model <model>   Model: opus, sonnet, haiku, or mix (default: sonnet)
+  --mix-ratio <O:S:H>   Mix ratio as opus:sonnet:haiku (default: 20:40:40)
+  -h, --help            Show help
 ```
 
 Features:
 
+- **Model selection**: Choose opus, sonnet, haiku, or mix for cost/quality balance
 - **Resume capability**: Interrupted batches continue from last progress
 - **Progress tracking**: `batch-progress.json` updated after each game
 - **Parallel execution**: Run multiple games simultaneously
+- **Real-time status**: Shows running games with elapsed time and ETA
 - **Error handling**: Failed games logged, can retry
 
 ### generate-coverage-report.ts
@@ -179,14 +215,31 @@ const tensors = toTensorFormat(games[0]);
 
 ## Cost Estimates
 
+### By Model (per game)
+
+| Model  | Input Tokens | Output Tokens | Cost/Game |
+| ------ | ------------ | ------------- | --------- |
+| opus   | ~8,000       | ~3,000        | ~$0.20    |
+| sonnet | ~8,000       | ~3,000        | ~$0.10    |
+| haiku  | ~8,000       | ~3,000        | ~$0.02    |
+
+### By Scale (using default sonnet)
+
 | Scale  | Games | Est. Cost | Time (3 workers) |
 | ------ | ----- | --------- | ---------------- |
-| Test   | 15    | ~$2-3     | ~15 min          |
-| Small  | 100   | ~$15-25   | ~1.5 hr          |
-| Medium | 500   | ~$75-100  | ~7 hr            |
-| Full   | 1000  | ~$150-200 | ~14 hr           |
+| Test   | 15    | ~$1.50    | ~15 min          |
+| Small  | 100   | ~$10      | ~1.5 hr          |
+| Medium | 500   | ~$50      | ~7 hr            |
+| Full   | 1000  | ~$100     | ~14 hr           |
 
-Costs based on Claude Opus 4.5 (~$0.15/game average).
+### By Scale (using mix mode 20:40:40)
+
+| Scale  | Games | Est. Cost | Time (3 workers) |
+| ------ | ----- | --------- | ---------------- |
+| Test   | 15    | ~$1       | ~12 min          |
+| Small  | 100   | ~$6       | ~1 hr            |
+| Medium | 500   | ~$30      | ~5 hr            |
+| Full   | 1000  | ~$60      | ~10 hr           |
 
 ## Troubleshooting
 
@@ -239,5 +292,4 @@ bun scripts/generate-coverage-report.ts
 - **Curriculum learning**: Progress from random → greedy → MCTS opponents
 - **Reasoning quality scoring**: Rate and filter by reasoning usefulness
 - **Active learning**: Focus on uncertain/interesting positions
-- **Model comparison**: Compare Claude Opus vs Sonnet data quality
 - **Streaming export**: Direct export to training frameworks
