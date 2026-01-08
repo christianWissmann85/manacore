@@ -48,7 +48,10 @@ const DEFAULT_MIX_RATIO = { opus: 20, sonnet: 40, haiku: 40 };
 const PROJECT_ROOT = join(dirname(import.meta.path), '..');
 const DATA_DIR = join(PROJECT_ROOT, 'packages/ai/data/human-training');
 const PROGRESS_FILE = join(DATA_DIR, 'batch-progress.json');
-const PROMPT_TEMPLATE = readFileSync(join(PROJECT_ROOT, 'scripts/prompts/play-mtg-game.txt'), 'utf-8');
+const PROMPT_TEMPLATE = readFileSync(
+  join(PROJECT_ROOT, 'scripts/prompts/play-mtg-game.txt'),
+  'utf-8',
+);
 
 interface GameConfig {
   id: string;
@@ -82,10 +85,7 @@ interface BatchProgress {
 }
 
 // Track running games for status display
-const runningGames: Map<
-  string,
-  { game: GameConfig; startTime: number; turn: number; reasoning: string }
-> = new Map();
+const runningGames: Map<string, { game: GameConfig; startTime: number }> = new Map();
 let statusInterval: ReturnType<typeof setInterval> | null = null;
 let batchStartTime: number = 0;
 let completedDurations: number[] = [];
@@ -274,17 +274,13 @@ function printStatusUpdate(progress: BatchProgress): void {
       `${colors.magenta}► ${runningGames.size} running${colors.reset}`,
   );
 
-  // Show running games with reasoning
+  // Show running games
   for (const [, info] of runningGames) {
     const runningFor = formatDuration(now - info.startTime);
-    const turnInfo = info.turn > 0 ? `T${info.turn}` : '...';
     const modelBadge = getModelBadge(info.game.model);
-    const reasoningSnippet = info.reasoning
-      ? `${colors.dim}"${info.reasoning.slice(0, 35)}${info.reasoning.length > 35 ? '...' : ''}"${colors.reset}`
-      : '';
     lines.push(
       `  ${colors.magenta}►${colors.reset} ${modelBadge} ${info.game.deck} vs ${info.game.opponent} ` +
-        `${colors.gray}(${runningFor}, ${turnInfo})${colors.reset} ${reasoningSnippet}`,
+        `${colors.gray}(${runningFor})${colors.reset}`,
     );
   }
 
@@ -340,12 +336,7 @@ async function runGame(game: GameConfig, progress: BatchProgress): Promise<boole
     );
 
     // Track this running game
-    runningGames.set(game.id, {
-      game,
-      startTime,
-      turn: 0,
-      reasoning: '',
-    });
+    runningGames.set(game.id, { game, startTime });
 
     const proc = spawn(
       'claude',
@@ -368,44 +359,13 @@ async function runGame(game: GameConfig, progress: BatchProgress): Promise<boole
 
     let stdout = '';
     let stderr = '';
-    let turnCount = 0;
-
-    // Helper to extract info from output
-    const parseOutput = (text: string) => {
-      const info = runningGames.get(game.id);
-      if (!info) return;
-
-      // Extract turn number
-      const turnMatch = text.match(/Turn (\d+)/i);
-      if (turnMatch) {
-        turnCount = parseInt(turnMatch[1], 10);
-        info.turn = turnCount;
-      }
-
-      // Extract reasoning from tool calls or output
-      // Look for patterns like: "reasoning": "..." or reasoning: "..."
-      const reasoningMatch = text.match(/"reasoning":\s*"([^"]+)"/);
-      if (reasoningMatch) {
-        info.reasoning = reasoningMatch[1].replace(/\\n/g, ' ').trim();
-      }
-
-      // Also try to catch reasoning from MCP action output
-      const actionReasonMatch = text.match(/Reasoning:\s*(.+?)(?:\n|$)/i);
-      if (actionReasonMatch) {
-        info.reasoning = actionReasonMatch[1].trim();
-      }
-    };
 
     proc.stdout.on('data', (data) => {
-      const text = data.toString();
-      stdout += text;
-      parseOutput(text);
+      stdout += data.toString();
     });
 
     proc.stderr.on('data', (data) => {
-      const text = data.toString();
-      stderr += text;
-      parseOutput(text);
+      stderr += data.toString();
     });
 
     // Timeout after 10 minutes (some games take longer with complex board states)
@@ -437,7 +397,9 @@ async function runGame(game: GameConfig, progress: BatchProgress): Promise<boole
         allOutput.includes('Training data saved') ||
         allOutput.includes('Saved training data');
       const hasFatalError =
-        stderr.includes('FATAL') || stderr.includes('Cannot find module') || stderr.includes('SyntaxError');
+        stderr.includes('FATAL') ||
+        stderr.includes('Cannot find module') ||
+        stderr.includes('SyntaxError');
 
       // Clear status, print result, then status will redraw
       clearStatusBlock();
@@ -456,7 +418,7 @@ async function runGame(game: GameConfig, progress: BatchProgress): Promise<boole
             `${getModelBadge(game.model)} ` +
             `${colors.bright}${game.deck}${colors.reset} vs ` +
             `${colors.bright}${game.opponent}${colors.reset} ` +
-            `(${formatDuration(duration)}, ~${turnCount} turns)`,
+            `(${formatDuration(duration)})`,
         );
         resolve(true);
       } else {
@@ -709,7 +671,9 @@ if (isNaN(parallelWorkers) || parallelWorkers < 1) {
 // Validate model
 const validModels = ['opus', 'sonnet', 'haiku', 'mix'];
 if (!validModels.includes(modelArg)) {
-  console.error(`${colors.red}Error: --model must be one of: ${validModels.join(', ')}${colors.reset}`);
+  console.error(
+    `${colors.red}Error: --model must be one of: ${validModels.join(', ')}${colors.reset}`,
+  );
   process.exit(1);
 }
 
@@ -718,7 +682,9 @@ let mixRatio = DEFAULT_MIX_RATIO;
 if (values['mix-ratio']) {
   const parts = values['mix-ratio'].split(':').map((s) => parseInt(s, 10));
   if (parts.length !== 3 || parts.some(isNaN) || parts.some((n) => n < 0)) {
-    console.error(`${colors.red}Error: --mix-ratio must be in format O:S:H (e.g., 20:40:40)${colors.reset}`);
+    console.error(
+      `${colors.red}Error: --mix-ratio must be in format O:S:H (e.g., 20:40:40)${colors.reset}`,
+    );
     process.exit(1);
   }
   mixRatio = { opus: parts[0], sonnet: parts[1], haiku: parts[2] };

@@ -1,9 +1,9 @@
 {
-  "batchId": "batch-2026-01-08-jjiuv2",
-  "startedAt": "2026-01-08T12:12:24.594Z",
+  "batchId": "batch-2026-01-08-xv67v0",
+  "startedAt": "2026-01-08T12:31:52.670Z",
   "config": {
     "totalGames": 1,
-    "parallelWorkers": 1,
+    "parallelWorkers": 3,
     "matchups": [
       "white-random"
     ]
@@ -15,16 +15,17 @@
     "running": 0
   },
   "games": {
-    "game-1767874344594": {
-      "id": "game-1767874344594",
+    "game-1767875512670": {
+      "id": "game-1767875512670",
       "deck": "white",
       "opponent": "random",
-      "seed": 1767874344594,
+      "model": "haiku",
+      "seed": 1767875512670,
       "status": "completed",
-      "startedAt": "2026-01-08T12:12:24.602Z",
-      "completedAt": "2026-01-08T12:16:52.629Z",
-      "durationMs": 268027,
-      "file": "game-1767874350072.json"
+      "startedAt": "2026-01-08T12:31:52.678Z",
+      "completedAt": "2026-01-08T12:33:50.318Z",
+      "durationMs": 117640,
+      "file": "game-1767875516737.json"
     }
   }
 }
