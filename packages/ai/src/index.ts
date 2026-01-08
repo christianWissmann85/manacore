@@ -171,6 +171,9 @@ export {
   exportForNumPy,
 } from './training';
 
+// Neural network bot exports (Phase 2B)
+export { NeuralBot, createNeuralBot, type NeuralBotConfig } from './neural';
+
 if (!process.env.MANACORE_SILENT_INIT) {
   console.log(`✅ @manacore/ai v${AI_VERSION} loaded`);
 }

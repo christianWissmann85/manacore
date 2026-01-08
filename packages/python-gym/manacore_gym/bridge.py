@@ -134,7 +134,14 @@ class BunBridge:
                 if attempt < self.max_retries - 1:
                     time.sleep(0.5 * (attempt + 1))
                 else:
-                    raise RuntimeError(f"Request failed after {self.max_retries} attempts: {e}") from e
+                    # Try to get error details from response
+                    error_detail = ""
+                    if hasattr(e, "response") and e.response is not None:
+                        try:
+                            error_detail = f" - Server response: {e.response.text}"
+                        except Exception:
+                            pass
+                    raise RuntimeError(f"Request failed after {self.max_retries} attempts: {e}{error_detail}") from e
 
         raise RuntimeError("Unexpected error in request")
 

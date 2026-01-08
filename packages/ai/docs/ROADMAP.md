@@ -1,8 +1,8 @@
 # ManaCore AI Package - Development Roadmap
 
-**Version:** 0.3.0
-**Last Updated:** January 5, 2026
-**Status:** Phase 2.1 Complete, Phase 2.2 In Progress
+**Version:** 0.4.0
+**Last Updated:** January 8, 2026
+**Status:** Phase 2B Complete (Neural Imitator)
 
 ---
 
@@ -12,11 +12,12 @@ The ManaCore AI package provides bot implementations for playing Magic: The Gath
 
 ### Current Bot Hierarchy
 
-| Bot       | Strength       | Speed          | Description                     |
-| --------- | -------------- | -------------- | ------------------------------- |
-| RandomBot | Baseline       | ~50 games/sec  | Random legal actions            |
-| GreedyBot | ~64% vs Random | ~4 games/sec   | 1-ply lookahead with evaluation |
-| MCTSBot   | TBD vs Greedy  | ~0.1 games/sec | Monte Carlo Tree Search         |
+| Bot       | Strength       | Speed          | Description                         |
+| --------- | -------------- | -------------- | ----------------------------------- |
+| RandomBot | Baseline       | ~50 games/sec  | Random legal actions                |
+| GreedyBot | ~89% vs Random | ~4 games/sec   | 1-ply lookahead with evaluation     |
+| NeuralBot | ~60% vs Random | ~100 games/sec | ONNX neural network (behavior clone)|
+| MCTSBot   | TBD vs Greedy  | ~0.1 games/sec | Monte Carlo Tree Search             |
 
 ---
 
@@ -126,6 +127,36 @@ function determinize(state: GameState): GameState {
 - [x] Win rate matrix (all bots vs all bots)
 - [x] Performance profiling dashboard
 
+## ✅ Phase 2B: Neural Imitator (Complete)
+
+**Completed:** January 8, 2026
+
+Trained a neural network to imitate bot decisions (behavior cloning):
+
+- [x] Generated 10K games training data (474K samples)
+- [x] Uploaded to HuggingFace: [Chris-AiKi/manacore-mtg-10k](https://huggingface.co/datasets/Chris-AiKi/manacore-mtg-10k)
+- [x] ImitatorNet architecture (25 → 256 → 256 → 128 → 350)
+- [x] Training pipeline with label smoothing
+- [x] ONNX export for TypeScript inference (589KB)
+- [x] NeuralBot implementation with ONNX Runtime
+
+**Key Files:**
+
+- `src/neural/NeuralBot.ts` - ONNX Runtime inference
+- `src/neural/benchmark.ts` - Bot comparison script
+- `packages/python-gym/manacore_gym/neural/` - PyTorch training
+
+**Benchmark Results:**
+
+| Matchup                | Win Rate |
+| ---------------------- | -------- |
+| NeuralBot vs RandomBot | 60.0%    |
+| NeuralBot vs GreedyBot | 18.0%    |
+| GreedyBot vs RandomBot | 89.0%    |
+
+**Note:** Performance below targets due to training on Greedy data (not MCTS).
+See `docs/TRACK_B_AGENTS.md` for full documentation.
+
 ## Phase 3: Advanced MCTS
 
 **Status:** Planning Complete (January 6, 2026)
@@ -158,6 +189,11 @@ packages/ai/
 │   │   ├── GreedyBot.ts     # 1-ply lookahead
 │   │   └── MCTSBot.ts       # Tree search
 │   │
+│   ├── neural/              # Phase 2B: Neural network bot
+│   │   ├── NeuralBot.ts     # ONNX Runtime inference
+│   │   ├── benchmark.ts     # Bot comparison
+│   │   └── index.ts
+│   │
 │   ├── evaluation/
 │   │   └── evaluate.ts      # Board evaluation function
 │   │
@@ -165,7 +201,13 @@ packages/ai/
 │   │   ├── MCTSNode.ts      # Node structure, UCB1
 │   │   └── MCTS.ts          # Core algorithm
 │   │
+│   ├── training/            # Training data collection
+│   │   └── TrainingDataCollector.ts
+│   │
 │   └── index.ts             # Package exports
+│
+├── models/
+│   └── imitator.onnx        # Trained neural model (589KB)
 │
 ├── tests/
 │   ├── GreedyBot.test.ts
@@ -175,6 +217,13 @@ packages/ai/
 └── docs/
     ├── MCTS-ARCHITECTURE.md  # Algorithm whitepaper
     └── ROADMAP.md            # This file
+
+packages/python-gym/          # Python training environment
+└── manacore_gym/
+    └── neural/
+        ├── imitator.py      # ImitatorNet architecture
+        ├── data_loader.py   # HuggingFace data loading
+        └── trainer.py       # Training loop
 ```
 
 ---

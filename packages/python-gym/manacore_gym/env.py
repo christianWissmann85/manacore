@@ -175,7 +175,14 @@ class ManaCoreBattleEnv(gym.Env):
             # Find nearest legal action (fallback)
             legal_actions = np.where(self._legal_action_mask)[0]
             if len(legal_actions) == 0:
-                raise RuntimeError("No legal actions available")
+                # No legal actions - game may be over, return terminal state
+                return (
+                    self._get_observation(),
+                    -1.0,  # Treat as loss since we can't act
+                    True,  # terminated
+                    False,  # truncated
+                    self._get_info(),
+                )
             action = int(legal_actions[0])
 
         response = self.bridge.step(self._game_id, action)

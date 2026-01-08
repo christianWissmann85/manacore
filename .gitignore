@@ -56,6 +56,7 @@ coverage/
 
 # All experiment output (simulations, benchmarks, training data, tuning)
 /output/
+packages/python-gym/logs
 
 # Legacy output locations (deprecated - use output/ instead)
 results/

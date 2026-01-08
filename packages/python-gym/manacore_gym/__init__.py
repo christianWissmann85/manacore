@@ -30,6 +30,13 @@ from .bridge import BunBridge
 from .env import ManaCoreBattleEnv
 from .utils import make_env, make_masked_vec_env, make_vec_env
 
+# Training utilities (lazy import to avoid sb3 dependency when not needed)
+def __getattr__(name: str):
+    if name in ("CurriculumScheduler", "CurriculumStage", "STANDARD_CURRICULUM", "FAST_CURRICULUM"):
+        from .training import CurriculumScheduler, CurriculumStage, STANDARD_CURRICULUM, FAST_CURRICULUM
+        return locals()[name]
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 # Register the environment with Gymnasium
 register(
     id="ManaCore-v0",
