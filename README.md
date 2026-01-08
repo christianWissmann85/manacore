@@ -103,6 +103,21 @@ model = MaskablePPO("MlpPolicy", env)
 model.learn(total_timesteps=100_000)
 ```
 
+### Jupyter Notebooks
+
+Try ManaCore in interactive notebooks:
+
+```bash
+# One-line setup with uv
+./scripts/setup-notebooks.sh
+
+# Or manually
+cd packages/python-gym
+uv sync --extra notebook
+```
+
+Then open [packages/python-gym/notebooks/01_getting_started.ipynb](packages/python-gym/notebooks/01_getting_started.ipynb) in VS Code and select the `.venv` kernel.
+
 ---
 
 ## Research Roadmap

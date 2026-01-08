@@ -4,12 +4,34 @@ Gymnasium environment for Magic: The Gathering AI research.
 
 ## Installation
 
+### Using uv (Recommended)
+
+```bash
+# Basic installation
+cd packages/python-gym
+uv sync
+
+# With Stable Baselines3 support
+uv sync --extra sb3
+
+# With notebook support (includes ipykernel, jupyter, matplotlib, sb3)
+uv sync --extra notebook
+
+# With everything
+uv sync --all-extras
+```
+
+### Using pip
+
 ```bash
 # From the manacore repository
 pip install -e packages/python-gym
 
 # With Stable Baselines3 support
 pip install -e "packages/python-gym[sb3]"
+
+# With notebook support
+pip install -e "packages/python-gym[notebook]"
 
 # With development dependencies
 pip install -e "packages/python-gym[dev]"

@@ -5,7 +5,7 @@ This module provides helpers for creating multiple environments
 that can run in parallel, significantly speeding up training.
 """
 
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 from ..env import ManaCoreBattleEnv
 
@@ -14,7 +14,7 @@ def make_env(
     opponent: str = "greedy",
     deck: str = "random",
     opponent_deck: str = "random",
-    seed: int | None = None,
+    seed: Optional[int] = None,
     server_url: str = "http://localhost:3333",
     auto_start_server: bool = True,
     rank: int = 0,
@@ -58,7 +58,7 @@ def make_vec_env(
     opponent: str = "greedy",
     deck: str = "random",
     opponent_deck: str = "random",
-    seed: int | None = None,
+    seed: Optional[int] = None,
     server_url: str = "http://localhost:3333",
     auto_start_server: bool = True,
     vec_env_cls: str = "dummy",
@@ -95,8 +95,8 @@ def make_vec_env(
     """
     try:
         from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
-    except ImportError:
-        raise ImportError("stable-baselines3 is required for vectorized environments. Install with: pip install stable-baselines3")
+    except ImportError as e:
+        raise ImportError("stable-baselines3 is required for vectorized environments. Install with: pip install stable-baselines3") from e
 
     # Create environment factories
     env_fns = [
@@ -114,9 +114,9 @@ def make_vec_env(
 
     # Create vectorized environment
     if vec_env_cls == "subproc":
-        return SubprocVecEnv(env_fns)
+        return SubprocVecEnv(env_fns)  # type: ignore[arg-type]
     else:
-        return DummyVecEnv(env_fns)
+        return DummyVecEnv(env_fns)  # type: ignore[arg-type]
 
 
 def make_masked_vec_env(
@@ -124,7 +124,7 @@ def make_masked_vec_env(
     opponent: str = "greedy",
     deck: str = "random",
     opponent_deck: str = "random",
-    seed: int | None = None,
+    seed: Optional[int] = None,
     server_url: str = "http://localhost:3333",
     auto_start_server: bool = True,
     vec_env_cls: str = "dummy",
@@ -158,8 +158,8 @@ def make_masked_vec_env(
     try:
         from sb3_contrib.common.wrappers import ActionMasker
         from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
-    except ImportError:
-        raise ImportError("sb3-contrib is required for masked vectorized environments. Install with: pip install sb3-contrib")
+    except ImportError as e:
+        raise ImportError("sb3-contrib is required for masked vectorized environments. Install with: pip install sb3-contrib") from e
 
     import numpy as np
 
@@ -177,7 +177,7 @@ def make_masked_vec_env(
             )
             if seed is not None:
                 env.reset(seed=seed + rank)
-            return ActionMasker(env, mask_fn)
+            return ActionMasker(env, mask_fn)  # type: ignore[arg-type]
 
         return _init
 

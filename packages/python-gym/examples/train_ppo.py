@@ -51,10 +51,10 @@ def train(
     try:
         from sb3_contrib import MaskablePPO
         from sb3_contrib.common.wrappers import ActionMasker
-    except ImportError:
+    except ImportError as e:
         print("Error: sb3-contrib is required for MaskablePPO training.")
         print("Install with: pip install sb3-contrib")
-        raise SystemExit(1)
+        raise SystemExit(1) from e
 
     print("=" * 60)
     print("ManaCore PPO Training")
@@ -125,9 +125,9 @@ def evaluate_quick(model_path: str, opponent: str = "greedy", n_games: int = 10)
     """Quick evaluation of the trained model."""
     try:
         from sb3_contrib import MaskablePPO
-    except ImportError:
+    except ImportError as e:
         print("Error: sb3-contrib is required.")
-        raise SystemExit(1)
+        raise SystemExit(1) from e
 
     print(f"\nQuick evaluation: {n_games} games vs {opponent}")
     print("-" * 40)

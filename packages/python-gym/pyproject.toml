@@ -57,6 +57,8 @@ notebook = [
     "pandas>=2.0.0",
     "stable-baselines3>=2.0.0",
     "sb3-contrib>=2.0.0",
+    "tqdm>=4.65.0",
+    "rich>=13.0.0",
 ]
 all = [
     "manacore-gym[sb3,dev,notebook]",
@@ -77,6 +79,16 @@ target-version = ["py39", "py310", "py311", "py312"]
 [tool.ruff]
 line-length = 200
 target-version = "py39"
+exclude = [
+    ".venv",
+    "dist",
+    "build",
+    ".eggs",
+    "*.egg-info",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".pytest_cache",
+]
 
 [tool.ruff.lint]
 select = [
@@ -113,6 +125,11 @@ warn_return_any = false
 warn_unused_ignores = true
 disallow_untyped_defs = true
 ignore_missing_imports = true
+exclude = [
+    "^.venv/",
+    "^dist/",
+    "^build/",
+]
 
 [[tool.mypy.overrides]]
 module = "manacore_gym.wrappers.*"

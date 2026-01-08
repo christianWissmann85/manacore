@@ -74,10 +74,10 @@ def evaluate_model(
     """
     try:
         from sb3_contrib import MaskablePPO
-    except ImportError:
+    except ImportError as e:
         print("Error: sb3-contrib is required.")
         print("Install with: pip install sb3-contrib")
-        raise SystemExit(1)
+        raise SystemExit(1) from e
 
     # Load model
     model = MaskablePPO.load(model_path)
