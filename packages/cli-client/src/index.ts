@@ -432,6 +432,58 @@ async function main() {
       break;
     }
 
+    case 'gym-server':
+    case 'gym': {
+      // Start the Gym HTTP server for Python ML integration
+      const portIndex = args.indexOf('--port');
+      const port = portIndex !== -1 ? parseInt(args[portIndex + 1] || '3333', 10) : 3333;
+
+      console.log('🏋️ ManaCore Gym Server\n');
+      console.log(`Starting HTTP server on port ${port}...`);
+      console.log('');
+      console.log('Endpoints:');
+      console.log(`  Health:     http://localhost:${port}/health`);
+      console.log(`  Create:     POST http://localhost:${port}/game/create`);
+      console.log(`  Step:       POST http://localhost:${port}/game/:id/step`);
+      console.log(`  State:      GET  http://localhost:${port}/game/:id/state`);
+      console.log(`  Batch:      POST http://localhost:${port}/batch/create`);
+      console.log('');
+      console.log('Python usage:');
+      console.log('  from manacore_gym import ManaCoreBattleEnv');
+      console.log('  env = ManaCoreBattleEnv(auto_start_server=False)');
+      console.log('');
+      console.log('Press Ctrl+C to stop the server.\n');
+
+      // Spawn the gym-server
+      const { spawn } = await import('child_process');
+      const { resolve } = await import('path');
+
+      const gymServerPath = resolve(__dirname, '..', '..', 'gym-server', 'src', 'index.ts');
+
+      const serverProcess = spawn('bun', ['run', gymServerPath, '--port', String(port)], {
+        stdio: 'inherit',
+        env: { ...process.env },
+      });
+
+      // Handle graceful shutdown
+      process.on('SIGINT', () => {
+        console.log('\n\nShutting down gym server...');
+        serverProcess.kill('SIGTERM');
+        process.exit(0);
+      });
+
+      process.on('SIGTERM', () => {
+        serverProcess.kill('SIGTERM');
+        process.exit(0);
+      });
+
+      // Wait for server process to exit
+      await new Promise<void>((resolve) => {
+        serverProcess.on('close', () => resolve());
+      });
+      break;
+    }
+
     case 'help':
     default:
       console.log('🔬 ManaCore Research CLI\n');
@@ -456,6 +508,15 @@ async function main() {
       console.log('    mcts-greedy-tuning-pipeline.json            - Complete tuning workflow');
       console.log('    collect-training-fast.json    - ML training data (fast)');
       console.log('    collect-training-mcts.json    - ML training data (quality)');
+      console.log('');
+      console.log('───────────────────────────────────────────────────────────────');
+      console.log('');
+      console.log('ML Infrastructure:');
+      console.log('  gym-server              Start HTTP server for Python Gym integration');
+      console.log('  gym                     Alias for gym-server');
+      console.log('');
+      console.log('  Options:');
+      console.log('    --port <n>            Server port (default: 3333)');
       console.log('');
       console.log('───────────────────────────────────────────────────────────────');
       console.log('');

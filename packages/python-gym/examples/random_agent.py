@@ -9,7 +9,7 @@ import gymnasium as gym
 import numpy as np
 
 # Import to register the environment
-import manacore_gym
+import manacore_gym  # noqa: F401
 
 
 def main():

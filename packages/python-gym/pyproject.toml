@@ -50,8 +50,16 @@ dev = [
     "ruff>=0.1.0",
     "mypy>=1.0.0",
 ]
+notebook = [
+    "ipykernel>=6.0.0",
+    "jupyter>=1.0.0",
+    "matplotlib>=3.5.0",
+    "pandas>=2.0.0",
+    "stable-baselines3>=2.0.0",
+    "sb3-contrib>=2.0.0",
+]
 all = [
-    "manacore-gym[sb3,dev]",
+    "manacore-gym[sb3,dev,notebook]",
 ]
 
 [project.urls]
@@ -63,18 +71,52 @@ Repository = "https://github.com/christianWissmann85/manacore"
 packages = ["manacore_gym"]
 
 [tool.black]
-line-length = 100
+line-length = 200
 target-version = ["py39", "py310", "py311", "py312"]
 
 [tool.ruff]
-line-length = 100
-select = ["E", "F", "I", "W"]
+line-length = 200
+target-version = "py39"
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "F",      # pyflakes
+    "I",      # isort
+    "W",      # pycodestyle warnings
+    "UP",     # pyupgrade
+    "B",      # flake8-bugbear
+    "SIM",    # flake8-simplify
+]
+ignore = [
+    "E501",   # line too long (handled by line-length setting)
+    "E731",   # lambda assignment (sometimes cleaner)
+    "B008",   # function call in default argument (common pattern)
+    "SIM108", # ternary operator (explicit if/else often clearer)
+    "SIM117", # multiple with statements (can be clearer separate)
+]
+
+# Notebook-specific configuration
+[tool.ruff.lint.per-file-ignores]
+"notebooks/*.ipynb" = [
+    "F821",  # undefined-name (notebooks have cell-to-cell state)
+    "F541",  # f-string-missing-placeholders (style preference in notebooks)
+    "W293",  # blank-line-with-whitespace (formatter inconsistency with notebooks)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["manacore_gym"]
 
 [tool.mypy]
 python_version = "3.9"
-warn_return_any = true
+warn_return_any = false
 warn_unused_ignores = true
 disallow_untyped_defs = true
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "manacore_gym.wrappers.*"
+disable_error_code = ["attr-defined", "return-value"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

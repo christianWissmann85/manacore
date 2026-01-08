@@ -5,12 +5,12 @@ This module handles communication with the Bun-based HTTP server
 that exposes the ManaCore game engine.
 """
 
-import subprocess
-import time
 import os
 import signal
-from typing import Any, Optional
+import subprocess
+import time
 from pathlib import Path
+from typing import Any, Optional
 
 import requests
 
@@ -71,10 +71,7 @@ class BunBridge:
             if gym_server.exists():
                 return str(gym_server)
 
-        raise FileNotFoundError(
-            "Could not find gym-server. Please specify server_path or "
-            "run from the manacore repository root."
-        )
+        raise FileNotFoundError("Could not find gym-server. Please specify server_path or run from the manacore repository root.")
 
     def _is_server_running(self) -> bool:
         """Check if the server is already running."""
@@ -102,9 +99,9 @@ class BunBridge:
         )
 
         # Wait for server to be ready
-        for i in range(30):  # 30 second timeout
+        for _ in range(30):  # 30 second timeout
             if self._is_server_running():
-                print(f"[BunBridge] Server started successfully")
+                print("[BunBridge] Server started successfully")
                 return
             time.sleep(1)
 
@@ -137,7 +134,7 @@ class BunBridge:
                 if attempt < self.max_retries - 1:
                     time.sleep(0.5 * (attempt + 1))
                 else:
-                    raise RuntimeError(f"Request failed after {self.max_retries} attempts: {e}")
+                    raise RuntimeError(f"Request failed after {self.max_retries} attempts: {e}") from e
 
         raise RuntimeError("Unexpected error in request")
 

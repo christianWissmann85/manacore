@@ -2,8 +2,8 @@
 Server management utilities.
 """
 
-import subprocess
 import os
+import subprocess
 import time
 from pathlib import Path
 from typing import Optional
@@ -36,10 +36,7 @@ def find_server_path() -> str:
         if gym_server.exists():
             return str(gym_server)
 
-    raise FileNotFoundError(
-        "Could not find gym-server. Please ensure you're running from the "
-        "manacore repository or specify the server path explicitly."
-    )
+    raise FileNotFoundError("Could not find gym-server. Please ensure you're running from the manacore repository or specify the server path explicitly.")
 
 
 def is_server_running(host: str = "localhost", port: int = 3333) -> bool:

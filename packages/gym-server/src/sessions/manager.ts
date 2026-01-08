@@ -207,6 +207,23 @@ export class SessionManager {
     session.lastAccessedAt = Date.now();
     session.stepCount++;
 
+    // If game is already over, return terminal state (no-op for RL compatibility)
+    if (session.state.gameOver) {
+      const reward = session.state.winner === 'player' ? 1.0 : -1.0;
+      return {
+        state: session.state,
+        reward,
+        done: true,
+        truncated: false,
+        info: {
+          stepCount: session.stepCount,
+          turn: session.state.turnCount,
+          phase: session.state.phase,
+          winner: session.state.winner,
+        },
+      };
+    }
+
     // Get legal actions for player
     const legalActions = getLegalActions(session.state, 'player');
 

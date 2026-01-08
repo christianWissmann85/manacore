@@ -26,8 +26,9 @@ __version__ = "0.1.0"
 
 from gymnasium.envs.registration import register
 
-from .env import ManaCoreBattleEnv
 from .bridge import BunBridge
+from .env import ManaCoreBattleEnv
+from .utils import make_env, make_masked_vec_env, make_vec_env
 
 # Register the environment with Gymnasium
 register(
@@ -39,5 +40,8 @@ register(
 __all__ = [
     "ManaCoreBattleEnv",
     "BunBridge",
+    "make_env",
+    "make_vec_env",
+    "make_masked_vec_env",
     "__version__",
 ]

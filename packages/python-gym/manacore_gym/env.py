@@ -5,11 +5,12 @@ This module provides a Gymnasium-compatible environment for training
 reinforcement learning agents on Magic: The Gathering.
 """
 
+import contextlib
 from typing import Any, Optional, SupportsFloat
 
 import gymnasium as gym
-from gymnasium import spaces
 import numpy as np
+from gymnasium import spaces
 
 from .bridge import BunBridge
 
@@ -152,9 +153,7 @@ class ManaCoreBattleEnv(gym.Env):
 
         return self._get_observation(), self._get_info()
 
-    def step(
-        self, action: int
-    ) -> tuple[np.ndarray, SupportsFloat, bool, bool, dict[str, Any]]:
+    def step(self, action: int) -> tuple[np.ndarray, SupportsFloat, bool, bool, dict[str, Any]]:
         """
         Take an action in the environment.
 
@@ -246,10 +245,8 @@ class ManaCoreBattleEnv(gym.Env):
     def close(self) -> None:
         """Clean up resources."""
         if self._game_id is not None:
-            try:
+            with contextlib.suppress(Exception):
                 self.bridge.delete_game(self._game_id)
-            except Exception:
-                pass
             self._game_id = None
 
         # Don't close bridge here - let garbage collection handle it
