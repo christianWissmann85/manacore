@@ -49,7 +49,7 @@ def evaluate(
     wins = 0
     total_steps = 0
 
-    for game in range(n_games):
+    for _ in range(n_games):
         obs, info = env.reset()
         done = False
         steps = 0
@@ -231,9 +231,9 @@ def train_with_curriculum(
         result = train_stage(
             model=model,
             env=env,
-            opponent=stage["opponent"],
-            timesteps=stage["timesteps"],
-            target_win_rate=stage["target"],
+            opponent=str(stage["opponent"]),
+            timesteps=int(stage["timesteps"]),
+            target_win_rate=float(stage["target"]),
             eval_freq=10_000,
             eval_games=30,
             verbose=verbose,

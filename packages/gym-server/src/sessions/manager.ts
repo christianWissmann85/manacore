@@ -227,6 +227,24 @@ export class SessionManager {
     // Get legal actions for player
     const legalActions = getLegalActions(session.state, 'player');
 
+    // No legal actions = treat as terminal (edge case, shouldn't happen normally)
+    if (legalActions.length === 0) {
+      console.warn(`[SessionManager] No legal actions available for game ${gameId}`);
+      return {
+        state: session.state,
+        reward: -1.0, // Treat as loss
+        done: true,
+        truncated: false,
+        info: {
+          stepCount: session.stepCount,
+          turn: session.state.turnCount,
+          phase: session.state.phase,
+          winner: 'opponent',
+          error: 'No legal actions available',
+        },
+      };
+    }
+
     if (actionIndex < 0 || actionIndex >= legalActions.length) {
       throw new Error(
         `Invalid action index: ${actionIndex}. Legal actions: 0-${legalActions.length - 1}`,
@@ -238,29 +256,90 @@ export class SessionManager {
     if (!action) {
       throw new Error(`Action at index ${actionIndex} not found`);
     }
-    session.state = applyAction(session.state, action);
+
+    try {
+      session.state = applyAction(session.state, action);
+    } catch (error) {
+      // Action validation failed - treat as terminal state
+      console.warn(
+        `[SessionManager] Action failed for game ${gameId}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+      return {
+        state: session.state,
+        reward: -1.0,
+        done: true,
+        truncated: false,
+        info: {
+          stepCount: session.stepCount,
+          turn: session.state.turnCount,
+          phase: session.state.phase,
+          winner: 'opponent',
+          error: error instanceof Error ? error.message : 'Action failed',
+        },
+      };
+    }
 
     // Run opponent moves until player has priority again or game ends
     while (!session.state.gameOver && session.state.priorityPlayer === 'opponent') {
-      const opponentAction = session.opponent.chooseAction(session.state, 'opponent');
-      session.state = applyAction(session.state, opponentAction);
+      try {
+        const opponentAction = session.opponent.chooseAction(session.state, 'opponent');
+        session.state = applyAction(session.state, opponentAction);
+      } catch (error) {
+        // Opponent action failed - treat as win for player
+        console.warn(
+          `[SessionManager] Opponent action failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        );
+        return {
+          state: session.state,
+          reward: 1.0,
+          done: true,
+          truncated: false,
+          info: {
+            stepCount: session.stepCount,
+            turn: session.state.turnCount,
+            phase: session.state.phase,
+            winner: 'player',
+            error: 'Opponent action failed',
+          },
+        };
+      }
     }
 
     // Auto-pass forced moves for player
-    while (!session.state.gameOver && session.state.priorityPlayer === 'player') {
-      const playerActions = getLegalActions(session.state, 'player');
-      if (playerActions.length === 1 && playerActions[0]) {
-        // Forced move - auto apply
-        session.state = applyAction(session.state, playerActions[0]);
+    try {
+      while (!session.state.gameOver && session.state.priorityPlayer === 'player') {
+        const playerActions = getLegalActions(session.state, 'player');
+        if (playerActions.length === 1 && playerActions[0]) {
+          // Forced move - auto apply
+          session.state = applyAction(session.state, playerActions[0]);
 
-        // Check if opponent now has priority
-        while (!session.state.gameOver && session.state.priorityPlayer === 'opponent') {
-          const opponentAction = session.opponent.chooseAction(session.state, 'opponent');
-          session.state = applyAction(session.state, opponentAction);
+          // Check if opponent now has priority
+          while (!session.state.gameOver && session.state.priorityPlayer === 'opponent') {
+            const opponentAction = session.opponent.chooseAction(session.state, 'opponent');
+            session.state = applyAction(session.state, opponentAction);
+          }
+        } else {
+          break;
         }
-      } else {
-        break;
       }
+    } catch (error) {
+      // Auto-pass loop failed - return current state as terminal
+      console.warn(
+        `[SessionManager] Auto-pass failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+      return {
+        state: session.state,
+        reward: session.state.gameOver ? (session.state.winner === 'player' ? 1.0 : -1.0) : -1.0,
+        done: true,
+        truncated: false,
+        info: {
+          stepCount: session.stepCount,
+          turn: session.state.turnCount,
+          phase: session.state.phase,
+          winner: session.state.winner || 'opponent',
+          error: error instanceof Error ? error.message : 'Auto-pass failed',
+        },
+      };
     }
 
     // Calculate reward
