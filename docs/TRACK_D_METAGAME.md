@@ -19,6 +19,7 @@ This is a stretch goal—ambitious, speculative, and potentially the most intere
 Most game AI research focuses on playing within fixed rules. But Magic: The Gathering has a unique property: **deck construction is part of the game**.
 
 A truly intelligent MTG agent would:
+
 1. Build decks (not just pilot them)
 2. Adapt to metagames (counter popular strategies)
 3. Discover novel combos (that humans haven't found)
@@ -38,6 +39,7 @@ This is closer to **creativity** than **optimization**.
 **Tasks:**
 
 - [ ] Implement genetic algorithm core:
+
   ```typescript
   interface Deck {
     cards: { name: string; count: number }[];
@@ -77,6 +79,7 @@ This is closer to **creativity** than **optimization**.
   - Fitness = average win rate
 
 **Success Criteria:**
+
 - [ ] GA produces valid 60-card decks
 - [ ] Fitness improves over generations
 - [ ] Converges to stable strategies
@@ -86,6 +89,7 @@ This is closer to **creativity** than **optimization**.
 **Tasks:**
 
 - [ ] Run long evolution:
+
   ```bash
   bun scripts/evolve-decks.ts \
     --population 100 \
@@ -104,6 +108,7 @@ This is closer to **creativity** than **optimization**.
   - Deck archetype clustering
 
 **Success Criteria:**
+
 - [ ] Clear fitness improvement over 50 generations
 - [ ] Evolved decks are playable (not random piles)
 - [ ] Some decks beat hand-crafted decks
@@ -128,6 +133,7 @@ This is closer to **creativity** than **optimization**.
 - [ ] Document findings in Track C
 
 **Success Criteria:**
+
 - [ ] At least 2 recognizable archetypes emerge
 - [ ] Card choices make strategic sense
 - [ ] Potential for novel discoveries
@@ -139,6 +145,7 @@ This is closer to **creativity** than **optimization**.
 **Tasks:**
 
 - [ ] Define "combo" detection:
+
   ```typescript
   // A combo is when specific cards appear together
   // at higher than expected frequency in winning decks
@@ -154,6 +161,7 @@ This is closer to **creativity** than **optimization**.
   - Is the combo viable in gameplay?
 
 **Success Criteria:**
+
 - [ ] At least 1 non-obvious card synergy discovered
 - [ ] Combo validated in actual games
 - [ ] This would be a "eureka" moment!
@@ -171,10 +179,11 @@ This is closer to **creativity** than **optimization**.
 **Tasks:**
 
 - [ ] Implement metagame loop:
+
   ```typescript
   class MetagameSimulator {
-    decks: Deck[];        // Current meta decks
-    agents: Agent[];      // Agents piloting decks
+    decks: Deck[]; // Current meta decks
+    agents: Agent[]; // Agents piloting decks
     history: MetaSnapshot[];
 
     // One "week" of metagame evolution
@@ -201,6 +210,7 @@ This is closer to **creativity** than **optimization**.
   - Counter-strategies emergence
 
 **Success Criteria:**
+
 - [ ] Metagame evolves over time
 - [ ] Dominant strategies get countered
 - [ ] Rock-paper-scissors dynamics emerge
@@ -222,6 +232,7 @@ This is closer to **creativity** than **optimization**.
   - If a card never appears, it may be too weak
 
 **Success Criteria:**
+
 - [ ] Quantified balance metrics
 - [ ] Identified problematic cards (if any)
 - [ ] Recommendations for card pool adjustment
@@ -243,6 +254,7 @@ This is closer to **creativity** than **optimization**.
   - Output: Card text, power/toughness
 
 - [ ] Use LLM for initial generation:
+
   ```
   Generate a balanced red creature for 3 mana that would
   be playable but not overpowered in 6th Edition Limited.
@@ -254,6 +266,7 @@ This is closer to **creativity** than **optimization**.
   - Measure impact on metagame
 
 **Success Criteria:**
+
 - [ ] Generated cards are syntactically valid
 - [ ] Some generated cards are balanced
 - [ ] Novel design space explored
@@ -271,6 +284,7 @@ This is closer to **creativity** than **optimization**.
   - Validate in simulation
 
 **Success Criteria:**
+
 - [ ] AI can propose reasonable balance changes
 - [ ] Changes improve metagame health
 - [ ] Novel approach to game design
@@ -282,21 +296,25 @@ This is closer to **creativity** than **optimization**.
 These are ideas that go beyond the current roadmap:
 
 ### Multi-Format Learning
+
 - Train agent on multiple MTG formats (Standard, Modern, Legacy)
 - Transfer learning between formats
 - Format-specific strategy emergence
 
 ### Opponent Modeling
+
 - Learn to predict opponent's deck/strategy
 - Adapt play style mid-game
 - Metagame awareness during play
 
 ### Natural Language Deck Building
+
 - "Build me an aggressive red deck"
 - LLM interprets intent, GA optimizes
 - Human-AI collaborative design
 
 ### Card Image Generation
+
 - Generate card art for evolved cards
 - Use Stable Diffusion / DALL-E
 - Complete the "AI game designer" vision
@@ -315,11 +333,13 @@ Track A (Gym) ──► Track B (Agents) ──► Track C (Experiments)
 ```
 
 **Minimum Requirements:**
+
 - Stable game engine (Phase 0) ✅
 - Fast simulation (1000+ games/sec) ✅
 - At least one strong agent (MCTSBot) ✅
 
 **Nice to Have:**
+
 - PPO Specialists (for diverse opponents)
 - Llama-Mage (for interpretable deck building)
 
@@ -327,13 +347,13 @@ Track A (Gym) ──► Track B (Agents) ──► Track C (Experiments)
 
 ## Success Metrics
 
-| Goal | Metric | Target |
-|------|--------|--------|
-| GA produces viable decks | Win rate vs random | >70% |
-| Archetypes emerge | Distinct clusters | 3+ |
-| Combo discovery | Novel synergies | 1+ |
-| Metagame health | Deck diversity | >3 viable |
-| Balance insights | Actionable recommendations | Yes |
+| Goal                     | Metric                     | Target    |
+| ------------------------ | -------------------------- | --------- |
+| GA produces viable decks | Win rate vs random         | >70%      |
+| Archetypes emerge        | Distinct clusters          | 3+        |
+| Combo discovery          | Novel synergies            | 1+        |
+| Metagame health          | Deck diversity             | >3 viable |
+| Balance insights         | Actionable recommendations | Yes       |
 
 ---
 
@@ -352,6 +372,7 @@ Track A (Gym) ──► Track B (Agents) ──► Track C (Experiments)
 If we can build AI that **creates** good game content (decks, cards, balance patches), we've moved beyond "AI that plays games" to "AI that designs games."
 
 This has implications for:
+
 - Game development (AI-assisted design)
 - Procedural content generation
 - Understanding creativity in AI

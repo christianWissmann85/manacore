@@ -23,12 +23,12 @@ This is not just a game engine - it's an **AI research laboratory**.
 
 Development is organized into four parallel tracks:
 
-| Track | Focus | Lead Phase | Status |
-|-------|-------|------------|--------|
-| [🏛️ Track A: Infrastructure](docs/TRACK_A_INFRASTRUCTURE.md) | Gym bridge, data pipeline, orchestrator | Phase 1-2 | 🔜 Next |
-| [🧠 Track B: Agents](docs/TRACK_B_AGENTS.md) | Neural nets, PPO, Llama-Mage | Phase 2-6 | Planned |
-| [🧪 Track C: Experiments](docs/TRACK_C_EXPERIMENTS.md) | Research questions, papers | Phase 5+ | Planned |
-| [🔮 Track D: Meta-Game](docs/TRACK_D_METAGAME.md) | Deck building, balance | Phase 8+ | Stretch |
+| Track                                                        | Focus                                   | Lead Phase | Status  |
+| ------------------------------------------------------------ | --------------------------------------- | ---------- | ------- |
+| [🏛️ Track A: Infrastructure](docs/TRACK_A_INFRASTRUCTURE.md) | Gym bridge, data pipeline, orchestrator | Phase 1-2  | 🔜 Next |
+| [🧠 Track B: Agents](docs/TRACK_B_AGENTS.md)                 | Neural nets, PPO, Llama-Mage            | Phase 2-6  | Planned |
+| [🧪 Track C: Experiments](docs/TRACK_C_EXPERIMENTS.md)       | Research questions, papers              | Phase 5+   | Planned |
+| [🔮 Track D: Meta-Game](docs/TRACK_D_METAGAME.md)            | Deck building, balance                  | Phase 8+   | Stretch |
 
 ---
 
@@ -36,26 +36,26 @@ Development is organized into four parallel tracks:
 
 ### Foundation Era (Completed)
 
-| Phase | Name | Status | Key Deliverable |
-|-------|------|--------|-----------------|
-| 0 | Foundation | ✅ Done | Monorepo, basic game loop |
-| 0.5 | Core Rules | ✅ Done | Stack, combat, mana system |
-| 0.6 | Card Library | ✅ Done | 302+ cards from 6th Edition |
-| 0.7 | MCTS & Evaluation | ✅ Done | MCTSBot, tuned evaluation |
-| 0.8 | MCP Integration | ✅ Done | Claude Code can play MTG |
+| Phase | Name              | Status  | Key Deliverable             |
+| ----- | ----------------- | ------- | --------------------------- |
+| 0     | Foundation        | ✅ Done | Monorepo, basic game loop   |
+| 0.5   | Core Rules        | ✅ Done | Stack, combat, mana system  |
+| 0.6   | Card Library      | ✅ Done | 302+ cards from 6th Edition |
+| 0.7   | MCTS & Evaluation | ✅ Done | MCTSBot, tuned evaluation   |
+| 0.8   | MCP Integration   | ✅ Done | Claude Code can play MTG    |
 
 ### Research Era (Current)
 
-| Phase | Name | Track | Status | Key Deliverable |
-|-------|------|-------|--------|-----------------|
-| **1** | **The Gym Bridge** | A | 🔜 Next | Python `manacore-gym` package |
-| **2** | **Data Factory** | A+B | Planned | 10K game dataset, Neural Imitator |
-| **3** | **PPO Specialists** | B | Planned | Agent Ignis, Agent Aqua |
-| **4** | **LLM Training Pipeline** | A | Planned | Multi-provider orchestrator |
-| **5** | **Llama-Mage** | B+C | Planned | Fine-tuned MTG LLM |
-| **6** | **AlphaZero** | B | Planned | Self-play training loop |
-| **7** | **Transfer Learning** | C | Planned | 6ED → Urza's adaptation study |
-| **8+** | **Meta-Game** | D | Stretch | GA deck building |
+| Phase  | Name                      | Track | Status  | Key Deliverable                   |
+| ------ | ------------------------- | ----- | ------- | --------------------------------- |
+| **1**  | **The Gym Bridge**        | A     | 🔜 Next | Python `manacore-gym` package     |
+| **2**  | **Data Factory**          | A+B   | Planned | 10K game dataset, Neural Imitator |
+| **3**  | **PPO Specialists**       | B     | Planned | Agent Ignis, Agent Aqua           |
+| **4**  | **LLM Training Pipeline** | A     | Planned | Multi-provider orchestrator       |
+| **5**  | **Llama-Mage**            | B+C   | Planned | Fine-tuned MTG LLM                |
+| **6**  | **AlphaZero**             | B     | Planned | Self-play training loop           |
+| **7**  | **Transfer Learning**     | C     | Planned | 6ED → Urza's adaptation study     |
+| **8+** | **Meta-Game**             | D     | Stretch | GA deck building                  |
 
 ---
 
@@ -86,15 +86,18 @@ Development is organized into four parallel tracks:
 ## Quick Links
 
 ### Documentation
+
 - [Track A: Infrastructure](docs/TRACK_A_INFRASTRUCTURE.md) - Gym, data pipeline, orchestrator
 - [Track B: Agents](docs/TRACK_B_AGENTS.md) - Neural nets, PPO, LLM agents
 - [Track C: Experiments](docs/TRACK_C_EXPERIMENTS.md) - Research questions, papers
 - [Track D: Meta-Game](docs/TRACK_D_METAGAME.md) - Deck building, creativity
 
 ### Archives
+
 - [Roadmap v1 (Game Era)](docs/archive/ROADMAP_v1_GAME_ERA.md) - Original game-focused roadmap
 
 ### Technical
+
 - [CLAUDE.md](CLAUDE.md) - Project guide for AI assistants
 - [ARCHITECTURE.md](ARCHITECTURE.md) - System design
 - [packages/engine/docs/CARD_STATUS.md](packages/engine/docs/CARD_STATUS.md) - Card implementation status
@@ -130,23 +133,23 @@ Development is organized into four parallel tracks:
 
 ## Performance Targets
 
-| Metric | Current | Target | Why |
-|--------|---------|--------|-----|
-| Games/sec (engine) | 1,000+ | 1,000+ | ✅ Sufficient |
-| Games/sec (Python) | N/A | 100+ | RL training speed |
-| MCTS iterations | 500 | 500 | ✅ Frozen baseline |
-| Training data | 13 games | 100K+ | Neural network training |
-| PPO training | N/A | 1M steps | Agent convergence |
+| Metric             | Current  | Target   | Why                     |
+| ------------------ | -------- | -------- | ----------------------- |
+| Games/sec (engine) | 1,000+   | 1,000+   | ✅ Sufficient           |
+| Games/sec (Python) | N/A      | 100+     | RL training speed       |
+| MCTS iterations    | 500      | 500      | ✅ Frozen baseline      |
+| Training data      | 13 games | 100K+    | Neural network training |
+| PPO training       | N/A      | 1M steps | Agent convergence       |
 
 ---
 
 ## Budget & Resources
 
-| Resource | Allocation | Notes |
-|----------|------------|-------|
-| Claude MAX | $90/month | Training data generation (MCP) |
-| API Budget | Up to $500/month | Multi-provider orchestrator |
-| Compute | Local + Cloud | DigitalOcean for long runs |
+| Resource   | Allocation       | Notes                          |
+| ---------- | ---------------- | ------------------------------ |
+| Claude MAX | $90/month        | Training data generation (MCP) |
+| API Budget | Up to $500/month | Multi-provider orchestrator    |
+| Compute    | Local + Cloud    | DigitalOcean for long runs     |
 
 ---
 

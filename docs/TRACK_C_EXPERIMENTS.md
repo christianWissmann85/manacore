@@ -11,6 +11,7 @@
 Track C is where we answer research questions and produce publishable findings. This track doesn't build software—it uses the infrastructure (Track A) and agents (Track B) to run experiments and analyze results.
 
 **Publication Targets:**
+
 - HuggingFace Papers
 - arXiv (cs.AI, cs.LG)
 - Blog posts and open-source documentation
@@ -22,6 +23,7 @@ Track C is where we answer research questions and produce publishable findings. 
 **Research Question:** Can a model that "reads" cards (LLM) beat a model that "simulates" mechanics (MCTS)?
 
 **Hypothesis:**
+
 - MCTS will dominate in tactical situations (combat math, damage calculation)
 - LLM will excel in strategic decisions (long-term planning, card valuation)
 - Overall, MCTS wins on win rate, but LLM provides better explanations
@@ -29,17 +31,20 @@ Track C is where we answer research questions and produce publishable findings. 
 ### Methodology
 
 **Agents:**
+
 - MCTS-500 (500 iterations, greedy rollout)
 - MCTS-1000 (1000 iterations, greedy rollout)
 - Llama-Mage (fine-tuned on Claude reasoning)
 - Claude Sonnet (via API, as reference)
 
 **Conditions:**
+
 1. Tactical: Simple board states, clear optimal play
 2. Strategic: Complex boards, multiple viable lines
 3. Time-pressured: Limited decision time (1s vs 10s)
 
 **Metrics:**
+
 - Win rate (primary)
 - Decision time
 - Agreement with human experts (if available)
@@ -79,12 +84,12 @@ Phase 3: Ablation
 
 ### Expected Outcomes
 
-| Metric | MCTS-500 | Llama-Mage | Prediction |
-|--------|----------|------------|------------|
-| Win rate | ~55% | ~45% | MCTS wins overall |
-| Tactical accuracy | High | Medium | MCTS stronger |
-| Strategic quality | Medium | High | LLM stronger |
-| Interpretability | None | High | LLM wins |
+| Metric            | MCTS-500 | Llama-Mage | Prediction        |
+| ----------------- | -------- | ---------- | ----------------- |
+| Win rate          | ~55%     | ~45%       | MCTS wins overall |
+| Tactical accuracy | High     | Medium     | MCTS stronger     |
+| Strategic quality | Medium   | High       | LLM stronger      |
+| Interpretability  | None     | High       | LLM wins          |
 
 ### Deliverables
 
@@ -101,6 +106,7 @@ Phase 3: Ablation
 **Research Question:** Can an agent trained on "fair" Magic (6th Edition) adapt to "broken" Magic (Urza's Block)?
 
 **Hypothesis:**
+
 - Pre-training on Core Sets creates "General Magic Intuition"
 - This accelerates learning of Power Creep mechanics
 - Zero-shot transfer will fail, but fine-tuning will be faster than from-scratch
@@ -108,11 +114,13 @@ Phase 3: Ablation
 ### Background
 
 6th Edition is considered "fair" Magic:
+
 - Balanced mana costs
 - Limited combo potential
 - Creature-based gameplay
 
 Urza's Block is considered "broken":
+
 - Fast mana (Tolarian Academy, Gaea's Cradle)
 - Combo engines (High Tide, Megrim)
 - Paradigm-shifting cards
@@ -120,6 +128,7 @@ Urza's Block is considered "broken":
 ### Methodology
 
 **Scenario Pack:** Implement 10-15 high-impact Urza's Saga cards:
+
 - Tolarian Academy (lands = blue mana)
 - Gaea's Cradle (creatures = green mana)
 - Windfall (draw/discard)
@@ -128,13 +137,14 @@ Urza's Block is considered "broken":
 
 **Agent Groups:**
 
-| Group | Pre-training | Fine-tuning | Notes |
-|-------|--------------|-------------|-------|
-| A (Zero-Shot) | 6ED (1M steps) | None | Test raw transfer |
-| B (Transfer) | 6ED (1M steps) | Urza (varying) | Measure adaptation |
-| C (From Scratch) | None | Urza (1M steps) | Baseline comparison |
+| Group            | Pre-training   | Fine-tuning     | Notes               |
+| ---------------- | -------------- | --------------- | ------------------- |
+| A (Zero-Shot)    | 6ED (1M steps) | None            | Test raw transfer   |
+| B (Transfer)     | 6ED (1M steps) | Urza (varying)  | Measure adaptation  |
+| C (From Scratch) | None           | Urza (1M steps) | Baseline comparison |
 
 **Metrics:**
+
 - "Time to Adaptation" (steps to reach 60% win rate)
 - Card valuation (does agent recognize Academy is good?)
 - Strategy emergence (does agent discover combos?)
@@ -164,11 +174,11 @@ Phase 4: Card Valuation Analysis
 
 ### Expected Outcomes
 
-| Metric | Group A | Group B | Group C |
-|--------|---------|---------|---------|
-| Zero-shot win rate | ~30% | N/A | N/A |
-| Steps to 60% WR | N/A | ~50K | ~200K |
-| Discovers Academy value | No | Yes (fast) | Yes (slow) |
+| Metric                  | Group A | Group B    | Group C    |
+| ----------------------- | ------- | ---------- | ---------- |
+| Zero-shot win rate      | ~30%    | N/A        | N/A        |
+| Steps to 60% WR         | N/A     | ~50K       | ~200K      |
+| Discovers Academy value | No      | Yes (fast) | Yes (slow) |
 
 ### Deliverables
 
@@ -185,6 +195,7 @@ Phase 4: Card Valuation Analysis
 **Research Question:** Is it better to train deck-specific agents or one multi-task agent?
 
 **Hypothesis:**
+
 - Specialists will outperform on their home deck
 - Generalist will be more robust across decks
 - League training (specialists + generalist) produces best overall results
@@ -192,15 +203,18 @@ Phase 4: Card Valuation Analysis
 ### Methodology
 
 **Specialists:**
+
 - Agent Ignis (Red only)
 - Agent Aqua (Blue only)
 - Agent Silva (Green only)
 
 **Generalists:**
+
 - Multi-Task Agent (trained on all decks, deck identity as input)
 - League Agent (trained against specialists)
 
 **Evaluation:**
+
 ```
 Round Robin Tournament:
 - Each agent plays each deck
@@ -232,13 +246,13 @@ Phase 4: Evaluation
 
 ### Analysis
 
-| Agent | Red Deck | Blue Deck | Green Deck | Average |
-|-------|----------|-----------|------------|---------|
-| Ignis | Best | Poor | Poor | ? |
-| Aqua | Poor | Best | Poor | ? |
-| Silva | Poor | Poor | Best | ? |
-| Multi-Task | Good | Good | Good | ? |
-| League | ? | ? | ? | Best? |
+| Agent      | Red Deck | Blue Deck | Green Deck | Average |
+| ---------- | -------- | --------- | ---------- | ------- |
+| Ignis      | Best     | Poor      | Poor       | ?       |
+| Aqua       | Poor     | Best      | Poor       | ?       |
+| Silva      | Poor     | Poor      | Best       | ?       |
+| Multi-Task | Good     | Good      | Good       | ?       |
+| League     | ?        | ?         | ?          | Best?   |
 
 ### Deliverables
 
@@ -255,6 +269,7 @@ Phase 4: Evaluation
 **Research Question:** Can we understand why agents make decisions?
 
 **Hypothesis:**
+
 - LLM reasoning can be validated against actual outcomes
 - MCTS visit counts reveal decision confidence
 - PPO action probabilities show learned heuristics
@@ -262,6 +277,7 @@ Phase 4: Evaluation
 ### Methodology
 
 **Techniques:**
+
 1. **LLM Reasoning Analysis**
    - Collect 1000 decisions with reasoning
    - Categorize reasoning types (tempo, card advantage, threat assessment)
@@ -290,6 +306,7 @@ Phase 4: Evaluation
 **Research Question:** How do our agents compare to human players?
 
 **Hypothesis:**
+
 - Strong agents should beat casual humans
 - Expert humans may still beat our best agents
 - LLM agents feel more "human-like" to play against
@@ -297,17 +314,20 @@ Phase 4: Evaluation
 ### Methodology
 
 **Human Participants:**
+
 - Recruit 10-20 MTG players (varying skill)
 - Categorize: Beginner, Intermediate, Expert
 - Each plays 10 games vs each agent type
 
 **Agents:**
+
 - RandomBot (sanity check)
 - MCTSBot-500
 - PPO Specialist
 - Llama-Mage
 
 **Metrics:**
+
 - Win rate by skill level
 - Post-game survey: "How human-like was the opponent?"
 - Decision time comparison
@@ -329,19 +349,20 @@ Phase 4: Evaluation
 
 ## Publication Roadmap
 
-| Experiment | Target Venue | Timeline | Status |
-|------------|--------------|----------|--------|
-| 1: LLM vs MCTS | arXiv, HuggingFace | Phase 5+ | Planned |
-| 2: Transfer Learning | arXiv | Phase 7 | Planned |
-| 3: Specialist vs Generalist | Blog post | Phase 3+ | Planned |
-| 4: Interpretability | Paper section | Ongoing | Planned |
-| 5: Human Baseline | Optional | Stretch | Idea |
+| Experiment                  | Target Venue       | Timeline | Status  |
+| --------------------------- | ------------------ | -------- | ------- |
+| 1: LLM vs MCTS              | arXiv, HuggingFace | Phase 5+ | Planned |
+| 2: Transfer Learning        | arXiv              | Phase 7  | Planned |
+| 3: Specialist vs Generalist | Blog post          | Phase 3+ | Planned |
+| 4: Interpretability         | Paper section      | Ongoing  | Planned |
+| 5: Human Baseline           | Optional           | Stretch  | Idea    |
 
 ---
 
 ## Data Management
 
 All experimental data should be:
+
 - Stored in `data/experiments/{experiment_name}/`
 - Versioned with git LFS or external storage
 - Documented with data cards

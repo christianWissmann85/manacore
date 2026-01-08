@@ -23,22 +23,22 @@ Each stage builds on the previous, validating infrastructure before adding compl
 
 ### Baseline Agents (Complete)
 
-| Agent | Type | Speed | Strength | Use Case |
-|-------|------|-------|----------|----------|
-| RandomBot | Random | 1000+ g/s | Weak | Testing, baseline |
-| GreedyBot | Heuristic | 100-200 g/s | Medium | Fast evaluation |
-| MCTSBot | Search | 3-30 g/s | Strong | Gold standard |
+| Agent     | Type      | Speed       | Strength | Use Case          |
+| --------- | --------- | ----------- | -------- | ----------------- |
+| RandomBot | Random    | 1000+ g/s   | Weak     | Testing, baseline |
+| GreedyBot | Heuristic | 100-200 g/s | Medium   | Fast evaluation   |
+| MCTSBot   | Search    | 3-30 g/s    | Strong   | Gold standard     |
 
 ### Research Agents (Planned)
 
-| Agent | Type | Phase | Use Case |
-|-------|------|-------|----------|
-| NeuralImitator | Behavior Cloning | 2 | Validate pipeline |
-| Agent Ignis | PPO (Red) | 3 | Specialist study |
-| Agent Aqua | PPO (Blue) | 3 | Specialist study |
-| Agent Silva | PPO (Green) | 3 | Specialist study |
-| Llama-Mage | Fine-tuned LLM | 5 | Interpretability |
-| AlphaCore | Self-play NN | 6 | Peak performance |
+| Agent          | Type             | Phase | Use Case          |
+| -------------- | ---------------- | ----- | ----------------- |
+| NeuralImitator | Behavior Cloning | 2     | Validate pipeline |
+| Agent Ignis    | PPO (Red)        | 3     | Specialist study  |
+| Agent Aqua     | PPO (Blue)       | 3     | Specialist study  |
+| Agent Silva    | PPO (Green)      | 3     | Specialist study  |
+| Llama-Mage     | Fine-tuned LLM   | 5     | Interpretability  |
+| AlphaCore      | Self-play NN     | 6     | Peak performance  |
 
 ---
 
@@ -57,6 +57,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 **Tasks:**
 
 - [ ] Create neural network module structure:
+
   ```
   packages/ai/src/neural/
   ├── models/
@@ -70,6 +71,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
   ```
 
 - [ ] Define ImitatorNet architecture:
+
   ```
   Input:  25 features (normalized)
   Hidden: 256 → ReLU → 256 → ReLU → 128 → ReLU
@@ -81,6 +83,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 - [ ] Implement in ONNX-compatible format for portability
 
 **Success Criteria:**
+
 - [ ] Model defined and exportable
 - [ ] Can load in both TypeScript and Python
 - [ ] Inference <1ms per decision
@@ -90,6 +93,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 **Tasks:**
 
 - [ ] Implement data loader:
+
   ```typescript
   class TrainingDataLoader {
     constructor(dataDir: string);
@@ -99,9 +103,9 @@ Each stage builds on the previous, validating infrastructure before adding compl
 
     // Convert to tensors
     toTensors(): {
-      features: Float32Array[];  // [N, 25]
-      actions: Int32Array;       // [N]
-      outcomes: Float32Array;    // [N]
+      features: Float32Array[]; // [N, 25]
+      actions: Int32Array; // [N]
+      outcomes: Float32Array; // [N]
     };
 
     // Train/validation split
@@ -110,6 +114,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
   ```
 
 - [ ] Implement training loop:
+
   ```typescript
   class Trainer {
     constructor(model: ImitatorNet, config: TrainConfig);
@@ -130,6 +135,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
   ```
 
 **Success Criteria:**
+
 - [ ] Training completes without errors
 - [ ] Loss decreases over epochs
 - [ ] Model achieves >60% action prediction accuracy
@@ -139,13 +145,16 @@ Each stage builds on the previous, validating infrastructure before adding compl
 **Tasks:**
 
 - [ ] Implement NeuralBot:
+
   ```typescript
   class NeuralBot implements Bot {
     private model: ImitatorNet;
 
     constructor(modelPath: string);
 
-    getName(): string { return "NeuralImitator"; }
+    getName(): string {
+      return 'NeuralImitator';
+    }
 
     chooseAction(state: GameState, playerId: PlayerId): Action {
       // 1. Extract features
@@ -169,6 +178,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 - [ ] Benchmark against baselines
 
 **Success Criteria:**
+
 - [ ] NeuralBot plays complete games
 - [ ] Inference speed: 1000+ games/sec (as fast as RandomBot!)
 - [ ] Win rate vs RandomBot: >80%
@@ -179,6 +189,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 **Tasks:**
 
 - [ ] Compare NeuralBot to MCTS:
+
   ```
   NeuralBot vs RandomBot:  Track win rate
   NeuralBot vs GreedyBot:  Track win rate
@@ -193,6 +204,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 - [ ] Document findings in `docs/experiments/neural-imitator.md`
 
 **Success Criteria:**
+
 - [ ] Quantified comparison to baselines
 - [ ] Identified strengths and weaknesses
 - [ ] Pipeline validated end-to-end
@@ -212,6 +224,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 **Tasks:**
 
 - [ ] Define training curriculum:
+
   ```python
   CURRICULUM = [
       # Stage 1: Beat random
@@ -229,6 +242,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
   ```
 
 - [ ] Implement curriculum scheduler:
+
   ```python
   class CurriculumScheduler:
       def __init__(self, curriculum: list):
@@ -246,6 +260,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 - [ ] Add callback for automatic stage advancement
 
 **Success Criteria:**
+
 - [ ] Curriculum scheduler implemented
 - [ ] Automatic advancement on target reached
 - [ ] Logging of stage transitions
@@ -255,6 +270,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 **Tasks:**
 
 - [ ] Create training script for Red decks:
+
   ```python
   # scripts/train_ignis.py
   from sb3_contrib import MaskablePPO
@@ -290,6 +306,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 - [ ] Save checkpoints every 100K steps
 
 **Success Criteria:**
+
 - [ ] Agent converges (loss stabilizes)
 - [ ] Beats RandomBot >95%
 - [ ] Beats GreedyBot >70%
@@ -301,6 +318,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 
 - [ ] Create training script for Blue decks (control style)
 - [ ] Use different reward shaping:
+
   ```python
   # Blue values card advantage and game length
   def blue_reward(info):
@@ -313,6 +331,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 - [ ] Compare learning curves to Ignis
 
 **Success Criteria:**
+
 - [ ] Agent learns control playstyle
 - [ ] Different decision patterns than Ignis
 - [ ] Competitive win rate
@@ -326,6 +345,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 - [ ] Complete the "color triangle"
 
 **Success Criteria:**
+
 - [ ] Three distinct specialists trained
 - [ ] Each has different strategic tendencies
 - [ ] Rock-paper-scissors dynamics observable
@@ -335,6 +355,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 **Tasks:**
 
 - [ ] Run round-robin tournament:
+
   ```
   Ignis vs Aqua: 1000 games
   Aqua vs Silva: 1000 games
@@ -349,6 +370,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 - [ ] Create visualization of learned policies
 
 **Success Criteria:**
+
 - [ ] Quantified matchup data
 - [ ] Identified strategic differences
 - [ ] Documentation for Track C experiments
@@ -368,6 +390,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 **Tasks:**
 
 - [ ] Collect 10K+ games with reasoning from Claude:
+
   ```bash
   bun run orchestrator generate \
     --provider anthropic \
@@ -376,6 +399,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
   ```
 
 - [ ] Convert to instruction-tuning format:
+
   ```json
   {
     "instruction": "You are playing Magic: The Gathering...",
@@ -387,6 +411,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 - [ ] Create train/val/test splits (80/10/10)
 
 **Success Criteria:**
+
 - [ ] 10K+ training examples with reasoning
 - [ ] Diverse game states and decisions
 - [ ] Quality validated (no nonsense reasoning)
@@ -396,17 +421,18 @@ Each stage builds on the previous, validating infrastructure before adding compl
 **Tasks:**
 
 - [ ] Evaluate base model options:
-  | Model | Size | VRAM | Notes |
-  |-------|------|------|-------|
-  | Llama-3.2-3B | 3B | 8GB | Fast, good baseline |
-  | Llama-3.1-8B | 8B | 16GB | Better reasoning |
-  | Mistral-7B | 7B | 14GB | Good instruction following |
-  | Qwen2.5-7B | 7B | 14GB | Strong on structured tasks |
+      | Model | Size | VRAM | Notes |
+      |-------|------|------|-------|
+      | Llama-3.2-3B | 3B | 8GB | Fast, good baseline |
+      | Llama-3.1-8B | 8B | 16GB | Better reasoning |
+      | Mistral-7B | 7B | 14GB | Good instruction following |
+      | Qwen2.5-7B | 7B | 14GB | Strong on structured tasks |
 
 - [ ] Choose based on available compute
 - [ ] Document selection rationale
 
 **Success Criteria:**
+
 - [ ] Model selected and justified
 - [ ] Can run inference locally
 - [ ] Baseline performance measured
@@ -416,11 +442,13 @@ Each stage builds on the previous, validating infrastructure before adding compl
 **Tasks:**
 
 - [ ] Set up fine-tuning environment:
+
   ```bash
   pip install transformers peft bitsandbytes accelerate
   ```
 
 - [ ] Configure QLoRA parameters:
+
   ```python
   lora_config = LoraConfig(
       r=16,                    # Rank
@@ -447,6 +475,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 - [ ] Monitor loss and generation quality
 
 **Success Criteria:**
+
 - [ ] Training completes without OOM
 - [ ] Loss decreases smoothly
 - [ ] Generated reasoning is coherent
@@ -456,9 +485,10 @@ Each stage builds on the previous, validating infrastructure before adding compl
 **Tasks:**
 
 - [ ] Implement LlamaMageBot:
+
   ```typescript
   class LlamaMageBot implements Bot {
-    private model: LocalLLM;  // Ollama or vLLM
+    private model: LocalLLM; // Ollama or vLLM
 
     async chooseAction(state: GameState, playerId: PlayerId): Promise<Action> {
       // 1. Render state as text
@@ -466,9 +496,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 
       // 2. Get legal actions
       const actions = getLegalActions(state, playerId);
-      const actionText = actions.map((a, i) =>
-        `[${i}] ${describeAction(a)}`
-      ).join('\n');
+      const actionText = actions.map((a, i) => `[${i}] ${describeAction(a)}`).join('\n');
 
       // 3. Query LLM
       const prompt = `${stateText}\n\nLegal moves:\n${actionText}\n\nChoose the best move and explain why:`;
@@ -486,6 +514,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 - [ ] Handle parsing errors gracefully
 
 **Success Criteria:**
+
 - [ ] Bot plays complete games
 - [ ] Reasoning is coherent and relevant
 - [ ] Handles edge cases (invalid output)
@@ -495,6 +524,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 **Tasks:**
 
 - [ ] Run evaluation suite:
+
   ```
   Llama-Mage vs RandomBot:  1000 games
   Llama-Mage vs GreedyBot:  1000 games
@@ -510,6 +540,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 - [ ] Create comparison report for Track C
 
 **Success Criteria:**
+
 - [ ] Quantified performance vs baselines
 - [ ] Identified strengths (strategic) and weaknesses (tactical)
 - [ ] Ready for Experiment 1 (LLM vs MCTS showdown)
@@ -529,6 +560,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 **Tasks:**
 
 - [ ] Design AlphaCore network:
+
   ```
   Input: 25 features (can expand later)
 
@@ -546,6 +578,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 - [ ] Add ONNX export for TypeScript inference
 
 **Success Criteria:**
+
 - [ ] Network forward pass works
 - [ ] Both heads produce valid outputs
 - [ ] Export/import cycle works
@@ -555,6 +588,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 **Tasks:**
 
 - [ ] Implement self-play game generation:
+
   ```python
   def generate_self_play_games(model, n_games=100):
       games = []
@@ -565,6 +599,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
   ```
 
 - [ ] Implement MCTS with neural network guidance:
+
   ```python
   def mcts_search(state, model, n_simulations=100):
       root = MCTSNode(state)
@@ -588,6 +623,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
   ```
 
 - [ ] Training loop:
+
   ```python
   for iteration in range(1000):
       # Generate games
@@ -606,6 +642,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
   ```
 
 **Success Criteria:**
+
 - [ ] Self-play generates valid games
 - [ ] Training updates model weights
 - [ ] ELO improves over iterations
@@ -616,6 +653,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 
 - [ ] Set up distributed training (if needed)
 - [ ] Implement replay buffer:
+
   ```python
   class ReplayBuffer:
       def __init__(self, capacity=100_000):
@@ -636,6 +674,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
   - Games per hour
 
 **Success Criteria:**
+
 - [ ] Training stable over long runs
 - [ ] No memory leaks
 - [ ] Clear progress metrics
@@ -645,6 +684,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 **Tasks:**
 
 - [ ] Full evaluation suite:
+
   ```
   AlphaCore vs RandomBot:    Should be >99%
   AlphaCore vs GreedyBot:    Should be >90%
@@ -657,6 +697,7 @@ Each stage builds on the previous, validating infrastructure before adding compl
 - [ ] Document in Track C experiments
 
 **Success Criteria:**
+
 - [ ] Strongest agent in the roster
 - [ ] Discovered novel strategies?
 - [ ] Ready for transfer learning experiments
@@ -680,24 +721,24 @@ Phase 4 (Orchestrator) ──► Phase 5 (Llama-Mage) ◄──┘
 
 ### External Dependencies
 
-| Component | Dependency | Version |
-|-----------|------------|---------|
-| Neural Imitator | ONNX Runtime | ^1.16.0 |
-| PPO Training | stable-baselines3 | ^2.0.0 |
-| Llama-Mage | transformers | ^4.40.0 |
-| Llama-Mage | peft | ^0.10.0 |
-| AlphaZero | PyTorch | ^2.0.0 |
+| Component       | Dependency        | Version |
+| --------------- | ----------------- | ------- |
+| Neural Imitator | ONNX Runtime      | ^1.16.0 |
+| PPO Training    | stable-baselines3 | ^2.0.0  |
+| Llama-Mage      | transformers      | ^4.40.0 |
+| Llama-Mage      | peft              | ^0.10.0 |
+| AlphaZero       | PyTorch           | ^2.0.0  |
 
 ---
 
 ## Success Metrics
 
-| Agent | vs Random | vs Greedy | vs MCTS | Notes |
-|-------|-----------|-----------|---------|-------|
-| NeuralImitator | >80% | >50% | ~40% | Matches training |
-| PPO Specialists | >95% | >70% | >55% | Curriculum target |
-| Llama-Mage | >80% | >60% | TBD | Interpretable |
-| AlphaCore | >99% | >90% | >60% | Peak performance |
+| Agent           | vs Random | vs Greedy | vs MCTS | Notes             |
+| --------------- | --------- | --------- | ------- | ----------------- |
+| NeuralImitator  | >80%      | >50%      | ~40%    | Matches training  |
+| PPO Specialists | >95%      | >70%      | >55%    | Curriculum target |
+| Llama-Mage      | >80%      | >60%      | TBD     | Interpretable     |
+| AlphaCore       | >99%      | >90%      | >60%    | Peak performance  |
 
 ---
 

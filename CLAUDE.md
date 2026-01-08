@@ -21,18 +21,19 @@ ManaCore is a high-fidelity Magic: The Gathering simulation built as an **AI Res
 
 Development follows four parallel tracks:
 
-| Track | Focus | Status |
-|-------|-------|--------|
+| Track                                        | Focus                                   | Status     |
+| -------------------------------------------- | --------------------------------------- | ---------- |
 | [🏛️ Track A](docs/TRACK_A_INFRASTRUCTURE.md) | Gym bridge, data pipeline, orchestrator | 🔜 Phase 1 |
-| [🧠 Track B](docs/TRACK_B_AGENTS.md) | Neural nets, PPO, Llama-Mage | Planned |
-| [🧪 Track C](docs/TRACK_C_EXPERIMENTS.md) | Research questions, papers | Planned |
-| [🔮 Track D](docs/TRACK_D_METAGAME.md) | Deck building, creativity | Stretch |
+| [🧠 Track B](docs/TRACK_B_AGENTS.md)         | Neural nets, PPO, Llama-Mage            | Planned    |
+| [🧪 Track C](docs/TRACK_C_EXPERIMENTS.md)    | Research questions, papers              | Planned    |
+| [🔮 Track D](docs/TRACK_D_METAGAME.md)       | Deck building, creativity               | Stretch    |
 
 ### Current Phase: Phase 1 - The Gym Bridge
 
 **Goal**: Create Python bindings so ML researchers can train agents with standard tools.
 
 **Key Deliverables**:
+
 - `packages/gym-server/` - HTTP server exposing engine API
 - `packages/python-gym/` - Gymnasium environment (PyPI package)
 - Example PPO training scripts with Stable Baselines3
@@ -104,20 +105,20 @@ Action → Validator → Reducer → New State
 
 ### Current Agents
 
-| Agent | Type | Speed | Strength | Status |
-|-------|------|-------|----------|--------|
-| RandomBot | Random | 1000+ g/s | Baseline | ✅ Complete |
-| GreedyBot | Heuristic | 100-200 g/s | Medium | ✅ Complete |
-| MCTSBot | Search | 3-30 g/s | Strong | ✅ Complete (frozen) |
+| Agent     | Type      | Speed       | Strength | Status               |
+| --------- | --------- | ----------- | -------- | -------------------- |
+| RandomBot | Random    | 1000+ g/s   | Baseline | ✅ Complete          |
+| GreedyBot | Heuristic | 100-200 g/s | Medium   | ✅ Complete          |
+| MCTSBot   | Search    | 3-30 g/s    | Strong   | ✅ Complete (frozen) |
 
 ### Planned Agents (Track B)
 
-| Agent | Type | Phase | Purpose |
-|-------|------|-------|---------|
-| NeuralImitator | Behavior Cloning | 2 | Validate ML pipeline |
-| PPO Specialists | RL | 3 | Deck-specific agents |
-| Llama-Mage | Fine-tuned LLM | 5 | Interpretable reasoning |
-| AlphaCore | Self-play NN | 6 | Peak performance |
+| Agent           | Type             | Phase | Purpose                 |
+| --------------- | ---------------- | ----- | ----------------------- |
+| NeuralImitator  | Behavior Cloning | 2     | Validate ML pipeline    |
+| PPO Specialists | RL               | 3     | Deck-specific agents    |
+| Llama-Mage      | Fine-tuned LLM   | 5     | Interpretable reasoning |
+| AlphaCore       | Self-play NN     | 6     | Peak performance        |
 
 ### Bot Interface
 
@@ -140,9 +141,9 @@ import {
   getOpponent,
 
   // Actions
-  getLegalActions,    // Returns Action[] - ALL valid moves
-  applyAction,        // Returns new GameState (immutable)
-  validateAction,     // Returns string[] of errors
+  getLegalActions, // Returns Action[] - ALL valid moves
+  applyAction, // Returns new GameState (immutable)
+  validateAction, // Returns string[] of errors
 
   // Game setup
   initializeGame,
@@ -157,12 +158,12 @@ The evaluation function uses 5 tuned weights:
 
 ```typescript
 TUNED_WEIGHTS = {
-  life: 0.31,    // Life differential
-  board: 0.46,  // Creature power/toughness
-  cards: 0.09,  // Hand size advantage
-  mana: 0.08,   // Land count
-  tempo: 0.05,  // Untapped permanents
-}
+  life: 0.31, // Life differential
+  board: 0.46, // Creature power/toughness
+  cards: 0.09, // Hand size advantage
+  mana: 0.08, // Land count
+  tempo: 0.05, // Untapped permanents
+};
 ```
 
 ### Training Data Collection
@@ -173,11 +174,15 @@ The `TrainingDataCollector` captures 25-dimensional feature vectors:
 // Features extracted per decision
 interface StateFeatures {
   // Life (normalized)
-  playerLife, opponentLife, lifeDelta
+  playerLife;
+  opponentLife;
+  lifeDelta;
 
   // Board state
-  playerCreatureCount, opponentCreatureCount
-  playerTotalPower, opponentTotalPower
+  playerCreatureCount;
+  opponentCreatureCount;
+  playerTotalPower;
+  opponentTotalPower;
   // ... 18 more features
 }
 ```
@@ -280,12 +285,12 @@ bun scripts/generate-coverage-report.ts
 
 ManaCore is optimized for AI training:
 
-| Metric | Current | Notes |
-|--------|---------|-------|
-| Games/second | 1,000+ | Engine simulation |
-| Action time | <1ms | Typical moves |
-| Full game | <30ms | 50 turns, 100 actions |
-| MCTS iterations | 500 | Frozen baseline |
+| Metric          | Current | Notes                 |
+| --------------- | ------- | --------------------- |
+| Games/second    | 1,000+  | Engine simulation     |
+| Action time     | <1ms    | Typical moves         |
+| Full game       | <30ms   | 50 turns, 100 actions |
+| MCTS iterations | 500     | Frozen baseline       |
 
 ---
 
@@ -301,22 +306,23 @@ Every feature must pass:
 
 ## Key File Locations
 
-| What | Where |
-|------|-------|
-| Bot interface | `packages/ai/src/bots/Bot.ts` |
-| MCTS implementation | `packages/ai/src/search/MCTS.ts` |
-| Evaluation function | `packages/ai/src/evaluation/evaluate.ts` |
+| What                    | Where                                               |
+| ----------------------- | --------------------------------------------------- |
+| Bot interface           | `packages/ai/src/bots/Bot.ts`                       |
+| MCTS implementation     | `packages/ai/src/search/MCTS.ts`                    |
+| Evaluation function     | `packages/ai/src/evaluation/evaluate.ts`            |
 | Training data collector | `packages/ai/src/training/TrainingDataCollector.ts` |
-| Game state types | `packages/engine/src/state/` |
-| Legal actions | `packages/engine/src/actions/getLegalActions.ts` |
-| MCP server | `packages/mcp-server/src/index.ts` |
-| Experiment configs | `experiments/*.json` |
+| Game state types        | `packages/engine/src/state/`                        |
+| Legal actions           | `packages/engine/src/actions/getLegalActions.ts`    |
+| MCP server              | `packages/mcp-server/src/index.ts`                  |
+| Experiment configs      | `experiments/*.json`                                |
 
 ---
 
 ## Documentation
 
 ### Roadmap & Tracks
+
 - [ROADMAP.md](ROADMAP.md) - Master roadmap (v2.0)
 - [Track A: Infrastructure](docs/TRACK_A_INFRASTRUCTURE.md) - Gym, data, orchestrator
 - [Track B: Agents](docs/TRACK_B_AGENTS.md) - Neural nets, PPO, LLM agents
@@ -324,11 +330,13 @@ Every feature must pass:
 - [Track D: Meta-Game](docs/TRACK_D_METAGAME.md) - Deck building, creativity
 
 ### Technical
+
 - [ARCHITECTURE.md](ARCHITECTURE.md) - System design
 - [packages/engine/docs/CARD_STATUS.md](packages/engine/docs/CARD_STATUS.md) - Card implementation
 - [experiments/README.md](experiments/README.md) - Experiment runner guide
 
 ### Archives
+
 - [docs/archive/ROADMAP_v1_GAME_ERA.md](docs/archive/ROADMAP_v1_GAME_ERA.md) - Original roadmap
 
 ---

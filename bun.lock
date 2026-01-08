@@ -60,6 +60,19 @@
         "typescript": "^5",
       },
     },
+    "packages/gym-server": {
+      "name": "@manacore/gym-server",
+      "version": "0.1.0",
+      "dependencies": {
+        "@manacore/ai": "workspace:*",
+        "@manacore/engine": "workspace:*",
+        "hono": "^4.6.0",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "typescript": "^5.0.0",
+      },
+    },
     "packages/mcp-server": {
       "name": "@manacore/mcp-server",
       "version": "0.0.1",
@@ -123,6 +136,8 @@
     "@manacore/data-scraper": ["@manacore/data-scraper@workspace:packages/data-scraper"],
 
     "@manacore/engine": ["@manacore/engine@workspace:packages/engine"],
+
+    "@manacore/gym-server": ["@manacore/gym-server@workspace:packages/gym-server"],
 
     "@manacore/mcp-server": ["@manacore/mcp-server@workspace:packages/mcp-server"],
 

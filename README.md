@@ -15,11 +15,11 @@
 
 ManaCore is an **AI Research Laboratory** disguised as a card game engine. We're exploring fundamental questions in artificial intelligence:
 
-| Research Question | Approach |
-|-------------------|----------|
+| Research Question                      | Approach                                 |
+| -------------------------------------- | ---------------------------------------- |
 | Can RL agents master MTG from scratch? | PPO specialists with curriculum learning |
-| Can LLMs beat brute-force search? | Fine-tuned Llama vs MCTS showdown |
-| Can AI invent new strategies? | Genetic algorithms for deck evolution |
+| Can LLMs beat brute-force search?      | Fine-tuned Llama vs MCTS showdown        |
+| Can AI invent new strategies?          | Genetic algorithms for deck evolution    |
 
 **This is not a consumer game client.** It's a high-fidelity simulation optimized for running millions of training games.
 
@@ -28,22 +28,25 @@ ManaCore is an **AI Research Laboratory** disguised as a card game engine. We're
 ## Features
 
 ### Engine
+
 - **302+ cards** from 6th Edition with faithful rules implementation
 - **1,000+ games/second** simulation speed
 - **Deterministic replay** with seed-based RNG
 - **1,267 automated tests** ensuring correctness
 
 ### AI Agents
-| Agent | Type | Strength | Status |
-|-------|------|----------|--------|
-| RandomBot | Baseline | Weak | ✅ Complete |
-| GreedyBot | Heuristic | Medium | ✅ Complete |
-| MCTSBot | Search | Strong | ✅ Complete |
-| NeuralBot | Neural Network | TBD | 🔜 Phase 2 |
-| PPO Specialists | Reinforcement Learning | TBD | 🔜 Phase 3 |
-| Llama-Mage | Fine-tuned LLM | TBD | 🔜 Phase 5 |
+
+| Agent           | Type                   | Strength | Status      |
+| --------------- | ---------------------- | -------- | ----------- |
+| RandomBot       | Baseline               | Weak     | ✅ Complete |
+| GreedyBot       | Heuristic              | Medium   | ✅ Complete |
+| MCTSBot         | Search                 | Strong   | ✅ Complete |
+| NeuralBot       | Neural Network         | TBD      | 🔜 Phase 2  |
+| PPO Specialists | Reinforcement Learning | TBD      | 🔜 Phase 3  |
+| Llama-Mage      | Fine-tuned LLM         | TBD      | 🔜 Phase 5  |
 
 ### Infrastructure
+
 - **MCP Server** - Claude Code can play MTG interactively
 - **Training Data Collector** - 25-dimensional feature vectors with LLM reasoning
 - **Experiment Runner** - JSON-based reproducible research configs
@@ -106,16 +109,17 @@ model.learn(total_timesteps=100_000)
 
 ManaCore follows a multi-track development approach:
 
-| Track | Focus | Current Phase |
-|-------|-------|---------------|
-| 🏛️ **Infrastructure** | Gym bridge, data pipeline, LLM orchestrator | Phase 1 |
-| 🧠 **Agents** | Neural nets, PPO, Llama-Mage, AlphaZero | Phase 2+ |
-| 🧪 **Experiments** | LLM vs MCTS, transfer learning, papers | Phase 5+ |
-| 🔮 **Meta-Game** | GA deck building, AI creativity | Phase 8+ |
+| Track                 | Focus                                       | Current Phase |
+| --------------------- | ------------------------------------------- | ------------- |
+| 🏛️ **Infrastructure** | Gym bridge, data pipeline, LLM orchestrator | Phase 1       |
+| 🧠 **Agents**         | Neural nets, PPO, Llama-Mage, AlphaZero     | Phase 2+      |
+| 🧪 **Experiments**    | LLM vs MCTS, transfer learning, papers      | Phase 5+      |
+| 🔮 **Meta-Game**      | GA deck building, AI creativity             | Phase 8+      |
 
 ### Phase 1: The Gym Bridge (Current)
 
 Creating Python bindings for ML researchers:
+
 - `packages/gym-server/` - HTTP server exposing engine API
 - `packages/python-gym/` - Gymnasium environment (PyPI)
 - Example training scripts with Stable Baselines3
@@ -154,13 +158,13 @@ See [ROADMAP.md](ROADMAP.md) for full details.
 
 ## Experiment Templates
 
-| Template | Purpose |
-|----------|---------|
-| `simulate-mcts-vs-greedy.json` | Bot vs bot matchup |
-| `benchmark-all-bots.json` | Full comparison with ELO |
-| `collect-training-fast.json` | ML training data (GreedyBot) |
-| `collect-training-mcts.json` | ML training data (MCTS) |
-| `tune-weights-evolve.json` | Evaluation weight optimization |
+| Template                       | Purpose                        |
+| ------------------------------ | ------------------------------ |
+| `simulate-mcts-vs-greedy.json` | Bot vs bot matchup             |
+| `benchmark-all-bots.json`      | Full comparison with ELO       |
+| `collect-training-fast.json`   | ML training data (GreedyBot)   |
+| `collect-training-mcts.json`   | ML training data (MCTS)        |
+| `tune-weights-evolve.json`     | Evaluation weight optimization |
 
 ```bash
 # Run any experiment
@@ -190,26 +194,26 @@ bun scripts/generate-coverage-report.ts
 
 ## Documentation
 
-| Document | Description |
-|----------|-------------|
-| [ROADMAP.md](ROADMAP.md) | Master roadmap (v2.0) |
-| [CLAUDE.md](CLAUDE.md) | Project guide for AI assistants |
-| [Track A](docs/TRACK_A_INFRASTRUCTURE.md) | Infrastructure details |
-| [Track B](docs/TRACK_B_AGENTS.md) | Agent development |
-| [Track C](docs/TRACK_C_EXPERIMENTS.md) | Research experiments |
-| [Track D](docs/TRACK_D_METAGAME.md) | Deck building & creativity |
+| Document                                  | Description                     |
+| ----------------------------------------- | ------------------------------- |
+| [ROADMAP.md](ROADMAP.md)                  | Master roadmap (v2.0)           |
+| [CLAUDE.md](CLAUDE.md)                    | Project guide for AI assistants |
+| [Track A](docs/TRACK_A_INFRASTRUCTURE.md) | Infrastructure details          |
+| [Track B](docs/TRACK_B_AGENTS.md)         | Agent development               |
+| [Track C](docs/TRACK_C_EXPERIMENTS.md)    | Research experiments            |
+| [Track D](docs/TRACK_D_METAGAME.md)       | Deck building & creativity      |
 
 ---
 
 ## Performance
 
-| Metric | Value |
-|--------|-------|
-| Simulation speed | 1,000+ games/second |
-| Action resolution | <1ms typical |
-| Full game | <30ms (50 turns) |
-| Cards implemented | 302+ (6th Edition) |
-| Test coverage | 1,267 tests |
+| Metric            | Value               |
+| ----------------- | ------------------- |
+| Simulation speed  | 1,000+ games/second |
+| Action resolution | <1ms typical        |
+| Full game         | <30ms (50 turns)    |
+| Cards implemented | 302+ (6th Edition)  |
+| Test coverage     | 1,267 tests         |
 
 ---
 
@@ -252,4 +256,4 @@ If you use ManaCore in your research, please cite:
 
 **Built with ❤️ for AI Research**
 
-*"The only way to win is to play a million games."*
+_"The only way to win is to play a million games."_

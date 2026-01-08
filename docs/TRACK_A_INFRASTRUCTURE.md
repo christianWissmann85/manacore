@@ -31,6 +31,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
 **Tasks:**
 
 - [ ] Create package structure:
+
   ```
   packages/gym-server/
   ├── src/
@@ -49,6 +50,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
   ```
 
 - [ ] Implement core endpoints:
+
   ```typescript
   POST /game/create          → { gameId, state, legalActions }
   POST /game/:id/step        → { state, legalActions, reward, done, info }
@@ -58,6 +60,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
   ```
 
 - [ ] Implement batch endpoint for vectorized environments:
+
   ```typescript
   POST /batch/step           → [{ state, reward, done }...]
   POST /batch/reset          → [{ state, legalActions }...]
@@ -79,6 +82,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
   ```
 
 **Success Criteria:**
+
 - [ ] Server starts on `bun run gym-server`
 - [ ] Can create/step/reset games via HTTP
 - [ ] Response time <5ms for single step
@@ -91,6 +95,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
 **Tasks:**
 
 - [ ] Create package structure:
+
   ```
   packages/python-gym/
   ├── pyproject.toml
@@ -118,6 +123,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
   ```
 
 - [ ] Define `pyproject.toml`:
+
   ```toml
   [project]
   name = "manacore-gym"
@@ -135,6 +141,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
   ```
 
 **Success Criteria:**
+
 - [ ] `pip install -e packages/python-gym/` works
 - [ ] Package structure follows Python best practices
 - [ ] Type hints pass `mypy --strict`
@@ -144,6 +151,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
 **Tasks:**
 
 - [ ] Implement `ManaCoreBattleEnv(gym.Env)`:
+
   ```python
   class ManaCoreBattleEnv(gym.Env):
       """
@@ -180,6 +188,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
   ```
 
 - [ ] Design observation space (25 dimensions):
+
   ```python
   self.observation_space = gym.spaces.Box(
       low=-1.0, high=1.0, shape=(25,), dtype=np.float32
@@ -187,6 +196,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
   ```
 
 - [ ] Design action space with masking:
+
   ```python
   # Max possible actions (will be masked)
   self.action_space = gym.spaces.Discrete(200)
@@ -196,6 +206,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
   ```
 
 - [ ] Implement reward shaping (optional):
+
   ```python
   # Sparse (default)
   reward = 1.0 if won else -1.0 if lost else 0.0
@@ -205,6 +216,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
   ```
 
 **Success Criteria:**
+
 - [ ] Passes `gym.utils.env_checker.check_env()`
 - [ ] Works with Stable Baselines3's MaskablePPO
 - [ ] Observation space consistent across episodes
@@ -214,6 +226,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
 **Tasks:**
 
 - [ ] Implement `BunBridge` class:
+
   ```python
   class BunBridge:
       def __init__(self, url="http://localhost:3333", auto_start=True):
@@ -245,6 +258,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
 - [ ] Add server health check before operations
 
 **Success Criteria:**
+
 - [ ] Bridge auto-starts Bun server when needed
 - [ ] Handles server restarts gracefully
 - [ ] <5ms overhead per request
@@ -254,6 +268,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
 **Tasks:**
 
 - [ ] Create `examples/random_agent.py`:
+
   ```python
   """Sanity check: random agent playing games."""
   import gymnasium as gym
@@ -278,6 +293,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
   ```
 
 - [ ] Create `examples/train_ppo.py`:
+
   ```python
   """Train PPO agent using Stable Baselines3."""
   from sb3_contrib import MaskablePPO
@@ -305,6 +321,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
   ```
 
 **Success Criteria:**
+
 - [ ] Random agent runs without errors
 - [ ] PPO training starts and logs to TensorBoard
 - [ ] Can save and load trained models
@@ -314,6 +331,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
 **Tasks:**
 
 - [ ] Implement `make_vec_env()` helper:
+
   ```python
   from stable_baselines3.common.vec_env import SubprocVecEnv
 
@@ -332,8 +350,9 @@ These components are foundational - Track B (Agents) cannot proceed without them
 - [ ] Measure games/second throughput
 
 **Success Criteria:**
+
 - [ ] Can train on 8+ environments in parallel
-- [ ] >100 games/second from Python
+- [ ] > 100 games/second from Python
 - [ ] Memory usage stable (no leaks)
 
 ### Task 1.7: Testing & Documentation
@@ -341,6 +360,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
 **Tasks:**
 
 - [ ] Write unit tests:
+
   ```python
   def test_env_reset():
       env = ManaCoreBattleEnv()
@@ -370,6 +390,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
   - `notebooks/01_getting_started.ipynb`
 
 **Success Criteria:**
+
 - [ ] All tests pass with `pytest`
 - [ ] README covers all use cases
 - [ ] Notebook runs without errors
@@ -389,6 +410,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
   ```
 
 **Success Criteria:**
+
 - [ ] Package builds cleanly
 - [ ] Can install from wheel
 - [ ] Ready for `twine upload` (when Phase 1 complete)
@@ -406,21 +428,25 @@ These components are foundational - Track B (Agents) cannot proceed without them
 **Tasks:**
 
 - [ ] Add JSONL export to `TrainingDataCollector`:
+
   ```typescript
   // For HuggingFace / LLM fine-tuning
   export function saveAsJSONL(data: GameTrainingData, filepath: string) {
-    const lines = data.samples.map(s => JSON.stringify({
-      features: featuresToArray(s.features),
-      action: s.actionIndex,
-      legal_count: s.legalActionCount,
-      outcome: data.outcome,
-      reasoning: s.reasoning,
-    }));
+    const lines = data.samples.map((s) =>
+      JSON.stringify({
+        features: featuresToArray(s.features),
+        action: s.actionIndex,
+        legal_count: s.legalActionCount,
+        outcome: data.outcome,
+        reasoning: s.reasoning,
+      }),
+    );
     writeFileSync(filepath, lines.join('\n'));
   }
   ```
 
 - [ ] Add NPZ export for PyTorch:
+
   ```typescript
   // Binary format for fast loading
   export function saveAsNPZ(data: GameTrainingData[], filepath: string) {
@@ -435,6 +461,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
   ```
 
 **Success Criteria:**
+
 - [ ] JSONL files load in Python with `json.loads()`
 - [ ] NPZ files load with `np.load()`
 - [ ] Both formats contain identical data
@@ -444,6 +471,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
 **Tasks:**
 
 - [ ] Create cloud generation script:
+
   ```bash
   # Run overnight on DigitalOcean
   bun scripts/generate-batch-data.ts \
@@ -460,6 +488,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
   - Win rate distribution
 
 **Success Criteria:**
+
 - [ ] Generate 10K games in <24 hours on cloud
 - [ ] Data quality verified (no corrupted games)
 - [ ] Can resume from interruption
@@ -469,6 +498,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
 **Tasks:**
 
 - [ ] Create dataset card for HuggingFace Hub:
+
   ```yaml
   # dataset_card.yaml
   language: en
@@ -489,6 +519,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
   ```
 
 **Success Criteria:**
+
 - [ ] Dataset visible on HuggingFace Hub
 - [ ] Can load with `datasets` library
 - [ ] Documentation complete
@@ -508,6 +539,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
 **Tasks:**
 
 - [ ] Create package structure:
+
   ```
   packages/orchestrator/
   ├── src/
@@ -531,12 +563,13 @@ These components are foundational - Track B (Agents) cannot proceed without them
   ```
 
 - [ ] Implement provider interface:
+
   ```typescript
   interface LLMProvider {
     name: string;
     chooseAction(
-      state: string,         // Rendered game state
-      actions: string[],     // Legal action descriptions
+      state: string, // Rendered game state
+      actions: string[], // Legal action descriptions
     ): Promise<{
       actionIndex: number;
       reasoning: string;
@@ -549,6 +582,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
 - [ ] Add cost tracking per provider
 
 **Success Criteria:**
+
 - [ ] Can generate games with Claude API
 - [ ] Can generate games with Gemini API
 - [ ] Cost per game tracked and logged
@@ -558,6 +592,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
 **Tasks:**
 
 - [ ] Create orchestrator CLI:
+
   ```bash
   bun run orchestrator generate \
     --provider anthropic \
@@ -572,6 +607,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
 - [ ] Add cost estimation before run
 
 **Success Criteria:**
+
 - [ ] Can generate 100 games overnight
 - [ ] Parallel execution works (3-5 concurrent)
 - [ ] Cost tracking accurate
@@ -581,6 +617,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
 **Tasks:**
 
 - [ ] Implement dual-LLM game mode:
+
   ```bash
   bun run orchestrator duel \
     --player1 anthropic:claude-sonnet-4.5 \
@@ -593,6 +630,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
 - [ ] Track win rates by provider
 
 **Success Criteria:**
+
 - [ ] Both LLMs can play a complete game
 - [ ] Reasoning captured for both sides
 - [ ] Head-to-head statistics tracked
@@ -614,25 +652,25 @@ Phase 4 (Orchestrator) → Phase 5 (Llama-Mage)
 
 ### External Dependencies
 
-| Component | Dependency | Version |
-|-----------|------------|---------|
-| Gym Server | Hono (HTTP framework) | ^4.0.0 |
-| Python Gym | gymnasium | ^0.29.0 |
-| Python Gym | numpy | ^1.24.0 |
-| Orchestrator | @anthropic-ai/sdk | ^0.30.0 |
+| Component    | Dependency            | Version |
+| ------------ | --------------------- | ------- |
+| Gym Server   | Hono (HTTP framework) | ^4.0.0  |
+| Python Gym   | gymnasium             | ^0.29.0 |
+| Python Gym   | numpy                 | ^1.24.0 |
+| Orchestrator | @anthropic-ai/sdk     | ^0.30.0 |
 | Orchestrator | @google/generative-ai | ^0.21.0 |
 
 ---
 
 ## Success Metrics
 
-| Metric | Target | Measurement |
-|--------|--------|-------------|
-| Games/sec (Python) | >100 | Benchmark script |
-| Parallel envs | 8+ | SB3 SubprocVecEnv |
-| Training data | 10K+ games | File count |
-| LLM cost/game | <$0.10 | API billing |
-| PyPI downloads | 100+ | PyPI stats |
+| Metric             | Target     | Measurement       |
+| ------------------ | ---------- | ----------------- |
+| Games/sec (Python) | >100       | Benchmark script  |
+| Parallel envs      | 8+         | SB3 SubprocVecEnv |
+| Training data      | 10K+ games | File count        |
+| LLM cost/game      | <$0.10     | API billing       |
+| PyPI downloads     | 100+       | PyPI stats        |
 
 ---
 
