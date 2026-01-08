@@ -202,7 +202,7 @@ def train_with_curriculum(
 
     env = ActionMasker(env, mask_fn)
 
-    # Create model
+    # Create model with stable hyperparameters
     print("\nInitializing MaskablePPO model...")
     model = MaskablePPO(
         "MlpPolicy",
@@ -210,14 +210,16 @@ def train_with_curriculum(
         verbose=0,
         seed=seed,
         tensorboard_log=log_path,
-        learning_rate=3e-4,
-        n_steps=1024,  # Reduced for faster iterations
+        learning_rate=1e-4,  # Lower for stability
+        n_steps=2048,  # Standard PPO
         batch_size=64,
         n_epochs=10,
         gamma=0.99,
         gae_lambda=0.95,
         clip_range=0.2,
         ent_coef=0.01,
+        max_grad_norm=0.5,  # Gradient clipping for stability
+        vf_coef=0.5,
     )
 
     # Train through stages

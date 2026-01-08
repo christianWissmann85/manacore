@@ -211,7 +211,15 @@ class ManaCoreBattleEnv(gym.Env):
             return np.zeros(self.OBSERVATION_SIZE, dtype=np.float32)
 
         features = self._current_state["observation"]["features"]
-        return np.array(features, dtype=np.float32)
+        obs = np.array(features, dtype=np.float32)
+
+        # Replace NaN/Inf with zeros for numerical stability
+        obs = np.nan_to_num(obs, nan=0.0, posinf=1.0, neginf=-1.0)
+
+        # Clip to observation space bounds
+        obs = np.clip(obs, -1.0, 1.0)
+
+        return obs
 
     def _get_info(self) -> dict[str, Any]:
         """Get additional information about the current state."""
