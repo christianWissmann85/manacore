@@ -11,6 +11,7 @@ This guide explains how to use hot reloading during ManaCore development to avoi
 ```
 
 This automatically restarts the MCP server whenever you save changes to:
+
 - `packages/engine/**/*.ts`
 - `packages/ai/**/*.ts`
 - `packages/mcp-server/**/*.ts`
@@ -38,6 +39,7 @@ bun run dev
 Update your MCP settings to use the dev script:
 
 **For Linux/Mac** (`~/.config/Claude/claude_desktop_config.json`):
+
 ```json
 {
   "mcpServers": {
@@ -50,6 +52,7 @@ Update your MCP settings to use the dev script:
 ```
 
 **For Windows** (`%APPDATA%\Claude\claude_desktop_config.json`):
+
 ```json
 {
   "mcpServers": {
@@ -65,6 +68,7 @@ Update your MCP settings to use the dev script:
 ### Gemini CLI
 
 Update your `.gemini-mcp-config.json`:
+
 ```json
 {
   "mcpServers": {
@@ -80,6 +84,7 @@ Update your `.gemini-mcp-config.json`:
 ### Bun Watch Mode
 
 Bun's `--watch` flag monitors the file system for changes and automatically:
+
 1. ✅ Detects when you save a `.ts` file
 2. ✅ Kills the current server process
 3. ✅ Re-imports all modules (fresh engine code!)
@@ -90,6 +95,7 @@ Bun's `--watch` flag monitors the file system for changes and automatically:
 ### What Happens to Active Games?
 
 ⚠️ **Important**: When the server restarts, the current game session is lost. This is because:
+
 - The `GameSession` state lives in memory
 - MCP servers are stateless between restarts
 - Your AI client (Claude/Gemini) will need to start a new game
@@ -129,6 +135,7 @@ If you need to preserve games across restarts, you could implement:
 3. **SQLite/JSON storage**: Store active sessions
 
 Example pseudocode:
+
 ```typescript
 // On restart, check for saved games
 const savedGame = loadGameFromDisk(gameId);
@@ -144,16 +151,19 @@ This is NOT currently implemented, but could be added if needed.
 ### Hot Reload Not Working?
 
 **Check 1**: Verify Bun version
+
 ```bash
 bun --version  # Should be 1.0.0 or higher
 ```
 
 **Check 2**: Confirm watch mode is active
+
 ```bash
 ps aux | grep "bun --watch"
 ```
 
 **Check 3**: File permissions
+
 ```bash
 ls -la scripts/start-mcp-server-dev.sh  # Should show -rwxr-xr-x
 ```
@@ -161,6 +171,7 @@ ls -la scripts/start-mcp-server-dev.sh  # Should show -rwxr-xr-x
 ### Client Not Reconnecting?
 
 Some MCP clients cache the connection. Try:
+
 1. **Close and reopen** the AI client entirely
 2. **Clear MCP cache** (location varies by client)
 3. **Check logs** for connection errors
@@ -190,11 +201,11 @@ Or update your MCP config to point to `start-mcp-server.sh` instead of `-dev.sh`
 
 ## Summary
 
-| Mode | Command | Restarts on Change? | Use Case |
-|------|---------|---------------------|----------|
-| **Production** | `start-mcp-server.sh` | ❌ No | Stable games, demos |
-| **Development** | `start-mcp-server-dev.sh` | ✅ Yes (auto) | Active development |
-| **Manual** | `bun run dev` | ✅ Yes (auto) | Quick testing |
+| Mode            | Command                   | Restarts on Change? | Use Case            |
+| --------------- | ------------------------- | ------------------- | ------------------- |
+| **Production**  | `start-mcp-server.sh`     | ❌ No               | Stable games, demos |
+| **Development** | `start-mcp-server-dev.sh` | ✅ Yes (auto)       | Active development  |
+| **Manual**      | `bun run dev`             | ✅ Yes (auto)       | Quick testing       |
 
 **Recommendation**: Use `-dev.sh` during active development, switch to production mode when doing long gameplay sessions or demos.
 

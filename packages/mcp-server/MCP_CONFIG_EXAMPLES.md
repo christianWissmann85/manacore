@@ -6,6 +6,7 @@
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ### Development Mode (Hot Reload)
+
 ```json
 {
   "mcpServers": {
@@ -17,6 +18,7 @@
 ```
 
 ### Production Mode (Stable)
+
 ```json
 {
   "mcpServers": {
@@ -28,6 +30,7 @@
 ```
 
 ### Both Modes (Switch as needed)
+
 ```json
 {
   "mcpServers": {
@@ -46,6 +49,7 @@
 **Config file**: `.gemini-mcp-config.json` (in your project or home directory)
 
 ### Development Mode
+
 ```json
 {
   "mcpServers": {

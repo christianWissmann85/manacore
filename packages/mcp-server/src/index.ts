@@ -235,9 +235,57 @@ class GameSession {
     return filterBlockActions(actions, this.state);
   }
 
+  /**
+   * Validate game state integrity (for debugging state corruption issues)
+   */
+  validateState(): string[] {
+    const errors: string[] = [];
+
+    // Check battlefield arrays exist
+    if (!Array.isArray(this.state.players.player.battlefield)) {
+      errors.push('Player battlefield is not an array');
+    }
+    if (!Array.isArray(this.state.players.opponent.battlefield)) {
+      errors.push('Opponent battlefield is not an array');
+    }
+
+    // Check for duplicate instanceIds on battlefield
+    const playerIds = new Set<string>();
+    for (const card of this.state.players.player.battlefield) {
+      if (playerIds.has(card.instanceId)) {
+        errors.push(`Duplicate instanceId on player battlefield: ${card.instanceId}`);
+      }
+      playerIds.add(card.instanceId);
+    }
+
+    const opponentIds = new Set<string>();
+    for (const card of this.state.players.opponent.battlefield) {
+      if (opponentIds.has(card.instanceId)) {
+        errors.push(`Duplicate instanceId on opponent battlefield: ${card.instanceId}`);
+      }
+      opponentIds.add(card.instanceId);
+    }
+
+    // Check life totals are reasonable
+    if (this.state.players.player.life > 100 || this.state.players.player.life < -100) {
+      errors.push(`Player life out of range: ${this.state.players.player.life}`);
+    }
+    if (this.state.players.opponent.life > 100 || this.state.players.opponent.life < -100) {
+      errors.push(`Opponent life out of range: ${this.state.players.opponent.life}`);
+    }
+
+    return errors;
+  }
+
   async playAction(actionIndex: number, reasoning?: string): Promise<string> {
     if (this.state.gameOver) {
       return `Game is already over. Winner: ${this.state.winner}`;
+    }
+
+    // Validate state before action (debug state corruption)
+    const preErrors = this.validateState();
+    if (preErrors.length > 0) {
+      console.error('[STATE CORRUPTION] Before action:', preErrors);
     }
 
     const legalActions = this.getLegalActions();
@@ -260,6 +308,12 @@ class GameSession {
 
     // Apply User Action
     this.state = applyAction(this.state, action);
+
+    // Validate state after action (debug state corruption)
+    const postErrors = this.validateState();
+    if (postErrors.length > 0) {
+      console.error('[STATE CORRUPTION] After action:', postErrors);
+    }
 
     // Clear opponent actions for new cycle
     this.lastOpponentActions = [];
