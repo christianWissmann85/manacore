@@ -2,7 +2,7 @@
 
 **Focus:** Gym bridge, data pipeline, orchestrator
 **Lead Phases:** 1, 2, 4
-**Status:** ✅ Phase 1 Complete | 🔜 Phase 2 Next
+**Status:** ✅ Phase 1 Complete | ✅ Phase 2 Complete | 🔜 Phase 4 Next
 
 ---
 
@@ -427,7 +427,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
 
 **Tasks:**
 
-- [ ] Add JSONL export to `TrainingDataCollector`:
+- [x] Add JSONL export to `TrainingDataCollector`:
 
   ```typescript
   // For HuggingFace / LLM fine-tuning
@@ -445,32 +445,33 @@ These components are foundational - Track B (Agents) cannot proceed without them
   }
   ```
 
-- [ ] Add NPZ export for PyTorch:
+- [x] Add NPZ export for PyTorch:
 
   ```typescript
-  // Binary format for fast loading
-  export function saveAsNPZ(data: GameTrainingData[], filepath: string) {
-    // Use numpy-compatible binary format
-    ...
+  // Binary format for fast loading via Python conversion
+  export function exportForNumPy(datasets: GameTrainingData[], filepath: string) {
+    // Exports JSON tensor format that Python converts to NPZ
   }
   ```
 
-- [ ] Add format conversion script:
+- [x] Add format conversion script:
   ```bash
-  bun scripts/convert-training-data.ts --input ./data --output-jsonl --output-npz
+  python scripts/convert-training-data.py tensors.json -o data.npz
+  python scripts/convert-training-data.py data.jsonl -o data.npz --format jsonl
+  python scripts/convert-training-data.py data.jsonl -o ./hf_dataset --format jsonl --hf
   ```
 
 **Success Criteria:**
 
-- [ ] JSONL files load in Python with `json.loads()`
-- [ ] NPZ files load with `np.load()`
-- [ ] Both formats contain identical data
+- [x] JSONL files load in Python with `json.loads()`
+- [x] NPZ files load with `np.load()`
+- [x] Both formats contain identical data
 
 ### Task 2.2: Batch Data Generation
 
 **Tasks:**
 
-- [ ] Create cloud generation script:
+- [x] Create cloud generation script:
 
   ```bash
   # Run overnight on DigitalOcean
@@ -481,48 +482,44 @@ These components are foundational - Track B (Agents) cannot proceed without them
     --output ./data/mcts-vs-greedy-10k/
   ```
 
-- [ ] Add progress tracking and resume capability
-- [ ] Add quality metrics logging:
+- [x] Add progress tracking and resume capability
+- [x] Add quality metrics logging:
   - Games per hour
-  - Average game length
+  - Average game length (turns/game)
   - Win rate distribution
+  - Total samples collected
 
 **Success Criteria:**
 
-- [ ] Generate 10K games in <24 hours on cloud
-- [ ] Data quality verified (no corrupted games)
-- [ ] Can resume from interruption
+- [x] Generate 10K games in <24 hours on cloud
+- [x] Data quality verified (no corrupted games)
+- [x] Can resume from interruption (`--resume` flag)
 
 ### Task 2.3: HuggingFace Dataset Card
 
 **Tasks:**
 
-- [ ] Create dataset card for HuggingFace Hub:
+- [x] Create dataset card for HuggingFace Hub:
+  - See `docs/HUGGINGFACE_DATASET_CARD.md`
+  - YAML frontmatter with license, task_categories, tags
+  - Complete feature vector documentation
+  - PyTorch DataLoader example
+  - Generation command examples
 
-  ```yaml
-  # dataset_card.yaml
-  language: en
-  license: mit
-  task_categories:
-    - reinforcement-learning
-  tags:
-    - magic-the-gathering
-    - game-ai
-    - mcts
-  ```
-
-- [ ] Upload initial dataset (10K games)
-- [ ] Add dataset loading example:
+- [x] Upload initial dataset (10K games)
+  - URL: https://huggingface.co/datasets/Chris-AiKi/manacore-mtg-10k
+  - 10,000 games, 474,410 samples
+- [x] Add dataset loading example:
   ```python
   from datasets import load_dataset
-  dataset = load_dataset("manacore/mtg-gameplay-10k")
+  dataset = load_dataset("Chris-AiKi/manacore-mtg-10k")
   ```
 
 **Success Criteria:**
 
-- [ ] Dataset visible on HuggingFace Hub
-- [ ] Can load with `datasets` library
-- [ ] Documentation complete
+- [x] Dataset visible on HuggingFace Hub
+- [x] Can load with `datasets` library
+- [x] Documentation complete
 
 ---
 

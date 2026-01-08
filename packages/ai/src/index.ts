@@ -152,6 +152,8 @@ export type {
   GameTrainingData,
   CollectorConfig,
   TensorData,
+  JSONLSample,
+  TensorExport,
 } from './training';
 export {
   TrainingDataCollector,
@@ -163,6 +165,10 @@ export {
   toTensorFormat,
   mergeTrainingData,
   DEFAULT_COLLECTOR_CONFIG,
+  // Phase 2: JSONL and NumPy exports
+  saveAsJSONL,
+  saveMultipleAsJSONL,
+  exportForNumPy,
 } from './training';
 
 if (!process.env.MANACORE_SILENT_INIT) {

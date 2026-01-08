@@ -19,12 +19,21 @@ export {
   toTensorFormat,
   mergeTrainingData,
 
+  // JSONL export (Phase 2)
+  saveAsJSONL,
+  saveMultipleAsJSONL,
+
+  // NumPy/NPZ export (Phase 2)
+  exportForNumPy,
+
   // Types
   type StateFeatures,
   type TrainingSample,
   type GameTrainingData,
   type CollectorConfig,
   type TensorData,
+  type JSONLSample,
+  type TensorExport,
 
   // Constants
   DEFAULT_COLLECTOR_CONFIG,

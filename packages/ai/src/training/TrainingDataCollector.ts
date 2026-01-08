@@ -529,3 +529,175 @@ export function mergeTrainingData(datasets: GameTrainingData[]): {
     },
   };
 }
+
+/**
+ * JSONL format - one JSON object per line
+ * Better for streaming, large datasets, and HuggingFace compatibility
+ *
+ * Each line contains:
+ * - features: 25-dim array
+ * - action: action index
+ * - legal_count: number of legal actions
+ * - action_type: string describing action
+ * - outcome: game result (1=win, 0=draw, -1=loss)
+ * - game_id: unique game identifier
+ * - turn: turn number
+ * - phase: game phase
+ * - reasoning: optional reasoning text
+ */
+export interface JSONLSample {
+  features: number[];
+  action: number;
+  legal_count: number;
+  action_type: string;
+  outcome: number;
+  game_id: string;
+  turn: number;
+  phase: string;
+  reasoning?: string;
+}
+
+/**
+ * Save training data as JSONL (one JSON object per line)
+ * This format is ideal for:
+ * - HuggingFace datasets
+ * - Streaming large files
+ * - Line-by-line processing
+ */
+export function saveAsJSONL(data: GameTrainingData, filepath: string): void {
+  const dir = dirname(filepath);
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
+
+  const lines = data.samples.map((sample): string => {
+    const jsonlSample: JSONLSample = {
+      features: featuresToArray(sample.features),
+      action: sample.actionIndex,
+      legal_count: sample.legalActionCount,
+      action_type: sample.actionType,
+      outcome: data.outcome,
+      game_id: data.gameId,
+      turn: sample.turn,
+      phase: sample.phase,
+      reasoning: sample.reasoning,
+    };
+    return JSON.stringify(jsonlSample);
+  });
+
+  writeFileSync(filepath, lines.join('\n'), 'utf-8');
+}
+
+/**
+ * Save multiple games as a single JSONL file
+ */
+export function saveMultipleAsJSONL(datasets: GameTrainingData[], filepath: string): void {
+  const dir = dirname(filepath);
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
+
+  const lines: string[] = [];
+
+  for (const data of datasets) {
+    for (const sample of data.samples) {
+      const jsonlSample: JSONLSample = {
+        features: featuresToArray(sample.features),
+        action: sample.actionIndex,
+        legal_count: sample.legalActionCount,
+        action_type: sample.actionType,
+        outcome: data.outcome,
+        game_id: data.gameId,
+        turn: sample.turn,
+        phase: sample.phase,
+        reasoning: sample.reasoning,
+      };
+      lines.push(JSON.stringify(jsonlSample));
+    }
+  }
+
+  writeFileSync(filepath, lines.join('\n'), 'utf-8');
+}
+
+/**
+ * Tensor format suitable for direct conversion to NumPy NPZ
+ *
+ * This creates a JSON file with typed arrays that Python can
+ * easily convert to numpy arrays and save as NPZ.
+ */
+export interface TensorExport {
+  // Metadata
+  version: string;
+  feature_dim: number;
+  num_samples: number;
+  num_games: number;
+
+  // Data arrays (flattened for efficiency)
+  features: number[]; // Flattened: [num_samples * feature_dim]
+  actions: number[]; // [num_samples]
+  legal_counts: number[]; // [num_samples]
+  outcomes: number[]; // [num_samples]
+
+  // Per-game metadata
+  game_ids: string[];
+  game_sample_counts: number[]; // Number of samples per game
+}
+
+/**
+ * Export training data in a format optimized for Python/NumPy loading
+ *
+ * The exported JSON can be loaded in Python and converted to NPZ:
+ * ```python
+ * import json
+ * import numpy as np
+ *
+ * with open('data.tensors.json') as f:
+ *     data = json.load(f)
+ *
+ * features = np.array(data['features']).reshape(-1, data['feature_dim'])
+ * actions = np.array(data['actions'])
+ * outcomes = np.array(data['outcomes'])
+ *
+ * np.savez_compressed('data.npz', features=features, actions=actions, outcomes=outcomes)
+ * ```
+ */
+export function exportForNumPy(datasets: GameTrainingData[], filepath: string): void {
+  const dir = dirname(filepath);
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
+
+  const features: number[] = [];
+  const actions: number[] = [];
+  const legalCounts: number[] = [];
+  const outcomes: number[] = [];
+  const gameIds: string[] = [];
+  const gameSampleCounts: number[] = [];
+
+  for (const data of datasets) {
+    gameIds.push(data.gameId);
+    gameSampleCounts.push(data.samples.length);
+
+    for (const sample of data.samples) {
+      features.push(...featuresToArray(sample.features));
+      actions.push(sample.actionIndex);
+      legalCounts.push(sample.legalActionCount);
+      outcomes.push(data.outcome);
+    }
+  }
+
+  const tensorExport: TensorExport = {
+    version: '1.0',
+    feature_dim: FEATURE_VECTOR_SIZE,
+    num_samples: actions.length,
+    num_games: datasets.length,
+    features,
+    actions,
+    legal_counts: legalCounts,
+    outcomes,
+    game_ids: gameIds,
+    game_sample_counts: gameSampleCounts,
+  };
+
+  writeFileSync(filepath, JSON.stringify(tensorExport), 'utf-8');
+}
