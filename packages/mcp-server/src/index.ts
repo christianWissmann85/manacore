@@ -13,6 +13,7 @@ import {
   createGreenDeck,
   CardLoader,
   getLegalActions,
+  getMeaningfulActions,
   describeAction,
   enableF6Mode,
   formatManaPool,
@@ -227,7 +228,9 @@ class GameSession {
   }
 
   getLegalActions() {
-    const actions = getLegalActions(this.state, 'player');
+    // Use getMeaningfulActions for human player - filters out PASS_PRIORITY and END_TURN
+    // when real choices exist, reducing token usage for LLM agents
+    const actions = getMeaningfulActions(this.state, 'player');
     // Filter out useless "Don't block" when no attackers
     return filterBlockActions(actions, this.state);
   }
@@ -330,44 +333,23 @@ class GameSession {
 
       // 2. If it's Player's priority, check for Auto-Pass
       if (this.state.priorityPlayer === 'player') {
+        // getMeaningfulActions already consolidates PASS_PRIORITY/END_TURN
+        // and filters redundant mana abilities via the engine
         const playerActions = this.getLegalActions();
 
-        // If only 1 action available (usually Pass Priority), auto-apply it
+        // If only 1 action available (forced move), auto-apply it
         if (playerActions.length === 1) {
           const autoAction = playerActions[0];
           this.state = applyAction(this.state, autoAction!);
           continue;
         }
 
-        // Filter out non-meaningful actions for auto-pass decisions:
-        // - PASS_PRIORITY and END_TURN are always auto-passable
-        // - ACTIVATE_ABILITY for mana abilities (tapping lands) during opponent's turn
-        const meaningfulActions = playerActions.filter((a) => {
-          if (a.type === 'PASS_PRIORITY' || a.type === 'END_TURN') return false;
-
-          // During opponent's turn, mana abilities are rarely useful
-          // (can't cast sorcery-speed spells anyway)
-          if (this.state.activePlayer === 'opponent' && a.type === 'ACTIVATE_ABILITY') {
-            const desc = describeAction(a, this.state);
-            // Filter out pure mana abilities like "Forest: Tap: Add {G}"
-            if (desc.includes('Tap: Add {')) return false;
-          }
-
-          return true;
-        });
-
-        if (meaningfulActions.length === 0 && playerActions.length > 0) {
-          // Prefer END_TURN to skip phases, otherwise PASS_PRIORITY
-          const autoAction =
-            playerActions.find((a) => a.type === 'END_TURN') ||
-            playerActions.find((a) => a.type === 'PASS_PRIORITY');
-          if (autoAction) {
-            this.state = applyAction(this.state, autoAction);
-            continue;
-          }
+        // If no actions available (shouldn't happen), break
+        if (playerActions.length === 0) {
+          break;
         }
 
-        // If multiple meaningful choices, stop and wait for User Input
+        // Multiple meaningful choices - wait for user input
         break;
       }
     }

@@ -113,7 +113,7 @@ export {
 
 export { validateAction } from './actions/validators';
 export { applyAction } from './actions/reducer';
-export { getLegalActions, describeAction } from './actions/getLegalActions';
+export { getLegalActions, getMeaningfulActions, describeAction } from './actions/getLegalActions';
 
 // Auto-pass optimizations for AI training (Phase 2.5)
 export {

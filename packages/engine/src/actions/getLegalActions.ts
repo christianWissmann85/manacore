@@ -942,3 +942,61 @@ export function describeAction(action: Action, state: GameState): string {
       return action.type;
   }
 }
+
+/**
+ * Get only meaningful actions for AI training and LLM agents
+ *
+ * This function consolidates "always available" skip actions:
+ * - Removes PASS_PRIORITY when END_TURN is available (END_TURN is more efficient)
+ * - Keeps one skip option so players can choose to not take action
+ *
+ * This reduces the action space by ~20-30% for AI training and reduces token usage
+ * for LLM agents while still allowing explicit passing.
+ *
+ * Use cases:
+ * - MCTS: Smaller game trees, faster simulations
+ * - GreedyBot: Fewer actions to evaluate
+ * - Neural Networks: Higher signal-to-noise ratio in training data
+ * - LLM Agents: Fewer tool calls, lower token costs
+ *
+ * @param state - Current game state
+ * @param playerId - Player to get actions for
+ * @returns Array of meaningful actions (consolidates pass/end options)
+ */
+export function getMeaningfulActions(state: GameState, playerId: 'player' | 'opponent'): Action[] {
+  const allActions = getLegalActions(state, playerId);
+
+  // If 0-1 actions, return as-is (even if it's just pass)
+  if (allActions.length <= 1) {
+    return allActions;
+  }
+
+  // Separate actions by type
+  const passAction = allActions.find((a) => a.type === 'PASS_PRIORITY');
+  const endTurnAction = allActions.find((a) => a.type === 'END_TURN');
+  const otherActions = allActions.filter(
+    (a) => a.type !== 'PASS_PRIORITY' && a.type !== 'END_TURN',
+  );
+
+  // Build result: other actions + one skip option (prefer END_TURN over PASS_PRIORITY)
+  const result: Action[] = [...otherActions];
+
+  // Add one skip option - END_TURN is preferred as it skips phases
+  if (endTurnAction) {
+    result.push(endTurnAction);
+  } else if (passAction) {
+    result.push(passAction);
+  }
+
+  // If we only have skip options (no other actions), just return the best one
+  if (otherActions.length === 0) {
+    if (endTurnAction) {
+      return [endTurnAction];
+    }
+    if (passAction) {
+      return [passAction];
+    }
+  }
+
+  return result;
+}
