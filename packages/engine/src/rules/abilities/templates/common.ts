@@ -150,24 +150,76 @@ export function getLandManaColors(landName: string): ManaColor[] {
 }
 
 /**
- * Check if player can pay a simple mana cost
+ * Check if player can pay a mana cost
+ *
+ * Handles both colored mana ({R}, {U}) and generic mana ({1}, {2}).
  *
  * @param state Game state
  * @param controller Player to check
- * @param manaCost Mana cost string (e.g., '{R}', '{2}{G}')
+ * @param manaCost Mana cost string (e.g., '{R}', '{2}{G}', '{3}')
  */
 export function canPaySimpleMana(
   state: GameState,
   controller: PlayerId,
   manaCost: string,
 ): boolean {
-  // Extract colored mana requirements
-  const colorMatches = manaCost.matchAll(/\{([WUBRGC])\}/g);
+  // 1. Parse Cost
+  const costs: Record<string, number> = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0, Generic: 0 };
+  let totalNeeded = 0;
 
+  // Generic mana (e.g. {2})
+  const genericMatches = manaCost.match(/\{(\d+)\}/);
+  if (genericMatches && genericMatches[1]) {
+    const amount = parseInt(genericMatches[1], 10);
+    costs.Generic = amount;
+    totalNeeded += amount;
+  }
+
+  // Colored mana
+  const colorMatches = manaCost.matchAll(/\{([WUBRGC])\}/g);
   for (const match of colorMatches) {
-    const color = match[1] as ManaColor;
-    if (countAvailableMana(state, controller, color) < 1) {
-      return false;
+    const color = match[1];
+    if (color) {
+      costs[color] = (costs[color] || 0) + 1;
+      totalNeeded++;
+    }
+  }
+
+  // 2. Check Total Available Mana
+  const player = state.players[controller];
+  let totalAvailable = 0;
+
+  // Pool
+  totalAvailable +=
+    player.manaPool.white +
+    player.manaPool.blue +
+    player.manaPool.black +
+    player.manaPool.red +
+    player.manaPool.green +
+    player.manaPool.colorless;
+
+  // Lands (untapped)
+  for (const permanent of player.battlefield) {
+    if (permanent.tapped) continue;
+    const template = CardLoader.getById(permanent.scryfallId);
+    if (template && isLand(template)) {
+      totalAvailable++; // Assuming 1 mana per land for now
+    }
+  }
+
+  if (totalAvailable < totalNeeded) {
+    return false;
+  }
+
+  // 3. Check Specific Color Requirements
+  // Note: This is a heuristic. It checks if there is enough mana of each color individually.
+  const colors = ['W', 'U', 'B', 'R', 'G', 'C'] as const;
+  for (const color of colors) {
+    const cost = costs[color];
+    if (cost !== undefined && cost > 0) {
+      if (countAvailableMana(state, controller, color) < cost) {
+        return false;
+      }
     }
   }
 

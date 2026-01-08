@@ -13,7 +13,7 @@ import type { PlayerId } from '../../../state/Zone';
 import type { CardInstance } from '../../../state/CardInstance';
 import type { TargetRequirement } from '../../targeting';
 import type { ActivatedAbility, ManaColor } from '../types';
-import { standardTapCheck, countAvailableMana } from './common';
+import { standardTapCheck, countAvailableMana, canPaySimpleMana } from './common';
 
 // =============================================================================
 // TAP FOR DAMAGE (PINGERS)
@@ -103,12 +103,8 @@ export function createTapForDamage(
 
       // Check mana if required
       if (manaCost) {
-        const colorMatches = manaCost.matchAll(/\{([WUBRGC])\}/g);
-        for (const match of colorMatches) {
-          const color = match[1] as ManaColor;
-          if (countAvailableMana(state, controller, color) < 1) {
-            return false;
-          }
+        if (!canPaySimpleMana(state, controller, manaCost)) {
+          return false;
         }
       }
 
@@ -235,12 +231,8 @@ export function createDamageWithSelfDamage(
       }
 
       if (manaCost) {
-        const colorMatches = manaCost.matchAll(/\{([WUBRGC])\}/g);
-        for (const match of colorMatches) {
-          const color = match[1] as ManaColor;
-          if (countAvailableMana(state, controller, color) < 1) {
-            return false;
-          }
+        if (!canPaySimpleMana(state, controller, manaCost)) {
+          return false;
         }
       }
 

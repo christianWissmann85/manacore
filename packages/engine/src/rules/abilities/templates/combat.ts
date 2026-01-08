@@ -18,6 +18,7 @@ import {
   countAvailableMana,
   standardTapCheck,
   hasLandTypeToSacrifice,
+  canPaySimpleMana,
 } from './common';
 
 // =============================================================================
@@ -74,12 +75,8 @@ export function createRegenerate(
       }
 
       // Check mana availability
-      const colorMatches = manaCost.matchAll(/\{([WUBRGC])\}/g);
-      for (const match of colorMatches) {
-        const color = match[1] as ManaColor;
-        if (countAvailableMana(state, controller, color) < 1) {
-          return false;
-        }
+      if (!canPaySimpleMana(state, controller, manaCost)) {
+        return false;
       }
 
       return true;
@@ -155,12 +152,8 @@ export function createLandSacrificeRegenerate(
       }
 
       // Check mana availability
-      const colorMatches = manaCost.matchAll(/\{([WUBRGC])\}/g);
-      for (const match of colorMatches) {
-        const color = match[1] as ManaColor;
-        if (countAvailableMana(state, controller, color) < 1) {
-          return false;
-        }
+      if (!canPaySimpleMana(state, controller, manaCost)) {
+        return false;
       }
 
       // Check for land to sacrifice
@@ -247,12 +240,8 @@ export function createTapToPrevent(
       }
 
       if (manaCost) {
-        const colorMatches = manaCost.matchAll(/\{([WUBRGC])\}/g);
-        for (const match of colorMatches) {
-          const color = match[1] as ManaColor;
-          if (countAvailableMana(state, controller, color) < 1) {
-            return false;
-          }
+        if (!canPaySimpleMana(state, controller, manaCost)) {
+          return false;
         }
       }
 

@@ -99,15 +99,15 @@ bun src/index.ts play
 
 ### Experiment Templates
 
-| Template                       | Purpose                        |
-| ------------------------------ | ------------------------------ |
-| `simulate-mcts-vs-greedy.json` | Bot vs bot simulation          |
-| `benchmark-all-bots.json`      | Multi-bot comparison with Elo  |
-| `tune-weights-evolve.json`     | Evaluation weight optimization |
-| `tune-mcts-grid.json`          | MCTS hyperparameter tuning     |
-| `mcts-greedy-tuning-pipeline.json`           | Complete tuning workflow       |
-| `collect-training-fast.json`   | ML training data (fast)        |
-| `collect-training-mcts.json`   | ML training data (quality)     |
+| Template                           | Purpose                        |
+| ---------------------------------- | ------------------------------ |
+| `simulate-mcts-vs-greedy.json`     | Bot vs bot simulation          |
+| `benchmark-all-bots.json`          | Multi-bot comparison with Elo  |
+| `tune-weights-evolve.json`         | Evaluation weight optimization |
+| `tune-mcts-grid.json`              | MCTS hyperparameter tuning     |
+| `mcts-greedy-tuning-pipeline.json` | Complete tuning workflow       |
+| `collect-training-fast.json`       | ML training data (fast)        |
+| `collect-training-mcts.json`       | ML training data (quality)     |
 
 ---
 

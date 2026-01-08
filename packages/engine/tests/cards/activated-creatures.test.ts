@@ -338,6 +338,32 @@ describe('Pump Ability Creatures', () => {
       expect(pumpAbility).toBeDefined();
       expect(pumpAbility!.cost.mana).toBe('{2}');
     });
+
+    test('cannot activate without mana', () => {
+      const engine = CardLoader.getByName('Dragon Engine')!;
+      const state = setupGameWithMana({}); // No mana
+
+      const engineCard = createCardInstance(engine.id, 'player', 'battlefield');
+      state.players.player.battlefield.push(engineCard);
+
+      const abilities = getActivatedAbilities(engineCard, state);
+      const pumpAbility = abilities.find((a) => a.id.includes('pump'));
+
+      expect(pumpAbility!.canActivate(state, engineCard.instanceId, 'player')).toBe(false);
+    });
+
+    test('cannot activate with insufficient mana', () => {
+      const engine = CardLoader.getByName('Dragon Engine')!;
+      const state = setupGameWithMana({ W: 1 }); // Only 1 mana
+
+      const engineCard = createCardInstance(engine.id, 'player', 'battlefield');
+      state.players.player.battlefield.push(engineCard);
+
+      const abilities = getActivatedAbilities(engineCard, state);
+      const pumpAbility = abilities.find((a) => a.id.includes('pump'));
+
+      expect(pumpAbility!.canActivate(state, engineCard.instanceId, 'player')).toBe(false);
+    });
   });
 
   describe('Pearl Dragon', () => {

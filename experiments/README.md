@@ -18,17 +18,17 @@ bun src/index.ts run ../../experiments/simulate-mcts-vs-greedy.json
 
 ## Available Templates
 
-| Template                       | Command      | Description                        |
-| ------------------------------ | ------------ | ---------------------------------- |
-| `simulate-mcts-vs-greedy.json` | simulate     | Bot vs bot simulation              |
-| `benchmark-all-bots.json`      | benchmark    | Multi-bot comparison matrix        |
-| `baseline-all-decks.json`      | (script)     | All decks baseline (see below)     |
-| `tune-weights-evolve.json`     | tune-weights | Evaluation weight optimization     |
-| `tune-mcts-grid.json`          | tune-mcts    | MCTS hyperparameter tuning         |
-| `mcts-greedy-tuning-pipeline.json`           | pipeline     | Complete tuning workflow           |
-| `collect-training-fast.json`   | collect      | ML training data (fast, GreedyBot) |
-| `collect-training-mcts.json`   | collect      | ML training data (MCTS quality)    |
-| `replay-game.json`             | replay       | Replay specific games              |
+| Template                           | Command      | Description                        |
+| ---------------------------------- | ------------ | ---------------------------------- |
+| `simulate-mcts-vs-greedy.json`     | simulate     | Bot vs bot simulation              |
+| `benchmark-all-bots.json`          | benchmark    | Multi-bot comparison matrix        |
+| `baseline-all-decks.json`          | (script)     | All decks baseline (see below)     |
+| `tune-weights-evolve.json`         | tune-weights | Evaluation weight optimization     |
+| `tune-mcts-grid.json`              | tune-mcts    | MCTS hyperparameter tuning         |
+| `mcts-greedy-tuning-pipeline.json` | pipeline     | Complete tuning workflow           |
+| `collect-training-fast.json`       | collect      | ML training data (fast, GreedyBot) |
+| `collect-training-mcts.json`       | collect      | ML training data (MCTS quality)    |
+| `replay-game.json`                 | replay       | Replay specific games              |
 
 ---
 

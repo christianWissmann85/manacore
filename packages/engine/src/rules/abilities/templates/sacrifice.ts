@@ -19,6 +19,7 @@ import {
   standardTapCheck,
   countAvailableMana,
   hasSacrificeable,
+  canPaySimpleMana,
 } from './common';
 import { CardLoader } from '../../../cards/CardLoader';
 
@@ -315,12 +316,8 @@ export function createSacrificeCreatureForDamage(
 
       // Check mana if required
       if (manaCost) {
-        const colorMatches = manaCost.matchAll(/\{([WUBRGC])\}/g);
-        for (const match of colorMatches) {
-          const color = match[1] as ManaColor;
-          if (countAvailableMana(state, controller, color) < 1) {
-            return false;
-          }
+        if (!canPaySimpleMana(state, controller, manaCost)) {
+          return false;
         }
       }
 
@@ -386,12 +383,8 @@ export function createSacrificeCreatureForDraw(
       }
 
       if (manaCost) {
-        const colorMatches = manaCost.matchAll(/\{([WUBRGC])\}/g);
-        for (const match of colorMatches) {
-          const color = match[1] as ManaColor;
-          if (countAvailableMana(state, controller, color) < 1) {
-            return false;
-          }
+        if (!canPaySimpleMana(state, controller, manaCost)) {
+          return false;
         }
       }
 

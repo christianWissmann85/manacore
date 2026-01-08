@@ -14,7 +14,12 @@ import type { PlayerId } from '../../../state/Zone';
 import type { CardInstance } from '../../../state/CardInstance';
 import type { TargetRequirement } from '../../targeting';
 import type { ActivatedAbility, ManaColor } from '../types';
-import { sourceExistsCheck, countAvailableMana, standardTapCheck } from './common';
+import {
+  sourceExistsCheck,
+  countAvailableMana,
+  standardTapCheck,
+  canPaySimpleMana,
+} from './common';
 
 // =============================================================================
 // PUMP SELF
@@ -81,15 +86,7 @@ export function createPumpSelf(
       }
 
       // Check mana availability
-      const colorMatches = manaCost.matchAll(/\{([WUBRGC])\}/g);
-      for (const match of colorMatches) {
-        const color = match[1] as ManaColor;
-        if (countAvailableMana(state, controller, color) < 1) {
-          return false;
-        }
-      }
-
-      return true;
+      return canPaySimpleMana(state, controller, manaCost);
     },
   };
 }
@@ -199,13 +196,7 @@ export function createTapToBuffOther(
       }
 
       if (manaCost) {
-        const colorMatches = manaCost.matchAll(/\{([WUBRGC])\}/g);
-        for (const match of colorMatches) {
-          const color = match[1] as ManaColor;
-          if (countAvailableMana(state, controller, color) < 1) {
-            return false;
-          }
-        }
+        return canPaySimpleMana(state, controller, manaCost);
       }
 
       return true;
@@ -262,15 +253,7 @@ export function createTapToDebuff(
         return false;
       }
 
-      const colorMatches = manaCost.matchAll(/\{([WUBRGC])\}/g);
-      for (const match of colorMatches) {
-        const color = match[1] as ManaColor;
-        if (countAvailableMana(state, controller, color) < 1) {
-          return false;
-        }
-      }
-
-      return true;
+      return canPaySimpleMana(state, controller, manaCost);
     },
   };
 }
