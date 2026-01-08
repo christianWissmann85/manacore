@@ -12,7 +12,8 @@
     "test:quiet": "bun ../../scripts/test-quiet.ts"
   },
   "dependencies": {
-    "@manacore/engine": "workspace:*"
+    "@manacore/engine": "workspace:*",
+    "onnxruntime-node": "^1.23.2"
   },
   "devDependencies": {
     "@types/bun": "latest"
