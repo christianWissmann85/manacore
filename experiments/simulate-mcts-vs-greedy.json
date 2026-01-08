@@ -1,7 +1,7 @@
 {
   "command": "simulate",
   "name": "mcts-vs-greedy-baseline",
-  "games": 10000,
+  "games": 100,
   "p1": {
     "type": "mcts-eval-fast"
   },

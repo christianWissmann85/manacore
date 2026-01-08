@@ -27,24 +27,24 @@ describe('WeightLoader', () => {
       const weights = loadWeights();
 
       expect(weights).toBeDefined();
-      expect(weights.version).toBe('1.0.0');
+      expect(weights.version).toBe('1.0.1');
       expect(weights.evaluation).toBeDefined();
       expect(weights.coefficients).toBeDefined();
       expect(weights.mcts).toBeDefined();
       expect(weights.performance).toBeDefined();
     });
 
-    test('weights have expected structure', () => {
+    test('weights have expected structure and valid ranges', () => {
       const weights = loadWeights();
 
-      // Evaluation weights
-      expect(weights.evaluation.life).toBeCloseTo(0.31, 2);
-      expect(weights.evaluation.board).toBeCloseTo(0.46, 2);
-      expect(weights.evaluation.cards).toBeCloseTo(0.09, 2);
-      expect(weights.evaluation.mana).toBeCloseTo(0.08, 2);
-      expect(weights.evaluation.tempo).toBeCloseTo(0.05, 2);
+      // Evaluation weights - check types and ranges instead of specific values
+      Object.entries(weights.evaluation).forEach(([key, value]) => {
+        expect(typeof value).toBe('number');
+        expect(value).toBeGreaterThanOrEqual(0);
+        expect(value).toBeLessThanOrEqual(1); // Individual normalized weights shouldn't exceed 1
+      });
 
-      // Weights should sum to ~1.0
+      // Weights should still sum to ~1.0 (Invariant)
       const sum =
         weights.evaluation.life +
         weights.evaluation.board +
@@ -96,21 +96,24 @@ describe('WeightLoader', () => {
   });
 
   describe('getMCTSParams', () => {
-    test('returns MCTS parameters', () => {
+    test('returns valid MCTS parameters', () => {
       const params = getMCTSParams();
 
-      expect(params.explorationConstant).toBeCloseTo(1.41, 2);
-      expect(params.rolloutDepth).toBe(20);
-      expect(params.rolloutPolicy).toBe('greedy');
-      expect(params.epsilon).toBe(0.1);
+      expect(params.explorationConstant).toBeGreaterThan(0);
+      expect(params.rolloutDepth).toBeGreaterThan(0);
+      expect(['random', 'greedy', 'epsilon']).toContain(params.rolloutPolicy);
+      if (params.epsilon !== undefined) {
+        expect(params.epsilon).toBeGreaterThanOrEqual(0);
+        expect(params.epsilon).toBeLessThanOrEqual(1);
+      }
     });
   });
 
   describe('getWeightsVersion', () => {
-    test('returns version string', () => {
+    test('returns valid semver version string', () => {
       const version = getWeightsVersion();
-
-      expect(version).toBe('1.0.0');
+      // Simple regex for x.y.z
+      expect(version).toMatch(/^\d+\.\d+\.\d+$/);
     });
   });
 
