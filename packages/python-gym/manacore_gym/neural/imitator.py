@@ -2,11 +2,13 @@
 ImitatorNet: Simple MLP for behavior cloning.
 
 Architecture:
-    Input:  25 features (normalized game state)
+    Input:  36 features (v2.0 enhanced game state)
     Hidden: 256 -> ReLU -> 256 -> ReLU -> 128 -> ReLU
     Output: logits over action indices
 
 Parameters: ~100K (small and fast)
+
+v2.0: Updated to 36 features based on diagnostic analysis
 """
 
 import torch
@@ -156,7 +158,7 @@ class ImitatorNet(nn.Module):
 
 
 def create_imitator_net(
-    input_dim: int = 25,
+    input_dim: int = 36,  # v2.0: 36 features (up from 25)
     hidden_dims: tuple[int, ...] = (256, 256, 128),
     output_dim: int = 200,
     dropout: float = 0.1,

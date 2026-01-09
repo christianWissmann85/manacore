@@ -85,9 +85,13 @@ def main() -> None:
     )
 
     # Create model
+    # Note: input_dim is auto-detected from data, but we default to 36 (v2.0)
     print("\nCreating model...")
+    input_dim = train_dataset.num_features  # Auto-detect from data
+    print(f"  Detected {input_dim} input features")
+
     model = create_imitator_net(
-        input_dim=25,
+        input_dim=input_dim,
         hidden_dims=tuple(args.hidden),
         output_dim=args.output_dim,
         dropout=args.dropout,

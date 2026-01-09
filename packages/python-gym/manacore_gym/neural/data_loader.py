@@ -19,10 +19,12 @@ class ManaDataset(Dataset):
     PyTorch Dataset for ManaCore training data.
 
     Each sample contains:
-        - features: 25-dim normalized game state
+        - features: 36-dim normalized game state (v2.0, was 25)
         - action: Action index (target for classification)
         - legal_count: Number of legal actions
         - outcome: Game result (1=win, -1=loss, 0=draw)
+
+    Note: Supports both 25-feature (v1.0) and 36-feature (v2.0) data.
     """
 
     def __init__(
