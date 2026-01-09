@@ -8,7 +8,7 @@ import time
 from pathlib import Path
 from typing import Optional
 
-import requests
+import requests  # type: ignore[import-untyped]
 
 
 def find_server_path() -> str:

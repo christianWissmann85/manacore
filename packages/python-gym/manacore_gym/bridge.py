@@ -13,7 +13,7 @@ import time
 from pathlib import Path
 from typing import Any, Optional
 
-import requests
+import requests  # type: ignore[import-untyped]
 
 
 class BunBridge:

@@ -22,13 +22,29 @@ class ManaCoreBattleEnv(gym.Env):
     This environment allows training RL agents to play Magic: The Gathering
     against various bot opponents.
 
-    Observation Space:
-        Box(25,) - 25 normalized features representing the game state:
+    Observation Space (v2.0 - 36 features):
+        Box(36,) - 36 normalized features representing the game state:
+
+        Original Features (25):
         - Life totals (player, opponent, delta)
         - Board state (creature counts, power, toughness)
         - Card advantage (hand sizes, library sizes)
         - Mana availability (lands, untapped)
         - Game state (turn, phase, combat)
+
+        Phase 1 Features (5 new - Critical):
+        - Stack power (player/opponent pending creatures)
+        - Non-linear life scaling (quadratic below 20)
+        - Attacking creature power
+
+        Phase 2 Features (4 new - Extended):
+        - Untapped creature power
+        - Spells on stack
+        - Hand composition (creatures/spells in hand)
+
+        Phase 3 Features (2 new - Strategic):
+        - Combat favorability prediction
+        - Unused mana in pool
 
     Action Space:
         Discrete(200) - Action index into legal actions
@@ -37,7 +53,7 @@ class ManaCoreBattleEnv(gym.Env):
     Reward:
         +1.0 for winning
         -1.0 for losing
-        0.0 for ongoing game
+        0.0 for ongoing game (with optional reward shaping)
 
     Args:
         opponent: Bot type ("random", "greedy", "mcts", "mcts-fast", "mcts-strong")
@@ -62,8 +78,8 @@ class ManaCoreBattleEnv(gym.Env):
 
     metadata = {"render_modes": ["human"], "render_fps": 1}
 
-    # Constants
-    OBSERVATION_SIZE = 25
+    # Constants - v2.0: Increased from 25 to 36 features
+    OBSERVATION_SIZE = 36
     MAX_ACTIONS = 200
 
     def __init__(
@@ -103,9 +119,10 @@ class ManaCoreBattleEnv(gym.Env):
         )
 
         # Define spaces
+        # Note: Some features can exceed 1.0 (e.g., playerLife, playerLifeScaled can be up to 2.0)
         self.observation_space = spaces.Box(
             low=-1.0,
-            high=1.0,
+            high=2.0,
             shape=(self.OBSERVATION_SIZE,),
             dtype=np.float32,
         )
@@ -214,10 +231,10 @@ class ManaCoreBattleEnv(gym.Env):
         obs = np.array(features, dtype=np.float32)
 
         # Replace NaN/Inf with zeros for numerical stability
-        obs = np.nan_to_num(obs, nan=0.0, posinf=1.0, neginf=-1.0)
+        obs = np.nan_to_num(obs, nan=0.0, posinf=2.0, neginf=-1.0)
 
         # Clip to observation space bounds
-        obs = np.clip(obs, -1.0, 1.0)
+        obs = np.clip(obs, -1.0, 2.0)
 
         return obs
 

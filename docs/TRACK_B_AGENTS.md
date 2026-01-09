@@ -201,6 +201,7 @@ Infrastructure for PPO training:
 - [x] Robust error handling
 
 **Files Created:**
+
 ```
 packages/python-gym/manacore_gym/training/
 ├── __init__.py
@@ -216,6 +217,7 @@ packages/gym-server/src/rewards/
 ```
 
 **Reward Shaping Formula:**
+
 ```
 F(s, s') = γ · V(s') - V(s)
 
@@ -236,11 +238,11 @@ where V(s) = 0.30 · life_advantage
 
 #### Training Log
 
-| Run | Steps | Network | Reward Shaping | vs Random | vs Greedy (Best) | Notes |
-|-----|-------|---------|----------------|-----------|------------------|-------|
-| 1 | 250K | 64x64 | No | 77% | 32% | Baseline |
-| 2 | 500K | 256x256 | Yes | 78% | 48% | +16% improvement |
-| 3 | 1M | 256x256 | Yes | 75% | 48% | **No scaling benefit** - [Report](./training-reports/2026-01-09_ppo_1M_scaling.md) |
+| Run | Steps | Network | Reward Shaping | vs Random | vs Greedy (Best) | Notes                                                                              |
+| --- | ----- | ------- | -------------- | --------- | ---------------- | ---------------------------------------------------------------------------------- |
+| 1   | 250K  | 64x64   | No             | 77%       | 32%              | Baseline                                                                           |
+| 2   | 500K  | 256x256 | Yes            | 78%       | 48%              | +16% improvement                                                                   |
+| 3   | 1M    | 256x256 | Yes            | 75%       | 48%              | **No scaling benefit** - [Report](./training-reports/2026-01-09_ppo_1M_scaling.md) |
 
 #### Research Questions
 
@@ -253,12 +255,14 @@ where V(s) = 0.30 · life_advantage
 #### Experimental Protocol
 
 For each training run, record:
+
 - Win rate checkpoints every 50K steps
 - TensorBoard logs (loss curves, entropy)
 - Best model checkpoint
 - Wall-clock time
 
 **Success Criteria:**
+
 - [ ] Achieve >60% win rate vs greedy
 - [ ] Document the scaling curve
 - [ ] Identify optimal hyperparameters
@@ -273,19 +277,19 @@ For each training run, record:
 
 #### The Roster
 
-| Agent | Archetype | Training Decks | Learning Hypothesis |
-|-------|-----------|----------------|---------------------|
-| **Ignis** 🔥 | Aggro | `red_burn`, `white_weenie`, `black_aggro` | Fast convergence (immediate rewards) |
-| **Aqua** 💧 | Control | `blue_control`, `dimir` | Slow convergence (delayed gratification) |
-| **Silva** 🌳 | Midrange | `green_midrange`, `gruul`, `simic` | Medium (investment → payoff) |
+| Agent        | Archetype | Training Decks                            | Learning Hypothesis                      |
+| ------------ | --------- | ----------------------------------------- | ---------------------------------------- |
+| **Ignis** 🔥 | Aggro     | `red_burn`, `white_weenie`, `black_aggro` | Fast convergence (immediate rewards)     |
+| **Aqua** 💧  | Control   | `blue_control`, `dimir`                   | Slow convergence (delayed gratification) |
+| **Silva** 🌳 | Midrange  | `green_midrange`, `gruul`, `simic`        | Medium (investment → payoff)             |
 
 #### Research Questions
 
 1. **Convergence Speed:** Does Aggro (Ignis) learn faster than Control (Aqua)?
-   - *Hypothesis:* Yes, because rewards are more immediate
+   - _Hypothesis:_ Yes, because rewards are more immediate
 
 2. **Credit Assignment:** Can PPO solve Control's long-horizon problem?
-   - *Hypothesis:* Difficult; may need specialized reward shaping
+   - _Hypothesis:_ Difficult; may need specialized reward shaping
 
 3. **Learning Curves:** Do different archetypes show different curve shapes?
    - Plot side-by-side for comparison
@@ -300,56 +304,63 @@ For each training run, record:
 
 ### Phase 3D: Transfer Learning Experiments 📝 PAPER-WORTHY
 
-**Goal:** Test whether agents learned *strategy* or just *card patterns*
+**Goal:** Test whether agents learned _strategy_ or just _card patterns_
 
 This is the most scientifically interesting phase. Results here could be publishable.
 
 #### Experiment A: Within-Archetype Transfer
 
 **Setup:**
+
 1. Train Ignis ONLY on `red_burn` until mastery (>70% vs greedy)
 2. Test Ignis on `white_weenie` (never seen during training)
 
 **Hypothesis:** Ignis performs well (~60%+) because it learned "Aggro" concepts:
+
 - Play cheap creatures early
 - Attack aggressively
 - Prioritize damage over card advantage
 
 **Metrics:**
+
 - Win rate on unseen deck
 - Action distribution comparison (does it still play aggressively?)
 
 #### Experiment B: Cross-Archetype Failure
 
 **Setup:**
+
 1. Take trained Ignis (Aggro specialist)
 2. Force it to play `blue_control` deck
 
 **Hypothesis:** Ignis fails miserably (<30%) because:
+
 - Tries to play control cards aggressively
 - Doesn't understand "wait and react"
 - Wrong heuristics for the strategy
 
-**Why this matters:** If Ignis fails at Control but succeeds at White Weenie, it proves the agent learned *strategy*, not *card mappings*.
+**Why this matters:** If Ignis fails at Control but succeeds at White Weenie, it proves the agent learned _strategy_, not _card mappings_.
 
 #### Experiment C: Feature Importance Analysis
 
 **Setup:**
+
 1. Train agent normally
 2. Ablate individual features (zero them out)
 3. Measure performance drop
 
 **Question:** Which features matter most for each archetype?
-- *Hypothesis:* Aggro cares about life differential; Control cares about card advantage
+
+- _Hypothesis:_ Aggro cares about life differential; Control cares about card advantage
 
 #### Data to Collect
 
-| Agent | Home Deck | vs Greedy | Transfer Deck | vs Greedy | Delta |
-|-------|-----------|-----------|---------------|-----------|-------|
-| Ignis | red_burn | ?% | white_weenie | ?% | ? |
-| Ignis | red_burn | ?% | blue_control | ?% | ? |
-| Aqua | blue_control | ?% | dimir | ?% | ? |
-| Aqua | blue_control | ?% | red_burn | ?% | ? |
+| Agent | Home Deck    | vs Greedy | Transfer Deck | vs Greedy | Delta |
+| ----- | ------------ | --------- | ------------- | --------- | ----- |
+| Ignis | red_burn     | ?%        | white_weenie  | ?%        | ?     |
+| Ignis | red_burn     | ?%        | blue_control  | ?%        | ?     |
+| Aqua  | blue_control | ?%        | dimir         | ?%        | ?     |
+| Aqua  | blue_control | ?%        | red_burn      | ?%        | ?     |
 
 ---
 
@@ -360,6 +371,7 @@ This is the most scientifically interesting phase. Results here could be publish
 #### Experiment: The Generalist Tax
 
 **Setup:**
+
 1. Train `Agent Polymath` on all decks simultaneously
    - Randomly sample deck each episode
    - Same total training steps as specialists
@@ -383,6 +395,7 @@ This is the most scientifically interesting phase. Results here could be publish
 #### Experiment: Round-Robin Tournament
 
 **Setup:**
+
 ```
 1000 games per matchup:
 - Ignis (Aggro) vs Aqua (Control)
@@ -393,6 +406,7 @@ This is the most scientifically interesting phase. Results here could be publish
 **Research Question:** Do agents discover Rock-Paper-Scissors dynamics naturally?
 
 **Expected Pattern (if agents learned real MTG):**
+
 ```
         Ignis (Aggro)
            ▲
@@ -405,6 +419,7 @@ This is the most scientifically interesting phase. Results here could be publish
 ```
 
 **Visualization:**
+
 - Win rate heatmap
 - Strategy triangle diagram
 - Decision tree comparisons
@@ -438,14 +453,14 @@ SPECIAL (Edge cases):
 
 ### Success Metrics Summary
 
-| Phase | Key Metric | Target | Status |
-|-------|------------|--------|--------|
-| 3A | Infrastructure | Complete | ✅ |
-| 3B | Win rate vs greedy | >60% | 🔄 48% |
-| 3C | Specialist convergence | All >60% | ⏳ |
-| 3D | Transfer accuracy | Measured | ⏳ |
-| 3E | Generalist gap | <10% | ⏳ |
-| 3F | Meta emergence | Documented | ⏳ |
+| Phase | Key Metric             | Target     | Status |
+| ----- | ---------------------- | ---------- | ------ |
+| 3A    | Infrastructure         | Complete   | ✅     |
+| 3B    | Win rate vs greedy     | >60%       | 🔄 48% |
+| 3C    | Specialist convergence | All >60%   | ⏳     |
+| 3D    | Transfer accuracy      | Measured   | ⏳     |
+| 3E    | Generalist gap         | <10%       | ⏳     |
+| 3F    | Meta emergence         | Documented | ⏳     |
 
 ---
 
@@ -458,7 +473,7 @@ By the end of Phase 3, we aim to produce:
 3. **Archetype Learning Curves:** Comparison plot (Aggro vs Control vs Midrange)
 4. **Meta Visualization:** Strategy triangle with empirical win rates
 
-These could form the basis of a research paper: *"Transfer Learning in Strategic Card Games: Do RL Agents Learn Strategy or Cards?"*
+These could form the basis of a research paper: _"Transfer Learning in Strategic Card Games: Do RL Agents Learn Strategy or Cards?"_
 
 ---
 
@@ -469,6 +484,7 @@ These could form the basis of a research paper: *"Transfer Learning in Strategic
 Report template: `YYYY-MM-DD_[experiment]_[detail].md`
 
 Each report must include:
+
 1. **Configuration**: All hyperparameters, architecture
 2. **Results**: Training curve, checkpoints, final eval
 3. **Analysis**: Key findings, hypotheses

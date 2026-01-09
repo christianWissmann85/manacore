@@ -324,7 +324,8 @@ describe('TrainingDataCollector', () => {
 
   describe('FEATURE_VECTOR_SIZE', () => {
     test('is correct', () => {
-      expect(FEATURE_VECTOR_SIZE).toBe(25);
+      // v2.0: Enhanced from 25 to 36 features
+      expect(FEATURE_VECTOR_SIZE).toBe(36);
     });
   });
 });

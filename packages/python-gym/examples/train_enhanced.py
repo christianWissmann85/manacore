@@ -1,12 +1,28 @@
 #!/usr/bin/env python3
 """
-Enhanced PPO Training with Reward Shaping and Larger Networks.
+Enhanced PPO Training v2.0 - With Full 36-Feature Observation Space.
 
 This script trains a PPO agent with:
+- Enhanced observation space (36 features vs 25 before)
 - Dense reward shaping (enabled in gym-server)
 - Larger neural network (256x256 hidden layers)
 - Extended training (500K-1M timesteps)
 - Focus on beating the greedy bot
+
+NEW v2.0 Features (11 new features based on diagnostic analysis):
+  Phase 1 (Critical):
+    - playerStackPower, opponentStackPower (GreedyBot gives 8x weight!)
+    - playerLifeScaled, opponentLifeScaled (non-linear life importance)
+    - attackingCreaturePower (1.5x bonus like GreedyBot)
+
+  Phase 2 (Extended):
+    - untappedCreaturePower (tempo indicator)
+    - spellsOnStack (combat tricks, removal awareness)
+    - creaturesInHand, spellsInHand (planning features)
+
+  Phase 3 (Strategic):
+    - canWinCombat (combat prediction heuristic)
+    - unusedMana (efficiency tracking)
 
 Requirements:
     uv pip install sb3-contrib tensorboard
@@ -203,10 +219,11 @@ def train_enhanced(
         eval_freq = 25_000
 
     print("=" * 60)
-    print("ManaCore Enhanced PPO Training")
+    print("ManaCore Enhanced PPO Training v2.0")
     print("=" * 60)
     print(f"Mode: {mode}")
     print(f"Total timesteps: {total_timesteps:,}")
+    print("Observation space: 36 features (v2.0 - enhanced)")
     print("Network: 256x256 (larger)")
     print("Reward shaping: ENABLED (dense rewards)")
     print("Opponent: greedy")

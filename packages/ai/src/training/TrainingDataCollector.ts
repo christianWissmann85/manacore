@@ -27,6 +27,9 @@ import { dirname } from 'path';
  *
  * All values are normalized to [0, 1] or [-1, 1] range
  * for neural network compatibility.
+ *
+ * v2.0: Enhanced with 11 new features based on diagnostic analysis
+ * comparing PPO observation space with GreedyBot/MCTSBot evaluation.
  */
 export interface StateFeatures {
   // Life totals (normalized to [0, 1] where 20 = 1.0)
@@ -67,6 +70,45 @@ export interface StateFeatures {
   canAttack: boolean;
   attackersAvailable: number;
   blockersAvailable: number;
+
+  // ============================================================================
+  // PHASE 1: Critical Missing Features (from diagnostic analysis)
+  // ============================================================================
+
+  // Stack awareness (GreedyBot gives 8.0x weight to creatures on stack!)
+  playerStackPower: number; // Power of pending creatures about to resolve
+  opponentStackPower: number;
+
+  // Non-linear life scaling (GreedyBot uses quadratic below 20)
+  playerLifeScaled: number; // lifeValue(life) - low life is disproportionately bad
+  opponentLifeScaled: number;
+
+  // Attacking bonus (GreedyBot gives 1.5x to attacking creatures)
+  attackingCreaturePower: number; // Total power of creatures currently attacking
+
+  // ============================================================================
+  // PHASE 2: Extended Features
+  // ============================================================================
+
+  // Untapped creature tracking (MCTSBot values at +2 each)
+  untappedCreaturePower: number; // Power of creatures ready to attack/block
+
+  // Stack composition
+  spellsOnStack: number; // Non-creature spells pending (combat tricks, removal)
+
+  // Hand composition (enables better planning)
+  creaturesInHand: number; // How many creatures can we cast?
+  spellsInHand: number; // How many non-creature spells?
+
+  // ============================================================================
+  // PHASE 3: Strategic Features
+  // ============================================================================
+
+  // Combat prediction
+  canWinCombat: number; // Heuristic: would attacking be favorable? (0-1)
+
+  // Mana efficiency
+  unusedMana: number; // Mana left in pool this turn (normalized)
 }
 
 /**
@@ -161,17 +203,98 @@ const PHASE_ENCODING: Record<string, number> = {
 };
 
 /**
+ * Non-linear life value - low life is disproportionately bad
+ * Matches GreedyBot's lifeValue function exactly
+ * 20 life = 20, 10 life = 8, 5 life = 3, 1 life = 0.5
+ */
+function lifeValue(life: number): number {
+  if (life <= 0) return -10; // Dead or about to die
+  if (life >= 20) return life; // Above starting life is linear
+  // Quadratic scaling below 20: life^1.5 / sqrt(20)
+  return Math.pow(life, 1.5) / Math.sqrt(20);
+}
+
+/**
+ * Calculate power of creatures on the stack (will resolve soon)
+ * Matches GreedyBot's getStackPower function
+ */
+function getStackPower(state: GameState, playerId: PlayerId): number {
+  let totalPower = 0;
+
+  for (const stackItem of state.stack) {
+    // Check if this is an unresolved item controlled by the player
+    const isUnresolved = !stackItem.resolved && !(stackItem as { countered?: boolean }).countered;
+    if (stackItem.controller === playerId && isUnresolved) {
+      const template = CardLoader.getById(stackItem.card.scryfallId);
+      if (template && isCreature(template)) {
+        const basePower = parseInt(template.power || '0', 10) || 0;
+        const baseToughness = parseInt(template.toughness || '0', 10) || 0;
+        // Value at full power since it will resolve
+        totalPower += basePower + baseToughness * 0.3;
+      }
+    }
+  }
+
+  return totalPower;
+}
+
+/**
+ * Count non-creature spells on the stack
+ */
+function countSpellsOnStack(state: GameState): number {
+  let count = 0;
+
+  for (const stackItem of state.stack) {
+    const isUnresolved = !stackItem.resolved && !(stackItem as { countered?: boolean }).countered;
+    if (isUnresolved) {
+      const template = CardLoader.getById(stackItem.card.scryfallId);
+      if (template && !isCreature(template)) {
+        count++;
+      }
+    }
+  }
+
+  return count;
+}
+
+/**
+ * Calculate total mana in a player's mana pool
+ */
+function getTotalMana(manaPool: {
+  white: number;
+  blue: number;
+  black: number;
+  red: number;
+  green: number;
+  colorless: number;
+}): number {
+  return (
+    manaPool.white +
+    manaPool.blue +
+    manaPool.black +
+    manaPool.red +
+    manaPool.green +
+    manaPool.colorless
+  );
+}
+
+/**
  * Extract normalized features from a game state
+ *
+ * v2.0: Now includes 36 features (up from 25) based on diagnostic analysis
  */
 export function extractFeatures(state: GameState, perspectivePlayer: PlayerId): StateFeatures {
   const player = state.players[perspectivePlayer];
-  const opponent = state.players[perspectivePlayer === 'player' ? 'opponent' : 'player'];
+  const opponentId = perspectivePlayer === 'player' ? 'opponent' : 'player';
+  const opponent = state.players[opponentId];
 
-  // Count creatures and their stats
+  // Count creatures and their stats (extended to include attacking/untapped)
   const countCreatureStats = (battlefield: CardInstance[]) => {
     let count = 0;
     let power = 0;
     let toughness = 0;
+    let attackingPower = 0;
+    let untappedPower = 0;
 
     for (const card of battlefield) {
       const template = CardLoader.getById(card.scryfallId);
@@ -179,12 +302,25 @@ export function extractFeatures(state: GameState, perspectivePlayer: PlayerId): 
         count++;
         const basePower = parseInt(template.power || '0', 10) || 0;
         const baseToughness = parseInt(template.toughness || '0', 10) || 0;
-        power += getEffectivePower(card, basePower);
-        toughness += getEffectiveToughness(card, baseToughness);
+        const effectivePower = getEffectivePower(card, basePower);
+        const effectiveToughness = getEffectiveToughness(card, baseToughness);
+
+        power += effectivePower;
+        toughness += effectiveToughness;
+
+        // Track attacking creatures (GreedyBot gives 1.5x bonus)
+        if (card.attacking) {
+          attackingPower += effectivePower;
+        }
+
+        // Track untapped creatures (can attack/block)
+        if (!card.tapped) {
+          untappedPower += effectivePower;
+        }
       }
     }
 
-    return { count, power, toughness };
+    return { count, power, toughness, attackingPower, untappedPower };
   };
 
   const playerStats = countCreatureStats(player.battlefield);
@@ -221,7 +357,55 @@ export function extractFeatures(state: GameState, perspectivePlayer: PlayerId): 
     return template && isCreature(template) && !c.tapped;
   }).length;
 
+  // Count cards in hand by type
+  const countHandByType = (hand: CardInstance[]) => {
+    let creatures = 0;
+    let spells = 0;
+
+    for (const card of hand) {
+      const template = CardLoader.getById(card.scryfallId);
+      if (template) {
+        if (isCreature(template)) {
+          creatures++;
+        } else if (!isLand(template)) {
+          // Non-creature, non-land = spell
+          spells++;
+        }
+      }
+    }
+
+    return { creatures, spells };
+  };
+
+  const playerHand = countHandByType(player.hand);
+
+  // Stack power calculations
+  const playerStackPower = getStackPower(state, perspectivePlayer);
+  const opponentStackPower = getStackPower(state, opponentId);
+  const spellsOnStack = countSpellsOnStack(state);
+
+  // Combat prediction heuristic:
+  // Can we win combat? Compare potential attack vs potential blocks
+  // Simple heuristic: If we have more untapped power than they do, combat is favorable
+  let canWinCombat = 0;
+  if (playerStats.untappedPower > 0) {
+    const ourAttackPotential = playerStats.untappedPower;
+    const theirBlockPotential = opponentStats.untappedPower;
+
+    if (ourAttackPotential > theirBlockPotential) {
+      canWinCombat = Math.min((ourAttackPotential - theirBlockPotential) / 10, 1.0);
+    } else if (theirBlockPotential > 0) {
+      // Partial favorability based on ratio
+      canWinCombat = Math.min(ourAttackPotential / (theirBlockPotential * 2), 0.5);
+    }
+  }
+
+  // Unused mana in pool
+  const unusedMana = getTotalMana(player.manaPool);
+
   return {
+    // ========== Original 25 features ==========
+
     // Life (normalized to [0, 1] where 20 = 1.0, capped at 2.0)
     playerLife: Math.min(player.life / 20, 2.0),
     opponentLife: Math.min(opponent.life / 20, 2.0),
@@ -260,14 +444,50 @@ export function extractFeatures(state: GameState, perspectivePlayer: PlayerId): 
     canAttack: state.phase === 'combat' && state.activePlayer === perspectivePlayer,
     attackersAvailable: Math.min(attackersAvailable / 10, 1.0),
     blockersAvailable: Math.min(blockersAvailable / 10, 1.0),
+
+    // ========== Phase 1: Critical Missing Features (5 new) ==========
+
+    // Stack awareness (normalized to [0, 1], max expected ~20 power)
+    playerStackPower: Math.min(playerStackPower / 20, 1.0),
+    opponentStackPower: Math.min(opponentStackPower / 20, 1.0),
+
+    // Non-linear life scaling (normalized: 20 life = 1.0, 5 life = 0.15)
+    playerLifeScaled: Math.min(lifeValue(player.life) / 20, 2.0),
+    opponentLifeScaled: Math.min(lifeValue(opponent.life) / 20, 2.0),
+
+    // Attacking creature power (normalized)
+    attackingCreaturePower: Math.min(playerStats.attackingPower / 20, 1.0),
+
+    // ========== Phase 2: Extended Features (4 new) ==========
+
+    // Untapped creature power (normalized)
+    untappedCreaturePower: Math.min(playerStats.untappedPower / 20, 1.0),
+
+    // Spells on stack (normalized, max expected ~5)
+    spellsOnStack: Math.min(spellsOnStack / 5, 1.0),
+
+    // Hand composition (normalized)
+    creaturesInHand: Math.min(playerHand.creatures / 5, 1.0),
+    spellsInHand: Math.min(playerHand.spells / 5, 1.0),
+
+    // ========== Phase 3: Strategic Features (2 new) ==========
+
+    // Combat prediction (0 = unfavorable, 1 = very favorable)
+    canWinCombat,
+
+    // Unused mana (normalized, max expected ~10)
+    unusedMana: Math.min(unusedMana / 10, 1.0),
   };
 }
 
 /**
  * Convert features to a flat array for neural network input
+ *
+ * v2.0: Now returns 36 features (up from 25)
  */
 export function featuresToArray(features: StateFeatures): number[] {
   return [
+    // Original 25 features
     features.playerLife,
     features.opponentLife,
     features.lifeDelta,
@@ -293,13 +513,32 @@ export function featuresToArray(features: StateFeatures): number[] {
     features.canAttack ? 1 : 0,
     features.attackersAvailable,
     features.blockersAvailable,
+
+    // Phase 1: Critical Missing Features (5 new)
+    features.playerStackPower,
+    features.opponentStackPower,
+    features.playerLifeScaled,
+    features.opponentLifeScaled,
+    features.attackingCreaturePower,
+
+    // Phase 2: Extended Features (4 new)
+    features.untappedCreaturePower,
+    features.spellsOnStack,
+    features.creaturesInHand,
+    features.spellsInHand,
+
+    // Phase 3: Strategic Features (2 new)
+    features.canWinCombat,
+    features.unusedMana,
   ];
 }
 
 /**
  * Feature vector size (for neural network input layer)
+ *
+ * v2.0: Increased from 25 to 36 features
  */
-export const FEATURE_VECTOR_SIZE = 25;
+export const FEATURE_VECTOR_SIZE = 36;
 
 /**
  * Training Data Collector

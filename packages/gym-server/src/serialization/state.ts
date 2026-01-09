@@ -56,8 +56,12 @@ export interface StepResponse {
 
 /**
  * Feature names for documentation and debugging
+ *
+ * v2.0: Enhanced with 11 new features (36 total, up from 25)
+ * Based on diagnostic analysis comparing PPO with GreedyBot/MCTSBot
  */
 export const FEATURE_NAMES = [
+  // Original 25 features
   'playerLife',
   'opponentLife',
   'lifeDelta',
@@ -83,6 +87,23 @@ export const FEATURE_NAMES = [
   'canAttack',
   'attackersAvailable',
   'blockersAvailable',
+
+  // Phase 1: Critical Missing Features (5 new)
+  'playerStackPower', // Pending creatures about to resolve
+  'opponentStackPower',
+  'playerLifeScaled', // Non-linear life value (quadratic below 20)
+  'opponentLifeScaled',
+  'attackingCreaturePower', // Power of creatures currently attacking
+
+  // Phase 2: Extended Features (4 new)
+  'untappedCreaturePower', // Creatures ready to attack/block
+  'spellsOnStack', // Non-creature spells pending
+  'creaturesInHand', // Creatures in hand
+  'spellsInHand', // Non-creature spells in hand
+
+  // Phase 3: Strategic Features (2 new)
+  'canWinCombat', // Combat favorability heuristic
+  'unusedMana', // Mana left in pool
 ];
 
 /**

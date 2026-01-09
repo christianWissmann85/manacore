@@ -9,22 +9,23 @@
 
 ## Configuration
 
-| Parameter | Value |
-|-----------|-------|
-| Algorithm | MaskablePPO (sb3-contrib) |
-| Network | 256x256 MLP |
-| Total Steps | 1,000,000 |
-| Learning Rate | 3e-4 |
-| Batch Size | 128 |
-| n_steps | 2048 |
-| Entropy Coef | 0.02 |
+| Parameter      | Value                     |
+| -------------- | ------------------------- |
+| Algorithm      | MaskablePPO (sb3-contrib) |
+| Network        | 256x256 MLP               |
+| Total Steps    | 1,000,000                 |
+| Learning Rate  | 3e-4                      |
+| Batch Size     | 128                       |
+| n_steps        | 2048                      |
+| Entropy Coef   | 0.02                      |
 | Reward Shaping | Enabled (potential-based) |
-| Opponent | GreedyBot |
-| Eval Frequency | 50,000 steps |
-| Eval Games | 50 per checkpoint |
-| Seed | 42 |
+| Opponent       | GreedyBot                 |
+| Eval Frequency | 50,000 steps              |
+| Eval Games     | 50 per checkpoint         |
+| Seed           | 42                        |
 
 ### Reward Shaping Weights
+
 ```
 life_advantage:    0.30
 board_power:       0.25
@@ -64,47 +65,47 @@ Win Rate vs Greedy over 1M steps
 
 ### Checkpoint Data
 
-| Steps (K) | Win Rate | Notes |
-|-----------|----------|-------|
-| 50 | 38% | Initial |
-| **100** | **48%** | **BEST** |
-| 150 | 30% | Drop |
-| 200 | 40% | Recovery |
-| 250 | 42% | |
-| 300 | 32% | Drop |
-| 350 | 42% | Recovery |
-| 400 | 46% | Near best |
-| 450 | 32% | Drop |
-| 500 | 34% | |
-| 550 | 36% | |
-| 600 | 36% | |
-| 650 | 28% | Lowest |
-| 700 | 46% | Recovery |
-| 750 | 44% | |
-| 800 | 30% | Drop |
-| 850 | 38% | |
-| 900 | 40% | |
-| 950 | 42% | |
-| 1000 | 42% | Final |
+| Steps (K) | Win Rate | Notes     |
+| --------- | -------- | --------- |
+| 50        | 38%      | Initial   |
+| **100**   | **48%**  | **BEST**  |
+| 150       | 30%      | Drop      |
+| 200       | 40%      | Recovery  |
+| 250       | 42%      |           |
+| 300       | 32%      | Drop      |
+| 350       | 42%      | Recovery  |
+| 400       | 46%      | Near best |
+| 450       | 32%      | Drop      |
+| 500       | 34%      |           |
+| 550       | 36%      |           |
+| 600       | 36%      |           |
+| 650       | 28%      | Lowest    |
+| 700       | 46%      | Recovery  |
+| 750       | 44%      |           |
+| 800       | 30%      | Drop      |
+| 850       | 38%      |           |
+| 900       | 40%      |           |
+| 950       | 42%      |           |
+| 1000      | 42%      | Final     |
 
 ### Final Evaluation (100 games)
 
-| Opponent | Wins | Win Rate |
-|----------|------|----------|
-| RandomBot | 75 | 75.0% |
-| GreedyBot | 33 | 33.0% |
+| Opponent  | Wins | Win Rate |
+| --------- | ---- | -------- |
+| RandomBot | 75   | 75.0%    |
+| GreedyBot | 33   | 33.0%    |
 
 ### Statistics
 
-| Metric | Value |
-|--------|-------|
-| Best Win Rate (training) | 48% @ 100K steps |
-| Final Win Rate (training) | 42% |
-| Final Win Rate (eval) | 33% |
-| Win Rate Range | 28% - 48% |
-| Standard Deviation | ~6% (estimated) |
-| Total Training Time | ~95 minutes |
-| Speed | ~175 it/s |
+| Metric                    | Value            |
+| ------------------------- | ---------------- |
+| Best Win Rate (training)  | 48% @ 100K steps |
+| Final Win Rate (training) | 42%              |
+| Final Win Rate (eval)     | 33%              |
+| Win Rate Range            | 28% - 48%        |
+| Standard Deviation        | ~6% (estimated)  |
+| Total Training Time       | ~95 minutes      |
+| Speed                     | ~175 it/s        |
 
 ---
 
@@ -131,23 +132,23 @@ Win Rate vs Greedy over 1M steps
 
 ### Hypotheses for Ceiling
 
-| Hypothesis | Evidence | Likelihood |
-|------------|----------|------------|
-| **Observation space insufficient** | 25 features can't capture combat math, abilities | High |
-| **Greedy exploits specific weaknesses** | Deterministic opponent; consistent winning patterns | High |
-| **Reward shaping local optima** | Dense rewards may teach suboptimal habits | Medium |
-| **Action semantics invisible** | Agent sees indices, not action meaning | Medium |
-| **Evaluation noise** | 50 games per checkpoint is low sample | Medium |
+| Hypothesis                              | Evidence                                            | Likelihood |
+| --------------------------------------- | --------------------------------------------------- | ---------- |
+| **Observation space insufficient**      | 25 features can't capture combat math, abilities    | High       |
+| **Greedy exploits specific weaknesses** | Deterministic opponent; consistent winning patterns | High       |
+| **Reward shaping local optima**         | Dense rewards may teach suboptimal habits           | Medium     |
+| **Action semantics invisible**          | Agent sees indices, not action meaning              | Medium     |
+| **Evaluation noise**                    | 50 games per checkpoint is low sample               | Medium     |
 
 ---
 
 ## Comparison with Previous Runs
 
-| Run | Steps | Network | Shaping | vs Greedy (Best) | vs Greedy (Final) |
-|-----|-------|---------|---------|------------------|-------------------|
-| 1 (Baseline) | 250K | 64x64 | No | 32% | 32% |
-| 2 (Enhanced) | 500K | 256x256 | Yes | 48% | 45% |
-| **3 (Scaling)** | **1M** | **256x256** | **Yes** | **48%** | **33%** |
+| Run             | Steps  | Network     | Shaping | vs Greedy (Best) | vs Greedy (Final) |
+| --------------- | ------ | ----------- | ------- | ---------------- | ----------------- |
+| 1 (Baseline)    | 250K   | 64x64       | No      | 32%              | 32%               |
+| 2 (Enhanced)    | 500K   | 256x256     | Yes     | 48%              | 45%               |
+| **3 (Scaling)** | **1M** | **256x256** | **Yes** | **48%**          | **33%**           |
 
 **Conclusion**: Doubling training steps from 500K to 1M provided no benefit. The 500K run actually had better final performance (45% vs 33%).
 
@@ -166,18 +167,21 @@ Before changing the approach, understand WHY greedy wins:
 ### Potential Improvements
 
 **Option A: Richer Observations**
+
 - Add creature abilities (flying, first strike, etc.)
 - Add spell type information
 - Add combat math predictions
 - Add mana curve analysis
 
 **Option B: Hyperparameter Tuning**
+
 - Increase entropy coefficient (more exploration)
 - Decrease learning rate (more stable)
 - Increase evaluation games (reduce noise)
 - Try different network architectures (512x512, CNN)
 
 **Option D: Alternative Training**
+
 - Self-play instead of vs greedy
 - Population-based training
 - Imitation learning on MCTS data
@@ -186,12 +190,12 @@ Before changing the approach, understand WHY greedy wins:
 
 ## Files
 
-| File | Path |
-|------|------|
-| Final Model | `packages/python-gym/models/ppo_enhanced_extended_20260109_094429.zip` |
-| Best Model | `packages/python-gym/models/ppo_best_vs_greedy.zip` |
-| TensorBoard Logs | `packages/python-gym/logs/scaling_1M/` |
-| Training Script | `packages/python-gym/examples/train_enhanced.py` |
+| File             | Path                                                                   |
+| ---------------- | ---------------------------------------------------------------------- |
+| Final Model      | `packages/python-gym/models/ppo_enhanced_extended_20260109_094429.zip` |
+| Best Model       | `packages/python-gym/models/ppo_best_vs_greedy.zip`                    |
+| TensorBoard Logs | `packages/python-gym/logs/scaling_1M/`                                 |
+| Training Script  | `packages/python-gym/examples/train_enhanced.py`                       |
 
 ---
 
@@ -222,5 +226,5 @@ TRAINING SUMMARY
 
 ---
 
-*Report generated: January 9, 2026*
-*Author: Claude + Chris*
+_Report generated: January 9, 2026_
+_Author: Claude + Chris_
