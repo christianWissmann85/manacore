@@ -25,45 +25,72 @@ export function PlayerArea({ player }: PlayerAreaProps) {
   return (
     <div
       className={`
-        flex items-center gap-4 px-4 py-3 rounded-lg
-        ${isActive ? 'bg-board-accent/40 ring-1 ring-board-highlight/50' : 'bg-board-surface/50'}
-        ${hasPriority ? 'ring-2 ring-yellow-500/50' : ''}
+        relative flex items-center gap-6 px-6 py-4 rounded-xl transition-all duration-300
+        ${isActive ? 'bg-glass-panel border-glass-border shadow-lg' : 'bg-transparent border border-transparent'}
+        ${hasPriority ? 'ring-1 ring-accent-glow shadow-[0_0_15px_rgba(96,165,250,0.15)] bg-glass-surface' : ''}
       `}
     >
-      {/* Player info */}
-      <div className="flex flex-col items-center gap-1 min-w-[80px]">
-        <span className="text-xs text-gray-400 uppercase tracking-wider">
-          {isPlayer ? 'You' : 'Opponent'}
-        </span>
+      {/* Active Player Indicator Label (floating label) */}
+      {isActive && (
+        <div className="absolute -top-2.5 left-6 bg-glass-base px-2 text-[10px] text-accent-glow uppercase tracking-widest font-bold border border-glass-border rounded-full z-10">
+          Active Turn
+        </div>
+      )}
+
+      {/* Player info column */}
+      <div className="flex flex-col items-center gap-2 min-w-[80px]">
         <LifeCounter life={life} isPlayer={isPlayer} />
-        {hasPriority && <span className="text-xs text-yellow-400 animate-pulse">Priority</span>}
+        <div className="flex flex-col items-center">
+          <span className="text-[10px] text-glass-text-muted uppercase tracking-widest font-semibold">
+            {isPlayer ? 'You' : 'Opponent'}
+          </span>
+          {hasPriority && (
+            <span className="text-[10px] text-accent-glow animate-pulse font-bold mt-0.5">
+              PRIORITY
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Mana pool (only for player) */}
-      {isPlayer && <ManaDisplay manaPool={playerData.manaPool} />}
-
-      {/* Hand */}
-      <div className="flex-1 min-w-0">
-        {isPlayer ? (
-          <Hand cards={playerData.hand} />
-        ) : (
-          <div className="flex items-center gap-2">
-            <div className="flex -space-x-8">
-              {Array.from({ length: Math.min(opponentData.handCount, 7) }).map((_, i) => (
-                <div
-                  key={i}
-                  className="w-12 h-16 bg-gradient-to-br from-blue-900 to-blue-950 rounded border border-blue-800/50 shadow-md"
-                  style={{ transform: `rotate(${(i - 3) * 3}deg)` }}
-                />
-              ))}
-            </div>
-            <span className="text-sm text-gray-400">{opponentData.handCount} cards</span>
+      {/* Center Area: Hand & Mana */}
+      <div className="flex-1 min-w-0 flex flex-col gap-2">
+        {/* Mana Row (only for player, or visible mana for opponent in future) */}
+        {isPlayer && (
+          <div className="flex justify-start">
+            <ManaDisplay manaPool={playerData.manaPool} />
           </div>
         )}
+
+        {/* Hand Area */}
+        <div className="relative min-h-[100px] flex items-center">
+          {isPlayer ? (
+            <Hand cards={playerData.hand} />
+          ) : (
+            <div className="flex items-center gap-4">
+              <div className="flex -space-x-12 pl-4">
+                {Array.from({ length: Math.min(opponentData.handCount, 7) }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="w-16 h-24 bg-gradient-to-br from-indigo-900 to-slate-900 rounded border border-white/10 shadow-xl transition-transform hover:-translate-y-2"
+                    style={{
+                      transform: `rotate(${(i - 3) * 2}deg) translateY(${Math.abs(i - 3) * 2}px)`,
+                      zIndex: i,
+                    }}
+                  >
+                    <div className="w-full h-full opacity-30 bg-[url('/card-back-pattern.png')] bg-repeat bg-[length:10px_10px]" />
+                  </div>
+                ))}
+              </div>
+              <span className="text-sm text-glass-text-secondary font-medium ml-4">
+                {opponentData.handCount} Cards in Hand
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Zone indicators */}
-      <div className="flex gap-3">
+      {/* Right Column: Zones */}
+      <div className="flex flex-col gap-2 border-l border-glass-border pl-4">
         <ZoneIndicator icon="📚" count={libraryCount} label="Library" />
         <ZoneIndicator icon="💀" count={graveyardCount} label="Graveyard" />
       </div>

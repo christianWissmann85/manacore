@@ -3,92 +3,61 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --color-mana-white: #F8F6D8;
-    --color-mana-blue: #0E68AB;
-    --color-mana-black: #150B00;
-    --color-mana-red: #D3202A;
-    --color-mana-green: #00733E;
-    --color-mana-colorless: #CBC2BF;
-  }
-
   body {
-    @apply bg-board-bg min-h-screen;
-    font-family: 'Inter', system-ui, sans-serif;
+    @apply bg-glass-base text-glass-text-primary font-body overflow-hidden selection:bg-accent-primary selection:text-white;
+    background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 70%);
   }
 
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: theme('colors.board.accent') theme('colors.board.surface');
+  /* Custom Scrollbar for Webkit */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-glass-border rounded-full hover:bg-glass-text-muted transition-colors;
   }
 }
 
 @layer components {
-  .card-frame {
-    @apply relative rounded-lg overflow-hidden shadow-lg transition-transform duration-200;
-    aspect-ratio: 63 / 88;
+  /* The core glass panel class */
+  .glass-panel {
+    @apply bg-glass-surface backdrop-blur-md border border-glass-border shadow-lg;
   }
 
-  .card-frame:hover {
-    @apply scale-105 z-10;
+  .glass-panel-hover {
+    @apply hover:bg-glass-highlight hover:border-white/20 transition-all duration-200;
   }
 
-  .card-tapped {
-    @apply rotate-90;
-  }
-
-  .mana-symbol {
-    @apply inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold;
-  }
-
-  .mana-W { @apply bg-mana-white text-black; }
-  .mana-U { @apply bg-mana-blue text-white; }
-  .mana-B { @apply bg-mana-black text-white border border-gray-600; }
-  .mana-R { @apply bg-mana-red text-white; }
-  .mana-G { @apply bg-mana-green text-white; }
-  .mana-C { @apply bg-mana-colorless text-black; }
-
-  .panel {
-    @apply bg-board-surface rounded-lg border border-board-accent/30;
-  }
-
-  .panel-header {
-    @apply px-4 py-2 border-b border-board-accent/30 font-semibold text-sm uppercase tracking-wider text-gray-400;
-  }
-
+  /* Button Styles */
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-colors duration-150;
+    @apply px-4 py-2 rounded font-semibold transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-primary {
-    @apply bg-board-highlight hover:bg-board-highlight/80 text-white;
+    @apply bg-accent-primary text-white hover:bg-blue-600 shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_20px_rgba(59,130,246,0.5)];
   }
 
   .btn-secondary {
-    @apply bg-board-accent hover:bg-board-accent/80 text-gray-200;
+    @apply bg-glass-panel border border-glass-border text-glass-text-secondary hover:text-white hover:border-white/30;
   }
 
-  .hint-tooltip {
-    @apply absolute z-50 px-3 py-2 text-sm bg-black/90 text-white rounded-lg shadow-xl;
-    @apply opacity-0 pointer-events-none transition-opacity duration-200;
+  .btn-danger {
+    @apply bg-accent-danger/20 border border-accent-danger/50 text-red-200 hover:bg-accent-danger hover:text-white;
   }
-
-  .hint-tooltip.visible {
-    @apply opacity-100 pointer-events-auto;
+  
+  /* Card frame placeholder style */
+  .card-frame {
+    @apply rounded-xl overflow-hidden shadow-md transition-transform duration-200 bg-glass-panel border border-glass-border;
   }
-}
-
-@layer utilities {
-  .text-glow {
-    text-shadow: 0 0 10px currentColor;
+  
+  .card-tapped {
+    @apply rotate-90 opacity-80;
   }
-
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
+  
+  .panel {
+    @apply glass-panel rounded-lg;
   }
 }

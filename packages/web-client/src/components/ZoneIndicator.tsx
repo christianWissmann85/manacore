@@ -9,11 +9,13 @@ export function ZoneIndicator({ icon, count, label, onClick }: ZoneIndicatorProp
   return (
     <button
       onClick={onClick}
-      className="flex flex-col items-center gap-0.5 p-2 rounded hover:bg-board-accent/30 transition-colors"
+      className="flex flex-col items-center gap-0.5 p-2 rounded-lg hover:bg-glass-highlight transition-colors group"
       title={label}
     >
-      <span className="text-lg">{icon}</span>
-      <span className="text-sm font-mono">{count}</span>
+      <span className="text-lg opacity-70 group-hover:opacity-100 transition-opacity">{icon}</span>
+      <span className="text-xs font-mono text-glass-text-secondary group-hover:text-glass-text-primary">
+        {count}
+      </span>
     </button>
   );
 }

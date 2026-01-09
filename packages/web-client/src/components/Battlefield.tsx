@@ -52,27 +52,32 @@ export function Battlefield({ owner, className }: BattlefieldProps) {
 
   return (
     <div
-      className={clsx('flex flex-col gap-2 p-2 min-h-0 overflow-y-auto scrollbar-hide', className)}
+      className={clsx(
+        'relative flex flex-col gap-4 p-4 min-h-0 transition-colors rounded-xl',
+        className,
+      )}
     >
-      {/* Creatures row */}
-      {creatures.length > 0 && (
-        <div className="flex flex-wrap gap-1 justify-center">{creatures.map(renderPermanent)}</div>
-      )}
-
-      {/* Other permanents row */}
-      {others.length > 0 && (
-        <div className="flex flex-wrap gap-1 justify-center">{others.map(renderPermanent)}</div>
-      )}
-
-      {/* Lands row */}
-      {lands.length > 0 && (
-        <div className="flex flex-wrap gap-1 justify-center">{lands.map(renderPermanent)}</div>
-      )}
-
-      {/* Empty state */}
+      {/* Background Hint Label */}
       {permanents.length === 0 && (
-        <div className="flex-1 flex items-center justify-center text-gray-600 text-sm border-2 border-dashed border-board-accent/20 rounded-lg bg-black/10">
-          {owner === 'player' ? 'Your battlefield' : "Opponent's battlefield"}
+        <div className="absolute inset-0 m-4 border-2 border-dashed border-glass-border rounded-xl flex items-center justify-center pointer-events-none">
+          <span className="text-glass-text-muted/50 text-sm font-medium uppercase tracking-widest">
+            {owner === 'player' ? 'Your Battlefield' : "Opponent's Battlefield"}
+          </span>
+        </div>
+      )}
+
+      {/* Creatures & Planeswalkers (Front Row) */}
+      {(creatures.length > 0 || others.length > 0) && (
+        <div className="flex flex-wrap gap-2 justify-center z-10 min-h-[100px] items-center">
+          {creatures.map(renderPermanent)}
+          {others.map(renderPermanent)}
+        </div>
+      )}
+
+      {/* Lands & Enchantments (Back Row) */}
+      {lands.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 justify-center z-0 opacity-90 scale-95 origin-top">
+          {lands.map(renderPermanent)}
         </div>
       )}
     </div>

@@ -48,8 +48,11 @@ export function GameBoard() {
 
   if (!gameState) {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-500">
-        No game in progress
+      <div className="flex-1 flex items-center justify-center text-glass-text-muted select-none">
+        <div className="text-center opacity-50">
+          <div className="text-4xl mb-4 grayscale">🃏</div>
+          <p>No game in progress</p>
+        </div>
       </div>
     );
   }
@@ -57,11 +60,11 @@ export function GameBoard() {
   if (cardsLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-2xl mb-2">🃏</div>
-          <div className="text-gray-400 animate-pulse">Loading card data from Scryfall...</div>
-          <div className="text-xs text-gray-500 mt-2">
-            This only happens once - cards are cached
+        <div className="glass-panel p-8 rounded-2xl flex flex-col items-center">
+          <div className="text-4xl mb-4 animate-bounce">🃏</div>
+          <div className="text-glass-text-primary font-bold">Loading Assets</div>
+          <div className="text-xs text-glass-text-secondary mt-2">
+            Fetching card art from Scryfall...
           </div>
         </div>
       </div>
@@ -69,30 +72,36 @@ export function GameBoard() {
   }
 
   return (
-    <div className="flex-1 flex flex-col p-4 gap-3 overflow-hidden">
-      {/* Opponent Area (top) */}
-      <PlayerArea player="opponent" />
+    <div className="relative flex-1 flex flex-col p-6 gap-4 overflow-hidden h-full">
+      {/* Background Decor (Subtle Grid) */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
 
-      {/* Battlefield (center) */}
-      <div className="flex-1 flex gap-3 min-h-0">
-        <div className="flex-1 flex flex-col gap-2">
-          {/* Opponent's battlefield */}
-          <Battlefield owner="opponent" className="flex-1" />
-
-          {/* Divider with Stack */}
-          <div className="relative h-px bg-board-accent/50">
-            <Stack />
-          </div>
-
-          {/* Player's battlefield */}
-          <Battlefield owner="player" className="flex-1" />
-        </div>
+      {/* Opponent Area (Top) */}
+      <div className="z-10">
+        <PlayerArea player="opponent" />
       </div>
 
-      {/* Player Area (bottom) */}
-      <PlayerArea player="player" />
+      {/* Battlefields (Middle - Grow) */}
+      <div className="flex-1 flex flex-col gap-2 min-h-0 relative z-0">
+        {/* Opponent's battlefield */}
+        <Battlefield
+          owner="opponent"
+          className="flex-1 border-b border-glass-border/30 rounded-b-none"
+        />
 
-      {/* Action Bar */}
+        {/* The Stack (Floating Overlay) */}
+        <Stack />
+
+        {/* Player's battlefield */}
+        <Battlefield owner="player" className="flex-1 rounded-t-none" />
+      </div>
+
+      {/* Player Area (Bottom) */}
+      <div className="z-10">
+        <PlayerArea player="player" />
+      </div>
+
+      {/* Action Dock (Floating) */}
       <ActionBar />
     </div>
   );

@@ -10,9 +10,10 @@ export function CardPreview() {
 
   if (!targetId || !gameState) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 text-gray-500 text-center h-[400px]">
-        <div className="text-4xl mb-4 opacity-20">🎴</div>
-        <p className="text-sm">Hover over a card to inspect</p>
+      <div className="flex flex-col items-center justify-center p-8 text-glass-text-muted text-center h-[400px] border-2 border-dashed border-glass-border/30 rounded-xl m-4">
+        <div className="text-4xl mb-4 opacity-20 grayscale">🎴</div>
+        <p className="text-sm font-medium">No Card Signal</p>
+        <p className="text-xs opacity-50 mt-1">Hover over a card to scan</p>
       </div>
     );
   }
@@ -44,35 +45,59 @@ export function CardPreview() {
   if (!card) return null;
 
   return (
-    <div className="flex flex-col items-center p-4 animate-in fade-in duration-200">
-      <div className="mb-4 shadow-2xl rounded-lg">
-        <Card
-          card={card}
-          size="large"
-          // Disable interactions in preview
-          canAct={false}
-          selected={false}
-        />
+    <div className="flex flex-col items-center p-2 animate-in fade-in duration-300">
+      {/* Scanner Visuals */}
+      <div className="relative mb-6 group">
+        <div className="absolute -inset-4 bg-accent-primary/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="relative shadow-2xl rounded-xl overflow-hidden ring-1 ring-white/10">
+          <Card
+            card={card}
+            size="large"
+            // Disable interactions in preview
+            canAct={false}
+            selected={false}
+          />
+          {/* Scanner Line */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-accent-primary/20 to-transparent h-[10%] w-full animate-[scan_2s_ease-in-out_infinite] pointer-events-none" />
+        </div>
       </div>
 
-      {/* Oracle Text Display (for accessibility/clarity) */}
-      <div className="w-full space-y-2 mt-2 bg-board-bg/50 p-3 rounded border border-board-accent/20">
-        <div className="flex justify-between items-baseline border-b border-white/10 pb-1">
-          <span className="font-bold text-board-highlight">{card.name}</span>
-          <span className="font-mono text-xs">{card.manaCost}</span>
+      {/* Data Readout */}
+      <div className="w-full space-y-3 bg-glass-panel p-4 rounded-xl border border-glass-border shadow-lg relative overflow-hidden">
+        {/* Tech Decor */}
+        <div className="absolute top-0 right-0 p-1">
+          <div className="flex gap-0.5">
+            <div className="w-1 h-1 bg-accent-primary rounded-full animate-pulse" />
+            <div className="w-1 h-1 bg-accent-primary/50 rounded-full" />
+          </div>
         </div>
 
-        <div className="text-xs text-gray-300">{card.typeLine}</div>
+        <div className="flex justify-between items-baseline border-b border-white/5 pb-2">
+          <span className="font-display font-bold text-lg text-white tracking-wide">
+            {card.name}
+          </span>
+          <span className="font-mono text-xs text-accent-glow bg-accent-glow/10 px-1.5 py-0.5 rounded border border-accent-glow/30">
+            {card.manaCost || '0'}
+          </span>
+        </div>
+
+        <div className="text-xs font-bold text-glass-text-secondary uppercase tracking-wider">
+          {card.typeLine}
+        </div>
 
         {card.oracleText && (
-          <div className="text-sm text-gray-200 whitespace-pre-wrap leading-relaxed">
+          <div className="text-sm text-glass-text-primary whitespace-pre-wrap leading-relaxed font-body opacity-90">
             {card.oracleText}
           </div>
         )}
 
         {(card.power !== undefined || card.toughness !== undefined) && (
-          <div className="text-right font-bold text-lg pt-1">
-            {card.power}/{card.toughness}
+          <div className="flex justify-end pt-2">
+            <div className="bg-glass-base px-3 py-1 rounded text-lg font-bold border border-glass-border">
+              <span className="text-white">{card.power}</span>
+              <span className="text-glass-text-muted mx-1">/</span>
+              <span className="text-white">{card.toughness}</span>
+            </div>
           </div>
         )}
       </div>
