@@ -89,15 +89,96 @@ function hasLure(
 }
 
 /**
+ * Check if a creature is prevented from combat by an aura (e.g., Pacifism)
+ */
+function isPreventedFromCombat(
+  state: GameState,
+  creature: import('../state/CardInstance').CardInstance,
+): boolean {
+  if (!creature.attachments || creature.attachments.length === 0) {
+    return false;
+  }
+
+  // Check each attachment
+  for (const attachmentId of creature.attachments) {
+    // Find the aura on any player's battlefield
+    for (const playerId of ['player', 'opponent'] as const) {
+      const aura = state.players[playerId].battlefield.find((c) => c.instanceId === attachmentId);
+      if (aura) {
+        const auraTemplate = CardLoader.getById(aura.scryfallId);
+        if (auraTemplate?.oracle_text) {
+          const text = auraTemplate.oracle_text.toLowerCase();
+          // Check for "can't attack" or "can't attack or block"
+          if (text.includes("can't attack") || text.includes('cannot attack')) {
+            return true;
+          }
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Check if a creature is prevented from attacking or blocking by a global enchantment
+ * (e.g., Light of Day: "Black creatures can't attack or block")
+ */
+function isPreventedByGlobalEnchantment(
+  state: GameState,
+  creature: import('../state/CardInstance').CardInstance,
+): boolean {
+  const creatureTemplate = CardLoader.getById(creature.scryfallId);
+  if (!creatureTemplate) return false;
+
+  const creatureColors = creatureTemplate.colors || [];
+
+  // Check all enchantments on battlefield
+  for (const playerId of ['player', 'opponent'] as const) {
+    for (const permanent of state.players[playerId].battlefield) {
+      const template = CardLoader.getById(permanent.scryfallId);
+      if (!template) continue;
+
+      const typeLine = template.type_line?.toLowerCase() || '';
+      if (!typeLine.includes('enchantment') || typeLine.includes('aura')) continue;
+
+      switch (template.name) {
+        case 'Light of Day':
+          // "Black creatures can't attack or block."
+          if (creatureColors.includes('B')) {
+            return true;
+          }
+          break;
+
+        // Add more global enchantment combat restrictions here
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
  * Check if a blocker can block a specific attacker (considering evasion abilities)
  * This is used for Lure to determine which blockers are "able" to block.
  */
 function canBlockAttacker(
   state: GameState,
+  blocker: import('../state/CardInstance').CardInstance,
   blockerTemplate: CardTemplate,
   attackerTemplate: CardTemplate,
   defendingPlayer: 'player' | 'opponent',
 ): boolean {
+  // Check if prevented from blocking by aura (e.g., Pacifism)
+  if (isPreventedFromCombat(state, blocker)) {
+    return false;
+  }
+
+  // Check if prevented from blocking by global enchantment (e.g., Light of Day)
+  if (isPreventedByGlobalEnchantment(state, blocker)) {
+    return false;
+  }
+
   // Flying check
   if (hasFlying(attackerTemplate)) {
     if (!hasFlying(blockerTemplate) && !hasReach(blockerTemplate)) {
@@ -819,7 +900,7 @@ function getLegalBlockerDeclarations(
       const ableBlockers = potentialBlockers.filter((blocker) => {
         const blockerTemplate = CardLoader.getById(blocker.scryfallId);
         if (!blockerTemplate) return false;
-        return canBlockAttacker(state, blockerTemplate, attackerTemplate, playerId);
+        return canBlockAttacker(state, blocker, blockerTemplate, attackerTemplate, playerId);
       });
 
       // Create blocks array where ALL able blockers block the Lured attacker
