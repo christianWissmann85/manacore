@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { GameBoard } from './components/GameBoard';
 import { InspectorPanel } from './components/InspectorPanel';
 import { ControlPanel } from './components/ControlPanel';
@@ -67,6 +68,12 @@ function LoadingOverlay() {
 
 function WelcomeModal() {
   const { startGame } = useGameStore();
+  const [seedInput, setSeedInput] = useState('');
+
+  const getSeed = () => {
+    const parsed = parseInt(seedInput, 10);
+    return isNaN(parsed) ? undefined : parsed;
+  };
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
@@ -78,13 +85,24 @@ function WelcomeModal() {
         </p>
 
         <div className="space-y-4">
+          <div className="flex items-center gap-2 mb-2">
+            <label className="text-sm text-gray-400">Random Seed (Optional):</label>
+            <input
+              type="number"
+              value={seedInput}
+              onChange={(e) => setSeedInput(e.target.value)}
+              className="bg-board-bg border border-board-accent/30 rounded px-2 py-1 text-sm text-white w-24"
+              placeholder="e.g. 123"
+            />
+          </div>
+
           <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
             Start a Game
           </h3>
 
           <div className="grid grid-cols-2 gap-3">
             <button
-              onClick={() => void startGame('human', 'greedy')}
+              onClick={() => void startGame('human', 'greedy', 'red', 'red', getSeed())}
               className="btn btn-primary text-left p-4"
             >
               <div className="font-semibold">Human vs Greedy</div>
@@ -92,7 +110,7 @@ function WelcomeModal() {
             </button>
 
             <button
-              onClick={() => void startGame('human', 'mcts')}
+              onClick={() => void startGame('human', 'mcts', 'red', 'red', getSeed())}
               className="btn btn-primary text-left p-4"
             >
               <div className="font-semibold">Human vs MCTS</div>
@@ -100,7 +118,7 @@ function WelcomeModal() {
             </button>
 
             <button
-              onClick={() => void startGame('greedy', 'mcts')}
+              onClick={() => void startGame('greedy', 'mcts', 'red', 'red', getSeed())}
               className="btn btn-secondary text-left p-4"
             >
               <div className="font-semibold">Greedy vs MCTS</div>
@@ -108,7 +126,7 @@ function WelcomeModal() {
             </button>
 
             <button
-              onClick={() => void startGame('mcts', 'mcts')}
+              onClick={() => void startGame('mcts', 'mcts', 'red', 'red', getSeed())}
               className="btn btn-secondary text-left p-4"
             >
               <div className="font-semibold">MCTS vs MCTS</div>

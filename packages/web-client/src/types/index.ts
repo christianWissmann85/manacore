@@ -127,6 +127,15 @@ export interface MCTSTreeNode {
   children: MCTSTreeNode[];
 }
 
+export interface ActionTraceStep {
+  action: unknown;
+  playerId: string;
+  turn: number;
+  phase: string;
+  description: string;
+  aiThinking?: AIThinking | null;
+}
+
 /** Game step response from gym-server */
 export interface GameStepResponse {
   gameId: string;
@@ -150,6 +159,7 @@ export interface GameStepResponse {
   /** Extended for web client */
   clientState?: ClientGameState;
   aiThinking?: AIThinking;
+  actionTrace?: ActionTraceStep[];
 }
 
 /** Game history entry for replay */

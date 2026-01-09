@@ -5,7 +5,7 @@
  * Sessions are stored in memory and auto-cleaned after inactivity.
  */
 
-import type { GameState, CardTemplate } from '@manacore/engine';
+import type { GameState, CardTemplate, Action } from '@manacore/engine';
 import {
   initializeGame,
   applyAction,
@@ -13,6 +13,7 @@ import {
   getRandomTestDeck,
   getTestDeck,
   ALL_TEST_DECKS,
+  describeAction,
 } from '@manacore/engine';
 import type { AllDeckTypes } from '@manacore/engine';
 import {
@@ -44,6 +45,15 @@ export interface SessionManagerConfig {
   inactivityTimeoutMs: number;
   cleanupIntervalMs: number;
   rewardShaping: RewardShapingConfig;
+}
+
+export interface ActionTraceStep {
+  action: Action;
+  playerId: string;
+  turn: number;
+  phase: string;
+  description: string;
+  aiThinking?: AIThinking | null;
 }
 
 export const DEFAULT_SESSION_CONFIG: SessionManagerConfig = {
@@ -202,6 +212,7 @@ export class SessionManager {
     done: boolean;
     truncated: boolean;
     info: Record<string, unknown>;
+    actionTrace: ActionTraceStep[];
   } {
     const session = this.sessions.get(gameId);
     if (!session) {
@@ -210,6 +221,7 @@ export class SessionManager {
 
     session.lastAccessedAt = Date.now();
     session.stepCount++;
+    const actionTrace: ActionTraceStep[] = [];
 
     // If game is already over, return terminal state (no-op for RL compatibility)
     if (session.state.gameOver) {
@@ -225,6 +237,7 @@ export class SessionManager {
           phase: session.state.phase,
           winner: session.state.winner,
         },
+        actionTrace,
       };
     }
 
@@ -246,6 +259,7 @@ export class SessionManager {
           winner: 'opponent',
           error: 'No legal actions available',
         },
+        actionTrace,
       };
     }
 
@@ -262,6 +276,13 @@ export class SessionManager {
     }
 
     try {
+      actionTrace.push({
+        action,
+        playerId: 'player',
+        turn: session.state.turnCount,
+        phase: session.state.phase,
+        description: describeAction(action, session.state),
+      });
       session.state = applyAction(session.state, action);
     } catch (error) {
       // Action validation failed - treat as terminal state
@@ -280,6 +301,7 @@ export class SessionManager {
           winner: 'opponent',
           error: error instanceof Error ? error.message : 'Action failed',
         },
+        actionTrace,
       };
     }
 
@@ -287,10 +309,20 @@ export class SessionManager {
     while (!session.state.gameOver && session.state.priorityPlayer === 'opponent') {
       try {
         const opponentAction = session.opponent.chooseAction(session.state, 'opponent');
-        session.state = applyAction(session.state, opponentAction);
-
-        // Capture AI thinking after opponent move
+        
+        // Capture AI thinking after opponent move decision
         session.lastAIThinking = session.opponent.getLastThinking();
+
+        actionTrace.push({
+          action: opponentAction,
+          playerId: 'opponent',
+          turn: session.state.turnCount,
+          phase: session.state.phase,
+          description: describeAction(opponentAction, session.state),
+          aiThinking: session.lastAIThinking,
+        });
+
+        session.state = applyAction(session.state, opponentAction);
       } catch (error) {
         // Opponent action failed - treat as win for player
         console.warn(
@@ -308,6 +340,7 @@ export class SessionManager {
             winner: 'player',
             error: 'Opponent action failed',
           },
+          actionTrace,
         };
       }
     }
@@ -318,15 +351,34 @@ export class SessionManager {
         const playerActions = getLegalActions(session.state, 'player');
         if (playerActions.length === 1 && playerActions[0]) {
           // Forced move - auto apply
-          session.state = applyAction(session.state, playerActions[0]);
+          const autoAction = playerActions[0];
+          actionTrace.push({
+            action: autoAction,
+            playerId: 'player',
+            turn: session.state.turnCount,
+            phase: session.state.phase,
+            description: describeAction(autoAction, session.state),
+          });
+
+          session.state = applyAction(session.state, autoAction);
 
           // Check if opponent now has priority
           while (!session.state.gameOver && session.state.priorityPlayer === 'opponent') {
             const opponentAction = session.opponent.chooseAction(session.state, 'opponent');
-            session.state = applyAction(session.state, opponentAction);
-
+            
             // Capture AI thinking after opponent move
             session.lastAIThinking = session.opponent.getLastThinking();
+
+            actionTrace.push({
+              action: opponentAction,
+              playerId: 'opponent',
+              turn: session.state.turnCount,
+              phase: session.state.phase,
+              description: describeAction(opponentAction, session.state),
+              aiThinking: session.lastAIThinking,
+            });
+
+            session.state = applyAction(session.state, opponentAction);
           }
         } else {
           break;
@@ -349,6 +401,7 @@ export class SessionManager {
           winner: session.state.winner || 'opponent',
           error: error instanceof Error ? error.message : 'Auto-pass failed',
         },
+        actionTrace,
       };
     }
 
@@ -379,6 +432,7 @@ export class SessionManager {
         winner: session.state.winner,
         shapedReward: reward !== terminalReward,
       },
+      actionTrace,
     };
   }
 

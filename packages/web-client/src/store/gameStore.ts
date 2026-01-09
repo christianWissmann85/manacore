@@ -47,6 +47,7 @@ interface GameStore {
     opponent: BotType,
     playerDeck?: DeckType,
     opponentDeck?: DeckType,
+    seed?: number,
   ) => Promise<void>;
   executeAction: (actionIndex: number) => Promise<void>;
   resetGame: () => Promise<void>;
@@ -100,11 +101,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   showHints: true,
 
   // Game lifecycle
-  startGame: async (player, opponent, playerDeck = 'red', opponentDeck = 'red') => {
+  startGame: async (player, opponent, playerDeck = 'red', opponentDeck = 'red', seed) => {
     set({ isLoading: true, error: null });
 
     try {
-      const response = await gameService.createGame(opponent, playerDeck, opponentDeck);
+      const response = await gameService.createGame(opponent, playerDeck, opponentDeck, seed);
 
       set({
         gameId: response.gameId,
@@ -150,25 +151,55 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       // Update win probability history
       const winProbHistory = [...get().winProbabilityHistory];
-      if (response.aiThinking?.winProbability !== undefined) {
-        winProbHistory.push({
+      const history = [...get().history];
+
+      if (response.actionTrace && response.actionTrace.length > 0) {
+        // Use trace for granular history
+        response.actionTrace.forEach((step) => {
+          // Add to history
+          history.push({
+            turn: step.turn,
+            phase: step.phase,
+            action: { 
+              index: -1, 
+              type: 'unknown', 
+              description: step.description 
+            },
+            state: newState, // We only have the final state
+            aiThinking: step.aiThinking ?? undefined,
+            timestamp: Date.now(),
+          });
+
+          // Add to win prob history if AI thinking exists
+          if (step.aiThinking?.winProbability !== undefined) {
+            winProbHistory.push({
+              turn: step.turn,
+              step: winProbHistory.length,
+              probability: step.aiThinking.winProbability,
+              event: step.description,
+            });
+          }
+        });
+      } else {
+        // Fallback for legacy/simple response
+        if (response.aiThinking?.winProbability !== undefined) {
+          winProbHistory.push({
+            turn: newState.turn,
+            step: winProbHistory.length,
+            probability: response.aiThinking.winProbability,
+            event: action?.description,
+          });
+        }
+
+        history.push({
           turn: newState.turn,
-          step: winProbHistory.length,
-          probability: response.aiThinking.winProbability,
-          event: action?.description,
+          phase: newState.phase,
+          action: action ?? null,
+          state: newState,
+          aiThinking: response.aiThinking,
+          timestamp: Date.now(),
         });
       }
-
-      // Add to history
-      const history = [...get().history];
-      history.push({
-        turn: newState.turn,
-        phase: newState.phase,
-        action: action ?? null,
-        state: newState,
-        aiThinking: response.aiThinking,
-        timestamp: Date.now(),
-      });
 
       set({
         gameState: newState,
