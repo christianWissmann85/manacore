@@ -253,6 +253,11 @@ ManaCore is unofficial Fan Content permitted under the Fan Content Policy. Not a
 **Asset Policy:**
 This repository does not contain or distribute card images or copyrighted text. All game data is fetched locally by the user via the Scryfall API for personal research purposes only.
 
+### Data Sources
+
+All card data is sourced from the Scryfall API under their terms of use.
+Users must run `bun run scripts/fetch-cards.ts` locally to download card data.
+
 ---
 
 ## Citation

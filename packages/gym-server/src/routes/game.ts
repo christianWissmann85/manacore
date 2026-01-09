@@ -6,9 +6,11 @@
  */
 
 import { Hono } from 'hono';
+import { getLegalActions } from '@manacore/engine';
 import type { SessionManager } from '../sessions/manager';
 import { createStepResponse, serializeObservation, createActionMask } from '../serialization/state';
 import { serializeClientState, serializeLegalActionsForClient } from '../serialization/clientState';
+import { createThinkingBot } from '../bots/ThinkingCapture';
 
 interface CreateGameBody {
   opponent?: string;
@@ -224,6 +226,65 @@ export function createGameRoutes(sessionManager: SessionManager): Hono {
       return c.json({ success: true });
     } else {
       return c.json({ error: `Game not found: ${gameId}` }, 404);
+    }
+  });
+
+  /**
+   * GET /game/:id/expert_action
+   * Query what an expert bot would choose at the current state.
+   * Used for DAgger (Dataset Aggregation) data collection.
+   *
+   * Query params:
+   *   - expert: Bot type to query (default: "greedy")
+   *
+   * Returns:
+   *   - expertAction: The action index the expert would choose
+   *   - expertActionDescription: Human-readable description
+   */
+  app.get('/:id/expert_action', (c) => {
+    try {
+      const gameId = c.req.param('id');
+      const expertType = c.req.query('expert') || 'greedy';
+
+      const session = sessionManager.getSession(gameId);
+      if (!session) {
+        return c.json({ error: `Game not found: ${gameId}` }, 404);
+      }
+
+      // Create an expert bot to query
+      const expert = createThinkingBot(expertType, session.seed);
+
+      // Get what the expert would do as the player
+      const expertAction = expert.chooseAction(session.state, 'player');
+
+      // Find the action index in legal actions
+      const legalActions = getLegalActions(session.state, 'player');
+
+      // Find matching action by comparing stringified actions
+      const actionStr = JSON.stringify(expertAction);
+      let expertActionIndex = -1;
+      for (let i = 0; i < legalActions.length; i++) {
+        if (JSON.stringify(legalActions[i]) === actionStr) {
+          expertActionIndex = i;
+          break;
+        }
+      }
+
+      // Get action description
+      const clientActions = serializeLegalActionsForClient(session.state, 'player');
+      const expertActionDescription =
+        expertActionIndex >= 0 && expertActionIndex < clientActions.length
+          ? clientActions[expertActionIndex]?.description || 'Unknown'
+          : 'Unknown';
+
+      return c.json({
+        expertAction: expertActionIndex,
+        expertActionDescription,
+        expertType,
+        thinking: expert.getLastThinking(),
+      });
+    } catch (error) {
+      return c.json({ error: error instanceof Error ? error.message : 'Unknown error' }, 500);
     }
   });
 

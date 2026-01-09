@@ -64,7 +64,9 @@ Examples:
 
 ### Phase 3B.1: Imitation Learning
 
-_(In progress - learning from GreedyBot demonstrations)_
+| Date       | Report                                                                     | Key Finding                                                         |
+| ---------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| 2026-01-09 | [imitation_learning_baseline](./2026-01-09_imitation_learning_baseline.md) | 40.6% accuracy but only 15.5% win rate; distribution mismatch issue |
 
 ### Phase 3C: Archetype Specialists
 

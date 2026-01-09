@@ -229,6 +229,20 @@ class BunBridge:
         """Delete a game session."""
         return self._request("DELETE", f"/game/{game_id}")
 
+    def get_expert_action(self, game_id: str, expert: str = "greedy") -> dict[str, Any]:
+        """
+        Query what an expert bot would choose at the current state.
+        Used for DAgger (Dataset Aggregation) data collection.
+
+        Args:
+            game_id: The game session ID
+            expert: Bot type to query (default: "greedy")
+
+        Returns:
+            Dict with expertAction (index), expertActionDescription, expertType
+        """
+        return self._request("GET", f"/game/{game_id}/expert_action?expert={expert}")
+
     def batch_create(
         self,
         count: int,
