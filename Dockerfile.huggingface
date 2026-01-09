@@ -1,0 +1,64 @@
+# ManaCore HuggingFace Spaces Dockerfile
+# 
+# This builds a Docker image that includes:
+# - The gym-server (game engine + API)
+# - The web-client (React UI)
+# - Card data (6ed.json) for internal engine use only
+#
+# IP-Safe Architecture:
+# - Server uses 6ed.json internally for game logic (fair use)
+# - API responses contain only card IDs + game state
+# - Client fetches card names/text/images from Scryfall API
+# - No copyrighted content is redistributed via HTTP
+
+FROM oven/bun:1 AS builder
+
+WORKDIR /app
+
+# Copy workspace files
+COPY package.json bun.lockb bunfig.toml ./
+COPY packages ./packages
+
+# Install all dependencies
+RUN bun install --frozen-lockfile
+
+# Build the web client (React SPA)
+WORKDIR /app/packages/web-client
+RUN bun run build
+
+# Build the gym-server
+WORKDIR /app/packages/gym-server
+RUN bun run check
+
+# === Production Stage ===
+FROM oven/bun:1-slim
+
+WORKDIR /app
+
+# Copy node_modules from builder
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages ./packages
+
+# Copy built web client
+COPY --from=builder /app/packages/web-client/dist ./public
+
+# Copy card data for INTERNAL engine use only (not exposed via API)
+# This is legally acceptable as it's used for computation, not redistribution
+COPY --from=builder /app/packages/engine/data/cards/6ed.json ./packages/engine/data/cards/6ed.json
+
+# Expose HuggingFace Spaces port
+EXPOSE 7860
+
+# Set environment
+ENV NODE_ENV=production
+ENV PORT=7860
+ENV HOST=0.0.0.0
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:7860/health || exit 1
+
+# Start server
+# The gym-server will serve both the API and static web-client files
+WORKDIR /app/packages/gym-server
+CMD ["bun", "run", "src/index.ts", "--port", "7860", "--host", "0.0.0.0"]

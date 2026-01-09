@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { clsx } from 'clsx';
 import { scryfallService } from '../services/scryfallService';
+import { useEnrichedCard } from '../hooks/useEnrichedCard';
 import type { CardData, PermanentData } from '../types';
 import { ManaSymbols } from './ManaSymbols';
 
@@ -36,25 +37,44 @@ export function Card({
   onClick,
   onHover,
 }: CardProps) {
+  // Enrich card data if needed (fetches from Scryfall)
+  const { card: enrichedCard, loading: enrichLoading } = useEnrichedCard(card);
+  
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
 
   const dimensions = SIZES[size];
-  const isCreature = card.typeLine.includes('Creature');
+  const isCreature = enrichedCard.typeLine?.includes('Creature') ?? false;
   const permanent = card as PermanentData;
   const hasSummoningSickness = 'summoningSick' in permanent && permanent.summoningSick;
 
-  // Load image from Scryfall
+  // Load image from Scryfall (prefer direct URL if available)
   useEffect(() => {
     let mounted = true;
 
     async function loadImage() {
-      const url = await scryfallService.getCardImage(
-        card.name,
-        size === 'small' ? 'small' : 'normal',
-      );
-      if (mounted) {
-        setImageUrl(url);
+      // Use enriched data's imageUrl or fetch by ID
+      if (enrichedCard.imageUrl) {
+        if (mounted) setImageUrl(enrichedCard.imageUrl);
+        return;
+      }
+      
+      // Fallback to fetching by name if available
+      if (enrichedCard.name) {
+        const url = await scryfallService.getCardImage(
+          enrichedCard.name,
+          size === 'small' ? 'small' : 'normal',
+        );
+        if (mounted) {
+          setImageUrl(url);
+        }
+      } else {
+        // Use direct URL construction from scryfallId
+        const directUrl = scryfallService.getImageUrlById(
+          card.scryfallId,
+          size === 'small' ? 'small' : 'normal'
+        );
+        if (mounted) setImageUrl(directUrl);
       }
     }
 
@@ -63,11 +83,26 @@ export function Card({
     return () => {
       mounted = false;
     };
-  }, [card.name, size]);
+  }, [enrichedCard.name, enrichedCard.imageUrl, card.scryfallId, size]);
 
   const handleImageError = () => {
     setImageError(true);
   };
+
+  // Show loading state for unenriched cards
+  if (enrichLoading && !enrichedCard.name) {
+    return (
+      <motion.div
+        className="card-frame relative bg-gray-800 flex items-center justify-center"
+        style={{
+          width: dimensions.width,
+          height: dimensions.height,
+        }}
+      >
+        <div className="text-xs text-gray-400 animate-pulse">Loading...</div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -92,13 +127,13 @@ export function Card({
       {imageUrl && !imageError ? (
         <img
           src={imageUrl}
-          alt={card.name}
+          alt={enrichedCard.name || 'Card'}
           className="w-full h-full object-cover"
           onError={handleImageError}
           loading="lazy"
         />
       ) : (
-        <CardFallback card={card} size={size} />
+        <CardFallback card={enrichedCard} size={size} />
       )}
 
       {/* Overlays */}
@@ -106,7 +141,7 @@ export function Card({
         <>
           {/* Power/Toughness badge */}
           <div className="absolute bottom-1 right-1 bg-black/80 px-1.5 py-0.5 rounded text-xs font-bold">
-            {card.power}/{card.toughness}
+            {enrichedCard.power}/{enrichedCard.toughness}
           </div>
 
           {/* Damage indicator */}
@@ -148,12 +183,12 @@ export function Card({
 
 /** Fallback card display when image fails to load */
 function CardFallback({ card, size }: { card: CardData; size: 'small' | 'medium' | 'large' }) {
-  const isLand = card.typeLine.includes('Land');
-  const isCreature = card.typeLine.includes('Creature');
+  const isLand = card.typeLine?.includes('Land') ?? false;
+  const isCreature = card.typeLine?.includes('Creature') ?? false;
 
   // Determine card color for background
   const getColorClass = () => {
-    if (card.colors.length === 0) {
+    if (!card.colors || card.colors.length === 0) {
       if (isLand) return 'from-amber-900 to-amber-950';
       return 'from-gray-700 to-gray-900';
     }
@@ -181,9 +216,9 @@ function CardFallback({ card, size }: { card: CardData; size: 'small' | 'medium'
       <div className="p-1 border-b border-white/20">
         <div className="flex justify-between items-start">
           <span className={clsx('font-bold truncate', size === 'small' ? 'text-[8px]' : 'text-xs')}>
-            {card.name}
+            {card.name || 'Loading...'}
           </span>
-          {size !== 'small' && <ManaSymbols cost={card.manaCost} size="xs" />}
+          {size !== 'small' && card.manaCost && <ManaSymbols cost={card.manaCost} size="xs" />}
         </div>
       </div>
 
@@ -194,13 +229,13 @@ function CardFallback({ card, size }: { card: CardData; size: 'small' | 'medium'
           size === 'small' ? 'text-[6px]' : 'text-[10px]',
         )}
       >
-        {card.typeLine}
+        {card.typeLine || 'Unknown Type'}
       </div>
 
       {/* Text box */}
       {size !== 'small' && (
         <div className="flex-1 p-1 text-[8px] leading-tight overflow-hidden opacity-80">
-          {card.oracleText}
+          {card.oracleText || ''}
         </div>
       )}
 

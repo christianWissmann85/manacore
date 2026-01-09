@@ -76,8 +76,56 @@ Examples:
 function createServer(): Hono {
   const app = new Hono();
 
+  // Middleware
+  app.use('*', cors());
+  app.use('*', logger());
+
   // Create session manager
   const sessionManager = new SessionManager({
+    maxSessions: DEFAULT_SESSION_CONFIG.maxSessions,
+    sessionTTL: DEFAULT_SESSION_CONFIG.sessionTTL,
+    cleanupInterval: DEFAULT_SESSION_CONFIG.cleanupInterval,
+  });
+
+  // API Routes
+  app.route('/game', createGameRoutes(sessionManager));
+  app.route('/batch', createBatchRoutes(sessionManager));
+  app.route('/health', createHealthRoutes(sessionManager));
+
+  // Serve static web client files (for HuggingFace deployment)
+  const publicPath = process.env.PUBLIC_PATH || '../../../public';
+  try {
+    app.get('/*', async (c) => {
+      const path = c.req.path === '/' ? '/index.html' : c.req.path;
+      const filePath = `${publicPath}${path}`;
+      
+      try {
+        const file = Bun.file(filePath);
+        const exists = await file.exists();
+        
+        if (exists) {
+          return new Response(file);
+        }
+        
+        // For SPA routing, return index.html for non-API routes
+        if (!path.startsWith('/game') && !path.startsWith('/batch') && !path.startsWith('/health')) {
+          const indexFile = Bun.file(`${publicPath}/index.html`);
+          if (await indexFile.exists()) {
+            return new Response(indexFile);
+          }
+        }
+        
+        return c.notFound();
+      } catch {
+        return c.notFound();
+      }
+    });
+  } catch (err) {
+    console.warn('Static file serving not available:', err);
+  }
+
+  return app;
+}
     maxSessions: 1000,
     inactivityTimeoutMs: 5 * 60 * 1000, // 5 minutes
     cleanupIntervalMs: 60 * 1000, // 1 minute
@@ -91,10 +139,42 @@ function createServer(): Hono {
     app.use('*', logger());
   }
 
-  // Mount routes
+  // API Routes
   app.route('/game', createGameRoutes(sessionManager));
   app.route('/batch', createBatchRoutes(sessionManager));
   app.route('/health', createHealthRoutes(sessionManager));
+
+  // Serve static web client files (for HuggingFace deployment)
+  const publicPath = process.env.PUBLIC_PATH || '../../../public';
+  try {
+    app.get('/*', async (c) => {
+      const path = c.req.path === '/' ? '/index.html' : c.req.path;
+      const filePath = `${publicPath}${path}`;
+      
+      try {
+        const file = Bun.file(filePath);
+        const exists = await file.exists();
+        
+        if (exists) {
+          return new Response(file);
+        }
+        
+        // For SPA routing, return index.html for non-API routes
+        if (!path.startsWith('/game') && !path.startsWith('/batch') && !path.startsWith('/health')) {
+          const indexFile = Bun.file(`${publicPath}/index.html`);
+          if (await indexFile.exists()) {
+            return new Response(indexFile);
+          }
+        }
+        
+        return c.notFound();
+      } catch {
+        return c.notFound();
+      }
+    });
+  } catch (err) {
+    console.warn('Static file serving not available:', err);
+  }
 
   // Root redirect to health
   app.get('/', (c) => c.redirect('/health'));

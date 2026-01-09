@@ -384,6 +384,6 @@ If you need to temporarily revert to server-side data:
 ## Questions?
 
 If you encounter migration issues, check:
-1. [Card Enrichment Examples](../examples/card-enrichment-examples.tsx)
-2. [Deployment Guide](../../docs/DEPLOYMENT_HUGGINGFACE.md)
-3. [Web Client README](../README.md#ip-safety--data-flow-architecture)
+1. [Card Enrichment Examples](../packages/web-client/examples/card-enrichment-examples.tsx)
+2. [Deployment Guide](./DEPLOYMENT_HUGGINGFACE.md)
+3. [Web Client README](../packages/web-client/README.md)

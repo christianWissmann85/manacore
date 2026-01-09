@@ -6,8 +6,8 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { enrichCard, prefetchGameCards } from '../services/cardEnricher';
-import type { CardData } from '../types';
+import { enrichCard, prefetchGameCards } from '../src/services/cardEnricher';
+import type { CardData, ClientGameState } from '../src/types';
 
 /**
  * Example 1: Basic Card Component
@@ -61,7 +61,7 @@ export function GameBoard({ gameState }: { gameState: ClientGameState }) {
         ...gameState.player.hand,
         ...gameState.player.battlefield,
         ...gameState.opponent.battlefield,
-        ...gameState.stack.map(s => s.card),
+        ...gameState.stack.map((s: { card: CardData }) => s.card),
       ];
 
       const scryfallIds = [...new Set(allCards.map(c => c.scryfallId))];
@@ -76,13 +76,13 @@ export function GameBoard({ gameState }: { gameState: ClientGameState }) {
   }, [gameState.gameId]);
 
   if (!isReady) {
-    return <LoadingScreen message="Loading card data from Scryfall..." />;
+    return <div className="loading-screen">Loading card data from Scryfall...</div>;
   }
 
   return (
     <div className="game-board">
-      <Hand cards={gameState.player.hand} />
-      <Battlefield permanents={gameState.player.battlefield} />
+      <div className="hand">{gameState.player.hand.map(c => <CardDisplay key={c.instanceId} card={c} />)}</div>
+      <div className="battlefield">{gameState.player.battlefield.map(c => <CardDisplay key={c.instanceId} card={c} />)}</div>
       {/* ... */}
     </div>
   );
