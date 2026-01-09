@@ -60,6 +60,7 @@ coverage/
 
 # All experiment output (simulations, benchmarks, training data, tuning)
 /output/
+packages/python-gym/output/
 packages/python-gym/logs
 packages/python-gym/models
 packages/ai/models

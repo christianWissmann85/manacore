@@ -2,7 +2,9 @@
 
 **Focus:** Neural networks, reinforcement learning, LLM agents
 **Lead Phases:** 2, 3, 5, 6
-**Status:** Phase 2B Complete (January 8, 2026)
+**Status:** Phase 3B In Progress (January 9, 2026)
+
+> **Research Focus:** Extended Phase 3 to deeply explore PPO scaling, archetype specialists, and transfer learning before advancing to LLMs/AlphaZero.
 
 ---
 
@@ -31,14 +33,16 @@ Each stage builds on the previous, validating infrastructure before adding compl
 
 ### Research Agents
 
-| Agent          | Type             | Phase | Status  | Use Case          |
-| -------------- | ---------------- | ----- | ------- | ----------------- |
-| NeuralImitator | Behavior Cloning | 2B    | ✅ Done | Validate pipeline |
-| Agent Ignis    | PPO (Red)        | 3     | Planned | Specialist study  |
-| Agent Aqua     | PPO (Blue)       | 3     | Planned | Specialist study  |
-| Agent Silva    | PPO (Green)      | 3     | Planned | Specialist study  |
-| Llama-Mage     | Fine-tuned LLM   | 5     | Planned | Interpretability  |
-| AlphaCore      | Self-play NN     | 6     | Planned | Peak performance  |
+| Agent          | Type             | Phase | Status      | Use Case                      |
+| -------------- | ---------------- | ----- | ----------- | ----------------------------- |
+| NeuralImitator | Behavior Cloning | 2B    | ✅ Done     | Validate pipeline             |
+| PPO Baseline   | PPO (Generalist) | 3B    | 🔄 48% WR   | Master the basics             |
+| Agent Ignis    | PPO (Aggro)      | 3C    | ⏳ Planned  | Aggro archetype specialist    |
+| Agent Aqua     | PPO (Control)    | 3C    | ⏳ Planned  | Control archetype specialist  |
+| Agent Silva    | PPO (Midrange)   | 3C    | ⏳ Planned  | Midrange archetype specialist |
+| Agent Polymath | PPO (Generalist) | 3E    | ⏳ Planned  | Generalist vs specialist test |
+| Llama-Mage     | Fine-tuned LLM   | 5     | ⏳ Deferred | Interpretability              |
+| AlphaCore      | Self-play NN     | 6     | ⏳ Deferred | Peak performance              |
 
 ---
 
@@ -141,195 +145,330 @@ packages/ai/models/
 
 ---
 
-## Phase 3: PPO Specialists (In Progress)
+## Phase 3: PPO Mastery & Research (Extended)
 
-**Theme:** "Train from scratch"
+**Theme:** "Master reinforcement learning before moving on"
 
-**Goal:** Train reinforcement learning agents that discover strategies through self-play, without imitating existing bots.
+**Philosophy:** Phase 3 is now an extended research phase. Instead of rushing to LLMs and AlphaZero, we will deeply explore PPO's capabilities, document scaling behaviors, and run rigorous transfer learning experiments worthy of publication.
 
-**Status:** Infrastructure complete, initial training shows promise
+**Status:** Phase 3A complete, Phase 3B in progress
 
-### Progress Update (January 8, 2026)
+---
 
-**Completed:**
+### Phase 3 Roadmap
 
-- [x] Curriculum learning scheduler implemented (`manacore_gym/training/curriculum.py`)
-- [x] PPO training script with curriculum (`examples/train_curriculum.py`)
-- [x] Robust error handling in gym-server for edge cases
-- [x] Observation sanitization to prevent NaN values
+```
+Phase 3A: Foundation ────────────────────────► COMPLETE
+    │
+    ▼
+Phase 3B: Master the Baseline ───────────────► CURRENT
+    │   Goal: Beat greedy >60%
+    │   Study: Scaling laws, emergent abilities
+    │
+    ▼
+Phase 3C: Archetype Specialists
+    │   Train: Ignis (Aggro), Aqua (Control), Silva (Midrange)
+    │   Study: Convergence speed by archetype
+    │
+    ▼
+Phase 3D: Transfer Learning Experiments ◄──── MOST EXCITING!
+    │   Test: Can specialists generalize?
+    │   Paper-worthy: "Do RL agents learn strategy or cards?"
+    │
+    ▼
+Phase 3E: Generalist Challenge
+    │   Train: Agent Polymath (all decks)
+    │   Study: Specialist vs Generalist tradeoff
+    │
+    ▼
+Phase 3F: Meta Analysis
+        Tournament: Rock-Paper-Scissors dynamics
+        Visualize: Strategy triangle emergence
+```
 
-**Initial Training Results (Fast Curriculum - 70K steps):**
-| Stage | Opponent | Win Rate | Target |
-|-------|----------|----------|--------|
-| 1 | Random | 76.7% | 75% |
-| 2 | Greedy | 35% | 50% |
+---
+
+### Phase 3A: Foundation ✅ COMPLETE
+
+**Completed January 9, 2026**
+
+Infrastructure for PPO training:
+
+- [x] Gymnasium environment with action masking
+- [x] Curriculum learning scheduler
+- [x] Reward shaping module (potential-based)
+- [x] Enhanced training scripts
+- [x] Robust error handling
 
 **Files Created:**
-
 ```
 packages/python-gym/manacore_gym/training/
 ├── __init__.py
-└── curriculum.py          # CurriculumScheduler class
+└── curriculum.py              # CurriculumScheduler
 
 packages/python-gym/examples/
-└── train_curriculum.py    # PPO training with curriculum
+├── train_curriculum.py        # Basic PPO training
+└── train_enhanced.py          # Large network + reward shaping
+
+packages/gym-server/src/rewards/
+├── index.ts
+└── shaping.ts                 # RewardShaper class
 ```
 
-### Task 3.1: Curriculum Learning Setup
+**Reward Shaping Formula:**
+```
+F(s, s') = γ · V(s') - V(s)
 
-**Tasks:**
+where V(s) = 0.30 · life_advantage
+           + 0.25 · board_power
+           + 0.20 · creature_count
+           + 0.15 · card_advantage
+           + 0.10 · mana_advantage
+```
 
-- [x] Define training curriculum:
+---
 
-  ```python
-  CURRICULUM = [
-      # Stage 1: Beat random
-      {"opponent": "random", "timesteps": 100_000, "target_wr": 0.90},
+### Phase 3B: Master the Baseline 🔬 CURRENT
 
-      # Stage 2: Beat greedy
-      {"opponent": "greedy", "timesteps": 200_000, "target_wr": 0.70},
+**Goal:** Train ONE agent to consistently beat GreedyBot (>60% win rate)
 
-      # Stage 3: Beat MCTS
-      {"opponent": "mcts-eval-fast", "timesteps": 500_000, "target_wr": 0.55},
+**Why this matters:** Before training specialists, we must prove PPO can solve the core problem. If we can't beat greedy with unlimited compute, specialists won't help.
 
-      # Stage 4: Self-play
-      {"opponent": "self", "timesteps": 1_000_000},
-  ]
-  ```
+#### Training Log
 
-- [x] Implement curriculum scheduler:
+| Run | Steps | Network | Reward Shaping | vs Random | vs Greedy (Best) | Notes |
+|-----|-------|---------|----------------|-----------|------------------|-------|
+| 1 | 250K | 64x64 | No | 77% | 32% | Baseline |
+| 2 | 500K | 256x256 | Yes | 78% | 48% | +16% improvement |
+| 3 | ? | ? | ? | ? | ? | *Next experiment* |
 
-  ```python
-  class CurriculumScheduler:
-      def __init__(self, curriculum: list):
-          self.stages = curriculum
-          self.current_stage = 0
+#### Research Questions
 
-      def get_opponent(self) -> str:
-          return self.stages[self.current_stage]["opponent"]
+1. **Scaling Laws:** Does performance improve logarithmically with steps, or are there phase transitions ("emergent abilities")?
 
-      def should_advance(self, win_rate: float) -> bool:
-          target = self.stages[self.current_stage]["target_wr"]
-          return win_rate >= target
-  ```
+2. **Diminishing Returns:** At what point does more training stop helping? 1M? 5M? 10M steps?
 
-- [x] Add callback for automatic stage advancement
+3. **Architecture Impact:** Does 512x512 significantly outperform 256x256?
 
-**Success Criteria:**
+#### Experimental Protocol
 
-- [x] Curriculum scheduler implemented
-- [x] Automatic advancement on target reached
-- [x] Logging of stage transitions
-
-### Task 3.2: Agent Ignis (Red Specialist)
-
-**Tasks:**
-
-- [ ] Create training script for Red decks:
-
-  ```python
-  # scripts/train_ignis.py
-  from sb3_contrib import MaskablePPO
-  from manacore_gym import ManaCoreBattleEnv, CurriculumScheduler
-
-  env = ManaCoreBattleEnv(
-      deck="red-aggro",
-      opponent_deck="vanilla",
-  )
-
-  model = MaskablePPO(
-      "MlpPolicy",
-      env,
-      learning_rate=3e-4,
-      n_steps=2048,
-      batch_size=64,
-      n_epochs=10,
-      gamma=0.99,
-      verbose=1,
-      tensorboard_log="./logs/ignis/",
-  )
-
-  scheduler = CurriculumScheduler(CURRICULUM)
-
-  # Training loop with curriculum
-  ...
-
-  model.save("models/ignis-v1")
-  ```
-
-- [ ] Train for 1M+ timesteps
-- [ ] Track ELO progression over time
-- [ ] Save checkpoints every 100K steps
+For each training run, record:
+- Win rate checkpoints every 50K steps
+- TensorBoard logs (loss curves, entropy)
+- Best model checkpoint
+- Wall-clock time
 
 **Success Criteria:**
+- [ ] Achieve >60% win rate vs greedy
+- [ ] Document the scaling curve
+- [ ] Identify optimal hyperparameters
 
-- [ ] Agent converges (loss stabilizes)
-- [ ] Beats RandomBot >95%
-- [ ] Beats GreedyBot >70%
-- [ ] ELO improves monotonically
+---
 
-### Task 3.3: Agent Aqua (Blue Specialist)
+### Phase 3C: Archetype Specialists
 
-**Tasks:**
+**Goal:** Train three agents on distinct playstyles (not colors!)
 
-- [ ] Create training script for Blue decks (control style)
-- [ ] Use different reward shaping:
+**Key Insight (from Gemini):** Training on "Aggro" teaches tempo. Training on "Red" teaches card IDs. Archetypes transfer; colors don't.
 
-  ```python
-  # Blue values card advantage and game length
-  def blue_reward(info):
-      base = info["win"] - info["loss"]
-      card_bonus = info["card_advantage"] * 0.01
-      return base + card_bonus
-  ```
+#### The Roster
 
-- [ ] Train for 1M+ timesteps
-- [ ] Compare learning curves to Ignis
+| Agent | Archetype | Training Decks | Learning Hypothesis |
+|-------|-----------|----------------|---------------------|
+| **Ignis** 🔥 | Aggro | `red_burn`, `white_weenie`, `black_aggro` | Fast convergence (immediate rewards) |
+| **Aqua** 💧 | Control | `blue_control`, `dimir` | Slow convergence (delayed gratification) |
+| **Silva** 🌳 | Midrange | `green_midrange`, `gruul`, `simic` | Medium (investment → payoff) |
 
-**Success Criteria:**
+#### Research Questions
 
-- [ ] Agent learns control playstyle
-- [ ] Different decision patterns than Ignis
-- [ ] Competitive win rate
+1. **Convergence Speed:** Does Aggro (Ignis) learn faster than Control (Aqua)?
+   - *Hypothesis:* Yes, because rewards are more immediate
 
-### Task 3.4: Agent Silva (Green Specialist)
+2. **Credit Assignment:** Can PPO solve Control's long-horizon problem?
+   - *Hypothesis:* Difficult; may need specialized reward shaping
 
-**Tasks:**
+3. **Learning Curves:** Do different archetypes show different curve shapes?
+   - Plot side-by-side for comparison
 
-- [ ] Create training script for Green decks (ramp/big creatures)
-- [ ] Train for 1M+ timesteps
-- [ ] Complete the "color triangle"
+#### Success Criteria
 
-**Success Criteria:**
+- [ ] All three specialists beat greedy >60%
+- [ ] Documented learning curve differences
+- [ ] Each agent shows archetype-appropriate behavior
 
-- [ ] Three distinct specialists trained
-- [ ] Each has different strategic tendencies
-- [ ] Rock-paper-scissors dynamics observable
+---
 
-### Task 3.5: Specialist Analysis
+### Phase 3D: Transfer Learning Experiments 📝 PAPER-WORTHY
 
-**Tasks:**
+**Goal:** Test whether agents learned *strategy* or just *card patterns*
 
-- [ ] Run round-robin tournament:
+This is the most scientifically interesting phase. Results here could be publishable.
 
-  ```
-  Ignis vs Aqua: 1000 games
-  Aqua vs Silva: 1000 games
-  Silva vs Ignis: 1000 games
-  ```
+#### Experiment A: Within-Archetype Transfer
 
-- [ ] Analyze decision differences:
-  - When do specialists diverge?
-  - What heuristics did each learn?
-  - Can we identify "personality"?
+**Setup:**
+1. Train Ignis ONLY on `red_burn` until mastery (>70% vs greedy)
+2. Test Ignis on `white_weenie` (never seen during training)
 
-- [ ] Create visualization of learned policies
+**Hypothesis:** Ignis performs well (~60%+) because it learned "Aggro" concepts:
+- Play cheap creatures early
+- Attack aggressively
+- Prioritize damage over card advantage
 
-**Success Criteria:**
+**Metrics:**
+- Win rate on unseen deck
+- Action distribution comparison (does it still play aggressively?)
 
-- [ ] Quantified matchup data
-- [ ] Identified strategic differences
-- [ ] Documentation for Track C experiments
+#### Experiment B: Cross-Archetype Failure
+
+**Setup:**
+1. Take trained Ignis (Aggro specialist)
+2. Force it to play `blue_control` deck
+
+**Hypothesis:** Ignis fails miserably (<30%) because:
+- Tries to play control cards aggressively
+- Doesn't understand "wait and react"
+- Wrong heuristics for the strategy
+
+**Why this matters:** If Ignis fails at Control but succeeds at White Weenie, it proves the agent learned *strategy*, not *card mappings*.
+
+#### Experiment C: Feature Importance Analysis
+
+**Setup:**
+1. Train agent normally
+2. Ablate individual features (zero them out)
+3. Measure performance drop
+
+**Question:** Which features matter most for each archetype?
+- *Hypothesis:* Aggro cares about life differential; Control cares about card advantage
+
+#### Data to Collect
+
+| Agent | Home Deck | vs Greedy | Transfer Deck | vs Greedy | Delta |
+|-------|-----------|-----------|---------------|-----------|-------|
+| Ignis | red_burn | ?% | white_weenie | ?% | ? |
+| Ignis | red_burn | ?% | blue_control | ?% | ? |
+| Aqua | blue_control | ?% | dimir | ?% | ? |
+| Aqua | blue_control | ?% | red_burn | ?% | ? |
+
+---
+
+### Phase 3E: Generalist Challenge
+
+**Goal:** Train a single agent on ALL deck types
+
+#### Experiment: The Generalist Tax
+
+**Setup:**
+1. Train `Agent Polymath` on all decks simultaneously
+   - Randomly sample deck each episode
+   - Same total training steps as specialists
+
+2. Compare win rates:
+   - Polymath with red_burn vs Ignis with red_burn
+   - Polymath with blue_control vs Aqua with blue_control
+
+**Research Question:** How much worse is the generalist?
+
+**Hypothesis:** Specialists are 5-15% better on their home archetype, but Polymath is more robust overall.
+
+**The Holy Grail:** Can we train a generalist that matches specialist performance?
+
+---
+
+### Phase 3F: Meta Analysis
+
+**Goal:** Discover emergent metagame dynamics
+
+#### Experiment: Round-Robin Tournament
+
+**Setup:**
+```
+1000 games per matchup:
+- Ignis (Aggro) vs Aqua (Control)
+- Aqua (Control) vs Silva (Midrange)
+- Silva (Midrange) vs Ignis (Aggro)
+```
+
+**Research Question:** Do agents discover Rock-Paper-Scissors dynamics naturally?
+
+**Expected Pattern (if agents learned real MTG):**
+```
+        Ignis (Aggro)
+           ▲
+          / \
+   beats /   \ loses to
+        /     \
+       /       \
+  Aqua ◄───────► Silva
+(Control) beats (Midrange)
+```
+
+**Visualization:**
+- Win rate heatmap
+- Strategy triangle diagram
+- Decision tree comparisons
+
+---
+
+### Available Decks by Archetype
+
+```
+AGGRO (Damage-focused, fast games):
+├── red_burn        # Shock, Hammer of Bogardan, Stone Rain
+├── white_weenie    # Tundra Wolves, Samite Healer, cheap creatures
+└── black_aggro     # Bog Rats, Python, aggressive black creatures
+
+CONTROL (Card advantage, long games):
+├── blue_control    # Counterspell, Power Sink, Air Elemental
+└── dimir           # Blue + Black (counters + removal)
+
+MIDRANGE (Investment, board presence):
+├── green_midrange  # River Boa, Gorilla Chieftain, Hurricane
+├── gruul           # Red + Green (creatures + burn)
+└── simic           # Blue + Green (tempo + creatures)
+
+SPECIAL (Edge cases):
+├── artifact        # Colorless cards
+├── color_hate      # Protection/hate cards
+└── spells          # Spell-heavy deck
+```
+
+---
+
+### Success Metrics Summary
+
+| Phase | Key Metric | Target | Status |
+|-------|------------|--------|--------|
+| 3A | Infrastructure | Complete | ✅ |
+| 3B | Win rate vs greedy | >60% | 🔄 48% |
+| 3C | Specialist convergence | All >60% | ⏳ |
+| 3D | Transfer accuracy | Measured | ⏳ |
+| 3E | Generalist gap | <10% | ⏳ |
+| 3F | Meta emergence | Documented | ⏳ |
+
+---
+
+### Research Output Goals
+
+By the end of Phase 3, we aim to produce:
+
+1. **Scaling Analysis:** Graph of performance vs training steps
+2. **Transfer Learning Results:** Table of within/cross-archetype transfer
+3. **Archetype Learning Curves:** Comparison plot (Aggro vs Control vs Midrange)
+4. **Meta Visualization:** Strategy triangle with empirical win rates
+
+These could form the basis of a research paper: *"Transfer Learning in Strategic Card Games: Do RL Agents Learn Strategy or Cards?"*
+
+---
+
+### Next Steps (Phase 3B)
+
+1. [ ] Run 1M step training (measure scaling)
+2. [ ] Run 2M step training (check for emergent abilities)
+3. [ ] Try larger network (512x512)
+4. [ ] Document all results in training log above
+5. [ ] Once >60% achieved, proceed to Phase 3C
 
 ---
 
@@ -692,7 +831,8 @@ Phase 4 (Orchestrator) ──► Phase 5 (Llama-Mage) ◄──┘
 | Agent           | vs Random | vs Greedy | vs MCTS | Notes                             |
 | --------------- | --------- | --------- | ------- | --------------------------------- |
 | NeuralImitator  | 60% ⚠️    | 18% ⚠️    | -       | Trained on Greedy data (not MCTS) |
-| PPO Specialists | >95%      | >70%      | >55%    | Curriculum target                 |
+| PPO (Enhanced)  | 78%       | 45-48%    | -       | Reward shaping + 256x256 network  |
+| PPO Specialists | >95%      | >70%      | >55%    | Curriculum target (future)        |
 | Llama-Mage      | >80%      | >60%      | TBD     | Interpretable                     |
 | AlphaCore       | >99%      | >90%      | >60%    | Peak performance                  |
 
