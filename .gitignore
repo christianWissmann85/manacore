@@ -58,6 +58,7 @@ coverage/
 /output/
 packages/python-gym/logs
 packages/python-gym/models
+packages/ai/models
 
 # Legacy output locations (deprecated - use output/ instead)
 results/
