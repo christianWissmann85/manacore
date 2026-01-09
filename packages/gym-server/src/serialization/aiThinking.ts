@@ -184,7 +184,7 @@ export function captureMCTSThinking(
     winProbability: result.winRate,
     evaluatedNodes: result.iterations,
     timeMs: result.timeMs,
-    mctsTree: serializeMCTSNode(result.root, state, 5, 0, 1),
+    mctsTree: serializeMCTSNode(result.root, state, 5, 0, 2),
     evaluation: calculateEvaluationBreakdown(state, playerId),
   };
 }
