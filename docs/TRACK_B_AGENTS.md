@@ -240,7 +240,7 @@ where V(s) = 0.30 · life_advantage
 |-----|-------|---------|----------------|-----------|------------------|-------|
 | 1 | 250K | 64x64 | No | 77% | 32% | Baseline |
 | 2 | 500K | 256x256 | Yes | 78% | 48% | +16% improvement |
-| 3 | ? | ? | ? | ? | ? | *Next experiment* |
+| 3 | 1M | 256x256 | Yes | 75% | 48% | **No scaling benefit** - [Report](./training-reports/2026-01-09_ppo_1M_scaling.md) |
 
 #### Research Questions
 
@@ -462,12 +462,37 @@ These could form the basis of a research paper: *"Transfer Learning in Strategic
 
 ---
 
+### Documentation Practices
+
+**Every training run should produce a report** in `docs/training-reports/`.
+
+Report template: `YYYY-MM-DD_[experiment]_[detail].md`
+
+Each report must include:
+1. **Configuration**: All hyperparameters, architecture
+2. **Results**: Training curve, checkpoints, final eval
+3. **Analysis**: Key findings, hypotheses
+4. **Next Steps**: What to try based on results
+5. **Files**: Paths to models, logs
+
+See [Training Reports README](./training-reports/README.md) for full format.
+
+---
+
+### Current Status (Phase 3B)
+
+**Latest Finding (Jan 9, 2026):** [1M Scaling Report](./training-reports/2026-01-09_ppo_1M_scaling.md)
+
+- No scaling benefit beyond 100K steps
+- Ceiling at ~48% vs greedy
+- Next: Diagnose WHY greedy wins before adding complexity
+
 ### Next Steps (Phase 3B)
 
-1. [ ] Run 1M step training (measure scaling)
-2. [ ] Run 2M step training (check for emergent abilities)
-3. [ ] Try larger network (512x512)
-4. [ ] Document all results in training log above
+1. [x] Run 1M step training (measure scaling) - **No benefit found**
+2. [ ] **Diagnose failure patterns** (Option C) - watch games where greedy wins
+3. [ ] Try richer observations (Option A) if diagnosis suggests it
+4. [ ] Try hyperparameter tuning (Option B) - more eval games, entropy
 5. [ ] Once >60% achieved, proceed to Phase 3C
 
 ---
