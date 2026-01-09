@@ -71,6 +71,39 @@ Key changes:
 
 **Finding**: Larger networks and different hyperparameters did not help. The default configuration is already near-optimal for this problem.
 
+### 6. Curriculum Learning v2
+
+Progressive difficulty approach:
+- Stage 1: 100% Random (30K steps, target 85%)
+- Stage 2: 50% Random + 50% Greedy (30K steps, target 65%)
+- Stage 3: 100% Greedy (50K steps, target 50%)
+
+| Stage | Opponent | Win Rate | Target | Status |
+|-------|----------|----------|--------|--------|
+| 1 | Random | 73.3% | 85% | FAIL |
+| 2 | Mixed | 36.7% vs Greedy | 65% | FAIL |
+| 3 | Greedy | 36.7% vs Greedy | 50% | FAIL |
+
+**Final: 81% vs Random, 36% vs Greedy**
+
+**Finding**: NEGATIVE. Curriculum learning actually hurt performance. The model learned patterns for the mixed distribution that didn't transfer to pure Greedy play. Performance dropped from 45% baseline to 36%.
+
+### 7. Reward Shaping (Enhanced)
+
+Increased reward shaping scale from 0.1 to 0.5 (5x) to make intermediate rewards more impactful.
+
+Shaped reward characteristics:
+- Range: [-0.038, +0.031] per step
+- Average magnitude: 0.008
+- Based on: life delta, board power, creature count, card advantage, mana
+
+| Metric | Sparse (baseline) | Shaped (5x scale) |
+|--------|-------------------|-------------------|
+| vs Random | 78% | 74% |
+| vs Greedy | 45% | 38% |
+
+**Finding**: NEGATIVE. Reward shaping hurt performance (-7%). This is theoretically consistent - potential-based shaping preserves the optimal policy, it doesn't change what that policy is. The 45% ceiling is a property of the problem, not the reward signal.
+
 ## Analysis
 
 ### Why Does PPO Plateau at 45%?
@@ -103,36 +136,16 @@ Based on our experiments:
 - ❌ Larger networks (worse performance)
 - ❌ Warm starting from imitation (neutral at best)
 - ❌ Hyperparameter tuning (marginal gains)
+- ❌ Curriculum learning (hurt performance)
+- ❌ Reward shaping (hurt performance)
 
 ## Recommended Next Steps
 
-### Curriculum Learning (HIGH PRIORITY)
+### Self-Play (HIGH PRIORITY)
 
-Instead of training against a fixed strong opponent, gradually increase difficulty:
+Train against copies of itself instead of a fixed opponent. This avoids overfitting to GreedyBot's specific strategy and creates an adaptive curriculum.
 
-```
-Phase 1: 100% Random    → Learn basics, build confidence
-Phase 2: 50% Random + 50% Greedy → Transition skills
-Phase 3: 100% Greedy    → Specialize against strong play
-```
-
-This addresses the sparse reward problem by providing easier wins early in training.
-
-### Self-Play (MEDIUM PRIORITY)
-
-Train against copies of itself to avoid overfitting to GreedyBot's specific strategy.
-
-### Reward Shaping (MEDIUM PRIORITY)
-
-Add intermediate rewards for:
-
-- Life advantage
-- Board presence (creatures)
-- Card advantage
-
-The gym server already has this implemented but needs testing.
-
-### LLM-Based Approaches (LONG TERM)
+### LLM-Based Approaches (MEDIUM PRIORITY)
 
 Use language models for:
 
