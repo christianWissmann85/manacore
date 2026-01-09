@@ -54,7 +54,7 @@ class TrainingRun:
 class TrainingAnalyzer:
     """
     Analyze and visualize ManaCore RL training runs.
-    
+
     Parses TensorBoard event files and creates publication-ready visualizations
     including learning curves, statistical comparisons, and 3D exploration plots.
     """
@@ -62,7 +62,7 @@ class TrainingAnalyzer:
     def __init__(self, logs_dir: str | Path):
         """
         Initialize analyzer with logs directory.
-        
+
         Args:
             logs_dir: Path to logs directory containing training runs
         """
@@ -153,14 +153,14 @@ class TrainingAnalyzer:
     ) -> plt.Figure:
         """
         Plot learning curves for specified metrics and runs.
-        
+
         Args:
             metrics: List of metric names to plot (default: key metrics)
             runs: List of run names to include (default: all)
             smoothing: Exponential moving average smoothing (0-1)
             figsize: Figure size (width, height)
             save_path: Optional path to save figure
-        
+
         Returns:
             Matplotlib figure
         """
@@ -243,12 +243,12 @@ class TrainingAnalyzer:
     ) -> plt.Figure:
         """
         Create a comparison matrix showing all runs side-by-side.
-        
+
         Args:
             metric: Metric to compare
             figsize: Figure size
             save_path: Optional path to save figure
-        
+
         Returns:
             Matplotlib figure
         """
@@ -347,13 +347,13 @@ class TrainingAnalyzer:
     ) -> go.Figure:
         """
         Create interactive 3D plot exploring metric relationships.
-        
+
         Args:
             x_metric: Metric for X axis
             y_metric: Metric for Y axis
             z_metric: Metric for Z axis (typically reward)
             save_path: Optional path to save HTML
-        
+
         Returns:
             Plotly figure
         """
@@ -431,7 +431,7 @@ class TrainingAnalyzer:
     def create_statistical_report(self) -> pd.DataFrame:
         """
         Generate statistical comparison report across all runs.
-        
+
         Returns:
             DataFrame with statistical metrics for each run
         """
@@ -467,15 +467,17 @@ class TrainingAnalyzer:
     def export_for_paper(
         self,
         output_dir: str | Path,
-        formats: list[str] = ['png', 'pdf'],
+        formats: list[str] | None = None,
     ) -> None:
         """
         Export all plots in publication-ready formats.
-        
+
         Args:
             output_dir: Directory to save exports
             formats: Image formats to export ('png', 'pdf', 'svg')
         """
+        if formats is None:
+            formats = ['png', 'pdf']
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -523,7 +525,7 @@ class TrainingAnalyzer:
 def quick_analysis(logs_dir: str = "./logs") -> TrainingAnalyzer:
     """
     Quick analysis with default settings.
-    
+
     Example:
         >>> analyzer = quick_analysis("./logs")
         >>> analyzer.plot_learning_curves()

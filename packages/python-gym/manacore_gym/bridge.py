@@ -87,6 +87,11 @@ class BunBridge:
         if self._is_server_running():
             return
 
+        # If port might be in use, wait a bit for it to be released
+        time.sleep(1.0)
+        if self._is_server_running():
+            return
+
         print(f"[BunBridge] Starting server at {self.base_url}...")
 
         env = os.environ.copy()
