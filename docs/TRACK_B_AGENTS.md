@@ -140,19 +140,43 @@ packages/ai/models/
 
 ---
 
-## Phase 3: PPO Specialists
+## Phase 3: PPO Specialists (In Progress)
 
 **Theme:** "Train from scratch"
 
 **Goal:** Train reinforcement learning agents that discover strategies through self-play, without imitating existing bots.
 
-**Depends on:** Phase 1 (Gym Bridge) - need Python training environment
+**Status:** Infrastructure complete, initial training shows promise
+
+### Progress Update (January 8, 2026)
+
+**Completed:**
+- [x] Curriculum learning scheduler implemented (`manacore_gym/training/curriculum.py`)
+- [x] PPO training script with curriculum (`examples/train_curriculum.py`)
+- [x] Robust error handling in gym-server for edge cases
+- [x] Observation sanitization to prevent NaN values
+
+**Initial Training Results (Fast Curriculum - 70K steps):**
+| Stage | Opponent | Win Rate | Target |
+|-------|----------|----------|--------|
+| 1     | Random   | 76.7%    | 75%    |
+| 2     | Greedy   | 35%      | 50%    |
+
+**Files Created:**
+```
+packages/python-gym/manacore_gym/training/
+├── __init__.py
+└── curriculum.py          # CurriculumScheduler class
+
+packages/python-gym/examples/
+└── train_curriculum.py    # PPO training with curriculum
+```
 
 ### Task 3.1: Curriculum Learning Setup
 
 **Tasks:**
 
-- [ ] Define training curriculum:
+- [x] Define training curriculum:
 
   ```python
   CURRICULUM = [
@@ -170,7 +194,7 @@ packages/ai/models/
   ]
   ```
 
-- [ ] Implement curriculum scheduler:
+- [x] Implement curriculum scheduler:
 
   ```python
   class CurriculumScheduler:
@@ -186,13 +210,13 @@ packages/ai/models/
           return win_rate >= target
   ```
 
-- [ ] Add callback for automatic stage advancement
+- [x] Add callback for automatic stage advancement
 
 **Success Criteria:**
 
-- [ ] Curriculum scheduler implemented
-- [ ] Automatic advancement on target reached
-- [ ] Logging of stage transitions
+- [x] Curriculum scheduler implemented
+- [x] Automatic advancement on target reached
+- [x] Logging of stage transitions
 
 ### Task 3.2: Agent Ignis (Red Specialist)
 
