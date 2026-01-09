@@ -319,7 +319,7 @@ export class SessionManager {
     while (!session.state.gameOver && session.state.priorityPlayer === 'opponent') {
       try {
         const opponentAction = session.opponent.chooseAction(session.state, 'opponent');
-        
+
         // Capture AI thinking after opponent move decision
         session.lastAIThinking = session.opponent.getLastThinking();
 
@@ -375,7 +375,7 @@ export class SessionManager {
           // Check if opponent now has priority
           while (!session.state.gameOver && session.state.priorityPlayer === 'opponent') {
             const opponentAction = session.opponent.chooseAction(session.state, 'opponent');
-            
+
             // Capture AI thinking after opponent move
             session.lastAIThinking = session.opponent.getLastThinking();
 

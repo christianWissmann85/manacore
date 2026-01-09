@@ -29,11 +29,11 @@ export function Hand({ cards }: HandProps) {
         const totalCards = cards.length;
         const midpoint = (totalCards - 1) / 2;
         const offset = index - midpoint;
-        
+
         // Adjust spacing based on card count to keep hand compact
         const rotationPerCard = totalCards > 7 ? 20 / totalCards : 3;
         const rotation = offset * rotationPerCard;
-        
+
         // Vertical arch effect
         const translateY = Math.abs(offset) * (totalCards > 7 ? 1.5 : 2);
 
@@ -45,7 +45,7 @@ export function Hand({ cards }: HandProps) {
               transform: `rotate(${rotation}deg) translateY(${translateY}px)`,
               zIndex: isSelected ? 50 : index,
               // Overlap more if many cards
-              marginLeft: index === 0 ? 0 : totalCards > 7 ? -40 : -10, 
+              marginLeft: index === 0 ? 0 : totalCards > 7 ? -40 : -10,
             }}
           >
             <Card

@@ -24,10 +24,16 @@ Usage:
 
 import argparse
 import subprocess
-import sys
 import time
 from datetime import datetime
 from pathlib import Path
+from typing import TypedDict
+
+
+class ExperimentResult(TypedDict):
+    name: str
+    success: bool
+    elapsed: float
 
 
 def run_command(cmd: list[str], description: str) -> tuple[bool, float]:
@@ -101,7 +107,7 @@ Total estimated time:
     print(f"Run:          {'Warm Start Only' if args.warmstart_only else 'Sweep Only' if args.sweep_only else 'All Experiments'}")
     print("=" * 70)
 
-    results = []
+    results: list[ExperimentResult] = []
     total_start = time.time()
 
     # Experiment A: Warm Start v2

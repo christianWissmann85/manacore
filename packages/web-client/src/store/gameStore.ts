@@ -160,10 +160,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
           history.push({
             turn: step.turn,
             phase: step.phase,
-            action: { 
-              index: -1, 
-              type: 'unknown', 
-              description: `[${step.playerId === 'player' ? 'You' : 'Opponent'}] ${step.description}`
+            action: {
+              index: -1,
+              type: 'unknown',
+              description: `[${step.playerId === 'player' ? 'You' : 'Opponent'}] ${step.description}`,
             },
             state: newState, // We only have the final state
             aiThinking: step.aiThinking ?? undefined,
@@ -274,7 +274,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       try {
         // Query the server for what this bot type would do
         const { expertAction } = await gameService.getBotAction(gameId, playerType);
-        
+
         // Execute that action
         await get().executeAction(expertAction);
       } catch (error) {

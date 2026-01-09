@@ -51,7 +51,9 @@ export function Battlefield({ owner, className }: BattlefieldProps) {
   };
 
   return (
-    <div className={clsx('flex flex-col gap-2 p-2 min-h-0 overflow-y-auto scrollbar-hide', className)}>
+    <div
+      className={clsx('flex flex-col gap-2 p-2 min-h-0 overflow-y-auto scrollbar-hide', className)}
+    >
       {/* Creatures row */}
       {creatures.length > 0 && (
         <div className="flex flex-wrap gap-1 justify-center">{creatures.map(renderPermanent)}</div>

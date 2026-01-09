@@ -388,7 +388,7 @@ Example:
     print("\n" + "=" * 70)
     print("COMPARISON TO BASELINE")
     print("=" * 70)
-    print(f"Previous best (pure PPO): 45% vs Greedy")
+    print("Previous best (pure PPO): 45% vs Greedy")
     print(f"Best from sweep:          {best_greedy:.1f}% vs Greedy")
 
     if best_greedy > 45:

@@ -10,14 +10,13 @@ import { CardPreview } from './CardPreview';
 type Tab = 'ai' | 'card';
 
 export function InspectorPanel() {
-  const { 
-    aiThinking, 
-    showAIThinking, 
-    toggleAIThinking, 
-    opponentType, 
-    playerType,
+  const {
+    aiThinking,
+    showAIThinking,
+    toggleAIThinking,
+    opponentType,
     hoveredCardId,
-    selectedCardId
+    selectedCardId,
   } = useGameStore();
 
   const [activeTab, setActiveTab] = useState<Tab>('ai');
@@ -29,7 +28,6 @@ export function InspectorPanel() {
     }
   }, [hoveredCardId, selectedCardId]);
 
-  const isAIvsAI = playerType !== 'human';
   const hasAIThinking = aiThinking !== null;
 
   return (
@@ -69,8 +67,8 @@ export function InspectorPanel() {
               <button
                 onClick={toggleAIThinking}
                 className={`text-xs px-2 py-1 rounded transition-colors ${
-                  showAIThinking 
-                    ? 'bg-board-highlight text-white' 
+                  showAIThinking
+                    ? 'bg-board-highlight text-white'
                     : 'bg-board-accent text-gray-400 hover:text-gray-200'
                 }`}
               >

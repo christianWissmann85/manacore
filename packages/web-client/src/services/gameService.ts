@@ -97,7 +97,7 @@ class GameService {
       throw new Error(`Failed to get bot action: ${error}`);
     }
 
-    return response.json();
+    return response.json() as Promise<{ expertAction: number; expertActionDescription: string }>;
   }
 
   /** Delete game session */
