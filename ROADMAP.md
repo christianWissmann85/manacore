@@ -76,7 +76,7 @@ Development is organized into four parallel tracks:
 
 ```
 🔜 packages/gym-server/     - HTTP server for Python bridge
-🔜 packages/python-gym/     - Gymnasium environment 
+🔜 packages/python-gym/     - Gymnasium environment
 🔜 Vectorized environments  - Parallel training support
 🔜 Example training scripts - PPO with Stable Baselines3
 ```

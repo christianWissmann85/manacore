@@ -31,14 +31,14 @@ Each stage builds on the previous, validating infrastructure before adding compl
 
 ### Research Agents
 
-| Agent          | Type             | Phase | Status    | Use Case          |
-| -------------- | ---------------- | ----- | --------- | ----------------- |
-| NeuralImitator | Behavior Cloning | 2B    | ✅ Done    | Validate pipeline |
-| Agent Ignis    | PPO (Red)        | 3     | Planned   | Specialist study  |
-| Agent Aqua     | PPO (Blue)       | 3     | Planned   | Specialist study  |
-| Agent Silva    | PPO (Green)      | 3     | Planned   | Specialist study  |
-| Llama-Mage     | Fine-tuned LLM   | 5     | Planned   | Interpretability  |
-| AlphaCore      | Self-play NN     | 6     | Planned   | Peak performance  |
+| Agent          | Type             | Phase | Status  | Use Case          |
+| -------------- | ---------------- | ----- | ------- | ----------------- |
+| NeuralImitator | Behavior Cloning | 2B    | ✅ Done | Validate pipeline |
+| Agent Ignis    | PPO (Red)        | 3     | Planned | Specialist study  |
+| Agent Aqua     | PPO (Blue)       | 3     | Planned | Specialist study  |
+| Agent Silva    | PPO (Green)      | 3     | Planned | Specialist study  |
+| Llama-Mage     | Fine-tuned LLM   | 5     | Planned | Interpretability  |
+| AlphaCore      | Self-play NN     | 6     | Planned | Peak performance  |
 
 ---
 
@@ -66,13 +66,14 @@ Successfully implemented end-to-end neural network training pipeline:
 
 ### Benchmark Results
 
-| Matchup                  | Win Rate | Target | Status |
-| ------------------------ | -------- | ------ | ------ |
-| NeuralBot vs RandomBot   | 60.0%    | >80%   | ⚠️      |
-| NeuralBot vs GreedyBot   | 18.0%    | >50%   | ⚠️      |
-| GreedyBot vs RandomBot   | 89.0%    | -      | ✅      |
+| Matchup                | Win Rate | Target | Status |
+| ---------------------- | -------- | ------ | ------ |
+| NeuralBot vs RandomBot | 60.0%    | >80%   | ⚠️     |
+| NeuralBot vs GreedyBot | 18.0%    | >50%   | ⚠️     |
+| GreedyBot vs RandomBot | 89.0%    | -      | ✅     |
 
 **Analysis**: NeuralBot underperforms targets, likely due to:
+
 - Training on Greedy data (not MCTS) - simpler decision patterns
 - 47% validation accuracy means ~50% of moves are "wrong"
 - Better data (MCTS games) would improve quality
@@ -151,6 +152,7 @@ packages/ai/models/
 ### Progress Update (January 8, 2026)
 
 **Completed:**
+
 - [x] Curriculum learning scheduler implemented (`manacore_gym/training/curriculum.py`)
 - [x] PPO training script with curriculum (`examples/train_curriculum.py`)
 - [x] Robust error handling in gym-server for edge cases
@@ -159,10 +161,11 @@ packages/ai/models/
 **Initial Training Results (Fast Curriculum - 70K steps):**
 | Stage | Opponent | Win Rate | Target |
 |-------|----------|----------|--------|
-| 1     | Random   | 76.7%    | 75%    |
-| 2     | Greedy   | 35%      | 50%    |
+| 1 | Random | 76.7% | 75% |
+| 2 | Greedy | 35% | 50% |
 
 **Files Created:**
+
 ```
 packages/python-gym/manacore_gym/training/
 ├── __init__.py
@@ -686,12 +689,12 @@ Phase 4 (Orchestrator) ──► Phase 5 (Llama-Mage) ◄──┘
 
 ## Success Metrics
 
-| Agent           | vs Random | vs Greedy | vs MCTS | Notes                                    |
-| --------------- | --------- | --------- | ------- | ---------------------------------------- |
-| NeuralImitator  | 60% ⚠️    | 18% ⚠️    | -       | Trained on Greedy data (not MCTS)        |
-| PPO Specialists | >95%      | >70%      | >55%    | Curriculum target                        |
-| Llama-Mage      | >80%      | >60%      | TBD     | Interpretable                            |
-| AlphaCore       | >99%      | >90%      | >60%    | Peak performance                         |
+| Agent           | vs Random | vs Greedy | vs MCTS | Notes                             |
+| --------------- | --------- | --------- | ------- | --------------------------------- |
+| NeuralImitator  | 60% ⚠️    | 18% ⚠️    | -       | Trained on Greedy data (not MCTS) |
+| PPO Specialists | >95%      | >70%      | >55%    | Curriculum target                 |
+| Llama-Mage      | >80%      | >60%      | TBD     | Interpretable                     |
+| AlphaCore       | >99%      | >90%      | >60%    | Peak performance                  |
 
 ---
 

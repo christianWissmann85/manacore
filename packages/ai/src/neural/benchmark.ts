@@ -165,9 +165,15 @@ async function main() {
   console.log('\n' + '═'.repeat(60));
   console.log('Summary');
   console.log('═'.repeat(60));
-  console.log(`NeuralBot vs Random:  ${((vsRandom.p1Wins / vsRandom.games) * 100).toFixed(1)}% win rate`);
-  console.log(`NeuralBot vs Greedy:  ${((vsGreedy.p1Wins / vsGreedy.games) * 100).toFixed(1)}% win rate`);
-  console.log(`Greedy vs Random:     ${((greedyVsRandom.p1Wins / greedyVsRandom.games) * 100).toFixed(1)}% win rate (baseline)`);
+  console.log(
+    `NeuralBot vs Random:  ${((vsRandom.p1Wins / vsRandom.games) * 100).toFixed(1)}% win rate`,
+  );
+  console.log(
+    `NeuralBot vs Greedy:  ${((vsGreedy.p1Wins / vsGreedy.games) * 100).toFixed(1)}% win rate`,
+  );
+  console.log(
+    `Greedy vs Random:     ${((greedyVsRandom.p1Wins / greedyVsRandom.games) * 100).toFixed(1)}% win rate (baseline)`,
+  );
   console.log('═'.repeat(60));
 
   // Cleanup

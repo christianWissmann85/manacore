@@ -35,7 +35,7 @@ Development follows four parallel tracks:
 **Key Deliverables**:
 
 - `packages/gym-server/` - HTTP server exposing engine API
-- `packages/python-gym/` - Gymnasium environment 
+- `packages/python-gym/` - Gymnasium environment
 - Example PPO training scripts with Stable Baselines3
 
 See [ROADMAP.md](ROADMAP.md) for full phase details.

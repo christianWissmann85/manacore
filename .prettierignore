@@ -14,3 +14,6 @@ packages/engine/data/
 # Package files
 package-lock.json
 bun.lockb
+
+# Python package and cache directories
+packages/python-gym/

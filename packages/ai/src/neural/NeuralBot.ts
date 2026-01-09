@@ -110,7 +110,10 @@ export class NeuralBot implements Bot {
     }
 
     // Create input tensor
-    const inputTensor = new ort.Tensor('float32', Float32Array.from(features), [1, features.length]);
+    const inputTensor = new ort.Tensor('float32', Float32Array.from(features), [
+      1,
+      features.length,
+    ]);
 
     // Run inference (we need to make this sync somehow)
     // ONNX Runtime Node.js is async, but we can use a cached result pattern
@@ -150,7 +153,10 @@ export class NeuralBot implements Bot {
     const featureArray = featuresToArray(features);
 
     // Create input tensor
-    const inputTensor = new ort.Tensor('float32', Float32Array.from(featureArray), [1, featureArray.length]);
+    const inputTensor = new ort.Tensor('float32', Float32Array.from(featureArray), [
+      1,
+      featureArray.length,
+    ]);
 
     // Run inference
     const outputs = await this.session!.run({ features: inputTensor });

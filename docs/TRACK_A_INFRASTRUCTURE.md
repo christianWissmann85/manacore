@@ -395,7 +395,7 @@ These components are foundational - Track B (Agents) cannot proceed without them
 - [x] README covers all use cases
 - [x] Notebook runs without errors
 
-### Task 1.8: PyPI Publishing Preparation 
+### Task 1.8: PyPI Publishing Preparation
 
 **Tasks:**
 

@@ -77,6 +77,7 @@ export default [
       '**/build/**',
       '**/data/**',
       '**/*.js', // Ignore compiled JS files
+      'packages/python-gym/**', // Python package - not TypeScript
     ],
   },
 ];

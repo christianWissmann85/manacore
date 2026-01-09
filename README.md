@@ -136,7 +136,7 @@ ManaCore follows a multi-track development approach:
 Creating Python bindings for ML researchers:
 
 - `packages/gym-server/` - HTTP server exposing engine API
-- `packages/python-gym/` - Gymnasium environment  
+- `packages/python-gym/` - Gymnasium environment
 - Example training scripts with Stable Baselines3
 
 See [ROADMAP.md](ROADMAP.md) for full details.

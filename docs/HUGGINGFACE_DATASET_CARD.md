@@ -39,17 +39,17 @@ This dataset contains decision-making data from thousands of MTG games played be
 
 ### Data Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `features` | `float32[25]` | Normalized game state features |
-| `action` | `int32` | Index of action taken (0 to legal_count-1) |
-| `legal_count` | `int32` | Number of legal actions available |
-| `action_type` | `string` | Human-readable action type |
-| `outcome` | `int32` | Game result: 1 (win), -1 (loss), 0 (draw) |
-| `game_id` | `string` | Unique game identifier |
-| `turn` | `int32` | Turn number when decision was made |
-| `phase` | `string` | Game phase (main1, combat, main2, etc.) |
-| `reasoning` | `string` | Optional strategic reasoning (if available) |
+| Field         | Type          | Description                                 |
+| ------------- | ------------- | ------------------------------------------- |
+| `features`    | `float32[25]` | Normalized game state features              |
+| `action`      | `int32`       | Index of action taken (0 to legal_count-1)  |
+| `legal_count` | `int32`       | Number of legal actions available           |
+| `action_type` | `string`      | Human-readable action type                  |
+| `outcome`     | `int32`       | Game result: 1 (win), -1 (loss), 0 (draw)   |
+| `game_id`     | `string`      | Unique game identifier                      |
+| `turn`        | `int32`       | Turn number when decision was made          |
+| `phase`       | `string`      | Game phase (main1, combat, main2, etc.)     |
+| `reasoning`   | `string`      | Optional strategic reasoning (if available) |
 
 ### Feature Vector (25 dimensions)
 
@@ -129,12 +129,12 @@ class MTGDataset(Dataset):
 
 ### Bot Types
 
-| Bot | Description | Strength |
-|-----|-------------|----------|
-| `random` | Uniform random legal actions | Baseline |
-| `greedy` | 1-ply lookahead with heuristics | Medium |
-| `mcts` | MCTS with evaluation (200 iterations) | Strong |
-| `mcts-strong` | MCTS (500 iterations) | Very Strong |
+| Bot           | Description                           | Strength    |
+| ------------- | ------------------------------------- | ----------- |
+| `random`      | Uniform random legal actions          | Baseline    |
+| `greedy`      | 1-ply lookahead with heuristics       | Medium      |
+| `mcts`        | MCTS with evaluation (200 iterations) | Strong      |
+| `mcts-strong` | MCTS (500 iterations)                 | Very Strong |
 
 ### Generation Command
 

@@ -117,7 +117,12 @@ function playGame(
   collector: TrainingDataCollector,
   maxTurns: number,
   seed: number,
-): { winner: 'player' | 'opponent' | 'draw'; turns: number; samples: number; finalState: GameState } {
+): {
+  winner: 'player' | 'opponent' | 'draw';
+  turns: number;
+  samples: number;
+  finalState: GameState;
+} {
   let state = initializeGame(getRandomTestDeck(), getRandomTestDeck(), seed);
 
   let turns = 0;
@@ -311,8 +316,12 @@ async function runBatch(config: BatchConfig, resume?: BatchProgress): Promise<vo
   console.log(`Total Time:      ${formatDuration(totalElapsed)}`);
   console.log(`Games/Hour:      ${progress.stats.gamesPerHour.toFixed(0)}`);
   console.log('');
-  console.log(`P1 (${config.p1Type}) Wins:  ${progress.stats.p1Wins} (${((progress.stats.p1Wins / progress.completedGames) * 100).toFixed(1)}%)`);
-  console.log(`P2 (${config.p2Type}) Wins:  ${progress.stats.p2Wins} (${((progress.stats.p2Wins / progress.completedGames) * 100).toFixed(1)}%)`);
+  console.log(
+    `P1 (${config.p1Type}) Wins:  ${progress.stats.p1Wins} (${((progress.stats.p1Wins / progress.completedGames) * 100).toFixed(1)}%)`,
+  );
+  console.log(
+    `P2 (${config.p2Type}) Wins:  ${progress.stats.p2Wins} (${((progress.stats.p2Wins / progress.completedGames) * 100).toFixed(1)}%)`,
+  );
   console.log(`Draws:           ${progress.stats.draws}`);
   console.log(`Errors:          ${progress.stats.errors}`);
   console.log('');

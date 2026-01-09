@@ -12,12 +12,12 @@ The ManaCore AI package provides bot implementations for playing Magic: The Gath
 
 ### Current Bot Hierarchy
 
-| Bot       | Strength       | Speed          | Description                         |
-| --------- | -------------- | -------------- | ----------------------------------- |
-| RandomBot | Baseline       | ~50 games/sec  | Random legal actions                |
-| GreedyBot | ~89% vs Random | ~4 games/sec   | 1-ply lookahead with evaluation     |
-| NeuralBot | ~60% vs Random | ~100 games/sec | ONNX neural network (behavior clone)|
-| MCTSBot   | TBD vs Greedy  | ~0.1 games/sec | Monte Carlo Tree Search             |
+| Bot       | Strength       | Speed          | Description                          |
+| --------- | -------------- | -------------- | ------------------------------------ |
+| RandomBot | Baseline       | ~50 games/sec  | Random legal actions                 |
+| GreedyBot | ~89% vs Random | ~4 games/sec   | 1-ply lookahead with evaluation      |
+| NeuralBot | ~60% vs Random | ~100 games/sec | ONNX neural network (behavior clone) |
+| MCTSBot   | TBD vs Greedy  | ~0.1 games/sec | Monte Carlo Tree Search              |
 
 ---
 
