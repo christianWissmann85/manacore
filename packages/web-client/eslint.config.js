@@ -79,6 +79,7 @@ export default [
       'vite.config.d.ts',
       '*.config.js',
       '*.config.ts',
+      'examples/**',
     ],
   },
 ];

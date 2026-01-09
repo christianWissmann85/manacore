@@ -17,10 +17,10 @@ export function Battlefield({ owner, className }: BattlefieldProps) {
     owner === 'player' ? gameState.player.battlefield : gameState.opponent.battlefield;
 
   // Group permanents by type
-  const lands = permanents.filter((p) => p.typeLine.includes('Land'));
-  const creatures = permanents.filter((p) => p.typeLine.includes('Creature'));
+  const lands = permanents.filter((p) => p.typeLine?.includes('Land'));
+  const creatures = permanents.filter((p) => p.typeLine?.includes('Creature'));
   const others = permanents.filter(
-    (p) => !p.typeLine.includes('Land') && !p.typeLine.includes('Creature'),
+    (p) => !p.typeLine?.includes('Land') && !p.typeLine?.includes('Creature'),
   );
 
   // Find actions that can be taken with cards on battlefield

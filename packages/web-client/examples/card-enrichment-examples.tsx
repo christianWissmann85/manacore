@@ -1,6 +1,6 @@
 /**
  * Example: Using Card Enrichment in React Components
- * 
+ *
  * This shows how to work with the IP-safe minimal card data from the server
  * and enrich it with Scryfall data for display.
  */
@@ -36,11 +36,7 @@ export function CardDisplay({ card }: { card: CardData }) {
 
   return (
     <div className="card">
-      <img 
-        src={enrichedCard.imageUrl} 
-        alt={enrichedCard.name}
-        loading="lazy"
-      />
+      <img src={enrichedCard.imageUrl} alt={enrichedCard.name} loading="lazy" />
       <h3>{enrichedCard.name}</h3>
       <p className="mana-cost">{enrichedCard.manaCost}</p>
       <p className="oracle-text">{enrichedCard.oracleText}</p>
@@ -64,11 +60,11 @@ export function GameBoard({ gameState }: { gameState: ClientGameState }) {
         ...gameState.stack.map((s: { card: CardData }) => s.card),
       ];
 
-      const scryfallIds = [...new Set(allCards.map(c => c.scryfallId))];
+      const scryfallIds = [...new Set(allCards.map((c) => c.scryfallId))];
 
       // Prefetch all cards in parallel (rate-limited internally)
       await prefetchGameCards(scryfallIds);
-      
+
       setIsReady(true);
     }
 
@@ -81,8 +77,16 @@ export function GameBoard({ gameState }: { gameState: ClientGameState }) {
 
   return (
     <div className="game-board">
-      <div className="hand">{gameState.player.hand.map(c => <CardDisplay key={c.instanceId} card={c} />)}</div>
-      <div className="battlefield">{gameState.player.battlefield.map(c => <CardDisplay key={c.instanceId} card={c} />)}</div>
+      <div className="hand">
+        {gameState.player.hand.map((c) => (
+          <CardDisplay key={c.instanceId} card={c} />
+        ))}
+      </div>
+      <div className="battlefield">
+        {gameState.player.battlefield.map((c) => (
+          <CardDisplay key={c.instanceId} card={c} />
+        ))}
+      </div>
       {/* ... */}
     </div>
   );
@@ -96,9 +100,7 @@ export function HandDisplay({ cards }: { cards: CardData[] }) {
 
   useEffect(() => {
     async function enrichAll() {
-      const enriched = await Promise.all(
-        cards.map(card => enrichCard(card))
-      );
+      const enriched = await Promise.all(cards.map((card) => enrichCard(card)));
       setEnrichedCards(enriched);
     }
 
@@ -107,7 +109,7 @@ export function HandDisplay({ cards }: { cards: CardData[] }) {
 
   return (
     <div className="hand">
-      {enrichedCards.map(card => (
+      {enrichedCards.map((card) => (
         <CardDisplay key={card.instanceId} card={card} />
       ))}
     </div>
@@ -162,24 +164,17 @@ function MyComponent({ card }: { card: CardData }) {
 /**
  * Example 5: Optimized Image Loading
  */
-export function CardImage({ 
-  scryfallId, 
-  size = 'normal' 
-}: { 
-  scryfallId: string; 
-  size?: 'small' | 'normal' | 'large' 
+export function CardImage({
+  scryfallId,
+  size = 'normal',
+}: {
+  scryfallId: string;
+  size?: 'small' | 'normal' | 'large';
 }) {
   // Direct image URL - no API call needed!
   const imageUrl = `https://cards.scryfall.io/${size}/front/${scryfallId.charAt(0)}/${scryfallId.charAt(1)}/${scryfallId}.jpg`;
 
-  return (
-    <img 
-      src={imageUrl} 
-      loading="lazy"
-      alt="Card"
-      className="card-image"
-    />
-  );
+  return <img src={imageUrl} loading="lazy" alt="Card" className="card-image" />;
 }
 
 /**
@@ -190,9 +185,8 @@ export function CacheStatus() {
 
   useEffect(() => {
     // Count cached cards
-    const keys = Object.keys(localStorage)
-      .filter(k => k.startsWith('manacore_scryfall_'));
-    
+    const keys = Object.keys(localStorage).filter((k) => k.startsWith('manacore_scryfall_'));
+
     const totalSize = keys.reduce((acc, key) => {
       const item = localStorage.getItem(key);
       return acc + (item?.length ?? 0);

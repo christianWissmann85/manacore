@@ -280,20 +280,24 @@ def main() -> None:
     print(f"Device:      {args.device}")
     print("=" * 60)
 
-    # Load existing data if specified
+    # Load existing data if specified and exists
+    all_features = []
+    all_actions = []
+    all_legal_counts = []
+    all_outcomes = []
+
     if args.existing_data:
-        print(f"\nLoading existing data from: {args.existing_data}")
-        existing = np.load(args.existing_data)
-        all_features = list(existing["features"])
-        all_actions = list(existing["actions"])
-        all_legal_counts = list(existing["legal_counts"])
-        all_outcomes = list(existing["outcomes"])
-        print(f"  Loaded {len(all_actions)} existing samples")
-    else:
-        all_features = []
-        all_actions = []
-        all_legal_counts = []
-        all_outcomes = []
+        existing_path = Path(args.existing_data)
+        if existing_path.exists():
+            print(f"\nLoading existing data from: {args.existing_data}")
+            existing = np.load(args.existing_data)
+            all_features = list(existing["features"])
+            all_actions = list(existing["actions"])
+            all_legal_counts = list(existing["legal_counts"])
+            all_outcomes = list(existing["outcomes"])
+            print(f"  Loaded {len(all_actions)} existing samples")
+        else:
+            print(f"\nNote: Existing data not found at {args.existing_data}, starting fresh")
 
     # Create bridge
     bridge = BunBridge(auto_start=True)

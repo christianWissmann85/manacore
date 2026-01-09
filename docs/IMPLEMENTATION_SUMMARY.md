@@ -3,9 +3,11 @@
 ## ✅ What Was Implemented
 
 ### 1. Client-Side Enrichment Hook
+
 **File:** `packages/web-client/src/hooks/useEnrichedCard.ts`
 
 Custom React hook that:
+
 - Enriches minimal server data with Scryfall API
 - Handles loading states automatically
 - Manages caching via ScryfallService
@@ -16,9 +18,11 @@ const { card, loading, error } = useEnrichedCard(minimalCard);
 ```
 
 ### 2. Updated Card Component
+
 **File:** `packages/web-client/src/components/Card.tsx`
 
 Now handles:
+
 - ✅ Unenriched cards (only scryfallId)
 - ✅ Loading states with spinners
 - ✅ Automatic enrichment via hook
@@ -26,27 +30,33 @@ Now handles:
 - ✅ Direct image URLs from Scryfall
 
 ### 3. Updated GameBoard Component
+
 **File:** `packages/web-client/src/components/GameBoard.tsx`
 
 Added:
+
 - ✅ Prefetching of all cards on game load
 - ✅ Loading screen during initial fetch
 - ✅ User-friendly messaging ("This only happens once")
 - ✅ Automatic card collection from game state
 
 ### 4. Enhanced Gym Server
+
 **File:** `packages/gym-server/src/index.ts`
 
 Added:
+
 - ✅ Static file serving for web client
 - ✅ SPA routing support (returns index.html)
 - ✅ Configurable public path
 - ✅ Ready for HuggingFace deployment
 
 ### 5. HuggingFace Dockerfile
+
 **File:** `Dockerfile.huggingface`
 
 Production-ready Docker image with:
+
 - ✅ Multi-stage build (builder + slim runtime)
 - ✅ Includes 6ed.json for internal engine use
 - ✅ Serves both API and web client
@@ -54,9 +64,11 @@ Production-ready Docker image with:
 - ✅ Optimized for HF Spaces (port 7860)
 
 ### 6. HuggingFace Space README
+
 **File:** `README.huggingface.md`
 
 Complete Space description with:
+
 - ✅ Feature highlights
 - ✅ IP-safe architecture explanation
 - ✅ Legal disclaimers
@@ -64,9 +76,11 @@ Complete Space description with:
 - ✅ Research applications
 
 ### 7. Quick Deployment Guide
+
 **File:** `docs/DEPLOYMENT_QUICKSTART.md`
 
 Step-by-step instructions for:
+
 - ✅ Creating HuggingFace Space
 - ✅ Copying files correctly
 - ✅ Handling 6ed.json
@@ -198,7 +212,7 @@ curl http://localhost:3333/game/YOUR_GAME_ID/state | jq '.player.hand[0]'
 
 const testCard = {
   instanceId: 'test_1',
-  scryfallId: '2f4f32bb-5bc2-4c33-9c20-44bc77278e6c' // Lightning Bolt
+  scryfallId: '2f4f32bb-5bc2-4c33-9c20-44bc77278e6c', // Lightning Bolt
 };
 
 // This should fetch from Scryfall
@@ -223,10 +237,10 @@ import { useEnrichedCard } from '../hooks/useEnrichedCard';
 
 function MyCardComponent({ card }: { card: CardData }) {
   const { card: enriched, loading, error } = useEnrichedCard(card);
-  
+
   if (loading) return <Spinner />;
   if (error) return <ErrorMessage error={error} />;
-  
+
   return <div>{enriched.name} - {enriched.oracleText}</div>;
 }
 ```
@@ -238,9 +252,9 @@ import { useEnrichedCards } from '../hooks/useEnrichedCard';
 
 function CardList({ cards }: { cards: CardData[] }) {
   const { cards: enriched, loading } = useEnrichedCards(cards);
-  
+
   if (loading) return <Loading count={cards.length} />;
-  
+
   return (
     <div>
       {enriched.map(card => (
@@ -267,7 +281,8 @@ async function loadCard(minimalCard: CardData) {
 ### Issue: "Cards show as 'Loading...' forever"
 
 **Cause:** Scryfall API blocked or network error  
-**Solution:** 
+**Solution:**
+
 - Check browser console for CORS/network errors
 - Verify Scryfall API is accessible: `curl https://api.scryfall.com/cards/test`
 - Check rate limiting (wait 1 minute)
@@ -275,7 +290,8 @@ async function loadCard(minimalCard: CardData) {
 ### Issue: "TypeError: card.name is undefined"
 
 **Cause:** Component using card before enrichment  
-**Solution:** 
+**Solution:**
+
 - Use `useEnrichedCard` hook
 - Add null checks: `card.name || 'Loading...'`
 - Wait for loading state to complete
@@ -284,6 +300,7 @@ async function loadCard(minimalCard: CardData) {
 
 **Cause:** Too many cached cards (5-10MB browser limit)  
 **Solution:**
+
 - Automatic cleanup is implemented
 - Manually clear: `localStorage.clear()`
 - Reduce cache duration in `scryfallService.ts`
@@ -292,6 +309,7 @@ async function loadCard(minimalCard: CardData) {
 
 **Cause:** Card data file not copied  
 **Solution:**
+
 ```bash
 # Ensure file exists locally
 bun run fetch-cards
@@ -303,16 +321,19 @@ cp packages/engine/data/cards/6ed.json /path/to/hf-space/packages/engine/data/ca
 ## 📊 Performance Metrics
 
 ### Build Time
+
 - Docker build: ~3-5 minutes (first build)
 - Docker build: ~1-2 minutes (cached layers)
 
 ### Runtime Performance
+
 - Server memory: ~50-100MB
 - Client initial load: 2-3 seconds (cold cache)
 - Client subsequent loads: <100ms (warm cache)
 - API response time: <50ms
 
 ### Network Usage
+
 - Initial card fetch: ~50-100 requests to Scryfall
 - Bandwidth: ~1-2MB total card data
 - Subsequent visits: 0 requests (cached)
@@ -328,7 +349,7 @@ Your deployment is successful when:
 ✅ Game state API returns only `scryfallId` + game data  
 ✅ No copyrighted text in server responses  
 ✅ Cards display with full data (name, text, images)  
-✅ Subsequent page loads are instant  
+✅ Subsequent page loads are instant
 
 ## 📚 Related Documentation
 

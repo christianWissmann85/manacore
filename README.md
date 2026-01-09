@@ -117,6 +117,7 @@ model.learn(total_timesteps=100_000)
 - `packages/mcp-server/` - Model Context Protocol server for Claude
 
 **Key Documentation:**
+
 - [Architecture Overview](ARCHITECTURE.md) - System design and component interactions
 - [Deployment Guide](docs/DEPLOYMENT_HUGGINGFACE.md) - Deploy to HuggingFace Spaces (IP-safe)
 - [Migration Guide](docs/MIGRATION_CLIENT_SIDE_FETCHING.md) - Update code for client-side data fetching
@@ -272,6 +273,7 @@ ManaCore is designed for AI researchers:
 ManaCore is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.
 
 **Asset Policy & Data Sources:**
+
 - This repository **does not contain or distribute** card images or copyrighted text
 - **Local Development:** Card data is fetched locally by the user via the Scryfall API (`bun run scripts/fetch-cards.ts`)
 - **Web Client:** Card data is fetched client-side directly from Scryfall API and cached in browser localStorage

@@ -7,17 +7,18 @@ This guide helps you migrate existing code to the new IP-safe architecture where
 ### Server-Side Changes
 
 **Before (packages/gym-server):**
+
 ```typescript
 // OLD: Server sent full card data including copyrighted text
 export interface CardData {
   instanceId: string;
   scryfallId: string;
-  name: string;                 // ❌ Copyrighted
+  name: string; // ❌ Copyrighted
   manaCost: string;
   cmc: number;
   typeLine: string;
-  oracleText: string;           // ❌ Copyrighted
-  flavorText?: string;          // ❌ Copyrighted
+  oracleText: string; // ❌ Copyrighted
+  flavorText?: string; // ❌ Copyrighted
   power?: string;
   toughness?: string;
   colors: string[];
@@ -26,6 +27,7 @@ export interface CardData {
 ```
 
 **After:**
+
 ```typescript
 // NEW: Server only sends IDs - client fetches the rest
 export interface CardData {
@@ -38,6 +40,7 @@ export interface CardData {
 ### Client-Side Changes
 
 **Before (packages/web-client):**
+
 ```typescript
 // OLD: Card data came pre-populated from server
 function CardDisplay({ card }: { card: CardData }) {
@@ -46,6 +49,7 @@ function CardDisplay({ card }: { card: CardData }) {
 ```
 
 **After:**
+
 ```typescript
 // NEW: Must enrich card data first
 import { enrichCard } from '../services/cardEnricher';
@@ -139,13 +143,13 @@ import { prefetchGameCards } from '../services/cardEnricher';
 
 async function startGame() {
   const gameState = await gameService.createGame();
-  
+
   // Extract all unique Scryfall IDs
   const scryfallIds = extractUniqueScryfallIds(gameState);
-  
+
   // Prefetch all cards before rendering
   await prefetchGameCards(scryfallIds);
-  
+
   // Now render game - cards will load instantly from cache
   setGameState(gameState);
 }
@@ -193,7 +197,7 @@ function CardComponent({ card }: { card: CardData }) {
   }, [card.scryfallId]);
 
   if (loading) return <Spinner />;
-  
+
   return <CardDisplay card={enriched} />;
 }
 ```
@@ -214,7 +218,7 @@ function CardComponent({ card }: { card: CardData }) {
   if (error) {
     return <div>Failed to load card: {error.message}</div>;
   }
-  
+
   return <CardDisplay card={enriched} />;
 }
 ```
@@ -263,7 +267,7 @@ function useEnrichedCard(card: CardData) {
 // Use it anywhere
 function MyComponent({ card }: { card: CardData }) {
   const { card: enriched, loading } = useEnrichedCard(card);
-  
+
   if (loading) return <Spinner />;
   return <div>{enriched.name}</div>;
 }
@@ -293,7 +297,7 @@ test('enrichCard populates card data', async () => {
   };
 
   const enriched = await enrichCard(minimal);
-  
+
   expect(enriched.name).toBe('Lightning Bolt');
   expect(enriched.oracleText).toBe('Lightning Bolt deals 3 damage to any target.');
 });
@@ -304,14 +308,14 @@ test('enrichCard populates card data', async () => {
 ```typescript
 test('game loads with card enrichment', async () => {
   const gameState = await createTestGame();
-  
+
   // Prefetch cards
   const scryfallIds = gameState.player.hand.map(c => c.scryfallId);
   await prefetchGameCards(scryfallIds);
-  
+
   // Render game
   render(<GameBoard gameState={gameState} />);
-  
+
   // Cards should be visible (not loading)
   expect(screen.getByText('Lightning Bolt')).toBeInTheDocument();
 });
@@ -340,12 +344,12 @@ test('game loads with card enrichment', async () => {
 ```typescript
 // Bad: Enriches on every render
 function Hand({ cards }) {
-  cards.forEach(card => enrichCard(card)); // ❌
+  cards.forEach((card) => enrichCard(card)); // ❌
 }
 
 // Good: Enriches once with prefetch
 useEffect(() => {
-  const ids = cards.map(c => c.scryfallId);
+  const ids = cards.map((c) => c.scryfallId);
   prefetchGameCards(ids);
 }, [cards]);
 ```
@@ -379,11 +383,12 @@ If you need to temporarily revert to server-side data:
 ✅ **Scryfall Compliance:** Client-side caching as intended  
 ✅ **Better Performance:** Browser caches data permanently  
 ✅ **Offline Support:** Cached data works without network  
-✅ **Flexible Deployment:** Can host on any platform safely  
+✅ **Flexible Deployment:** Can host on any platform safely
 
 ## Questions?
 
 If you encounter migration issues, check:
+
 1. [Card Enrichment Examples](../packages/web-client/examples/card-enrichment-examples.tsx)
 2. [Deployment Guide](./DEPLOYMENT_HUGGINGFACE.md)
 3. [Web Client README](../packages/web-client/README.md)

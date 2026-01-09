@@ -1,5 +1,5 @@
-/** 
- * Client-side card data for rendering 
+/**
+ * Client-side card data for rendering
  * Server only sends IDs - we fetch full data from Scryfall API
  */
 export interface CardData {

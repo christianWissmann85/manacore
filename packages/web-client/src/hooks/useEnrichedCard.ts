@@ -1,6 +1,6 @@
 /**
  * useEnrichedCard Hook
- * 
+ *
  * Enriches minimal card data from server with full data from Scryfall.
  * Handles loading states, caching, and error recovery.
  */
@@ -38,7 +38,7 @@ export function useEnrichedCard(card: CardData): UseEnrichedCardResult {
         setLoading(true);
         setError(null);
         const enriched = await enrichCard(card);
-        
+
         if (!cancelled) {
           setEnrichedCard(enriched);
         }
@@ -78,8 +78,8 @@ export function useEnrichedCards(cards: CardData[]): {
 
   useEffect(() => {
     // Check if any cards need enrichment
-    const needsEnrichment = cards.some(c => !c.name || !c.typeLine);
-    
+    const needsEnrichment = cards.some((c) => !c.name || !c.typeLine);
+
     if (!needsEnrichment) {
       setEnrichedCards(cards);
       setLoading(false);
@@ -92,11 +92,9 @@ export function useEnrichedCards(cards: CardData[]): {
       try {
         setLoading(true);
         setError(null);
-        
-        const enriched = await Promise.all(
-          cards.map(card => enrichCard(card))
-        );
-        
+
+        const enriched = await Promise.all(cards.map((card) => enrichCard(card)));
+
         if (!cancelled) {
           setEnrichedCards(enriched);
         }
@@ -117,7 +115,7 @@ export function useEnrichedCards(cards: CardData[]): {
     return () => {
       cancelled = true;
     };
-  }, [cards.map(c => c.scryfallId).join(',')]);
+  }, [cards.map((c) => c.scryfallId).join(',')]);
 
   return { cards: enrichedCards, loading, error };
 }

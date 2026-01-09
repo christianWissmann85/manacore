@@ -29,6 +29,7 @@ ManaCore uses a **client-side data fetching architecture** to ensure no copyrigh
 ```
 
 **Key Points:**
+
 - ✅ Server only sends card IDs and game state
 - ✅ Client fetches all copyrighted content from Scryfall
 - ✅ Browser localStorage caches data for performance
@@ -37,6 +38,7 @@ ManaCore uses a **client-side data fetching architecture** to ensure no copyrigh
 ## What Gets Deployed
 
 ### In Your Docker Image:
+
 - ✅ `@manacore/engine` - game rules engine (your code)
 - ✅ `@manacore/ai` - bot implementations (your code)
 - ✅ `@manacore/gym-server` - REST API server (your code)
@@ -46,6 +48,7 @@ ManaCore uses a **client-side data fetching architecture** to ensure no copyrigh
 - ❌ **NO** copyrighted text
 
 ### What Users Download:
+
 - Card data → Directly from Scryfall API
 - Card images → Directly from Scryfall CDN
 - Cached in their browser for subsequent visits
@@ -60,7 +63,7 @@ The serialization layer sends minimal data:
 // packages/gym-server/src/serialization/clientState.ts
 export interface CardData {
   instanceId: string;
-  scryfallId: string;  // ← Only the ID!
+  scryfallId: string; // ← Only the ID!
   // Client fetches everything else from Scryfall
 }
 ```
@@ -76,7 +79,7 @@ import { scryfallService } from './scryfallService';
 // Enrich minimal card data with full Scryfall data
 export async function enrichCard(card: CardData): Promise<CardData> {
   const scryfallCard = await scryfallService.getCardById(card.scryfallId);
-  
+
   return {
     ...card,
     name: scryfallCard.name,
@@ -155,7 +158,7 @@ app_port: 7860
 
 Interactive visualization of AI agents playing Magic: The Gathering.
 
-**Data Sources:** 
+**Data Sources:**
 - Game engine runs in this Space
 - Card data fetched client-side from Scryfall API
 - No copyrighted content stored or served from this Space
@@ -164,11 +167,13 @@ Interactive visualization of AI agents playing Magic: The Gathering.
 ### 4. Scryfall API Considerations
 
 **Rate Limiting:**
+
 - Scryfall allows ~10 requests/second
 - Our client implements 100ms delays between requests
 - LocalStorage caching prevents redundant fetches
 
 **Terms Compliance:**
+
 ```typescript
 // packages/web-client/src/services/scryfallService.ts
 const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -187,6 +192,7 @@ const minRequestInterval = 100; // Respects Scryfall's guidelines
 6. **Subsequent visits:** Instant load from cache
 
 **User Experience:**
+
 ```
 First Visit:     [████████░░] Loading cards... (2-3 seconds)
 Second Visit:    [██████████] Instant!
@@ -207,6 +213,7 @@ Before deploying, verify:
 ## Monitoring & Analytics
 
 **Track Client-Side Fetches:**
+
 ```typescript
 // Log cache hits vs misses
 scryfallService.on('fetch', (scryfallId) => {
@@ -221,16 +228,19 @@ scryfallService.on('cache_hit', (scryfallId) => {
 ## Troubleshooting
 
 ### "Cards not loading"
+
 - Check browser console for CORS errors
 - Verify Scryfall API is accessible
 - Check localStorage quota (5-10MB limit in most browsers)
 
 ### "Rate limit exceeded"
+
 - Reduce concurrent prefetching
 - Increase delay between requests
 - Implement exponential backoff
 
 ### "Images not displaying"
+
 - Scryfall image URLs are generated deterministically
 - Format: `https://cards.scryfall.io/{size}/front/{id[0]}/{id[1]}/{id}.jpg`
 - Check network tab for 404s
@@ -238,6 +248,7 @@ scryfallService.on('cache_hit', (scryfallId) => {
 ## Performance Optimization
 
 **Prefetch Strategy:**
+
 ```typescript
 // On game start, prefetch all unique cards
 const scryfallIds = extractUniqueScryfallIds(gameState);
@@ -245,9 +256,10 @@ await prefetchGameCards(scryfallIds);
 ```
 
 **Image Lazy Loading:**
+
 ```typescript
 // Only fetch images for visible cards
-<img 
+<img
   loading="lazy"
   src={scryfallService.getImageUrlById(card.scryfallId)}
 />
@@ -256,11 +268,13 @@ await prefetchGameCards(scryfallIds);
 ## Alternative Deployment Options
 
 ### Vercel/Netlify
+
 - Client-side fetching works identically
 - Server (gym-server) deployed as serverless functions
 - Environment: Node.js 18+
 
 ### Self-Hosted
+
 - No changes needed
 - Same IP-safe architecture
 - Users' browsers still fetch from Scryfall

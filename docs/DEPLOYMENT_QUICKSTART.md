@@ -59,6 +59,7 @@ EOF
 ```
 
 **Note:** We DO include `6ed.json` in the HF Space repo because:
+
 - It's used internally by the engine for game logic
 - The API never exposes this data
 - This is legal fair use for non-commercial research
@@ -80,6 +81,7 @@ Watch the logs: Click "Building" → "View build logs"
 ### 7. Test Your Space
 
 Once built, visit your Space URL:
+
 - `https://huggingface.co/spaces/YOUR_USERNAME/manacore-ai-lab`
 
 **First load:** May take 2-3 seconds as your browser fetches card data from Scryfall  
@@ -90,6 +92,7 @@ Once built, visit your Space URL:
 ### Build fails with "6ed.json not found"
 
 Make sure you copied the file:
+
 ```bash
 ls -lh packages/engine/data/cards/6ed.json
 ```
@@ -99,6 +102,7 @@ Should show ~220KB file.
 ### Space shows "Application startup failed"
 
 Check build logs for errors. Common issues:
+
 - Missing dependencies in package.json
 - Incorrect paths in Dockerfile
 - Port not set to 7860
@@ -106,6 +110,7 @@ Check build logs for errors. Common issues:
 ### Cards not loading in browser
 
 Open browser console (F12). Check for:
+
 - CORS errors → Check Scryfall API is accessible
 - 404 errors → Card IDs may be wrong
 - Rate limit errors → Wait a minute and refresh
@@ -113,6 +118,7 @@ Open browser console (F12). Check for:
 ### Static files not serving
 
 Check gym-server logs for:
+
 ```
 Static file serving not available
 ```
@@ -157,6 +163,7 @@ HuggingFace will automatically rebuild.
 ### Optimize Build Time
 
 Add to Dockerfile before build steps:
+
 ```dockerfile
 # Cache bun modules
 RUN --mount=type=cache,target=/root/.bun/install/cache \
@@ -166,6 +173,7 @@ RUN --mount=type=cache,target=/root/.bun/install/cache \
 ### Reduce Image Size
 
 The slim image is already optimized, but you can further reduce:
+
 - Remove dev dependencies from package.json
 - Minimize included files in COPY commands
 - Use .dockerignore to exclude test files
@@ -173,22 +181,23 @@ The slim image is already optimized, but you can further reduce:
 ### Improve First Load
 
 Pre-warm popular cards in web client:
+
 ```typescript
 // In web-client/src/main.tsx
-const POPULAR_CARDS = [
-  'Lightning Bolt', 'Counterspell', 'Forest', 'Island', 'Mountain'
-];
+const POPULAR_CARDS = ['Lightning Bolt', 'Counterspell', 'Forest', 'Island', 'Mountain'];
 prefetchCards(POPULAR_CARDS);
 ```
 
 ## Cost Considerations
 
 HuggingFace Spaces:
+
 - **Free tier:** Available for public spaces (with usage limits)
 - **Pro tier:** $9/month for persistent spaces
 - **Enterprise:** Custom pricing for high-traffic spaces
 
 Our Space is lightweight:
+
 - ~300MB Docker image
 - Minimal CPU usage (mostly idle)
 - No GPU required

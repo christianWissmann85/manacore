@@ -16,16 +16,19 @@ Watch AI agents think, plan, and strategize in real-time. ManaCore is an open-so
 ## Features
 
 🧠 **Glass-Box AI Visualization**
+
 - See inside MCTS (Monte Carlo Tree Search) decision trees
 - Watch win probability evolve turn-by-turn
 - Understand why AI makes each move
 
 🎮 **Interactive Gameplay**
+
 - Play against AI opponents
 - Step through games move-by-move
 - Explore alternative strategies
 
 📊 **Research Platform**
+
 - Based on Magic: The Gathering 6th Edition
 - Fully deterministic game engine
 - Suitable for ML/AI research
@@ -77,6 +80,7 @@ ManaCore is fully open source and available on GitHub:
 ### Contributing
 
 We welcome contributions from:
+
 - 🎮 Game developers (implementing more cards)
 - 🤖 ML researchers (training new agents)
 - 🎨 UI/UX designers (improving visualizations)
@@ -85,6 +89,7 @@ We welcome contributions from:
 ## Research Applications
 
 ManaCore enables research in:
+
 - Multi-agent game theory
 - Large language model planning
 - Monte Carlo tree search optimization

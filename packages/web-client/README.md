@@ -19,6 +19,7 @@ To ensure IP safety (Client-side fetching) and robust simulation (Server-side lo
   - **Scryfall API:** The browser fetches **all card data** (names, text, images) directly. The server _never_ touches copyrighted content.
 
 **IP-Safe Architecture:**
+
 ```
 User Browser
     ↓
@@ -73,6 +74,7 @@ We will keep the stack lightweight, type-safe, and modern.
 **Critical Design Decision:** To ensure legal compliance when hosting on HuggingFace Spaces, the server **never** distributes copyrighted content.
 
 **Server Sends (gym-server API):**
+
 ```typescript
 {
   instanceId: "card_123",
@@ -84,6 +86,7 @@ We will keep the stack lightweight, type-safe, and modern.
 ```
 
 **Client Fetches (Browser → Scryfall):**
+
 ```typescript
 // cardEnricher.ts enriches minimal server data with Scryfall API
 const fullCard = await scryfallService.getCardById(scryfallId);
@@ -92,6 +95,7 @@ const fullCard = await scryfallService.getCardById(scryfallId);
 ```
 
 **Why This Matters:**
+
 - ✅ Your HuggingFace Space distributes ZERO copyrighted text
 - ✅ Complies with Scryfall API terms (client-side caching)
 - ✅ Users' browsers cache data for instant subsequent loads

@@ -15,22 +15,24 @@ export function GameBoard() {
     if (!gameState) return;
 
     async function prefetch() {
+      if (!gameState) return;
+
       setCardsLoading(true);
       try {
         // Collect all unique scryfallIds from the game state
         const scryfallIds = new Set<string>();
-        
+
         // Player cards
-        gameState.player.hand.forEach(c => scryfallIds.add(c.scryfallId));
-        gameState.player.battlefield.forEach(c => scryfallIds.add(c.scryfallId));
-        gameState.player.graveyard.forEach(c => scryfallIds.add(c.scryfallId));
-        
+        gameState.player.hand.forEach((c) => scryfallIds.add(c.scryfallId));
+        gameState.player.battlefield.forEach((c) => scryfallIds.add(c.scryfallId));
+        gameState.player.graveyard.forEach((c) => scryfallIds.add(c.scryfallId));
+
         // Opponent cards
-        gameState.opponent.battlefield.forEach(c => scryfallIds.add(c.scryfallId));
-        gameState.opponent.graveyard.forEach(c => scryfallIds.add(c.scryfallId));
-        
+        gameState.opponent.battlefield.forEach((c) => scryfallIds.add(c.scryfallId));
+        gameState.opponent.graveyard.forEach((c) => scryfallIds.add(c.scryfallId));
+
         // Stack cards
-        gameState.stack.forEach(s => scryfallIds.add(s.card.scryfallId));
+        gameState.stack.forEach((s) => scryfallIds.add(s.card.scryfallId));
 
         // Prefetch all unique cards
         await prefetchGameCards([...scryfallIds]);
@@ -58,7 +60,9 @@ export function GameBoard() {
         <div className="text-center">
           <div className="text-2xl mb-2">🃏</div>
           <div className="text-gray-400 animate-pulse">Loading card data from Scryfall...</div>
-          <div className="text-xs text-gray-500 mt-2">This only happens once - cards are cached</div>
+          <div className="text-xs text-gray-500 mt-2">
+            This only happens once - cards are cached
+          </div>
         </div>
       </div>
     );

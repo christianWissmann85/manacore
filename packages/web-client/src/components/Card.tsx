@@ -39,7 +39,7 @@ export function Card({
 }: CardProps) {
   // Enrich card data if needed (fetches from Scryfall)
   const { card: enrichedCard, loading: enrichLoading } = useEnrichedCard(card);
-  
+
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
 
@@ -58,7 +58,7 @@ export function Card({
         if (mounted) setImageUrl(enrichedCard.imageUrl);
         return;
       }
-      
+
       // Fallback to fetching by name if available
       if (enrichedCard.name) {
         const url = await scryfallService.getCardImage(
@@ -72,7 +72,7 @@ export function Card({
         // Use direct URL construction from scryfallId
         const directUrl = scryfallService.getImageUrlById(
           card.scryfallId,
-          size === 'small' ? 'small' : 'normal'
+          size === 'small' ? 'small' : 'normal',
         );
         if (mounted) setImageUrl(directUrl);
       }
