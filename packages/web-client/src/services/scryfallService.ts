@@ -84,9 +84,40 @@ class ScryfallService {
     }
   }
 
+  /** Get full card data by Scryfall ID (preferred method for game data) */
+  async getCardById(scryfallId: string): Promise<ScryfallCard | null> {
+    const cacheKey = this.getCacheKeyById(scryfallId);
+
+    // Check localStorage cache
+    const cached = this.getFromCache(cacheKey);
+    if (cached) return cached;
+
+    // Fetch from Scryfall by ID
+    try {
+      const card = await this.fetchCardById(scryfallId);
+      if (card) {
+        this.setCache(cacheKey, card);
+      }
+      return card;
+    } catch (err) {
+      console.error(`Failed to fetch card by ID "${scryfallId}":`, err);
+      return null;
+    }
+  }
+
   /** Build a direct image URL (no API call needed if you have the Scryfall ID) */
   getImageUrlById(scryfallId: string, size: 'small' | 'normal' | 'large' = 'normal'): string {
     return `https://cards.scryfall.io/${size}/front/${scryfallId.charAt(0)}/${scryfallId.charAt(1)}/${scryfallId}.jpg`;
+  }
+
+  /** Prefetch multiple cards by ID (for game start) */
+  async prefetchCardsByIds(scryfallIds: string[]): Promise<void> {
+    const uncached = scryfallIds.filter((id) => !this.getFromCache(this.getCacheKeyById(id)));
+
+    // Batch fetch uncached cards with rate limiting
+    for (const id of uncached) {
+      await this.getCardById(id);
+    }
   }
 
   private async fetchCard(name: string): Promise<ScryfallCard | null> {
@@ -143,8 +174,42 @@ class ScryfallService {
     this.isProcessing = false;
   }
 
+  private async fetchCardById(scryfallId: string): Promise<ScryfallCard | null> {
+    return new Promise((resolve) => {
+      this.requestQueue.push(async () => {
+        try {
+          // Rate limiting
+          const now = Date.now();
+          const timeSinceLastRequest = now - this.lastRequestTime;
+          if (timeSinceLastRequest < this.minRequestInterval) {
+            await this.sleep(this.minRequestInterval - timeSinceLastRequest);
+          }
+
+          this.lastRequestTime = Date.now();
+
+          const response = await fetch(`${SCRYFALL_API}/cards/${scryfallId}`);
+
+          if (!response.ok) {
+            resolve(null);
+            return;
+          }
+
+          resolve((await response.json()) as ScryfallCard);
+        } catch {
+          resolve(null);
+        }
+      });
+
+      void this.processQueue();
+    });
+  }
+
   private getCacheKey(name: string): string {
-    return CACHE_PREFIX + name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    return CACHE_PREFIX + 'name_' + name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  }
+
+  private getCacheKeyById(scryfallId: string): string {
+    return CACHE_PREFIX + 'id_' + scryfallId;
   }
 
   private getFromCache(key: string): ScryfallCard | null {

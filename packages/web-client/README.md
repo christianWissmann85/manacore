@@ -12,11 +12,24 @@ To ensure IP safety (Client-side fetching) and robust simulation (Server-side lo
 
 - **Host:** Hugging Face Spaces (Docker SDK).
 - **Container Internal:**
-- **Backend (`gym-server`):** Runs the `engine`, `ai` bots, and exposes the REST API. It holds the "Truth".
-- **Frontend (`web-client`):** A static React SPA (Single Page Application) served by Nginx (or Hono static middleware) within the same container.
+  - **Backend (`gym-server`):** Runs the `engine`, `ai` bots, and exposes the REST API. It holds the "Truth".
+  - **Frontend (`web-client`):** A static React SPA (Single Page Application) served by Nginx (or Hono static middleware) within the same container.
 
 - **External Data:**
-- **Scryfall API:** The browser fetches images directly. The server _never_ touches image data.
+  - **Scryfall API:** The browser fetches **all card data** (names, text, images) directly. The server _never_ touches copyrighted content.
+
+**IP-Safe Architecture:**
+```
+User Browser
+    ↓
+    ├─→ Your HF Space (gym-server)
+    │   └─→ Returns: {scryfallId: "abc123", tapped: true, damage: 2}
+    │       (Only game state - NO copyrighted text)
+    │
+    └─→ Scryfall API (direct, client-side)
+        └─→ Returns: {name: "Lightning Bolt", oracle_text: "...", images: {...}}
+            (Cached in browser localStorage)
+```
 
 ```mermaid
 graph TD
@@ -27,8 +40,8 @@ graph TD
 
     User -->|Interacts| Browser
     Browser -->|1. GET /game/state| HF
-    Browser -->|2. Fetch Images (Client-side)| Scryfall
-    HF -->|3. JSON State + AI Metadata| Browser
+    Browser -->|2. Fetch Card Data + Images| Scryfall
+    HF -->|3. Game State (IDs only)| Browser
 
     subgraph HF [Manacore Container]
         GymServer[Gym Server (Node/Bun)]
@@ -54,6 +67,35 @@ We will keep the stack lightweight, type-safe, and modern.
 - `react-force-graph` or `vis-network`: For the MCTS Tree visualization.
 - `recharts`: For Win Probability and Evaluation graphs.
 - `framer-motion`: For smooth card animations (essential for "game feel").
+
+### 2.5 IP Safety & Data Flow Architecture
+
+**Critical Design Decision:** To ensure legal compliance when hosting on HuggingFace Spaces, the server **never** distributes copyrighted content.
+
+**Server Sends (gym-server API):**
+```typescript
+{
+  instanceId: "card_123",
+  scryfallId: "abc-def-ghi",  // ← Just the ID
+  tapped: false,
+  damage: 2
+  // NO name, oracle text, flavor text, or images
+}
+```
+
+**Client Fetches (Browser → Scryfall):**
+```typescript
+// cardEnricher.ts enriches minimal server data with Scryfall API
+const fullCard = await scryfallService.getCardById(scryfallId);
+// → Returns: name, oracle_text, flavor_text, image_uris, etc.
+// → Cached in browser localStorage for offline/fast access
+```
+
+**Why This Matters:**
+- ✅ Your HuggingFace Space distributes ZERO copyrighted text
+- ✅ Complies with Scryfall API terms (client-side caching)
+- ✅ Users' browsers cache data for instant subsequent loads
+- ✅ Legally safe for public demos and research sharing
 
 ### 3. "Glass-Box" Feature Design
 

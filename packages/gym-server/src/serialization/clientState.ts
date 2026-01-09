@@ -10,19 +10,13 @@ import { CardLoader, getLegalActions, describeAction } from '@manacore/engine';
 
 /**
  * Client-friendly card data
+ * NOTE: Only includes IDs - client fetches full data from Scryfall API
+ * This prevents distributing copyrighted text (flavor text, oracle text)
  */
 export interface CardData {
   instanceId: string;
   scryfallId: string;
-  name: string;
-  manaCost: string;
-  cmc: number;
-  typeLine: string;
-  oracleText: string;
-  power?: string;
-  toughness?: string;
-  colors: string[];
-  keywords: string[];
+  // All other data (name, oracle text, etc) fetched client-side from Scryfall
 }
 
 /**
@@ -108,27 +102,18 @@ export interface LegalActionData {
 
 /**
  * Convert a CardInstance to client-friendly CardData
+ * Only sends IDs - client fetches full card data from Scryfall API
  */
 function serializeCard(card: CardInstance): CardData {
-  const template = CardLoader.getById(card.scryfallId);
-
   return {
     instanceId: card.instanceId,
     scryfallId: card.scryfallId,
-    name: template?.name ?? 'Unknown Card',
-    manaCost: template?.mana_cost ?? '',
-    cmc: template?.cmc ?? 0,
-    typeLine: template?.type_line ?? 'Unknown',
-    oracleText: template?.oracle_text ?? '',
-    power: template?.power,
-    toughness: template?.toughness,
-    colors: template?.colors ?? [],
-    keywords: template?.keywords ?? [],
   };
 }
 
 /**
  * Convert a CardInstance on battlefield to PermanentData
+ * Only game state data - no copyrighted text
  */
 function serializePermanent(card: CardInstance, controller: PlayerId): PermanentData {
   const baseData = serializeCard(card);

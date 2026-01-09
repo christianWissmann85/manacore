@@ -1,16 +1,21 @@
-/** Client-side card data for rendering */
+/** 
+ * Client-side card data for rendering 
+ * Server only sends IDs - we fetch full data from Scryfall API
+ */
 export interface CardData {
   instanceId: string;
   scryfallId: string;
-  name: string;
-  manaCost: string;
-  cmc: number;
-  typeLine: string;
-  oracleText: string;
+  // Populated client-side from Scryfall:
+  name?: string;
+  manaCost?: string;
+  cmc?: number;
+  typeLine?: string;
+  oracleText?: string;
+  flavorText?: string;
   power?: string;
   toughness?: string;
-  colors: string[];
-  keywords: string[];
+  colors?: string[];
+  keywords?: string[];
   imageUrl?: string;
 }
 

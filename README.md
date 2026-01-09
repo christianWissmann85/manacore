@@ -103,6 +103,27 @@ model = MaskablePPO("MlpPolicy", env)
 model.learn(total_timesteps=100_000)
 ```
 
+---
+
+## Repository Structure
+
+- `packages/engine/` - Core game engine (rules, state machine)
+- `packages/ai/` - Bot implementations (Random, Greedy, MCTS)
+- `packages/cli-client/` - Terminal interface for testing
+- `packages/gym-server/` - HTTP server exposing engine API
+- `packages/web-client/` - React web UI (Glass-Box AI Lab)
+- `packages/python-gym/` - Python Gymnasium wrapper for ML
+- `packages/data-scraper/` - Scryfall data fetcher (local use only)
+- `packages/mcp-server/` - Model Context Protocol server for Claude
+
+**Key Documentation:**
+- [Architecture Overview](ARCHITECTURE.md) - System design and component interactions
+- [Deployment Guide](docs/DEPLOYMENT_HUGGINGFACE.md) - Deploy to HuggingFace Spaces (IP-safe)
+- [Migration Guide](docs/MIGRATION_CLIENT_SIDE_FETCHING.md) - Update code for client-side data fetching
+- [Testing Guide](TESTING.md) - Run tests and verify functionality
+
+---
+
 ### Jupyter Notebooks
 
 Try ManaCore in interactive notebooks:
@@ -250,8 +271,15 @@ ManaCore is designed for AI researchers:
 **Wizards of the Coast Fan Content Policy:**
 ManaCore is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.
 
-**Asset Policy:**
-This repository does not contain or distribute card images or copyrighted text. All game data is fetched locally by the user via the Scryfall API for personal research purposes only.
+**Asset Policy & Data Sources:**
+- This repository **does not contain or distribute** card images or copyrighted text
+- **Local Development:** Card data is fetched locally by the user via the Scryfall API (`bun run scripts/fetch-cards.ts`)
+- **Web Client:** Card data is fetched client-side directly from Scryfall API and cached in browser localStorage
+- **Server:** Our game server only transmits game state data (card IDs, tapped status, damage, etc.) - **no copyrighted text**
+- All card data is sourced from [Scryfall API](https://scryfall.com/docs/api) under their terms of use
+- Users are responsible for complying with Scryfall's API guidelines and rate limits
+
+This architecture ensures copyrighted content (flavor text, oracle text, card images) flows directly from Scryfall to the user's browser, never through our servers or repository.
 
 ### Data Sources
 
