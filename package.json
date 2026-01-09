@@ -17,11 +17,11 @@
     "test:ai": "cd packages/ai && bun test",
     "cli": "cd packages/cli-client && bun run src/index.ts",
     "dev:web": "cd packages/web-client && bun run dev",
-    "lint": "eslint packages/*/src/**/*.ts",
-    "lint:fix": "eslint --fix packages/*/src/**/*.ts",
+    "lint": "eslint packages/engine/src/**/*.ts packages/ai/src/**/*.ts packages/cli-client/src/**/*.ts packages/data-scraper/src/**/*.ts packages/mcp-server/src/**/*.ts && (cd packages/web-client && eslint src/**/*.{ts,tsx}) && (cd packages/gym-server && eslint src/**/*.ts)",
+    "lint:fix": "eslint --fix packages/engine/src/**/*.ts packages/ai/src/**/*.ts packages/cli-client/src/**/*.ts packages/data-scraper/src/**/*.ts packages/mcp-server/src/**/*.ts && (cd packages/web-client && eslint --fix src/**/*.{ts,tsx}) && (cd packages/gym-server && eslint --fix src/**/*.ts)",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md}\"",
-    "typecheck": "tsc --noEmit && cd packages/engine && tsc --noEmit && cd ../ai && tsc --noEmit && cd ../cli-client && tsc --noEmit",
+    "typecheck": "tsc --noEmit --project packages/engine/tsconfig.json && tsc --noEmit --project packages/ai/tsconfig.json && tsc --noEmit --project packages/cli-client/tsconfig.json && tsc --noEmit --project packages/gym-server/tsconfig.json && tsc --noEmit --project packages/web-client/tsconfig.json",
     "check": "bun run typecheck && bun run lint && bun run format:check"
   },
   "devDependencies": {

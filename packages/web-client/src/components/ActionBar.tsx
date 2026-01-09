@@ -50,7 +50,7 @@ export function ActionBar() {
         </div>
 
         {/* Pass priority button */}
-        {passActions.length > 0 && (
+        {passActions.length > 0 && passActions[0] && (
           <button
             onClick={() => handleAction(passActions[0].index)}
             className="btn btn-secondary text-sm"

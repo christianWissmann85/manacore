@@ -7,12 +7,7 @@
 
 import { Hono } from 'hono';
 import type { SessionManager } from '../sessions/manager';
-import {
-  createStepResponse,
-  serializeObservation,
-  createActionMask,
-  serializeLegalActions,
-} from '../serialization/state';
+import { createStepResponse, serializeObservation, createActionMask } from '../serialization/state';
 import { serializeClientState, serializeLegalActionsForClient } from '../serialization/clientState';
 
 interface CreateGameBody {

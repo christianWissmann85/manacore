@@ -11,11 +11,11 @@
 
 **Result: NEGATIVE** - Adding 11 new features based on GreedyBot's evaluation function did NOT improve performance and may have made it worse.
 
-| Metric | v1.0 (25 features) | v2.0 (36 features) |
-|--------|-------------------|-------------------|
-| Best Training Win Rate | 48% | 48% |
-| Final Eval (100 games) | 45% | 30% |
-| Ceiling Broken? | No | No |
+| Metric                 | v1.0 (25 features) | v2.0 (36 features) |
+| ---------------------- | ------------------ | ------------------ |
+| Best Training Win Rate | 48%                | 48%                |
+| Final Eval (100 games) | 45%                | 30%                |
+| Ceiling Broken?        | No                 | No                 |
 
 ---
 
@@ -48,16 +48,16 @@
 
 ### Training Parameters
 
-| Parameter | Value |
-|-----------|-------|
-| Algorithm | MaskablePPO (sb3-contrib) |
-| Network | 256x256 MLP |
-| Observation Size | **36** (up from 25) |
-| Learning Rate | 3e-4 |
-| Batch Size | 128 |
-| n_steps | 2048 |
-| Entropy Coef | 0.02 |
-| Reward Shaping | Enabled |
+| Parameter        | Value                     |
+| ---------------- | ------------------------- |
+| Algorithm        | MaskablePPO (sb3-contrib) |
+| Network          | 256x256 MLP               |
+| Observation Size | **36** (up from 25)       |
+| Learning Rate    | 3e-4                      |
+| Batch Size       | 128                       |
+| n_steps          | 2048                      |
+| Entropy Coef     | 0.02                      |
+| Reward Shaping   | Enabled                   |
 
 ---
 
@@ -90,36 +90,38 @@ Win Rate vs Greedy over 500K steps
 ● = Best checkpoint (48% at 300K)
 ```
 
-| Checkpoint | Win Rate |
-|------------|----------|
-| 25K | 24% |
-| 50K | 26% |
-| 75K | 36% |
-| 100K | 32% |
-| 150K | 38% |
-| 200K | 20% |
-| 275K | 46% |
-| **300K** | **48%** (best) |
-| 500K | 42% |
+| Checkpoint | Win Rate       |
+| ---------- | -------------- |
+| 25K        | 24%            |
+| 50K        | 26%            |
+| 75K        | 36%            |
+| 100K       | 32%            |
+| 150K       | 38%            |
+| 200K       | 20%            |
+| 275K       | 46%            |
+| **300K**   | **48%** (best) |
+| 500K       | 42%            |
 
 **Final Evaluation (100 games):**
+
 - vs Random: 74%
 - vs Greedy: **30%**
 
 ### Extended Run (1M steps)
 
-| Checkpoint | Win Rate |
-|------------|----------|
-| 50K | 24% |
-| 100K | 32% |
-| 150K | 46% |
-| 200K | 28% |
-| **300K** | **48%** (best) |
-| 500K | 28% |
-| 750K | 24% |
-| 1M | 38% |
+| Checkpoint | Win Rate       |
+| ---------- | -------------- |
+| 50K        | 24%            |
+| 100K       | 32%            |
+| 150K       | 46%            |
+| 200K       | 28%            |
+| **300K**   | **48%** (best) |
+| 500K       | 28%            |
+| 750K       | 24%            |
+| 1M         | 38%            |
 
 **Final Evaluation (100 games):**
+
 - vs Random: 77%
 - vs Greedy: **27%**
 
@@ -127,12 +129,12 @@ Win Rate vs Greedy over 500K steps
 
 ## Comparison with v1.0 (25 Features)
 
-| Run | Features | Steps | Best (Training) | Final (Eval) | Stability |
-|-----|----------|-------|-----------------|--------------|-----------|
-| v1.0 | 25 | 500K | 48% | **45%** | Moderate |
-| v1.0 | 25 | 1M | 48% | 33% | Low |
-| v2.0 | 36 | 500K | 48% | 30% | **Very Low** |
-| v2.0 | 36 | 1M | 48% | 27% | Very Low |
+| Run  | Features | Steps | Best (Training) | Final (Eval) | Stability    |
+| ---- | -------- | ----- | --------------- | ------------ | ------------ |
+| v1.0 | 25       | 500K  | 48%             | **45%**      | Moderate     |
+| v1.0 | 25       | 1M    | 48%             | 33%          | Low          |
+| v2.0 | 36       | 500K  | 48%             | 30%          | **Very Low** |
+| v2.0 | 36       | 1M    | 48%             | 27%          | Very Low     |
 
 ### Key Observations
 
@@ -149,21 +151,25 @@ Win Rate vs Greedy over 500K steps
 ### Why Didn't More Features Help?
 
 **Hypothesis 1: Curse of Dimensionality**
+
 - 44% more features = 44% more weights to learn
 - Same training budget, more parameters = underfitting
 - Network capacity spread thinner
 
 **Hypothesis 2: Feature Interference**
+
 - `playerLifeScaled` correlates with `playerLife`
 - `attackingCreaturePower` correlates with `playerTotalPower`
 - Redundant features can confuse gradient descent
 
 **Hypothesis 3: Observation ≠ Understanding**
+
 - GreedyBot has **hardcoded priorities** for these features
 - PPO must **learn** priorities from sparse reward
 - Seeing features doesn't teach HOW to use them
 
 **Hypothesis 4: Reward Signal Mismatch**
+
 - Reward shaping weights differ from GreedyBot's evaluation
 - Agent optimizes our reward, not GreedyBot's objective
 
@@ -172,6 +178,7 @@ Win Rate vs Greedy over 500K steps
 The 48% ceiling is **not an observation problem**. PPO can see enough information - it just can't learn the right policy from RL alone.
 
 Evidence:
+
 - Adding GreedyBot's exact features didn't help
 - High variance suggests policy instability, not observation gaps
 - Evaluation scores worse than training suggests overfitting to specific patterns
@@ -183,6 +190,7 @@ Evidence:
 **The feature engineering hypothesis was wrong.** The limitation is not what PPO sees, but how it learns.
 
 This suggests we need a different approach:
+
 1. **Imitation Learning** - Give PPO a warm start by imitating GreedyBot
 2. **Curriculum Learning** - Easier opponents first
 3. **Architecture Changes** - Attention, LSTM, or action embeddings
@@ -202,13 +210,13 @@ This suggests we need a different approach:
 
 ## Files
 
-| File | Path |
-|------|------|
-| Standard Model | `models/ppo_enhanced_standard_20260109_114213.zip` |
-| Extended Model | `models/ppo_enhanced_extended_20260109_140441.zip` |
-| Best Model | `models/ppo_best_vs_greedy.zip` |
+| File                   | Path                                                |
+| ---------------------- | --------------------------------------------------- |
+| Standard Model         | `models/ppo_enhanced_standard_20260109_114213.zip`  |
+| Extended Model         | `models/ppo_enhanced_extended_20260109_140441.zip`  |
+| Best Model             | `models/ppo_best_vs_greedy.zip`                     |
 | Feature Implementation | `packages/ai/src/training/TrainingDataCollector.ts` |
-| Training Script | `packages/python-gym/examples/train_enhanced.py` |
+| Training Script        | `packages/python-gym/examples/train_enhanced.py`    |
 
 ---
 
@@ -241,5 +249,5 @@ unusedMana: Math.min(unusedMana / 10, 1.0),
 
 ---
 
-*Report generated: January 9, 2026*
-*Lesson learned: More features ≠ better learning*
+_Report generated: January 9, 2026_
+_Lesson learned: More features ≠ better learning_

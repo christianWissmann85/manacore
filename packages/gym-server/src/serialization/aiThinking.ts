@@ -7,8 +7,7 @@
 
 import type { GameState, PlayerId, Action } from '@manacore/engine';
 import { describeAction } from '@manacore/engine';
-import type { Bot } from '@manacore/ai';
-import { evaluate, TUNED_WEIGHTS } from '@manacore/ai';
+import { TUNED_WEIGHTS } from '@manacore/ai';
 
 /**
  * MCTS tree node for visualization
@@ -104,7 +103,9 @@ function serializeMCTSNode(
     winRate,
     children:
       depth < maxDepth
-        ? topChildren.map((child) => serializeMCTSNode(child, state, maxChildren, depth + 1, maxDepth))
+        ? topChildren.map((child) =>
+            serializeMCTSNode(child, state, maxChildren, depth + 1, maxDepth),
+          )
         : [],
   };
 }
@@ -112,7 +113,10 @@ function serializeMCTSNode(
 /**
  * Calculate evaluation breakdown from current state
  */
-export function calculateEvaluationBreakdown(state: GameState, playerId: PlayerId): EvaluationBreakdown {
+export function calculateEvaluationBreakdown(
+  state: GameState,
+  playerId: PlayerId,
+): EvaluationBreakdown {
   const player = state.players[playerId];
   const opponent = state.players[playerId === 'player' ? 'opponent' : 'player'];
 
@@ -123,7 +127,7 @@ export function calculateEvaluationBreakdown(state: GameState, playerId: PlayerI
   const playerPower = player.battlefield
     .filter((c) => c.scryfallId && !c.tapped)
     .reduce((sum, c) => {
-      const power = parseInt(c.scryfallId.split('-')[0]) || 0;
+      const power = parseInt(c.scryfallId?.split('-')[0] || '0') || 0;
       return sum + power;
     }, 0);
   const opponentPower = opponent.battlefield.reduce((sum) => sum, 0);

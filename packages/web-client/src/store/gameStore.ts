@@ -264,11 +264,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { history } = get();
     if (index >= 0 && index < history.length) {
       const entry = history[index];
-      set({
-        replayIndex: index,
-        gameState: entry.state,
-        aiThinking: entry.aiThinking ?? null,
-      });
+      if (entry) {
+        set({
+          replayIndex: index,
+          gameState: entry.state,
+          aiThinking: entry.aiThinking ?? null,
+        });
+      }
     }
   },
 

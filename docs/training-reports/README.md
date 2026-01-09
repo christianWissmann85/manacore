@@ -56,11 +56,11 @@ Examples:
 
 ### Phase 3B: Master the Baseline
 
-| Date       | Report                                           | Key Finding                                           |
-| ---------- | ------------------------------------------------ | ----------------------------------------------------- |
-| 2026-01-09 | [ppo_1M_scaling](./2026-01-09_ppo_1M_scaling.md) | No scaling benefit beyond 100K steps; ceiling at ~48% |
-| 2026-01-09 | [diagnostic_greedy_mcts_analysis](./2026-01-09_diagnostic_greedy_mcts_analysis.md) | Identified 11 missing features in observation space |
-| 2026-01-09 | [ppo_v2_36features](./2026-01-09_ppo_v2_36features.md) | **NEGATIVE**: 36 features didn't help; eval dropped to 30% |
+| Date       | Report                                                                             | Key Finding                                                |
+| ---------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| 2026-01-09 | [ppo_1M_scaling](./2026-01-09_ppo_1M_scaling.md)                                   | No scaling benefit beyond 100K steps; ceiling at ~48%      |
+| 2026-01-09 | [diagnostic_greedy_mcts_analysis](./2026-01-09_diagnostic_greedy_mcts_analysis.md) | Identified 11 missing features in observation space        |
+| 2026-01-09 | [ppo_v2_36features](./2026-01-09_ppo_v2_36features.md)                             | **NEGATIVE**: 36 features didn't help; eval dropped to 30% |
 
 ### Phase 3B.1: Imitation Learning
 

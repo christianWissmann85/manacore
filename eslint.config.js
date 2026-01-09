@@ -31,6 +31,7 @@ export default [
         Buffer: 'readonly',
         structuredClone: 'readonly',
         performance: 'readonly',
+        fetch: 'readonly',
         // Bun-specific
         Bun: 'readonly',
       },

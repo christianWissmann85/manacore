@@ -131,7 +131,7 @@ export function ControlPanel() {
             max="4"
             step="0.25"
             value={replaySpeed}
-            onChange={(e) => setReplaySpeed(parseFloat(e.target.value))}
+            onChange={(e) => setReplaySpeed(parseFloat((e.target as HTMLInputElement).value))}
             className="flex-1"
           />
           <span className="text-xs font-mono w-8">{replaySpeed}x</span>
@@ -154,7 +154,7 @@ export function ControlPanel() {
             value={isReplaying ? replayIndex : history.length - 1}
             onChange={(e) => {
               if (!isReplaying) startReplay();
-              setReplayIndex(parseInt(e.target.value));
+              setReplayIndex(parseInt((e.target as HTMLInputElement).value));
             }}
             className="w-full"
           />

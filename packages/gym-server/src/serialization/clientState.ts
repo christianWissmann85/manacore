@@ -5,7 +5,7 @@
  * Maps card IDs to names, organizes zones, and provides UI-friendly data.
  */
 
-import type { GameState, CardInstance, PlayerId, Action } from '@manacore/engine';
+import type { GameState, CardInstance, PlayerId } from '@manacore/engine';
 import { CardLoader, getLegalActions, describeAction } from '@manacore/engine';
 
 /**
@@ -249,7 +249,7 @@ export function serializeLegalActionsForClient(
     } else if (action.type === 'DECLARE_BLOCKERS') {
       // For blockers, the first blocker is the "card"
       if (action.payload.blocks?.length > 0) {
-        result.cardInstanceId = action.payload.blocks[0].blockerId;
+        result.cardInstanceId = action.payload.blocks[0]?.blockerId;
       }
     }
 
@@ -260,7 +260,10 @@ export function serializeLegalActionsForClient(
 /**
  * Serialize full game state for web client
  */
-export function serializeClientState(state: GameState, gameId: string = 'unknown'): ClientGameState {
+export function serializeClientState(
+  state: GameState,
+  gameId: string = 'unknown',
+): ClientGameState {
   const playerState = state.players.player;
   const opponentState = state.players.opponent;
 

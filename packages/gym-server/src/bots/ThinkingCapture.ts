@@ -14,6 +14,11 @@ import {
   captureRandomThinking,
 } from '../serialization/aiThinking';
 
+// Type definitions for dynamically imported bots
+interface BotConstructor {
+  new (seed?: number): Bot;
+}
+
 /**
  * Extended bot interface that captures thinking
  */
@@ -80,7 +85,7 @@ export class GreedyThinkingBot implements ThinkingBot {
 
   constructor(seed?: number) {
     // Use dynamic import to avoid circular dependency
-    const { GreedyBot } = require('@manacore/ai');
+    const { GreedyBot } = require('@manacore/ai') as { GreedyBot: BotConstructor };
     this.innerBot = new GreedyBot(seed);
   }
 
@@ -120,7 +125,7 @@ export class RandomThinkingBot implements ThinkingBot {
   private innerBot: Bot;
 
   constructor(seed?: number) {
-    const { RandomBot } = require('@manacore/ai');
+    const { RandomBot } = require('@manacore/ai') as { RandomBot: BotConstructor };
     this.innerBot = new RandomBot(seed);
   }
 

@@ -32,6 +32,9 @@ import {
   hasReach,
   hasDefender,
   hasMenace,
+  hasFear,
+  getLandwalkTypes,
+  isArtifact,
 } from '../cards/CardTemplate';
 import { parseManaCost, hasXInCost, calculateMaxAffordableX } from '../utils/manaCosts';
 import { calculateAvailableMana } from './validators';
@@ -56,6 +59,78 @@ function cantAttackAlone(template: { name?: string; oracle_text?: string }): boo
   }
   const text = template.oracle_text?.toLowerCase() || '';
   return text.includes("can't attack alone");
+}
+
+/**
+ * Check if a creature has Lure attached
+ * (Lure: "All creatures able to block enchanted creature do so.")
+ */
+function hasLure(
+  state: GameState,
+  creature: import('../state/CardInstance').CardInstance,
+): boolean {
+  if (!creature.attachments || creature.attachments.length === 0) {
+    return false;
+  }
+
+  for (const attachmentId of creature.attachments) {
+    for (const playerId of ['player', 'opponent'] as const) {
+      const aura = state.players[playerId].battlefield.find((c) => c.instanceId === attachmentId);
+      if (aura) {
+        const auraTemplate = CardLoader.getById(aura.scryfallId);
+        if (auraTemplate?.name === 'Lure') {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Check if a blocker can block a specific attacker (considering evasion abilities)
+ * This is used for Lure to determine which blockers are "able" to block.
+ */
+function canBlockAttacker(
+  state: GameState,
+  blockerTemplate: CardTemplate,
+  attackerTemplate: CardTemplate,
+  defendingPlayer: 'player' | 'opponent',
+): boolean {
+  // Flying check
+  if (hasFlying(attackerTemplate)) {
+    if (!hasFlying(blockerTemplate) && !hasReach(blockerTemplate)) {
+      return false; // Can't block flying
+    }
+  }
+
+  // Landwalk check
+  const landwalkTypes = getLandwalkTypes(attackerTemplate);
+  if (landwalkTypes.length > 0) {
+    const defendingPlayerState = getPlayer(state, defendingPlayer);
+    for (const landType of landwalkTypes) {
+      const hasMatchingLand = defendingPlayerState.battlefield.some((permanent) => {
+        const permTemplate = CardLoader.getById(permanent.scryfallId);
+        if (!permTemplate) return false;
+        return permTemplate.type_line.includes(landType);
+      });
+      if (hasMatchingLand) {
+        return false; // Can't block due to landwalk
+      }
+    }
+  }
+
+  // Fear check
+  if (hasFear(attackerTemplate)) {
+    const isBlackCreature = blockerTemplate.colors?.includes('B') ?? false;
+    const isArtifactCreature = isArtifact(blockerTemplate) && isCreature(blockerTemplate);
+    if (!isBlackCreature && !isArtifactCreature) {
+      return false; // Can't block due to Fear
+    }
+  }
+
+  return true;
 }
 
 /**
@@ -729,6 +804,49 @@ function getLegalBlockerDeclarations(
   // Find attackers
   const attackers = activePlayer.battlefield.filter((c) => c.attacking);
 
+  // Check if any attacker has Lure
+  const luredAttackers = attackers.filter((attacker) => hasLure(state, attacker));
+
+  if (luredAttackers.length > 0) {
+    // LURE CASE: All able blockers must block the Lured creature(s)
+    // Generate only the forced blocking actions
+
+    for (const luredAttacker of luredAttackers) {
+      const attackerTemplate = CardLoader.getById(luredAttacker.scryfallId);
+      if (!attackerTemplate) continue;
+
+      // Find all blockers that CAN block this Lured attacker
+      const ableBlockers = potentialBlockers.filter((blocker) => {
+        const blockerTemplate = CardLoader.getById(blocker.scryfallId);
+        if (!blockerTemplate) return false;
+        return canBlockAttacker(state, blockerTemplate, attackerTemplate, playerId);
+      });
+
+      // Create blocks array where ALL able blockers block the Lured attacker
+      const forcedBlocks = ableBlockers.map((blocker) => ({
+        blockerId: blocker.instanceId,
+        attackerId: luredAttacker.instanceId,
+      }));
+
+      // Create the forced blocking action
+      const forcedAction: DeclareBlockersAction = {
+        type: 'DECLARE_BLOCKERS',
+        playerId,
+        payload: { blocks: forcedBlocks },
+      };
+
+      // Validate before adding
+      if (validateAction(state, forcedAction).length === 0) {
+        actions.push(forcedAction);
+      }
+    }
+
+    // When Lure is present, we only return the forced blocking actions
+    // Do NOT include "don't block" or other options
+    return actions;
+  }
+
+  // NORMAL CASE (no Lure): Generate all blocking options
   // Option 1: Don't block at all
   actions.push({
     type: 'DECLARE_BLOCKERS',
