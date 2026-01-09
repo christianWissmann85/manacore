@@ -29,49 +29,49 @@ export interface CardTemplate {
  * Check if a card is a creature
  */
 export function isCreature(card: CardTemplate): boolean {
-  return card.type_line.includes('Creature');
+  return card.type_line.toLowerCase().includes('creature');
 }
 
 /**
  * Check if a card is a land
  */
 export function isLand(card: CardTemplate): boolean {
-  return card.type_line.includes('Land');
+  return card.type_line.toLowerCase().includes('land');
 }
 
 /**
  * Check if a card is an instant
  */
 export function isInstant(card: CardTemplate): boolean {
-  return card.type_line.includes('Instant');
+  return card.type_line.toLowerCase().includes('instant');
 }
 
 /**
  * Check if a card is a sorcery
  */
 export function isSorcery(card: CardTemplate): boolean {
-  return card.type_line.includes('Sorcery');
+  return card.type_line.toLowerCase().includes('sorcery');
 }
 
 /**
  * Check if a card is an enchantment
  */
 export function isEnchantment(card: CardTemplate): boolean {
-  return card.type_line.includes('Enchantment');
+  return card.type_line.toLowerCase().includes('enchantment');
 }
 
 /**
  * Check if a card is an Aura (enchantment that attaches to something)
  */
 export function isAura(card: CardTemplate): boolean {
-  return card.type_line.includes('Aura');
+  return card.type_line.toLowerCase().includes('aura');
 }
 
 /**
  * Check if a card is an artifact
  */
 export function isArtifact(card: CardTemplate): boolean {
-  return card.type_line.includes('Artifact');
+  return card.type_line.toLowerCase().includes('artifact');
 }
 
 /**

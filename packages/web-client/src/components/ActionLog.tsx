@@ -13,6 +13,27 @@ export function ActionLog() {
     }
   }, [history.length]);
 
+  const handleExport = () => {
+    const text = history
+      .map((entry) => {
+        const turn = `Turn ${entry.turn} [${entry.phase}]`;
+        const action = entry.action ? `Player: ${entry.action.description}` : 'Player: (None)';
+        const aiInfo = entry.aiThinking
+          ? `\n  AI Eval: ${(entry.aiThinking.winProbability * 100).toFixed(1)}%`
+          : '';
+        return `${turn}\n  ${action}${aiInfo}\n`;
+      })
+      .join('\n');
+
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `manacore-log-${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (history.length === 0) {
     return (
       <div className="h-32 flex items-center justify-center text-gray-500 text-sm bg-board-bg/30 rounded">
@@ -22,13 +43,23 @@ export function ActionLog() {
   }
 
   return (
-    <div
-      ref={scrollRef}
-      className="h-48 overflow-y-auto bg-board-bg/30 rounded p-2 space-y-1 scrollbar-hide"
-    >
-      {history.map((entry, index) => (
-        <LogEntry key={index} entry={entry} index={index} />
-      ))}
+    <div className="flex flex-col gap-2 h-48">
+      <div className="flex justify-end">
+        <button
+          onClick={handleExport}
+          className="text-[10px] text-gray-400 hover:text-white flex items-center gap-1 bg-board-surface px-2 py-1 rounded border border-board-accent/20"
+        >
+          <span>📥</span> Export Log
+        </button>
+      </div>
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto bg-board-bg/30 rounded p-2 space-y-1 scrollbar-hide"
+      >
+        {history.map((entry, index) => (
+          <LogEntry key={index} entry={entry} index={index} />
+        ))}
+      </div>
     </div>
   );
 }

@@ -143,6 +143,7 @@ async function main() {
       }
 
       const debugMode = args.includes('--debug') || args.includes('-d');
+      const debugVerbose = args.includes('--debug-verbose') || args.includes('-dv');
       const playerBot = createBot(p1Type, 42, debugMode);
       const opponentBot = createBot(p2Type, 43, debugMode);
 
@@ -150,6 +151,7 @@ async function main() {
         gameCount,
         maxTurns,
         verbose: outputLevel === OutputLevel.VERBOSE,
+        debugVerbose,
         seed: baseSeed,
         exportJson: autoExport,
         exportCsv,

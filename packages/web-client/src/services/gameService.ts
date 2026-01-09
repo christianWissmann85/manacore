@@ -85,6 +85,21 @@ class GameService {
     return response.json() as Promise<GameStepResponse>;
   }
 
+  /** Get the recommended action from a bot */
+  async getBotAction(
+    gameId: string,
+    botType: BotType,
+  ): Promise<{ expertAction: number; expertActionDescription: string }> {
+    const response = await fetch(`${API_BASE}/game/${gameId}/expert_action?expert=${botType}`);
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Failed to get bot action: ${error}`);
+    }
+
+    return response.json();
+  }
+
   /** Delete game session */
   async delete(gameId: string): Promise<void> {
     await fetch(`${API_BASE}/game/${gameId}`, {

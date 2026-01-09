@@ -19,6 +19,7 @@ import { CardLoader } from '../cards/CardLoader';
 import {
   isInstant,
   isCreature,
+  isLand,
   hasKeyword,
   hasFlying,
   hasReach,
@@ -108,7 +109,7 @@ export function hasSorcerySpeedOptions(state: GameState, playerId: PlayerId): bo
   if (player.landsPlayedThisTurn < 1) {
     for (const card of player.hand) {
       const template = CardLoader.getById(card.scryfallId);
-      if (template && template.type_line.includes('Land')) {
+      if (template && isLand(template)) {
         return true; // Can play a land
       }
     }
@@ -120,9 +121,9 @@ export function hasSorcerySpeedOptions(state: GameState, playerId: PlayerId): bo
     if (!template) continue;
 
     // Skip instants (handled by hasInstantSpeedOptions)
-    if (template.type_line.includes('Instant')) continue;
+    if (isInstant(template)) continue;
     // Skip lands (handled above)
-    if (template.type_line.includes('Land')) continue;
+    if (isLand(template)) continue;
 
     // Check if we can afford it
     const manaCost = parseManaCost(template.mana_cost);
@@ -170,7 +171,7 @@ export function hasManaSink(state: GameState, playerId: PlayerId): boolean {
     if (!template) continue;
 
     // Skip lands
-    if (template.type_line.includes('Land')) continue;
+    if (isLand(template)) continue;
 
     // Any non-land spell with a mana cost is a potential sink
     if (template.mana_cost && template.mana_cost !== '') {

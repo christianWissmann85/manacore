@@ -234,12 +234,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
   },
 
-  // AI game control
+  // AI actions (for AI vs AI mode)
   stepAI: async () => {
-    const { legalActions, playerType } = get();
-    if (playerType !== 'human' && legalActions.length > 0) {
-      // For AI player, pick the first legal action (server handles AI choice)
-      await get().executeAction(0);
+    const { legalActions, playerType, gameId } = get();
+    if (!gameId || playerType === 'human') return;
+
+    if (legalActions.length > 0) {
+      try {
+        // Query the server for what this bot type would do
+        const { expertAction } = await gameService.getBotAction(gameId, playerType);
+        
+        // Execute that action
+        await get().executeAction(expertAction);
+      } catch (error) {
+        console.error('Failed to get AI step:', error);
+        // Fallback to random/first action on error to prevent freezing
+        await get().executeAction(0);
+      }
     }
   },
 

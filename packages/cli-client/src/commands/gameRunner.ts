@@ -364,16 +364,21 @@ function logGameProgress(
   }
   // Show phase changes
   else if (state.phase !== previousPhase || state.step !== previousStep) {
-    if (actionsThisTurn > 20 && actionsThisTurn % 10 === 0) {
-      console.log(`   ├─ ${state.phase}/${state.step} (${actionsThisTurn} actions so far)`);
-    }
+    console.log(`   ├─ ${state.phase}/${state.step}`);
   }
+
+  // Show every action with details
+  const actionDesc = describeAction(action, state);
+  const player = getPlayer(state, action.playerId);
+  const opponent = getPlayer(state, action.playerId === 'player' ? 'opponent' : 'player');
+  console.log(
+    `   [${actionCount}] ${action.playerId}: ${actionDesc} (Life: ${player.life}/${opponent.life} | Hand: ${player.hand.length}/${opponent.hand.length} | Board: ${player.battlefield.length}/${opponent.battlefield.length})`,
+  );
 
   // Warn if processing too many actions on one turn
   if (actionsThisTurn > 0 && actionsThisTurn % 100 === 0) {
-    const actionDesc = describeAction(action, state);
     console.log(
-      `   ⚠️  Turn ${state.turnCount}: ${actionsThisTurn} actions! Last: ${actionDesc} [${state.phase}/${state.step}] ${previousPriorityPlayer}→${state.priorityPlayer}`,
+      `   ⚠️  Turn ${state.turnCount}: ${actionsThisTurn} actions! [${state.phase}/${state.step}] ${previousPriorityPlayer}→${state.priorityPlayer}`,
     );
   }
 

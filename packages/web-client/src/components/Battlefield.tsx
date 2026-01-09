@@ -51,15 +51,15 @@ export function Battlefield({ owner, className }: BattlefieldProps) {
   };
 
   return (
-    <div className={clsx('flex flex-col gap-2 p-2', className)}>
+    <div className={clsx('flex flex-col gap-2 p-2 min-h-0 overflow-y-auto scrollbar-hide', className)}>
       {/* Creatures row */}
       {creatures.length > 0 && (
-        <div className="flex flex-wrap gap-2 justify-center">{creatures.map(renderPermanent)}</div>
+        <div className="flex flex-wrap gap-1 justify-center">{creatures.map(renderPermanent)}</div>
       )}
 
       {/* Other permanents row */}
       {others.length > 0 && (
-        <div className="flex flex-wrap gap-2 justify-center">{others.map(renderPermanent)}</div>
+        <div className="flex flex-wrap gap-1 justify-center">{others.map(renderPermanent)}</div>
       )}
 
       {/* Lands row */}
@@ -69,7 +69,7 @@ export function Battlefield({ owner, className }: BattlefieldProps) {
 
       {/* Empty state */}
       {permanents.length === 0 && (
-        <div className="flex-1 flex items-center justify-center text-gray-600 text-sm">
+        <div className="flex-1 flex items-center justify-center text-gray-600 text-sm border-2 border-dashed border-board-accent/20 rounded-lg bg-black/10">
           {owner === 'player' ? 'Your battlefield' : "Opponent's battlefield"}
         </div>
       )}

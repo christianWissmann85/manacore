@@ -33,6 +33,7 @@ import { resolveCombatDamage, cleanupCombat } from '../rules/combat';
 import { checkStateBasedActions } from '../rules/stateBasedActions';
 import { registerTrigger, resolveTriggers } from '../rules/triggers';
 import { getActivatedAbilities, payCosts, applyAbilityEffect } from '../rules/activatedAbilities';
+import { discardCards } from '../rules/effects';
 import { parseManaCost, addManaToPool, type ManaColor } from '../utils/manaCosts';
 import { createEmptyManaPool, type ManaPool } from '../state/PlayerState';
 import { incrementalClone } from '../state/incrementalClone';
@@ -331,6 +332,13 @@ function applyEndTurn(state: GameState, _action: EndTurnAction): void {
 
   // 5. Reset prevention effects (Phase 1.5.1)
   state.preventAllCombatDamage = false;
+
+  // 6. Check max hand size (Cleanup step)
+  // Simplified: Auto-discard down to 7 (randomly)
+  // In a full implementation, the player would choose which cards to discard
+  if (currentPlayer.hand.length > 7) {
+    discardCards(state, state.activePlayer, currentPlayer.hand.length - 7);
+  }
 
   // Switch active player
   state.activePlayer = state.activePlayer === 'player' ? 'opponent' : 'player';
