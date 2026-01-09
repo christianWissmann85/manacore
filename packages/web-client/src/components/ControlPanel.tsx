@@ -41,7 +41,7 @@ export function ControlPanel() {
           }
         } else if (isAIvsAI) {
           // For AI vs AI, trigger the next step
-          useGameStore.getState().stepAI();
+          void useGameStore.getState().stepAI();
         }
       }, interval);
 
@@ -73,7 +73,7 @@ export function ControlPanel() {
         setReplayIndex(nextIndex);
       }
     } else if (isAIvsAI) {
-      useGameStore.getState().stepAI();
+      void useGameStore.getState().stepAI();
     }
   };
 
@@ -105,14 +105,14 @@ export function ControlPanel() {
       {(isAIvsAI || gameOver) && (
         <div className="flex items-center gap-2">
           <button
-            onClick={handlePlayPause}
+            onClick={() => void handlePlayPause()}
             className="btn btn-secondary flex-1"
             disabled={gameOver && !isReplaying}
           >
             {isAutoPlaying ? '⏸ Pause' : '▶ Play'}
           </button>
           <button
-            onClick={handleStep}
+            onClick={() => void handleStep()}
             className="btn btn-secondary"
             disabled={isAutoPlaying || (gameOver && !isReplaying)}
           >
@@ -179,7 +179,10 @@ export function ControlPanel() {
         </label>
 
         <div className="flex gap-2">
-          <button onClick={resetGame} className="text-xs text-gray-400 hover:text-white">
+          <button
+            onClick={() => void resetGame()}
+            className="text-xs text-gray-400 hover:text-white"
+          >
             Reset
           </button>
           <button onClick={endGame} className="text-xs text-red-400 hover:text-red-300">

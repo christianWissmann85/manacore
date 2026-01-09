@@ -84,7 +84,7 @@ function WelcomeModal() {
 
           <div className="grid grid-cols-2 gap-3">
             <button
-              onClick={() => startGame('human', 'greedy')}
+              onClick={() => void startGame('human', 'greedy')}
               className="btn btn-primary text-left p-4"
             >
               <div className="font-semibold">Human vs Greedy</div>
@@ -92,7 +92,7 @@ function WelcomeModal() {
             </button>
 
             <button
-              onClick={() => startGame('human', 'mcts')}
+              onClick={() => void startGame('human', 'mcts')}
               className="btn btn-primary text-left p-4"
             >
               <div className="font-semibold">Human vs MCTS</div>
@@ -100,7 +100,7 @@ function WelcomeModal() {
             </button>
 
             <button
-              onClick={() => startGame('greedy', 'mcts')}
+              onClick={() => void startGame('greedy', 'mcts')}
               className="btn btn-secondary text-left p-4"
             >
               <div className="font-semibold">Greedy vs MCTS</div>
@@ -108,7 +108,7 @@ function WelcomeModal() {
             </button>
 
             <button
-              onClick={() => startGame('mcts', 'mcts')}
+              onClick={() => void startGame('mcts', 'mcts')}
               className="btn btn-secondary text-left p-4"
             >
               <div className="font-semibold">MCTS vs MCTS</div>

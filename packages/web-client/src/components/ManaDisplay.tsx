@@ -15,7 +15,7 @@ const MANA_ORDER: Array<{ key: keyof ManaPool; symbol: string }> = [
 ];
 
 export function ManaDisplay({ manaPool }: ManaDisplayProps) {
-  const totalMana = Object.values(manaPool).reduce((a, b) => a + b, 0);
+  const totalMana = (Object.values(manaPool) as number[]).reduce((a, b) => a + b, 0);
 
   if (totalMana === 0) {
     return (

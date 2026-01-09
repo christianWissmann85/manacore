@@ -17,7 +17,7 @@ export function ActionBar() {
   const otherActions = relevantActions.filter((a) => a.type !== 'PASS_PRIORITY');
 
   const handleAction = (actionIndex: number) => {
-    executeAction(actionIndex);
+    void executeAction(actionIndex);
   };
 
   return (

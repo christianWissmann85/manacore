@@ -15,18 +15,18 @@ import {
   ALL_TEST_DECKS,
 } from '@manacore/engine';
 import type { AllDeckTypes } from '@manacore/engine';
-import type { Bot } from '@manacore/ai';
-import { RandomBot, GreedyBot, MCTSBotPresets } from '@manacore/ai';
 import {
   RewardShaper,
   type RewardShapingConfig,
   DEFAULT_REWARD_SHAPING_CONFIG,
 } from '../rewards/shaping';
+import { type ThinkingBot, createThinkingBot } from '../bots/ThinkingCapture';
+import type { AIThinking } from '../serialization/aiThinking';
 
 export interface GameSession {
   id: string;
   state: GameState;
-  opponent: Bot;
+  opponent: ThinkingBot;
   opponentType: string;
   createdAt: number;
   lastAccessedAt: number;
@@ -35,6 +35,8 @@ export interface GameSession {
   rewardShaper: RewardShaper;
   playerDeckName: string;
   opponentDeckName: string;
+  /** Last captured AI thinking data */
+  lastAIThinking: AIThinking | null;
 }
 
 export interface SessionManagerConfig {
@@ -53,26 +55,10 @@ export const DEFAULT_SESSION_CONFIG: SessionManagerConfig = {
 
 /**
  * Create a bot instance from a string identifier
+ * @deprecated Use createThinkingBot from bots/ThinkingCapture instead
  */
-export function createBot(botType: string, seed?: number): Bot {
-  switch (botType.toLowerCase()) {
-    case 'random':
-      return new RandomBot(seed);
-    case 'greedy':
-      return new GreedyBot(seed);
-    case 'mcts':
-    case 'mcts-eval':
-      return MCTSBotPresets.standard();
-    case 'mcts-fast':
-    case 'mcts-eval-fast':
-      return MCTSBotPresets.fast();
-    case 'mcts-strong':
-    case 'mcts-eval-strong':
-      return MCTSBotPresets.strong();
-    default:
-      console.warn(`Unknown bot type: ${botType}, defaulting to greedy`);
-      return new GreedyBot(seed);
-  }
+export function createBot(botType: string, seed?: number): ThinkingBot {
+  return createThinkingBot(botType, seed);
 }
 
 /**
@@ -186,6 +172,7 @@ export class SessionManager {
       rewardShaper,
       playerDeckName: playerDeck,
       opponentDeckName: opponentDeck,
+      lastAIThinking: null,
     };
 
     this.sessions.set(gameId, session);
@@ -301,6 +288,9 @@ export class SessionManager {
       try {
         const opponentAction = session.opponent.chooseAction(session.state, 'opponent');
         session.state = applyAction(session.state, opponentAction);
+
+        // Capture AI thinking after opponent move
+        session.lastAIThinking = session.opponent.getLastThinking();
       } catch (error) {
         // Opponent action failed - treat as win for player
         console.warn(
@@ -334,6 +324,9 @@ export class SessionManager {
           while (!session.state.gameOver && session.state.priorityPlayer === 'opponent') {
             const opponentAction = session.opponent.chooseAction(session.state, 'opponent');
             session.state = applyAction(session.state, opponentAction);
+
+            // Capture AI thinking after opponent move
+            session.lastAIThinking = session.opponent.getLastThinking();
           }
         } else {
           break;
@@ -409,6 +402,7 @@ export class SessionManager {
     session.lastAccessedAt = Date.now();
     session.stepCount = 0;
     session.seed = actualSeed;
+    session.lastAIThinking = null;
     session.rewardShaper.reset();
     session.rewardShaper.initialize(session.state);
 

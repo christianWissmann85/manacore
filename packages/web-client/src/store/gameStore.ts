@@ -209,7 +209,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         isReplaying: false,
         replayIndex: 0,
       });
-    } catch (err) {
+    } catch {
       // If reset fails, try starting a new game
       await get().startGame(playerType, opponentType, playerDeck, opponentDeck);
     }
@@ -285,7 +285,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ hoveredCardId: instanceId });
   },
 
-  previewAction: async (actionIndex) => {
+  previewAction: (actionIndex) => {
     if (actionIndex === null) {
       set({ previewState: null });
       return;

@@ -58,7 +58,7 @@ export function Card({
       }
     }
 
-    loadImage();
+    void loadImage();
 
     return () => {
       mounted = false;

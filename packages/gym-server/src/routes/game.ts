@@ -2,6 +2,7 @@
  * Game Routes
  *
  * CRUD operations for game sessions
+ * Extended with clientState and aiThinking for web client visualization
  */
 
 import { Hono } from 'hono';
@@ -12,6 +13,7 @@ import {
   createActionMask,
   serializeLegalActions,
 } from '../serialization/state';
+import { serializeClientState, serializeLegalActionsForClient } from '../serialization/clientState';
 
 interface CreateGameBody {
   opponent?: string;
@@ -56,11 +58,19 @@ export function createGameRoutes(sessionManager: SessionManager): Hono {
         'player',
       );
 
+      // Add client-friendly state and legal actions
+      const clientState = serializeClientState(session.state, session.id);
+      const clientActions = serializeLegalActionsForClient(session.state, 'player');
+
       return c.json({
         gameId: session.id,
         seed: session.seed,
         opponent: session.opponentType,
         ...response,
+        // Extended fields for web client
+        clientState,
+        legalActions: clientActions, // Override with enhanced version
+        aiThinking: session.lastAIThinking,
       });
     } catch (error) {
       return c.json({ error: error instanceof Error ? error.message : 'Unknown error' }, 500);
@@ -83,6 +93,9 @@ export function createGameRoutes(sessionManager: SessionManager): Hono {
 
       const result = sessionManager.step(gameId, action);
 
+      // Get session to access AI thinking
+      const session = sessionManager.getSession(gameId);
+
       const response = createStepResponse(
         result.state,
         result.reward,
@@ -92,7 +105,17 @@ export function createGameRoutes(sessionManager: SessionManager): Hono {
         'player',
       );
 
-      return c.json(response);
+      // Add client-friendly state and legal actions
+      const clientState = serializeClientState(result.state, gameId);
+      const clientActions = serializeLegalActionsForClient(result.state, 'player');
+
+      return c.json({
+        ...response,
+        // Extended fields for web client
+        clientState,
+        legalActions: clientActions, // Override with enhanced version
+        aiThinking: session?.lastAIThinking ?? null,
+      });
     } catch (error) {
       return c.json({ error: error instanceof Error ? error.message : 'Unknown error' }, 400);
     }
@@ -119,10 +142,18 @@ export function createGameRoutes(sessionManager: SessionManager): Hono {
         'player',
       );
 
+      // Add client-friendly state and legal actions
+      const clientState = serializeClientState(session.state, session.id);
+      const clientActions = serializeLegalActionsForClient(session.state, 'player');
+
       return c.json({
         gameId: session.id,
         seed: session.seed,
         ...response,
+        // Extended fields for web client
+        clientState,
+        legalActions: clientActions, // Override with enhanced version
+        aiThinking: session.lastAIThinking,
       });
     } catch (error) {
       return c.json({ error: error instanceof Error ? error.message : 'Unknown error' }, 400);
@@ -142,13 +173,20 @@ export function createGameRoutes(sessionManager: SessionManager): Hono {
         return c.json({ error: `Game not found: ${gameId}` }, 404);
       }
 
+      // Add client-friendly state and legal actions
+      const clientState = serializeClientState(session.state, session.id);
+      const clientActions = serializeLegalActionsForClient(session.state, 'player');
+
       return c.json({
         observation: serializeObservation(session.state, 'player'),
         actionMask: createActionMask(session.state, 'player'),
-        legalActions: serializeLegalActions(session.state, 'player'),
+        legalActions: clientActions,
         done: session.state.gameOver,
         turn: session.state.turnCount,
         phase: session.state.phase,
+        // Extended fields for web client
+        clientState,
+        aiThinking: session.lastAIThinking,
       });
     } catch (error) {
       return c.json({ error: error instanceof Error ? error.message : 'Unknown error' }, 400);
@@ -168,8 +206,10 @@ export function createGameRoutes(sessionManager: SessionManager): Hono {
         return c.json({ error: `Game not found: ${gameId}` }, 404);
       }
 
+      const clientActions = serializeLegalActionsForClient(session.state, 'player');
+
       return c.json({
-        legalActions: serializeLegalActions(session.state, 'player'),
+        legalActions: clientActions,
         actionMask: createActionMask(session.state, 'player'),
       });
     } catch (error) {

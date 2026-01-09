@@ -26,7 +26,7 @@ class GameService {
       throw new Error(`Failed to create game: ${error}`);
     }
 
-    return response.json();
+    return response.json() as Promise<GameStepResponse & { gameId: string }>;
   }
 
   /** Execute an action */
@@ -42,7 +42,7 @@ class GameService {
       throw new Error(`Failed to execute action: ${error}`);
     }
 
-    return response.json();
+    return response.json() as Promise<GameStepResponse>;
   }
 
   /** Get current game state */
@@ -54,7 +54,7 @@ class GameService {
       throw new Error(`Failed to get state: ${error}`);
     }
 
-    return response.json();
+    return response.json() as Promise<GameStepResponse>;
   }
 
   /** Get legal actions */
@@ -66,7 +66,7 @@ class GameService {
       throw new Error(`Failed to get actions: ${error}`);
     }
 
-    return response.json();
+    return response.json() as Promise<{ legalActions: GameStepResponse['legalActions'] }>;
   }
 
   /** Reset game to initial state */
@@ -82,7 +82,7 @@ class GameService {
       throw new Error(`Failed to reset game: ${error}`);
     }
 
-    return response.json();
+    return response.json() as Promise<GameStepResponse>;
   }
 
   /** Delete game session */
@@ -99,7 +99,7 @@ class GameService {
     sessions: number;
   }> {
     const response = await fetch(`${API_BASE}/health`);
-    return response.json();
+    return response.json() as Promise<{ status: string; version: string; sessions: number }>;
   }
 }
 

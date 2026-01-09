@@ -110,7 +110,7 @@ class ScryfallService {
               // Try fuzzy search
               const fuzzyResponse = await fetch(`${SCRYFALL_API}/cards/named?fuzzy=${encodedName}`);
               if (fuzzyResponse.ok) {
-                resolve(await fuzzyResponse.json());
+                resolve((await fuzzyResponse.json()) as ScryfallCard);
                 return;
               }
             }
@@ -118,13 +118,13 @@ class ScryfallService {
             return;
           }
 
-          resolve(await response.json());
+          resolve((await response.json()) as ScryfallCard);
         } catch {
           resolve(null);
         }
       });
 
-      this.processQueue();
+      void this.processQueue();
     });
   }
 
@@ -152,7 +152,7 @@ class ScryfallService {
       const stored = localStorage.getItem(key);
       if (!stored) return null;
 
-      const entry: CacheEntry = JSON.parse(stored);
+      const entry = JSON.parse(stored) as CacheEntry;
 
       // Check if cache is expired
       if (Date.now() - entry.timestamp > CACHE_DURATION) {
@@ -173,7 +173,7 @@ class ScryfallService {
         timestamp: Date.now(),
       };
       localStorage.setItem(key, JSON.stringify(entry));
-    } catch (err) {
+    } catch {
       // localStorage might be full, clear old entries
       this.clearOldCache();
     }
@@ -186,7 +186,7 @@ class ScryfallService {
     const entries = keys
       .map((key) => {
         try {
-          const entry: CacheEntry = JSON.parse(localStorage.getItem(key) ?? '{}');
+          const entry = JSON.parse(localStorage.getItem(key) ?? '{}') as CacheEntry;
           return { key, timestamp: entry.timestamp ?? 0 };
         } catch {
           return { key, timestamp: 0 };
