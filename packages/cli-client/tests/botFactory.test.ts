@@ -7,7 +7,13 @@
 import { describe, test, expect } from 'bun:test';
 import { createBot, type BotType } from '../src/botFactory';
 import { RandomBot, GreedyBot, MCTSBot } from '@manacore/ai';
-import { initializeGame, createGreenDeck, getLegalActions } from '@manacore/engine';
+import {
+  initializeGame,
+  createGreenDeck,
+  getLegalActions,
+  _resetInstanceCounter,
+  _resetStackCounter,
+} from '@manacore/engine';
 
 // =============================================================================
 // TEST UTILITIES
@@ -161,6 +167,10 @@ describe('Bot configuration', () => {
   });
 
   test('passes seed to GreedyBot correctly', () => {
+    // Reset global counters to ensure deterministic card IDs
+    _resetInstanceCounter();
+    _resetStackCounter();
+
     const bot1 = createBot('greedy', 12345);
     const bot2 = createBot('greedy', 12345);
 

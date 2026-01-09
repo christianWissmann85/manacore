@@ -2,13 +2,15 @@
 Pytest configuration and fixtures for manacore_gym tests.
 """
 
+from collections.abc import Generator
+
 import pytest
 
 from manacore_gym.bridge import BunBridge
 
 
 @pytest.fixture(scope="session")
-def shared_server():
+def shared_server() -> Generator[BunBridge, None, None]:
     """
     Provide a shared game server for all tests.
 
@@ -22,7 +24,7 @@ def shared_server():
 
 
 @pytest.fixture(scope="function")
-def env_no_auto_start():
+def env_no_auto_start() -> dict[str, bool]:
     """
     Mark tests that should not auto-start their own server.
 

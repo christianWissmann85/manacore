@@ -13,7 +13,7 @@ def test_import() -> None:
     assert manacore_gym.__version__ == "0.1.0"
 
 
-def test_env_creation(shared_server) -> None:
+def test_env_creation(shared_server: object) -> None:
     """Test environment creation."""
     from manacore_gym import ManaCoreBattleEnv
 
@@ -22,7 +22,7 @@ def test_env_creation(shared_server) -> None:
     env.close()
 
 
-def test_env_reset(shared_server) -> None:
+def test_env_reset(shared_server: object) -> None:
     """Test environment reset."""
     from manacore_gym import ManaCoreBattleEnv
 
@@ -40,7 +40,7 @@ def test_env_reset(shared_server) -> None:
     env.close()
 
 
-def test_env_step(shared_server) -> None:
+def test_env_step(shared_server: object) -> None:
     """Test environment step."""
     from manacore_gym import ManaCoreBattleEnv
 
@@ -65,7 +65,7 @@ def test_env_step(shared_server) -> None:
     env.close()
 
 
-def test_action_masks(shared_server) -> None:
+def test_action_masks(shared_server: object) -> None:
     """Test action masking."""
     from manacore_gym import ManaCoreBattleEnv
 
@@ -80,7 +80,7 @@ def test_action_masks(shared_server) -> None:
     env.close()
 
 
-def test_gymnasium_registration(shared_server) -> None:
+def test_gymnasium_registration(shared_server: object) -> None:
     """Test that environment is registered with Gymnasium."""
     import gymnasium as gym
 
@@ -91,7 +91,7 @@ def test_gymnasium_registration(shared_server) -> None:
     env.close()
 
 
-def test_full_game(shared_server) -> None:
+def test_full_game(shared_server: object) -> None:
     """Test playing a complete game."""
     from manacore_gym import ManaCoreBattleEnv
 
@@ -127,7 +127,7 @@ def test_full_game(shared_server) -> None:
     env.close()
 
 
-def test_determinism(shared_server) -> None:
+def test_determinism(shared_server: object) -> None:
     """Test that same seed produces same game."""
     from manacore_gym import ManaCoreBattleEnv
 

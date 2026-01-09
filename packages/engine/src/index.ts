@@ -19,7 +19,14 @@ export type { PlayerState, ManaPool } from './state/PlayerState';
 export type { CardInstance } from './state/CardInstance';
 export type { Zone, PlayerId, GamePhase, GameStep, CounterType } from './state/Zone';
 
-export { createGameState, getPlayer, getOpponent, findCard, enableF6Mode, nextRandom } from './state/GameState';
+export {
+  createGameState,
+  getPlayer,
+  getOpponent,
+  findCard,
+  enableF6Mode,
+  nextRandom,
+} from './state/GameState';
 
 export { createPlayerState, createEmptyManaPool } from './state/PlayerState';
 
