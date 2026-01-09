@@ -97,9 +97,13 @@ export const TEST_DECKS = MONO_DECKS;
 /**
  * Get a random test deck from ALL decks (full coverage)
  */
-export function getRandomTestDeck(): CardTemplate[] {
+export function getRandomTestDeck(seed?: number): CardTemplate[] {
   const allDeckNames = Object.keys(ALL_TEST_DECKS) as AllDeckTypes[];
-  const randomDeck = allDeckNames[Math.floor(Math.random() * allDeckNames.length)]!;
+  const index =
+    seed !== undefined
+      ? seed % allDeckNames.length
+      : Math.floor(Math.random() * allDeckNames.length);
+  const randomDeck = allDeckNames[index]!;
   return ALL_TEST_DECKS[randomDeck]();
 }
 

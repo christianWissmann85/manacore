@@ -33,6 +33,8 @@ export interface GameSession {
   stepCount: number;
   seed: number;
   rewardShaper: RewardShaper;
+  playerDeckName: string;
+  opponentDeckName: string;
 }
 
 export interface SessionManagerConfig {
@@ -52,12 +54,12 @@ export const DEFAULT_SESSION_CONFIG: SessionManagerConfig = {
 /**
  * Create a bot instance from a string identifier
  */
-export function createBot(botType: string): Bot {
+export function createBot(botType: string, seed?: number): Bot {
   switch (botType.toLowerCase()) {
     case 'random':
-      return new RandomBot();
+      return new RandomBot(seed);
     case 'greedy':
-      return new GreedyBot();
+      return new GreedyBot(seed);
     case 'mcts':
     case 'mcts-eval':
       return MCTSBotPresets.standard();
@@ -69,7 +71,7 @@ export function createBot(botType: string): Bot {
       return MCTSBotPresets.strong();
     default:
       console.warn(`Unknown bot type: ${botType}, defaulting to greedy`);
-      return new GreedyBot();
+      return new GreedyBot(seed);
   }
 }
 
@@ -82,10 +84,12 @@ export function getAvailableDeckNames(): string[] {
 
 /**
  * Get a deck by name or return a random deck
+ * @param deckName - Deck name or "random"
+ * @param seed - Optional seed for deterministic random deck selection
  */
-export function getDeck(deckName: string): CardTemplate[] {
+export function getDeck(deckName: string, seed?: number): CardTemplate[] {
   if (deckName === 'random') {
-    return getRandomTestDeck();
+    return getRandomTestDeck(seed);
   }
 
   // Normalize deck name
@@ -162,11 +166,11 @@ export class SessionManager {
     const actualSeed = seed ?? Date.now();
     const gameId = `game-${actualSeed}-${Math.random().toString(36).slice(2, 8)}`;
 
-    const deck1 = getDeck(playerDeck);
-    const deck2 = getDeck(opponentDeck);
+    const deck1 = getDeck(playerDeck, actualSeed);
+    const deck2 = getDeck(opponentDeck, actualSeed + 1);
 
     const state = initializeGame(deck1, deck2, actualSeed);
-    const opponent = createBot(opponentType);
+    const opponent = createBot(opponentType, actualSeed);
     const rewardShaper = new RewardShaper(this.config.rewardShaping);
     rewardShaper.initialize(state);
 
@@ -180,6 +184,8 @@ export class SessionManager {
       stepCount: 0,
       seed: actualSeed,
       rewardShaper,
+      playerDeckName: playerDeck,
+      opponentDeckName: opponentDeck,
     };
 
     this.sessions.set(gameId, session);
@@ -393,10 +399,13 @@ export class SessionManager {
     }
 
     const actualSeed = seed ?? Date.now();
-    const deck1 = getRandomTestDeck();
-    const deck2 = getRandomTestDeck();
+    // Reuse the same decks from session creation
+    const deck1 = getDeck(session.playerDeckName, actualSeed);
+    const deck2 = getDeck(session.opponentDeckName, actualSeed + 1);
 
     session.state = initializeGame(deck1, deck2, actualSeed);
+    // Recreate opponent with new seed for determinism
+    session.opponent = createBot(session.opponentType, actualSeed);
     session.lastAccessedAt = Date.now();
     session.stepCount = 0;
     session.seed = actualSeed;

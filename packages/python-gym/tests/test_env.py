@@ -127,7 +127,6 @@ def test_full_game(shared_server) -> None:
     env.close()
 
 
-@pytest.mark.xfail(reason="Server-side determinism not fully implemented yet")
 def test_determinism(shared_server) -> None:
     """Test that same seed produces same game."""
     from manacore_gym import ManaCoreBattleEnv

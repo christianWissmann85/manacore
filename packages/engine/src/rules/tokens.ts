@@ -131,7 +131,7 @@ export function createTokens(
 
   for (let i = 0; i < count; i++) {
     const token: CardInstance = {
-      instanceId: `token_${tokenType}_${Date.now()}_${Math.random()}`,
+      instanceId: `token_${tokenType}_${state.turnCount}_${state.players[controller].battlefield.length}`,
       scryfallId: `token_${tokenType}`,
       owner: controller,
       controller: controller,
@@ -192,7 +192,7 @@ export function createCustomTokens(
 
   for (let i = 0; i < count; i++) {
     const token: CardInstance = {
-      instanceId: `token_${definition.name.toLowerCase()}_${Date.now()}_${Math.random()}`,
+      instanceId: `token_${definition.name.toLowerCase()}_${state.turnCount}_${state.players[controller].battlefield.length}`,
       scryfallId: `token_custom_${definition.name.toLowerCase()}`,
       owner: controller,
       controller: controller,

@@ -3,6 +3,7 @@ Pytest configuration and fixtures for manacore_gym tests.
 """
 
 import pytest
+
 from manacore_gym.bridge import BunBridge
 
 
@@ -10,7 +11,7 @@ from manacore_gym.bridge import BunBridge
 def shared_server():
     """
     Provide a shared game server for all tests.
-    
+
     This fixture starts a single server at the beginning of the test session
     and keeps it running for all tests, avoiding the overhead and issues
     of repeatedly starting/stopping the server between tests.
@@ -24,7 +25,7 @@ def shared_server():
 def env_no_auto_start():
     """
     Mark tests that should not auto-start their own server.
-    
+
     When using the shared_server fixture, individual tests should create
     environments with auto_start_server=False to use the shared server.
     """

@@ -49,7 +49,8 @@ export interface GameState {
   winner: PlayerId | null;
 
   // Determinism (for replays and AI)
-  rngSeed: number;
+  rngSeed: number; // Initial seed (for reference/display)
+  rngState: number; // Current RNG state (mutated on each call)
 
   // History (for undo/debugging)
   actionHistory: string[]; // JSON of actions applied
@@ -67,12 +68,23 @@ export interface GameState {
 /**
  * Create initial game state
  */
+/**
+ * Get next random number and update state
+ * Uses Linear Congruential Generator (LCG) for deterministic randomness
+ */
+export function nextRandom(state: GameState): number {
+  state.rngState = (state.rngState * 1664525 + 1013904223) % 4294967296;
+  return state.rngState / 4294967296;
+}
+
+/**
+ * Create initial game state
+ */
 export function createGameState(
   playerLibrary: CardInstance[],
   opponentLibrary: CardInstance[],
   seed: number = Date.now(),
 ): GameState {
-  // Import is at top of file
   return {
     players: {
       player: createPlayerState('player', playerLibrary),
@@ -88,6 +100,7 @@ export function createGameState(
     gameOver: false,
     winner: null,
     rngSeed: seed,
+    rngState: seed,
     actionHistory: [],
   };
 }

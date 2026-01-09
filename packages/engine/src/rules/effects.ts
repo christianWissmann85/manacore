@@ -15,6 +15,7 @@
 import type { GameState } from '../state/GameState';
 import type { CardInstance } from '../state/CardInstance';
 import type { PlayerId } from '../state/Zone';
+import { nextRandom } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
 import type { CardTemplate } from '../cards/CardTemplate';
 import {
@@ -962,8 +963,8 @@ export function discardCards(state: GameState, playerId: PlayerId, count: number
   const discarded: CardInstance[] = [];
 
   for (let i = 0; i < count && player.hand.length > 0; i++) {
-    // Random discard for non-deterministic effects
-    const index = Math.floor(Math.random() * player.hand.length);
+    // Use seeded RNG for deterministic discard
+    const index = Math.floor(nextRandom(state) * player.hand.length);
     const card = player.hand.splice(index, 1)[0]!;
     card.zone = 'graveyard';
     player.graveyard.push(card);
