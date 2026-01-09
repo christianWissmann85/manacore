@@ -14,8 +14,9 @@ import {
   getTestDeck,
   ALL_TEST_DECKS,
   describeAction,
+  getPlayer,
 } from '@manacore/engine';
-import type { AllDeckTypes } from '@manacore/engine';
+import type { AllDeckTypes, PlayerId } from '@manacore/engine';
 import {
   RewardShaper,
   type RewardShapingConfig,
@@ -129,6 +130,15 @@ export function getDeck(deckName: string, seed?: number): CardTemplate[] {
   // Default to red (simple aggro deck)
   console.warn(`Unknown deck: ${deckName}, defaulting to red`);
   return getTestDeck('red');
+}
+
+/**
+ * Format stats for action description (matches CLI output)
+ */
+function getActionStats(state: GameState, activePlayerId: string): string {
+  const active = getPlayer(state, activePlayerId as PlayerId);
+  const other = getPlayer(state, activePlayerId === 'player' ? 'opponent' : 'player');
+  return `(Life: ${active.life}/${other.life} | Hand: ${active.hand.length}/${other.hand.length} | Board: ${active.battlefield.length}/${other.battlefield.length})`;
 }
 
 export class SessionManager {
@@ -281,7 +291,7 @@ export class SessionManager {
         playerId: 'player',
         turn: session.state.turnCount,
         phase: session.state.phase,
-        description: describeAction(action, session.state),
+        description: `${describeAction(action, session.state)} ${getActionStats(session.state, 'player')}`,
       });
       session.state = applyAction(session.state, action);
     } catch (error) {
@@ -318,7 +328,7 @@ export class SessionManager {
           playerId: 'opponent',
           turn: session.state.turnCount,
           phase: session.state.phase,
-          description: describeAction(opponentAction, session.state),
+          description: `${describeAction(opponentAction, session.state)} ${getActionStats(session.state, 'opponent')}`,
           aiThinking: session.lastAIThinking,
         });
 
@@ -357,7 +367,7 @@ export class SessionManager {
             playerId: 'player',
             turn: session.state.turnCount,
             phase: session.state.phase,
-            description: describeAction(autoAction, session.state),
+            description: `${describeAction(autoAction, session.state)} ${getActionStats(session.state, 'player')}`,
           });
 
           session.state = applyAction(session.state, autoAction);
@@ -374,7 +384,7 @@ export class SessionManager {
               playerId: 'opponent',
               turn: session.state.turnCount,
               phase: session.state.phase,
-              description: describeAction(opponentAction, session.state),
+              description: `${describeAction(opponentAction, session.state)} ${getActionStats(session.state, 'opponent')}`,
               aiThinking: session.lastAIThinking,
             });
 

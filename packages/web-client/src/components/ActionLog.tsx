@@ -17,7 +17,7 @@ export function ActionLog() {
     const text = history
       .map((entry) => {
         const turn = `Turn ${entry.turn} [${entry.phase}]`;
-        const action = entry.action ? `Player: ${entry.action.description}` : 'Player: (None)';
+        const action = entry.action ? entry.action.description : '(None)';
         const aiInfo = entry.aiThinking
           ? `\n  AI Eval: ${(entry.aiThinking.winProbability * 100).toFixed(1)}%`
           : '';

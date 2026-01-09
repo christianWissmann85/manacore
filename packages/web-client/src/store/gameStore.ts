@@ -163,7 +163,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
             action: { 
               index: -1, 
               type: 'unknown', 
-              description: step.description 
+              description: `[${step.playerId === 'player' ? 'You' : 'Opponent'}] ${step.description}`
             },
             state: newState, // We only have the final state
             aiThinking: step.aiThinking ?? undefined,
