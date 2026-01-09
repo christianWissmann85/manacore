@@ -24,7 +24,7 @@ from pathlib import Path
 import torch
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Train ImitatorNet on ManaCore data")
 
     # Data
@@ -54,7 +54,7 @@ def main():
     args = parser.parse_args()
 
     # Import here to avoid slow startup
-    from manacore_gym.neural import ImitatorNet, Trainer, TrainingConfig, create_imitator_net, load_from_huggingface, load_from_npz
+    from manacore_gym.neural import Trainer, TrainingConfig, create_imitator_net, load_from_huggingface, load_from_npz
     from manacore_gym.neural.data_loader import create_data_loaders, train_val_split
 
     # Determine device

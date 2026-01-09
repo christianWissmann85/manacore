@@ -24,11 +24,13 @@ class ActionMasker(gym.ActionWrapper):
 
     def __init__(self, env: gym.Env):
         super().__init__(env)
-        self._last_mask: np.ndarray = np.ones(env.action_space.n, dtype=bool)
+        # Type narrowing: ActionWrapper requires Discrete action space
+        assert isinstance(env.action_space, gym.spaces.Discrete), "ActionMasker requires Discrete action space"
+        self._last_mask: np.ndarray = np.ones(int(env.action_space.n), dtype=bool)
 
     def reset(self, **kwargs: Any) -> tuple[np.ndarray, dict[str, Any]]:
         obs, info = self.env.reset(**kwargs)
-        self._last_mask = info.get("action_mask", np.ones(self.action_space.n, dtype=bool))
+        self._last_mask = info.get("action_mask", np.ones(int(self.action_space.n), dtype=np.bool_))
         return obs, info
 
     def step(self, action: int) -> tuple[np.ndarray, float, bool, bool, dict[str, Any]]:
@@ -39,8 +41,8 @@ class ActionMasker(gym.ActionWrapper):
                 action = int(legal_actions[0])
 
         obs, reward, terminated, truncated, info = self.env.step(action)
-        self._last_mask = info.get("action_mask", np.ones(self.action_space.n, dtype=bool))
-        return obs, reward, terminated, truncated, info
+        self._last_mask = info.get("action_mask", np.ones(int(self.action_space.n), dtype=np.bool_))
+        return obs, float(reward), terminated, truncated, info
 
     def action(self, action: int) -> int:
         """Convert action if needed."""

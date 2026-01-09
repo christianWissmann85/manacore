@@ -12,7 +12,7 @@ import numpy as np
 import manacore_gym  # noqa: F401
 
 
-def main():
+def main() -> None:
     print("Creating ManaCore environment...")
 
     # Create environment
@@ -39,7 +39,7 @@ def main():
 
         # Take action
         obs, reward, terminated, truncated, info = env.step(action)
-        total_reward += reward
+        total_reward += reward  # type: ignore[operator]
         step_count += 1
 
         # Print progress every 10 steps
@@ -47,7 +47,7 @@ def main():
             print(f"Step {step_count}: Life {info.get('playerLife', '?')}/{info.get('opponentLife', '?')}")
 
         if terminated or truncated:
-            winner = "Player" if reward > 0 else "Opponent"
+            winner = "Player" if reward > 0 else "Opponent"  # type: ignore[operator]
             print(f"\nGame over after {step_count} steps!")
             print(f"Winner: {winner}")
             print(f"Total reward: {total_reward}")

@@ -49,7 +49,7 @@ def benchmark_sequential(n_games: int = 100, opponent: str = "random", max_steps
             steps += 1
 
         total_steps += steps
-        if reward > 0:
+        if reward > 0:  # type: ignore[operator]
             wins += 1
 
         # Progress update

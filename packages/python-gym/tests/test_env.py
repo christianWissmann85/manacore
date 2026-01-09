@@ -6,14 +6,14 @@ import numpy as np
 import pytest
 
 
-def test_import():
+def test_import() -> None:
     """Test that the package can be imported."""
     import manacore_gym
 
     assert manacore_gym.__version__ == "0.1.0"
 
 
-def test_env_creation():
+def test_env_creation() -> None:
     """Test environment creation."""
     from manacore_gym import ManaCoreBattleEnv
 
@@ -22,7 +22,7 @@ def test_env_creation():
     env.close()
 
 
-def test_env_reset():
+def test_env_reset() -> None:
     """Test environment reset."""
     from manacore_gym import ManaCoreBattleEnv
 
@@ -40,7 +40,7 @@ def test_env_reset():
     env.close()
 
 
-def test_env_step():
+def test_env_step() -> None:
     """Test environment step."""
     from manacore_gym import ManaCoreBattleEnv
 
@@ -65,7 +65,7 @@ def test_env_step():
     env.close()
 
 
-def test_action_masks():
+def test_action_masks() -> None:
     """Test action masking."""
     from manacore_gym import ManaCoreBattleEnv
 
@@ -80,7 +80,7 @@ def test_action_masks():
     env.close()
 
 
-def test_gymnasium_registration():
+def test_gymnasium_registration() -> None:
     """Test that environment is registered with Gymnasium."""
     import gymnasium as gym
 
@@ -91,7 +91,7 @@ def test_gymnasium_registration():
     env.close()
 
 
-def test_full_game():
+def test_full_game() -> None:
     """Test playing a complete game."""
     from manacore_gym import ManaCoreBattleEnv
 
@@ -111,7 +111,7 @@ def test_full_game():
 
         action = legal_actions[0]
         obs, reward, terminated, truncated, info = env.step(action)
-        total_reward += reward
+        total_reward += reward  # type: ignore[operator]
         step_count += 1
 
         if terminated or truncated:
@@ -125,7 +125,7 @@ def test_full_game():
 
 
 @pytest.mark.xfail(reason="Server-side determinism not fully implemented yet")
-def test_determinism():
+def test_determinism() -> None:
     """Test that same seed produces same game."""
     from manacore_gym import ManaCoreBattleEnv
 

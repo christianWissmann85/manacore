@@ -17,6 +17,11 @@ import {
 import type { AllDeckTypes } from '@manacore/engine';
 import type { Bot } from '@manacore/ai';
 import { RandomBot, GreedyBot, MCTSBotPresets } from '@manacore/ai';
+import {
+  RewardShaper,
+  type RewardShapingConfig,
+  DEFAULT_REWARD_SHAPING_CONFIG,
+} from '../rewards/shaping';
 
 export interface GameSession {
   id: string;
@@ -27,18 +32,21 @@ export interface GameSession {
   lastAccessedAt: number;
   stepCount: number;
   seed: number;
+  rewardShaper: RewardShaper;
 }
 
 export interface SessionManagerConfig {
   maxSessions: number;
   inactivityTimeoutMs: number;
   cleanupIntervalMs: number;
+  rewardShaping: RewardShapingConfig;
 }
 
 export const DEFAULT_SESSION_CONFIG: SessionManagerConfig = {
   maxSessions: 1000,
   inactivityTimeoutMs: 5 * 60 * 1000, // 5 minutes
   cleanupIntervalMs: 60 * 1000, // 1 minute
+  rewardShaping: DEFAULT_REWARD_SHAPING_CONFIG,
 };
 
 /**
@@ -159,6 +167,8 @@ export class SessionManager {
 
     const state = initializeGame(deck1, deck2, actualSeed);
     const opponent = createBot(opponentType);
+    const rewardShaper = new RewardShaper(this.config.rewardShaping);
+    rewardShaper.initialize(state);
 
     const session: GameSession = {
       id: gameId,
@@ -169,6 +179,7 @@ export class SessionManager {
       lastAccessedAt: Date.now(),
       stepCount: 0,
       seed: actualSeed,
+      rewardShaper,
     };
 
     this.sessions.set(gameId, session);
@@ -342,11 +353,17 @@ export class SessionManager {
       };
     }
 
-    // Calculate reward
-    let reward = 0;
-    if (session.state.gameOver) {
-      reward = session.state.winner === 'player' ? 1.0 : -1.0;
-    }
+    // Calculate reward (terminal + shaped)
+    const terminalReward = session.state.gameOver
+      ? session.state.winner === 'player'
+        ? 1.0
+        : -1.0
+      : 0;
+    const reward = session.rewardShaper.calculateReward(
+      session.state,
+      terminalReward,
+      session.state.gameOver,
+    );
 
     // Check for truncation (max steps)
     const truncated = session.stepCount > 500;
@@ -361,6 +378,7 @@ export class SessionManager {
         turn: session.state.turnCount,
         phase: session.state.phase,
         winner: session.state.winner,
+        shapedReward: reward !== terminalReward,
       },
     };
   }
@@ -382,6 +400,8 @@ export class SessionManager {
     session.lastAccessedAt = Date.now();
     session.stepCount = 0;
     session.seed = actualSeed;
+    session.rewardShaper.reset();
+    session.rewardShaper.initialize(session.state);
 
     return session;
   }
@@ -424,6 +444,8 @@ export class SessionManager {
 
   /**
    * Clean up inactive sessions
+   * Note: Only clean up based on inactivity timeout, NOT gameOver status.
+   * This allows RL training to reuse sessions by calling reset().
    */
   private cleanup(): void {
     const now = Date.now();
@@ -431,7 +453,7 @@ export class SessionManager {
     let cleaned = 0;
 
     for (const [id, session] of this.sessions) {
-      if (session.lastAccessedAt < cutoff || session.state.gameOver) {
+      if (session.lastAccessedAt < cutoff) {
         this.sessions.delete(id);
         cleaned++;
       }

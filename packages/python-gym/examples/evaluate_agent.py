@@ -100,15 +100,15 @@ def evaluate_model(
         while not done:
             action_masks = env.action_masks()
             action, _ = model.predict(obs, action_masks=action_masks, deterministic=deterministic)
-            obs, reward, terminated, truncated, info = env.step(action)
+            obs, reward, terminated, truncated, info = env.step(action)  # type: ignore[arg-type]
             done = terminated or truncated
             steps += 1
 
         total_steps += steps
 
-        if reward > 0:
+        if reward > 0:  # type: ignore[operator]
             wins += 1
-        elif reward < 0:
+        elif reward < 0:  # type: ignore[operator]
             losses += 1
         else:
             draws += 1
@@ -211,7 +211,7 @@ def compare_with_random(
             steps += 1
 
         random_steps += steps
-        if reward > 0:
+        if reward > 0:  # type: ignore[operator]
             random_wins += 1
 
         if (game + 1) % 10 == 0:

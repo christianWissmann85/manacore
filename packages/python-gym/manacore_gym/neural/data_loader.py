@@ -8,11 +8,10 @@ Supports loading from:
 """
 
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader, Dataset
 
 
 class ManaDataset(Dataset):
@@ -105,7 +104,7 @@ def load_from_huggingface(
     try:
         from datasets import load_dataset
     except ImportError:
-        raise ImportError("Please install datasets: pip install datasets")
+        raise ImportError("Please install datasets: pip install datasets") from None
 
     print(f"Loading from HuggingFace: {repo_id} ({split})")
     dataset = load_dataset(repo_id, split=split, cache_dir=cache_dir)

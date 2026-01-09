@@ -54,7 +54,7 @@ class ImitatorNet(nn.Module):
         # Initialize weights
         self._init_weights()
 
-    def _init_weights(self):
+    def _init_weights(self) -> None:
         """Initialize weights using Xavier/Glorot initialization."""
         for module in self.modules():
             if isinstance(module, nn.Linear):
@@ -122,7 +122,7 @@ class ImitatorNet(nn.Module):
         """Get total number of trainable parameters."""
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
 
-    def export_onnx(self, path: str, opset_version: int = 14):
+    def export_onnx(self, path: str, opset_version: int = 14) -> None:
         """
         Export model to ONNX format for TypeScript inference.
 
@@ -140,7 +140,7 @@ class ImitatorNet(nn.Module):
         # Export using legacy exporter for compatibility
         torch.onnx.export(
             self,
-            dummy_input,
+            (dummy_input,),
             path,
             input_names=["features"],
             output_names=["logits"],

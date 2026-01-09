@@ -122,7 +122,7 @@ ignore = [
 known-first-party = ["manacore_gym"]
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.11"
 warn_return_any = false
 warn_unused_ignores = true
 disallow_untyped_defs = true

@@ -5,6 +5,7 @@ This module handles communication with the Bun-based HTTP server
 that exposes the ManaCore game engine.
 """
 
+import contextlib
 import os
 import signal
 import subprocess
@@ -137,10 +138,8 @@ class BunBridge:
                     # Try to get error details from response
                     error_detail = ""
                     if hasattr(e, "response") and e.response is not None:
-                        try:
+                        with contextlib.suppress(Exception):
                             error_detail = f" - Server response: {e.response.text}"
-                        except Exception:
-                            pass
                     raise RuntimeError(f"Request failed after {self.max_retries} attempts: {e}{error_detail}") from e
 
         raise RuntimeError("Unexpected error in request")

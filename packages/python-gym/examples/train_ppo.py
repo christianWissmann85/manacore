@@ -74,7 +74,7 @@ def train(
     def mask_fn(env: ManaCoreBattleEnv) -> np.ndarray:
         return env.action_masks()
 
-    env = ActionMasker(env, mask_fn)
+    env = ActionMasker(env, mask_fn)  # type: ignore[assignment,arg-type]
 
     # Create model
     print("Initializing MaskablePPO model...")
@@ -150,13 +150,13 @@ def evaluate_quick(model_path: str, opponent: str = "greedy", n_games: int = 10)
         while not done:
             action_masks = env.action_masks()
             action, _ = model.predict(obs, action_masks=action_masks, deterministic=True)
-            obs, reward, terminated, truncated, info = env.step(action)
+            obs, reward, terminated, truncated, info = env.step(action)  # type: ignore[arg-type]
             done = terminated or truncated
             steps += 1
 
         total_steps += steps
 
-        if reward > 0:
+        if reward > 0:  # type: ignore[operator]
             wins += 1
             result = "WIN"
         else:

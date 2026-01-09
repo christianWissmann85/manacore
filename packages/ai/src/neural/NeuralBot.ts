@@ -53,6 +53,10 @@ export class NeuralBot implements Bot {
     return 'NeuralBot';
   }
 
+  getDescription(): string {
+    return 'Neural network bot trained via behavior cloning on greedy bot data';
+  }
+
   /**
    * Initialize the ONNX session. Must be called before using the bot.
    */

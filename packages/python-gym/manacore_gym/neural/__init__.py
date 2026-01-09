@@ -7,9 +7,9 @@ This module contains:
 - ONNX export
 """
 
+from .data_loader import ManaDataset, load_from_huggingface, load_from_npz
 from .imitator import ImitatorNet, create_imitator_net
 from .trainer import Trainer, TrainingConfig
-from .data_loader import ManaDataset, load_from_huggingface, load_from_npz
 
 __all__ = [
     "ImitatorNet",

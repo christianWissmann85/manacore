@@ -5,10 +5,8 @@ Implements progressive difficulty scaling: start with easy opponents
 and gradually increase difficulty as the agent improves.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Callable, Optional
-
-import numpy as np
 
 
 @dataclass
@@ -240,7 +238,7 @@ class CurriculumScheduler:
         progress = self.get_progress()
 
         lines = [
-            f"=== Curriculum Progress ===",
+            "=== Curriculum Progress ===",
             f"Stage: {progress['stage_name']}",
             f"Opponent: {progress['opponent']}",
             f"Games: {progress['games_played']}",
@@ -301,7 +299,7 @@ class EvalCallback:
                 self.scheduler.advance()
                 if self.verbose:
                     new_stage = self.scheduler.current_stage.name if not self.scheduler.is_complete else "Complete"
-                    print(f"\n*** CURRICULUM ADVANCEMENT ***")
+                    print("\n*** CURRICULUM ADVANCEMENT ***")
                     print(f"    {old_stage} -> {new_stage}")
                     print()
 

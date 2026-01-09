@@ -2,13 +2,12 @@
 Training utilities for ImitatorNet.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from torch.utils.data import DataLoader
@@ -212,9 +211,9 @@ class Trainer:
         print(f"  Epochs: {self.config.epochs}")
         print(f"  Batch size: {self.config.batch_size}")
         print(f"  Learning rate: {self.config.learning_rate}")
-        print(f"  Train samples: {len(self.train_loader.dataset):,}")
+        print(f"  Train samples: {len(self.train_loader.dataset):,}")  # type: ignore[arg-type]
         if self.val_loader:
-            print(f"  Val samples: {len(self.val_loader.dataset):,}")
+            print(f"  Val samples: {len(self.val_loader.dataset):,}")  # type: ignore[arg-type]
         print()
 
         best_val_acc = 0.0
@@ -277,7 +276,7 @@ class Trainer:
 
         return self.stats
 
-    def save(self, path: str | Path):
+    def save(self, path: str | Path) -> None:
         """Save model and training state."""
         path = Path(path)
         torch.save(
@@ -291,7 +290,7 @@ class Trainer:
             path,
         )
 
-    def load(self, path: str | Path):
+    def load(self, path: str | Path) -> None:
         """Load model and training state."""
         path = Path(path)
         checkpoint = torch.load(path, map_location=self.config.device)
