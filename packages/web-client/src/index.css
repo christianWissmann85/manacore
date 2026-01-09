@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-mana-white: #F8F6D8;
+    --color-mana-blue: #0E68AB;
+    --color-mana-black: #150B00;
+    --color-mana-red: #D3202A;
+    --color-mana-green: #00733E;
+    --color-mana-colorless: #CBC2BF;
+  }
+
+  body {
+    @apply bg-board-bg min-h-screen;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.board.accent') theme('colors.board.surface');
+  }
+}
+
+@layer components {
+  .card-frame {
+    @apply relative rounded-lg overflow-hidden shadow-lg transition-transform duration-200;
+    aspect-ratio: 63 / 88;
+  }
+
+  .card-frame:hover {
+    @apply scale-105 z-10;
+  }
+
+  .card-tapped {
+    @apply rotate-90;
+  }
+
+  .mana-symbol {
+    @apply inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold;
+  }
+
+  .mana-W { @apply bg-mana-white text-black; }
+  .mana-U { @apply bg-mana-blue text-white; }
+  .mana-B { @apply bg-mana-black text-white border border-gray-600; }
+  .mana-R { @apply bg-mana-red text-white; }
+  .mana-G { @apply bg-mana-green text-white; }
+  .mana-C { @apply bg-mana-colorless text-black; }
+
+  .panel {
+    @apply bg-board-surface rounded-lg border border-board-accent/30;
+  }
+
+  .panel-header {
+    @apply px-4 py-2 border-b border-board-accent/30 font-semibold text-sm uppercase tracking-wider text-gray-400;
+  }
+
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-colors duration-150;
+  }
+
+  .btn-primary {
+    @apply bg-board-highlight hover:bg-board-highlight/80 text-white;
+  }
+
+  .btn-secondary {
+    @apply bg-board-accent hover:bg-board-accent/80 text-gray-200;
+  }
+
+  .hint-tooltip {
+    @apply absolute z-50 px-3 py-2 text-sm bg-black/90 text-white rounded-lg shadow-xl;
+    @apply opacity-0 pointer-events-none transition-opacity duration-200;
+  }
+
+  .hint-tooltip.visible {
+    @apply opacity-100 pointer-events-auto;
+  }
+}
+
+@layer utilities {
+  .text-glow {
+    text-shadow: 0 0 10px currentColor;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
