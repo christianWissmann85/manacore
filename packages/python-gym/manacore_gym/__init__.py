@@ -53,5 +53,6 @@ __all__ = [
     "make_env",
     "make_vec_env",
     "make_masked_vec_env",
+    "analysis",
     "__version__",
 ]

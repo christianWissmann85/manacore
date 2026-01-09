@@ -1,23 +1,63 @@
-# ManaCore Gym Notebooks
+# ManaCore Notebooks
 
-Interactive Jupyter notebooks for learning and experimenting with ManaCore Gym.
+Interactive Jupyter notebooks for learning and analyzing ManaCore RL training.
 
-## Quick Start (One-Time Setup)
+## 📚 Available Notebooks
 
-### 1. Install Dependencies with uv
+### 1. [Getting Started](01_getting_started.ipynb)
+Basic introduction to the ManaCore Gym environment.
 
-From the `packages/python-gym` directory:
+### 2. [Phase 3 Training Analysis](02_phase3_analysis.ipynb) ⭐
+**Publication-ready analysis toolkit** for Phase 3 training runs:
+
+- 📊 **Learning Curves** - Compare multiple training runs
+- 📈 **Statistical Reports** - Performance metrics with LaTeX export
+- 🎨 **Publication Plots** - High-quality figures (PNG, PDF, SVG)
+- 🌐 **3D Exploration** - Interactive visualizations
+- 📄 **Paper-Ready Exports** - Everything formatted for research papers
+
+## 🚀 Quick Start
 
 ```bash
+# Install notebook dependencies
+cd /home/chris/manacore/packages/python-gym
 uv sync --extra notebook
+
+# Launch Jupyter
+uv run jupyter notebook
 ```
 
-This installs:
-- `ipykernel` - Jupyter kernel for running notebooks
-- `jupyter` - Notebook interface
-- `matplotlib`, `pandas` - Data visualization and analysis
-- `stable-baselines3`, `sb3-contrib` - RL training libraries
-- `tqdm`, `rich` - Progress bars and formatting
+## 🎯 Analysis Toolkit Usage
+
+### In Jupyter Notebook
+
+```python
+from manacore_gym.analysis import TrainingAnalyzer
+
+# Load all training runs
+analyzer = TrainingAnalyzer("../logs")
+
+# Create learning curves
+analyzer.plot_learning_curves()
+
+# Generate comparison report
+analyzer.plot_comparison_matrix()
+
+# Export for publication
+analyzer.export_for_paper("../output/paper_figures")
+```
+
+### Command Line (Python Script)
+
+```python
+#!/usr/bin/env python3
+from manacore_gym.analysis import quick_analysis
+import matplotlib.pyplot as plt
+
+# Quick analysis
+analyzer = quick_analysis("./logs")
+analyzer.plot_learning_curves()
+plt.savefig("learning_curves.png", dpi=300)
 - All core dependencies (gymnasium, numpy, requests, etc.)
 
 ### 2. Select the Kernel in VS Code
