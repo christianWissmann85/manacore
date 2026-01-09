@@ -85,7 +85,7 @@ export class NeuralBot implements Bot {
     }
 
     if (legalActions.length === 1) {
-      return legalActions[0];
+      return legalActions[0]!;
     }
 
     // Extract features
@@ -97,23 +97,17 @@ export class NeuralBot implements Bot {
 
     // Clamp to valid range
     const clampedIndex = Math.min(actionIndex, legalActions.length - 1);
-    return legalActions[clampedIndex];
+    return legalActions[clampedIndex]!;
   }
 
   /**
    * Run inference and return best action index.
    * Note: This uses a sync workaround since Bot interface is sync.
    */
-  private runInferenceSync(features: number[], legalCount: number): number {
+  private runInferenceSync(_features: number[], _legalCount: number): number {
     if (!this.session) {
       throw new Error('Session not initialized');
     }
-
-    // Create input tensor
-    const inputTensor = new ort.Tensor('float32', Float32Array.from(features), [
-      1,
-      features.length,
-    ]);
 
     // Run inference (we need to make this sync somehow)
     // ONNX Runtime Node.js is async, but we can use a cached result pattern
@@ -145,7 +139,7 @@ export class NeuralBot implements Bot {
     }
 
     if (legalActions.length === 1) {
-      return legalActions[0];
+      return legalActions[0]!;
     }
 
     // Extract features
@@ -160,12 +154,15 @@ export class NeuralBot implements Bot {
 
     // Run inference
     const outputs = await this.session!.run({ features: inputTensor });
+    if (!outputs.logits) {
+      throw new Error('Model did not produce logits output');
+    }
     const logits = outputs.logits.data as Float32Array;
 
     // Apply masking and get best action
     const actionIndex = this.selectAction(logits, legalActions.length);
 
-    return legalActions[actionIndex];
+    return legalActions[actionIndex]!;
   }
 
   /**
@@ -175,13 +172,13 @@ export class NeuralBot implements Bot {
     // Create masked logits (only keep legal actions)
     const maskedLogits = new Float32Array(legalCount);
     for (let i = 0; i < legalCount; i++) {
-      maskedLogits[i] = logits[i];
+      maskedLogits[i] = logits[i]!;
     }
 
     // Apply temperature
     if (this.config.temperature !== 1.0) {
       for (let i = 0; i < maskedLogits.length; i++) {
-        maskedLogits[i] /= this.config.temperature;
+        maskedLogits[i]! /= this.config.temperature;
       }
     }
 
@@ -199,10 +196,10 @@ export class NeuralBot implements Bot {
    */
   private argmax(arr: Float32Array): number {
     let maxIdx = 0;
-    let maxVal = arr[0];
+    let maxVal = arr[0]!;
     for (let i = 1; i < arr.length; i++) {
-      if (arr[i] > maxVal) {
-        maxVal = arr[i];
+      if (arr[i]! > maxVal) {
+        maxVal = arr[i]!;
         maxIdx = i;
       }
     }
@@ -223,7 +220,7 @@ export class NeuralBot implements Bot {
     const r = this.rng();
     let cumProb = 0;
     for (let i = 0; i < probs.length; i++) {
-      cumProb += probs[i];
+      cumProb += probs[i]!;
       if (r < cumProb) {
         return i;
       }

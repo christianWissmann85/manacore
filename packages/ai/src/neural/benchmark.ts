@@ -9,7 +9,7 @@
 import { NeuralBot, createNeuralBot } from './NeuralBot';
 import { RandomBot } from '../bots/RandomBot';
 import { GreedyBot } from '../bots/GreedyBot';
-import { initializeGame, applyAction, getLegalActions, getRandomTestDeck } from '@manacore/engine';
+import { initializeGame, applyAction, getRandomTestDeck } from '@manacore/engine';
 import type { Bot } from '../bots/Bot';
 import { resolve } from 'path';
 
@@ -41,15 +41,15 @@ async function playGame(
       const playerId = state.priorityPlayer;
 
       let action;
-      if ('chooseActionAsync' in currentBot) {
+      if ('chooseActionAsync' in currentBot && typeof currentBot.chooseActionAsync === 'function') {
         action = await (currentBot as NeuralBot).chooseActionAsync(state, playerId);
       } else {
-        action = (currentBot as Bot).chooseAction(state, playerId);
+        action = currentBot.chooseAction(state, playerId);
       }
 
       state = applyAction(state, action);
 
-      if (state.priorityPlayer === 'player' && state.phase === 'untap') {
+      if (state.priorityPlayer === 'player' && state.phase === 'beginning') {
         turns++;
       }
     }
