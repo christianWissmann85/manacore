@@ -7,7 +7,7 @@
 
 ## Phase 2: Engine Stability & Rule Compliance
 - [x] Task: Identify and Reproduce Rule Bugs (Review `AcceptanceCriteria.test.ts`) (b95122d)
-- [ ] Task: Write Regression Tests for Rule Bugs
+- [x] Task: Write Regression Tests for Rule Bugs (f6f6f2d)
 - [ ] Task: Implement Fixes for Rules Engine
 - [ ] Task: Conductor - User Manual Verification 'Engine Stability & Rule Compliance' (Protocol in workflow.md)
 
