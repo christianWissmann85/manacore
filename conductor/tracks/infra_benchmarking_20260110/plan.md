@@ -1,7 +1,7 @@
 # Track Plan: Infrastructure Hardening and Performance Benchmarking
 
 ## Phase 1: Performance Benchmarking Suite
-- [ ] Task: Design Benchmark Metrics (Simulation speed, turn resolution time)
+- [x] Task: Design Benchmark Metrics (Simulation speed, turn resolution time) (0692b51)
 - [ ] Task: Implement Performance Benchmarking Script in `scripts/`
 - [ ] Task: Conductor - User Manual Verification 'Performance Benchmarking Suite' (Protocol in workflow.md)
 
