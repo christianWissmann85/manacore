@@ -12,7 +12,7 @@ import type { GameState, StackObject } from '../state/GameState';
 import type { CardInstance } from '../state/CardInstance';
 import { addTemporaryModification } from '../state/CardInstance';
 import type { PlayerId } from '../state/Zone';
-import { getPlayer } from '../state/GameState';
+import { getPlayer, findCard } from '../state/GameState';
 import { CardLoader } from '../cards/CardLoader';
 import { isInstant, isSorcery, isAura } from '../cards/CardTemplate';
 import { parseTargetRequirements, shouldSpellFizzle } from './targeting';
@@ -29,6 +29,8 @@ import {
   drawCards,
   discardCards,
 } from './effects';
+import { applyAbilityEffect, type ActivatedAbility } from './activatedAbilities';
+import { getActivatedAbilities } from './activatedAbilities'; // Needed to re-fetch ability definition if needed
 
 /**
  * Counter for stack IDs (for determinism)
@@ -61,6 +63,7 @@ export function pushToStack(
     resolved: false,
     countered: false,
     xValue,
+    type: 'spell',
   };
 
   state.stack.push(stackObj);
@@ -76,6 +79,45 @@ export function pushToStack(
 }
 
 /**
+ * Add an activated ability to the stack
+ */
+export function pushAbilityToStack(
+  state: GameState,
+  sourceId: string,
+  ability: ActivatedAbility,
+  controller: PlayerId,
+  targets: string[] = [],
+  xValue?: number,
+): void {
+  const sourceCard = findCard(state, sourceId);
+  if (!sourceCard) return;
+
+  const stackObj: StackObject = {
+    id: `stack_${stackCounter++}`,
+    controller,
+    card: sourceCard,
+    targets,
+    resolved: false,
+    countered: false,
+    xValue,
+    type: 'ability',
+    abilityId: ability.id,
+    sourceId: sourceId,
+  };
+
+  state.stack.push(stackObj);
+
+  // Reset priority passes
+  state.players.player.hasPassedPriority = false;
+  state.players.opponent.hasPassedPriority = false;
+  state.players.player.consecutivePasses = 0;
+  state.players.opponent.consecutivePasses = 0;
+
+  // Priority goes to the other player
+  state.priorityPlayer = controller === 'player' ? 'opponent' : 'player';
+}
+
+/**
  * Resolve the top spell on the stack
  */
 export function resolveTopOfStack(state: GameState): void {
@@ -83,19 +125,29 @@ export function resolveTopOfStack(state: GameState): void {
 
   const stackObj = state.stack[state.stack.length - 1]!;
   const controller = getPlayer(state, stackObj.controller);
-  const template = CardLoader.getById(stackObj.card.scryfallId);
-
+  
+  // Check for fizzling
   if (stackObj.countered) {
-    // Countered spells go to graveyard without resolving
-    stackObj.card.zone = 'graveyard';
-    controller.graveyard.push(stackObj.card);
-  } else if (template && checkSpellFizzles(state, stackObj)) {
-    // Spell fizzles - all targets became illegal
-    stackObj.card.zone = 'graveyard';
-    controller.graveyard.push(stackObj.card);
+    // Countered objects are removed. 
+    // Spells go to GY. Abilities just vanish.
+    if (stackObj.type !== 'ability') {
+        stackObj.card.zone = 'graveyard';
+        controller.graveyard.push(stackObj.card);
+    }
+  } else if (checkSpellFizzles(state, stackObj)) {
+    // Fizzled (illegal targets).
+    // Spells go to GY. Abilities just vanish.
+    if (stackObj.type !== 'ability') {
+        stackObj.card.zone = 'graveyard';
+        controller.graveyard.push(stackObj.card);
+    }
   } else {
-    // Resolve the spell
-    resolveSpell(state, stackObj);
+    // Resolve
+    if (stackObj.type === 'ability') {
+        resolveAbility(state, stackObj);
+    } else {
+        resolveSpell(state, stackObj);
+    }
   }
 
   // Remove from stack
@@ -110,6 +162,62 @@ export function resolveTopOfStack(state: GameState): void {
   // Priority returns to active player after resolution
   state.priorityPlayer = state.activePlayer;
 }
+
+/**
+ * Resolve an activated ability
+ */
+function resolveAbility(state: GameState, stackObj: StackObject): void {
+  if (!stackObj.abilityId || !stackObj.sourceId) return;
+
+  const card = findCard(state, stackObj.sourceId);
+  if (!card) return; // Source might be gone, but ability still resolves (LKA)
+  // Actually, for simple implementation, we assume ability definition is retrievable.
+  // If card is gone, we might need to look up LKA or just re-fetch abilities from template if possible?
+  // But abilities are instance-specific often.
+  // For now, if card is gone, let's try to proceed if we can find the ability definition?
+  // We don't store the full ability definition on the stack, just the ID.
+  
+  // Re-fetch abilities to find the definition
+  // Note: if card is in GY, `getActivatedAbilities` might not work as expected if it filters by zone.
+  // But `getActivatedAbilities` checks registry using card name.
+  
+  // Workaround: We really should store the AbilityEffect on the stack object or the full Ability definition 
+  // to be safe against source removal.
+  // But `StackObject` in GameState is serializable JSON, `ActivatedAbility` contains functions (`canActivate`).
+  // We can't store functions in GameState.
+  
+  // So we must re-derive the ability.
+  const abilities = getActivatedAbilities(card, state);
+  const ability = abilities.find(a => a.id === stackObj.abilityId);
+
+  if (!ability) {
+      // Ability not found? Maybe source changed zones and ID changed?
+      // Or maybe it was a one-shot ability?
+      return;
+  }
+
+  // Temporarily patch the ability target to be the specific target chosen
+  // This is a hack because `applyAbilityEffect` takes `AbilityEffect` which has a single `target` string
+  // but `StackObject` has `targets[]`.
+  // We need to map stack targets to the effect.
+  
+  // If the ability has targets, we pass them.
+  // `applyAbilityEffect` signature: 
+  // applyAbilityEffect(state, effect, controller, manaColorChoice, sourceId)
+  
+  // Wait, `applyAbilityEffect` inside `reducer.ts` handled mapping targets:
+  // `ability.effect.target = action.payload.targets[0];`
+  // We shouldn't mutate the ability definition itself as it might be shared/cached?
+  // `getActivatedAbilities` returns new objects usually.
+  
+  const effectToApply = { ...ability.effect };
+  if (stackObj.targets.length > 0) {
+      effectToApply.target = stackObj.targets[0];
+  }
+  
+  applyAbilityEffect(state, effectToApply, stackObj.controller, undefined, stackObj.sourceId);
+}
+
 
 /**
  * Check if a spell should fizzle (all targets became illegal)

@@ -24,6 +24,7 @@ import { hasVigilance } from '../cards/CardTemplate';
 import { clearTemporaryModifications } from '../state/CardInstance';
 import {
   pushToStack,
+  pushAbilityToStack,
   resolveTopOfStack,
   canResolveStack,
   bothPlayersPassedPriority,
@@ -663,9 +664,15 @@ function applyActivateAbility(state: GameState, action: ActivateAbilityAction): 
       action.payload.sourceId,
     );
   } else {
-    // Non-mana abilities: For now, apply immediately
-    // TODO Phase 2+: Put on stack for non-mana abilities
-    applyAbilityEffect(state, ability.effect, action.playerId, undefined, action.payload.sourceId);
+    // Non-mana abilities go on the stack
+    pushAbilityToStack(
+      state,
+      action.payload.sourceId,
+      ability,
+      action.playerId,
+      action.payload.targets,
+      action.payload.xValue
+    );
   }
 }
 
