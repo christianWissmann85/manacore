@@ -1,4 +1,4 @@
-import type { ManaPool } from '../types';
+import type { ManaPool } from '../../types';
 import { ManaSymbol } from './ManaSymbols';
 
 interface ManaDisplayProps {

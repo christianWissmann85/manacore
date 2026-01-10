@@ -1,12 +1,12 @@
-import { useGameStore } from '../store/gameStore';
-import { Card } from './Card';
-import type { CardData } from '../types';
+import { useGameStore } from '../../store/gameStore';
+import { Card } from '../core/Card';
+import type { CardData } from '../../types';
 
-interface HandProps {
+interface PlayHandProps {
   cards: CardData[];
 }
 
-export function Hand({ cards }: HandProps) {
+export function PlayHand({ cards }: PlayHandProps) {
   const { selectedCardId, selectCard, hoverCard, legalActions, showHints } = useGameStore();
 
   if (cards.length === 0) {

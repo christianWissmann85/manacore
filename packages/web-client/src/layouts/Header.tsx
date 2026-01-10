@@ -1,6 +1,11 @@
-import { useGameStore } from '../../store/gameStore';
+import { useGameStore } from '../store/gameStore';
 
-export function Header() {
+interface HeaderProps {
+  mode: 'play' | 'research';
+  onModeChange: (mode: 'play' | 'research') => void;
+}
+
+export function Header({ mode, onModeChange }: HeaderProps) {
   const { gameState } = useGameStore();
 
   return (
@@ -13,9 +18,33 @@ export function Header() {
           <div>
             <h1 className="text-lg font-bold text-white leading-none tracking-tight">ManaCore</h1>
             <span className="text-[10px] text-accent-primary uppercase tracking-[0.15em] font-semibold">
-              Glass-Box AI Lab
+              {mode === 'play' ? 'Play Mode' : 'Research Lab'}
             </span>
           </div>
+        </div>
+
+        {/* Mode Toggle */}
+        <div className="flex items-center gap-1 ml-4 bg-glass-panel rounded-full p-1 border border-glass-border">
+          <button
+            onClick={() => onModeChange('play')}
+            className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full transition-all ${
+              mode === 'play'
+                ? 'bg-accent-primary text-white shadow-lg'
+                : 'text-glass-text-muted hover:text-white'
+            }`}
+          >
+            Play
+          </button>
+          <button
+            onClick={() => onModeChange('research')}
+            className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full transition-all ${
+              mode === 'research'
+                ? 'bg-accent-secondary text-white shadow-lg'
+                : 'text-glass-text-muted hover:text-white'
+            }`}
+          >
+            Research
+          </button>
         </div>
       </div>
 

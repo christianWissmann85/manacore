@@ -1,6 +1,6 @@
-import { useGameStore } from '../store/gameStore';
+import { useGameStore } from '../../store/gameStore';
 import { Card } from './Card';
-import type { PermanentData } from '../types';
+import type { PermanentData } from '../../types';
 import { clsx } from 'clsx';
 
 interface BattlefieldProps {

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { clsx } from 'clsx';
-import { scryfallService } from '../services/scryfallService';
-import { useEnrichedCard } from '../hooks/useEnrichedCard';
-import type { CardData, PermanentData } from '../types';
+import { scryfallService } from '../../services/scryfallService';
+import { useEnrichedCard } from '../../hooks/useEnrichedCard';
+import type { CardData, PermanentData } from '../../types';
 import { ManaSymbols } from './ManaSymbols';
 
 interface CardProps {

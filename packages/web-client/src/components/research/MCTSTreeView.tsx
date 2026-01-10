@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { MCTSTreeNode } from '../types';
+import type { MCTSTreeNode } from '../../types';
 import { clsx } from 'clsx';
 
 interface MCTSTreeViewProps {

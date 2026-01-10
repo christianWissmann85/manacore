@@ -1,28 +1,22 @@
-import { GameBoard } from './components/GameBoard';
-import { InspectorPanel } from './components/InspectorPanel';
-import { ControlPanel } from './components/ControlPanel';
 import { useGameStore } from './store/gameStore';
-import { MainLayout } from './components/layout/MainLayout';
+import { useMode } from './hooks/useMode';
+import { PlayLayout } from './layouts/PlayLayout';
+import { ResearchLayout } from './layouts/ResearchLayout';
 import { WelcomeModal } from './components/modals/WelcomeModal';
 import { LoadingOverlay } from './components/modals/LoadingOverlay';
 
 export default function App() {
   const { gameState, isLoading } = useGameStore();
+  const { mode, setMode } = useMode();
 
   return (
     <>
-      <MainLayout
-        sidebar={
-          <>
-            <InspectorPanel />
-            <div className="border-t border-glass-border p-4 bg-glass-surface/50">
-              <ControlPanel />
-            </div>
-          </>
-        }
-      >
-        <GameBoard />
-      </MainLayout>
+      {/* Mode-specific layout */}
+      {mode === 'play' ? (
+        <PlayLayout mode={mode} onModeChange={setMode} />
+      ) : (
+        <ResearchLayout mode={mode} onModeChange={setMode} />
+      )}
 
       {/* Global Overlays */}
       {isLoading && <LoadingOverlay />}

@@ -1,18 +1,13 @@
-export { GameBoard } from './GameBoard';
-export { InspectorPanel } from './InspectorPanel';
-export { ControlPanel } from './ControlPanel';
-export { PlayerArea } from './PlayerArea';
-export { Battlefield } from './Battlefield';
-export { Hand } from './Hand';
-export { Stack } from './Stack';
-export { Card } from './Card';
-export { ActionBar } from './ActionBar';
-export { ManaSymbols, ManaSymbol } from './ManaSymbols';
-export { ManaDisplay } from './ManaDisplay';
-export { LifeCounter } from './LifeCounter';
-export { ZoneIndicator } from './ZoneIndicator';
-export { MCTSTreeView } from './MCTSTreeView';
-export { WinProbabilityChart } from './WinProbabilityChart';
-export { EvaluationBreakdown } from './EvaluationBreakdown';
-export { PolicyDistribution } from './PolicyDistribution';
-export { ActionLog } from './ActionLog';
+// Re-export from new organized structure for backwards compatibility
+// Core components (shared by both modes)
+export * from './core';
+
+// Play mode components
+export * from './play';
+
+// Research mode components
+export * from './research';
+
+// Modals
+export { WelcomeModal } from './modals/WelcomeModal';
+export { LoadingOverlay } from './modals/LoadingOverlay';

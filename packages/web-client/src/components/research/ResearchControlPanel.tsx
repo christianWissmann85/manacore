@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { useGameStore } from '../store/gameStore';
+import { useGameStore } from '../../store/gameStore';
 
-export function ControlPanel() {
+export function ResearchControlPanel() {
   const {
     gameState,
     playerType,

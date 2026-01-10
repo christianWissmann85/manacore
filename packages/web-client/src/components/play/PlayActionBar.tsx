@@ -1,8 +1,8 @@
-import { useGameStore } from '../store/gameStore';
+import { useGameStore } from '../../store/gameStore';
 import { clsx } from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export function ActionBar() {
+export function PlayActionBar() {
   const { gameState, legalActions, selectedCardId, executeAction, playerType, showHints } =
     useGameStore();
 

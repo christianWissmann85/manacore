@@ -1,4 +1,4 @@
-import { useGameStore } from '../store/gameStore';
+import { useGameStore } from '../../store/gameStore';
 import { useRef, useEffect } from 'react';
 import { clsx } from 'clsx';
 

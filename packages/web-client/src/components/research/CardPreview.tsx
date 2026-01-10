@@ -1,6 +1,6 @@
-import { useGameStore } from '../store/gameStore';
-import { Card } from './Card';
-import type { CardData } from '../types';
+import { useGameStore } from '../../store/gameStore';
+import { Card } from '../core/Card';
+import type { CardData } from '../../types';
 
 export function CardPreview() {
   const { hoveredCardId, gameState, selectedCardId } = useGameStore();

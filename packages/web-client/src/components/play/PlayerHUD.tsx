@@ -1,14 +1,14 @@
-import { useGameStore } from '../store/gameStore';
-import { Hand } from './Hand';
-import { ManaDisplay } from './ManaDisplay';
-import { LifeCounter } from './LifeCounter';
-import { ZoneIndicator } from './ZoneIndicator';
+import { useGameStore } from '../../store/gameStore';
+import { PlayHand } from './PlayHand';
+import { ManaDisplay } from '../core/ManaDisplay';
+import { LifeCounter } from '../core/LifeCounter';
+import { ZoneIndicator } from '../core/ZoneIndicator';
 
-interface PlayerAreaProps {
+interface PlayerHUDProps {
   player: 'player' | 'opponent';
 }
 
-export function PlayerArea({ player }: PlayerAreaProps) {
+export function PlayerHUD({ player }: PlayerHUDProps) {
   const { gameState } = useGameStore();
   if (!gameState) return null;
 
@@ -64,7 +64,7 @@ export function PlayerArea({ player }: PlayerAreaProps) {
         {/* Hand Area */}
         <div className="relative min-h-[100px] flex items-center">
           {isPlayer ? (
-            <Hand cards={playerData.hand} />
+            <PlayHand cards={playerData.hand} />
           ) : (
             <div className="flex items-center gap-4">
               <div className="flex -space-x-12 pl-4">

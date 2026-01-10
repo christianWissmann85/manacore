@@ -1,7 +1,7 @@
-import { useGameStore } from '../store/gameStore';
+import { useGameStore } from '../../store/gameStore';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export function Stack() {
+export function PlayStack() {
   const { gameState, showHints } = useGameStore();
 
   if (!gameState || gameState.stack.length === 0) {
