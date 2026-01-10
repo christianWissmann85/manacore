@@ -1,15 +1,15 @@
 # Plan: Project-Wide TODO Resolution
 
 ## Phase 1: CLI Client Profiling Enhancements
-- [~] Task: Implement AI Agent decision-making latency tracking in `Profiler.ts`
-    - [ ] Write failing tests for AI latency tracking
-    - [ ] Implement start/end markers for AI move selection
-    - [ ] Update Profiler report to display AI metrics
-- [ ] Task: Implement Engine action resolution latency tracking in `Profiler.ts`
-    - [ ] Write failing tests for Engine latency tracking
-    - [ ] Implement timing for `applyAction` calls
-    - [ ] Update Profiler report to display Engine metrics
-- [~] Task: Conductor - User Manual Verification 'Phase 1: CLI Client Profiling Enhancements' (Protocol in workflow.md)
+- [x] Task: Implement AI Agent decision-making latency tracking in `Profiler.ts` 0f586dc
+    - [x] Write failing tests for AI latency tracking
+    - [x] Implement start/end markers for AI move selection
+    - [x] Update Profiler report to display AI metrics
+- [x] Task: Implement Engine action resolution latency tracking in `Profiler.ts` 0f586dc
+    - [x] Write failing tests for Engine latency tracking
+    - [x] Implement timing for `applyAction` calls
+    - [x] Update Profiler report to display Engine metrics
+- [x] Task: Conductor - User Manual Verification 'Phase 1: CLI Client Profiling Enhancements' (Protocol in workflow.md) 0f586dc
 
 ## Phase 2: Game Engine - Ability Stack
 - [ ] Task: Define Stack state structure in `packages/engine/src/state`
