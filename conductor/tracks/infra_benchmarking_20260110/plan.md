@@ -18,6 +18,6 @@
 
 ## Phase 3: Developer Experience & Observability
 
-- [ ] Task: Enhance CLI Logging (Structured output, verbosity levels)
+- [x] Task: Enhance CLI Logging (Structured output, verbosity levels) (0c61b13)
 - [ ] Task: Improve Gym Server Debugging APIs
 - [ ] Task: Conductor - User Manual Verification 'Developer Experience & Observability' (Protocol in workflow.md)
