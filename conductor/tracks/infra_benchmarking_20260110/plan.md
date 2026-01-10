@@ -2,7 +2,7 @@
 
 ## Phase 1: Performance Benchmarking Suite
 - [x] Task: Design Benchmark Metrics (Simulation speed, turn resolution time) (0692b51)
-- [ ] Task: Implement Performance Benchmarking Script in `scripts/`
+- [x] Task: Implement Performance Benchmarking Script in `scripts/` (3944b00)
 - [ ] Task: Conductor - User Manual Verification 'Performance Benchmarking Suite' (Protocol in workflow.md)
 
 ## Phase 2: Engine Stability & Rule Compliance
