@@ -42,6 +42,7 @@ def train_hybrid_selfplay(
     log_path: str = "./logs/hybrid_selfplay_v2",
     seed: int = 42,
     n_envs: int = 8,  # Number of parallel environments
+    net_arch: list[int] | None = None,  # Network architecture, e.g., [256, 256]
 ) -> dict[str, Any]:
     """
     Train PPO with hybrid Greedy warmup + mixed self-play (v2).
@@ -55,10 +56,14 @@ def train_hybrid_selfplay(
         log_path: Directory for tensorboard logs
         seed: Random seed
         n_envs: Number of parallel environments (default: 8)
+        net_arch: Network architecture layers, e.g., [256, 256] (default: [64, 64])
 
     Returns:
         Dictionary with results at each evaluation point
     """
+    # Set default network architecture
+    if net_arch is None:
+        net_arch = [64, 64]
     try:
         from sb3_contrib import MaskablePPO
         from sb3_contrib.common.wrappers import ActionMasker
@@ -78,6 +83,7 @@ def train_hybrid_selfplay(
     print(f"Checkpoint Freq: {checkpoint_freq:,}")
     print(f"Eval Freq:       {eval_freq:,}")
     print(f"Parallel Envs:   {n_envs}")
+    print(f"Network Arch:    {net_arch}")
     print("-" * 70)
     print("Mixed Opponent Distribution (Self-Play Phase):")
     print("  30% Checkpoints (historical self-play)")
@@ -95,6 +101,7 @@ def train_hybrid_selfplay(
             "total_steps": total_steps,
             "warmup_steps": warmup_steps,
             "checkpoint_freq": checkpoint_freq,
+            "net_arch": net_arch,
         },
         "evaluations": {},
     }
@@ -119,6 +126,11 @@ def train_hybrid_selfplay(
     # Create vectorized environments using SubprocVecEnv for parallel execution
     greedy_env = SubprocVecEnv([make_greedy_env for _ in range(n_envs)])
 
+    # Configure policy with custom network architecture
+    policy_kwargs = {
+        "net_arch": {"pi": net_arch, "vf": net_arch},
+    }
+
     model = MaskablePPO(
         "MlpPolicy",
         greedy_env,
@@ -133,6 +145,7 @@ def train_hybrid_selfplay(
         verbose=1,
         seed=seed,
         tensorboard_log=log_path,
+        policy_kwargs=policy_kwargs,
     )
 
     print(f"\nTraining vs Greedy for {warmup_steps:,} steps...")
@@ -395,21 +408,32 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     parser.add_argument("--n-envs", type=int, default=8,
                         help="Number of parallel environments (default: 8)")
+    parser.add_argument("--net-arch", type=int, nargs="+", default=None,
+                        help="Network architecture layers (default: 64 64). Example: --net-arch 256 256")
 
     args = parser.parse_args()
+
+    # Determine save path based on network architecture
+    net_arch = args.net_arch if args.net_arch else [64, 64]
+    arch_str = "x".join(map(str, net_arch))
+    save_path = f"./models/hybrid_selfplay_{arch_str}"
+    log_path = f"./logs/hybrid_selfplay_{arch_str}"
 
     results = train_hybrid_selfplay(
         total_steps=args.total_steps,
         warmup_steps=args.warmup_steps,
         checkpoint_freq=args.checkpoint_freq,
         eval_freq=args.eval_freq,
+        save_path=save_path,
+        log_path=log_path,
         seed=args.seed,
         n_envs=args.n_envs,
+        net_arch=args.net_arch,
     )
 
     # Save results
     import json
-    results_path = Path("./models/hybrid_selfplay_v2/results.json")
+    results_path = Path(f"{save_path}/results.json")
     with open(results_path, "w") as f:
         json.dump(results, f, indent=2)
     print(f"\nResults saved to: {results_path}")
