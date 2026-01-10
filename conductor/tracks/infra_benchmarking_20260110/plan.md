@@ -6,7 +6,7 @@
 - [x] Task: Conductor - User Manual Verification 'Performance Benchmarking Suite' (Protocol in workflow.md)
 
 ## Phase 2: Engine Stability & Rule Compliance
-- [ ] Task: Identify and Reproduce Rule Bugs (Review `AcceptanceCriteria.test.ts`)
+- [x] Task: Identify and Reproduce Rule Bugs (Review `AcceptanceCriteria.test.ts`) (b95122d)
 - [ ] Task: Write Regression Tests for Rule Bugs
 - [ ] Task: Implement Fixes for Rules Engine
 - [ ] Task: Conductor - User Manual Verification 'Engine Stability & Rule Compliance' (Protocol in workflow.md)
