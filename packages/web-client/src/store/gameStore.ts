@@ -335,8 +335,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
-    // TODO: Implement one-ply lookahead preview via API
-    // For now, just highlight the action
+    // SCOPE DECISION (2026-01-10): Action lookahead preview NOT implemented.
+    // Rationale:
+    // 1. Web client purpose: AI research observation (MCTS trees, policy viz), not human gameplay UX
+    // 2. Target users: AI researchers running batch experiments, not MTG players
+    // 3. Existing features sufficient: Action descriptions + card hover show what actions do
+    // 4. Implementation cost (state cloning, preview API, delta calc) not justified for edge use case
+    // 5. Priority: AI visualization enhancements & performance, not human gameplay assistance
+    // For action details, users can hover cards to see oracle text and read action descriptions.
   },
 
   toggleHints: () => {

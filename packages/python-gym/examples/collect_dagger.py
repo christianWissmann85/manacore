@@ -336,8 +336,14 @@ def main() -> None:
 
         print(f"  Total samples: {len(all_actions)}")
 
-        # TODO: In multi-iteration DAgger, we would retrain the model here
-        # For now, we just collect data for later training
+        # SCOPE DECISION (2026-01-10): In-process retraining NOT implemented.
+        # Rationale:
+        # 1. Experimental results show limited value (see docs/training-reports/2026-01-09_dagger_ppo_warmstart.md)
+        #    - DAgger improved accuracy 40.6% → 53.1% but game performance only 15.5% → 18% vs Greedy
+        #    - Pure PPO from scratch achieves 45% vs Greedy (better than any imitation approach)
+        # 2. For true iterative DAgger, use run_dagger_ppo_pipeline.py which orchestrates the loop
+        # 3. Platform focus is RL/LLM training gym, not imitation learning reference implementation
+        # 4. Separation of concerns: keep collection and training as separate, composable tools
 
     # Save aggregated data
     output_path = Path(args.output)
