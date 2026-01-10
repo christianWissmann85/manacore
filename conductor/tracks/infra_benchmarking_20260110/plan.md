@@ -16,8 +16,10 @@
 
 - [x] Task: Conductor - User Manual Verification 'Engine Stability & Rule Compliance' (Protocol in workflow.md)
 
-## Phase 3: Developer Experience & Observability
+## Phase 3: Developer Experience & Observability [checkpoint: 9a31711]
 
 - [x] Task: Enhance CLI Logging (Structured output, verbosity levels) (0c61b13)
+
 - [x] Task: Improve Gym Server Debugging APIs (176ea18)
-- [ ] Task: Conductor - User Manual Verification 'Developer Experience & Observability' (Protocol in workflow.md)
+
+- [x] Task: Conductor - User Manual Verification 'Developer Experience & Observability' (Protocol in workflow.md)
