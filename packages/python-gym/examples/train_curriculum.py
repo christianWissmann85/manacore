@@ -25,6 +25,7 @@ import os
 from datetime import datetime
 from typing import Any
 
+import gymnasium as gym
 import numpy as np
 
 # Import to register the environment
@@ -147,6 +148,7 @@ def train_with_curriculum(
     save_path: str = "./models",
     log_path: str = "./logs/curriculum",
     seed: int = 42,
+    n_envs: int = 8,
     verbose: int = 1,
 ) -> str:
     """
@@ -165,6 +167,7 @@ def train_with_curriculum(
     try:
         from sb3_contrib import MaskablePPO
         from sb3_contrib.common.wrappers import ActionMasker
+        from stable_baselines3.common.vec_env import SubprocVecEnv
     except ImportError as e:
         print("Error: sb3-contrib is required.")
         print("Install with: uv pip install sb3-contrib")
@@ -186,6 +189,7 @@ def train_with_curriculum(
     print("ManaCore PPO Training with Curriculum Learning")
     print("=" * 60)
     print(f"Mode: {'Fast' if fast else 'Standard'}")
+    print(f"Parallel Envs: {n_envs}")
     print(f"Stages: {len(stages)}")
     for i, stage in enumerate(stages):
         print(f"  {i + 1}. vs {stage['opponent']} ({stage['timesteps']:,} steps, target: {stage['target']:.0%})")
@@ -194,13 +198,18 @@ def train_with_curriculum(
     print("=" * 60)
 
     # Start with random opponent (easiest)
-    env = ManaCoreBattleEnv(opponent="random")
-
-    # Wrap with action masker
-    def mask_fn(env: ManaCoreBattleEnv) -> np.ndarray:
+    def mask_fn(env: gym.Env) -> np.ndarray:
+        assert isinstance(env, ManaCoreBattleEnv)
         return env.action_masks()
 
-    env = ActionMasker(env, mask_fn)  # type: ignore[assignment,arg-type]
+    def make_env(opponent: str) -> gym.Env:
+        """Factory function for creating environments."""
+        env_inst: gym.Env = ManaCoreBattleEnv(opponent=opponent)
+        env_inst = ActionMasker(env_inst, mask_fn)
+        return env_inst
+
+    # Start with random opponent
+    env = SubprocVecEnv([lambda: make_env("random") for _ in range(n_envs)])
 
     # Create model with stable hyperparameters
     print("\nInitializing MaskablePPO model...")
@@ -225,9 +234,17 @@ def train_with_curriculum(
     # Train through stages
     results = []
 
-    for stage in stages:
-        # Update opponent
-        env.unwrapped.opponent = stage["opponent"]  # type: ignore[attr-defined]
+    for stage_idx, stage in enumerate(stages):
+        # Update opponent - need to recreate vectorized env with new opponent
+        if stage_idx > 0:  # Skip first stage, already created
+            env.close()
+            opponent_name = str(stage["opponent"])
+
+            def _make_stage_env(opp: str = opponent_name) -> gym.Env:
+                return make_env(opp)
+
+            env = SubprocVecEnv([_make_stage_env for _ in range(n_envs)])
+            model.set_env(env)
 
         # Train this stage
         result = train_stage(
@@ -301,6 +318,12 @@ def main() -> None:
         help="Random seed (default: 42)",
     )
     parser.add_argument(
+        "--n-envs",
+        type=int,
+        default=8,
+        help="Number of parallel environments (default: 8)",
+    )
+    parser.add_argument(
         "--quiet",
         action="store_true",
         help="Reduce output verbosity",
@@ -314,6 +337,7 @@ def main() -> None:
         save_path=args.save_path,
         log_path=args.log_path,
         seed=args.seed,
+        n_envs=args.n_envs,
         verbose=verbose,
     )
 

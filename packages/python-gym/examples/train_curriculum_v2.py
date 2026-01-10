@@ -32,6 +32,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+import gymnasium as gym
 import numpy as np
 
 import manacore_gym  # noqa: F401
@@ -165,12 +166,14 @@ def evaluate_model(
 def train_stage(
     model: Any,
     stage: CurriculumStage,
+    n_envs: int = 8,
     eval_freq: int = 20_000,
     eval_games: int = 30,
     verbose: bool = True,
 ) -> dict[str, Any]:
     """Train for one curriculum stage."""
     from sb3_contrib.common.wrappers import ActionMasker
+    from stable_baselines3.common.vec_env import SubprocVecEnv
 
     if verbose:
         print(f"\n{'=' * 70}")
@@ -180,13 +183,17 @@ def train_stage(
         print(f"  Timesteps: {stage.timesteps:,}")
         print(f"{'=' * 70}\n")
 
-    # Create environment with mixed opponents
-    mixed_env = MixedOpponentEnv(stage.opponents)
-
-    def mask_fn(env: Any) -> np.ndarray:
+    # Create parallel mixed opponent environments
+    def mask_fn(env: gym.Env) -> np.ndarray:
+        assert isinstance(env, MixedOpponentEnv)
         return env.action_masks()
 
-    wrapped_env = ActionMasker(mixed_env, mask_fn)
+    def make_mixed_env() -> gym.Env:
+        env_inst: gym.Env = MixedOpponentEnv(stage.opponents)
+        env_inst = ActionMasker(env_inst, mask_fn)
+        return env_inst
+
+    wrapped_env = SubprocVecEnv([make_mixed_env for _ in range(n_envs)])
 
     # Update model's environment
     model.set_env(wrapped_env)
@@ -249,12 +256,14 @@ def train_curriculum_v2(
     save_path: str = "./models/curriculum_v2",
     log_path: str = "./logs/curriculum_v2",
     seed: int = 42,
+    n_envs: int = 8,
     verbose: bool = True,
 ) -> str:
     """Train through the full curriculum."""
     try:
         from sb3_contrib import MaskablePPO
         from sb3_contrib.common.wrappers import ActionMasker
+        from stable_baselines3.common.vec_env import SubprocVecEnv
     except ImportError as e:
         print("Error: sb3-contrib is required.")
         raise SystemExit(1) from e
@@ -265,6 +274,7 @@ def train_curriculum_v2(
     print(f"Stages: {len(curriculum)}")
     total_steps = sum(s.timesteps for s in curriculum)
     print(f"Total timesteps: {total_steps:,}")
+    print(f"Parallel Envs: {n_envs}")
     print(f"Seed: {seed}")
     print()
     for i, stage in enumerate(curriculum):
@@ -274,12 +284,19 @@ def train_curriculum_v2(
     print("=" * 70)
 
     # Initialize with random opponent
-    base_env = ManaCoreBattleEnv(opponent="random")
-
-    def mask_fn(env: ManaCoreBattleEnv) -> np.ndarray:
+    def mask_fn(env: gym.Env) -> np.ndarray:
+        assert isinstance(env, (ManaCoreBattleEnv, MixedOpponentEnv))
         return env.action_masks()
 
-    env = ActionMasker(base_env, mask_fn)  # type: ignore[arg-type]
+    def make_env(opponents: dict[str, float]) -> gym.Env:
+        """Factory function for creating mixed opponent environments."""
+        env_inst: gym.Env = MixedOpponentEnv(opponents)
+        env_inst = ActionMasker(env_inst, mask_fn)
+        return env_inst
+
+    # Start with random opponent for first stage
+    first_stage = curriculum[0]
+    env = SubprocVecEnv([lambda: make_env(first_stage.opponents) for _ in range(n_envs)])
 
     # Create model with good hyperparameters
     model = MaskablePPO(
@@ -308,6 +325,7 @@ def train_curriculum_v2(
         result = train_stage(
             model=model,
             stage=stage,
+            n_envs=n_envs,
             eval_freq=20_000,
             eval_games=30,
             verbose=verbose,
@@ -393,6 +411,12 @@ Example:
         help="Random seed",
     )
     parser.add_argument(
+        "--n-envs",
+        type=int,
+        default=8,
+        help="Number of parallel environments (default: 8)",
+    )
+    parser.add_argument(
         "--output",
         type=str,
         default="./models/curriculum_v2",
@@ -407,6 +431,7 @@ Example:
         curriculum=curriculum,
         save_path=args.output,
         seed=args.seed,
+        n_envs=args.n_envs,
     )
 
 

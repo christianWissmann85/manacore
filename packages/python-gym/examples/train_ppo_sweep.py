@@ -27,6 +27,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
 
+import gymnasium as gym
 import numpy as np
 
 import manacore_gym  # noqa: F401
@@ -116,6 +117,7 @@ def train_config(
     save_path: str = "./models/sweep",
     log_path: str = "./logs/ppo_sweep",
     seed: int = 42,
+    n_envs: int = 8,
 ) -> dict[str, Any]:
     """
     Train PPO with a specific configuration.
@@ -127,6 +129,7 @@ def train_config(
         from sb3_contrib import MaskablePPO
         from sb3_contrib.common.wrappers import ActionMasker
         from stable_baselines3.common.callbacks import EvalCallback
+        from stable_baselines3.common.vec_env import SubprocVecEnv
     except ImportError as e:
         print("Error: sb3-contrib is required.")
         print("Install with: uv pip install sb3-contrib")
@@ -142,14 +145,21 @@ def train_config(
     print(f"  clip_range:    {config.clip_range}")
     print(f"  n_steps:       {config.n_steps}")
     print(f"  batch_size:    {config.batch_size}")
+    print(f"  n_envs:        {n_envs}")
     print("=" * 70)
 
-    # Create environments
-    def mask_fn(env: ManaCoreBattleEnv) -> np.ndarray:
+    # Create parallel environments
+    def mask_fn(env: gym.Env) -> np.ndarray:
+        assert isinstance(env, ManaCoreBattleEnv)
         return env.action_masks()
 
-    env = ActionMasker(ManaCoreBattleEnv(opponent=opponent), mask_fn)  # type: ignore[arg-type]
-    eval_env = ActionMasker(ManaCoreBattleEnv(opponent=opponent), mask_fn)  # type: ignore[arg-type]
+    def make_env() -> gym.Env:
+        env_inst: gym.Env = ManaCoreBattleEnv(opponent=opponent)
+        env_inst = ActionMasker(env_inst, mask_fn)
+        return env_inst
+
+    env = SubprocVecEnv([make_env for _ in range(n_envs)])
+    eval_env = make_env()  # Single env for evaluation
 
     # Configure paths for this run
     run_log_path = f"{log_path}/{config.name}"
@@ -300,6 +310,12 @@ Example:
         default=42,
         help="Random seed",
     )
+    parser.add_argument(
+        "--n-envs",
+        type=int,
+        default=8,
+        help="Number of parallel environments (default: 8)",
+    )
 
     args = parser.parse_args()
 
@@ -334,6 +350,7 @@ Example:
             opponent=args.opponent,
             total_timesteps=args.timesteps,
             seed=args.seed,
+            n_envs=args.n_envs,
         )
 
         # Evaluate vs Random

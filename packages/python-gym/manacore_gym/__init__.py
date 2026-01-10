@@ -31,7 +31,7 @@ from gymnasium.envs.registration import register
 from .bridge import BunBridge
 from .env import ManaCoreBattleEnv
 from .selfplay import SelfPlayEnv
-from .utils import make_env, make_masked_vec_env, make_vec_env
+from .utils import make_env, make_masked_vec_env, make_parallel_env, make_vec_env
 
 
 # Training utilities (lazy import to avoid sb3 dependency when not needed)
@@ -55,6 +55,7 @@ __all__ = [
     "make_env",
     "make_vec_env",
     "make_masked_vec_env",
+    "make_parallel_env",
     "analysis",
     "__version__",
 ]

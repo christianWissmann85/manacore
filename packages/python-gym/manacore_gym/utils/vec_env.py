@@ -7,6 +7,8 @@ that can run in parallel, significantly speeding up training.
 
 from typing import Any, Callable, Optional
 
+import gymnasium as gym
+
 from ..env import ManaCoreBattleEnv
 
 
@@ -182,6 +184,47 @@ def make_masked_vec_env(
         return _init
 
     env_fns = [make_masked_env(i) for i in range(n_envs)]
+
+    if vec_env_cls == "subproc":
+        return SubprocVecEnv(env_fns)
+    else:
+        return DummyVecEnv(env_fns)
+
+
+def make_parallel_env(
+    env_factory: Callable[[], gym.Env],
+    n_envs: int = 8,
+    vec_env_cls: str = "subproc",
+) -> Any:
+    """
+    Create parallel environments from a factory function.
+
+    This is a generic utility for parallelizing any environment,
+    including custom wrapped environments like SelfPlayEnv.
+
+    Args:
+        env_factory: Callable that creates a gym.Env instance
+        n_envs: Number of parallel environments (default: 8)
+        vec_env_cls: "subproc" for parallel or "dummy" for sequential
+
+    Returns:
+        SubprocVecEnv or DummyVecEnv
+
+    Example:
+        >>> def make_my_env():
+        ...     env = ManaCoreBattleEnv(opponent="greedy")
+        ...     env = ActionMasker(env, lambda e: e.action_masks())
+        ...     return env
+        >>> vec_env = make_parallel_env(make_my_env, n_envs=8)
+    """
+    try:
+        from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
+    except ImportError as e:
+        raise ImportError(
+            "stable-baselines3 is required. Install with: pip install stable-baselines3"
+        ) from e
+
+    env_fns = [env_factory for _ in range(n_envs)]
 
     if vec_env_cls == "subproc":
         return SubprocVecEnv(env_fns)

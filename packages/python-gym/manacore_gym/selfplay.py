@@ -2,7 +2,8 @@
 Self-Play Environment for ManaCore.
 
 This module provides a self-play environment where the agent plays
-against past versions of itself (historical self-play).
+against past versions of itself (historical self-play) with support
+for mixed opponent pools including server-side bots (greedy, random).
 """
 
 import os
@@ -19,35 +20,48 @@ from .bridge import BunBridge
 
 class SelfPlayEnv(gym.Env):
     """
-    Self-Play environment for ManaCore.
+    Self-Play environment for ManaCore with mixed opponent support.
 
-    The agent plays against past checkpoints of itself. This creates
-    an adaptive curriculum where the opponent gets stronger as training
-    progresses.
+    The agent plays against a mix of opponents:
+    - Past checkpoints of itself (historical self-play)
+    - Current policy (for stability)
+    - Server-side greedy bot (for exploitation skills)
+    - Random actions (for exploration)
 
     Key features:
     - Maintains a pool of checkpoint paths
-    - Randomly selects an opponent from the pool each game
-    - Falls back to random opponent if pool is empty
-    - Supports adding checkpoints during training
+    - Supports mixed opponent distribution
+    - Falls back gracefully when pool is empty
+    - Automatic opponent type switching per game
 
     Args:
         checkpoint_dir: Directory to store/load checkpoints
         pool_size: Maximum number of checkpoints to keep in pool
+        checkpoint_weight: Probability of playing against checkpoint (0-1)
+        greedy_weight: Probability of playing against greedy bot (0-1)
         current_weight: Probability of playing against current policy (0-1)
-        random_weight: Probability of playing against random bot (0-1)
+        random_weight: Probability of playing against random (0-1)
         deck: Player deck name
         opponent_deck: Opponent deck name
         server_url: URL of the gym server
         auto_start_server: Whether to auto-start server if not running
 
+    Note:
+        Weights are normalized internally, so they don't need to sum to 1.
+        When checkpoint pool is empty, checkpoint_weight is redistributed
+        to other opponent types proportionally.
+
     Example:
-        >>> env = SelfPlayEnv(checkpoint_dir="./checkpoints")
+        >>> env = SelfPlayEnv(
+        ...     checkpoint_dir="./checkpoints",
+        ...     checkpoint_weight=0.3,
+        ...     greedy_weight=0.3,
+        ...     current_weight=0.2,
+        ...     random_weight=0.2,
+        ... )
         >>> model = MaskablePPO("MlpPolicy", env)
-        >>> # Train for a while
         >>> model.save("./checkpoints/checkpoint_1")
         >>> env.add_checkpoint("./checkpoints/checkpoint_1.zip")
-        >>> # Continue training against the checkpoint
     """
 
     metadata = {"render_modes": ["human"], "render_fps": 1}
@@ -59,8 +73,10 @@ class SelfPlayEnv(gym.Env):
         self,
         checkpoint_dir: str = "./checkpoints",
         pool_size: int = 20,
+        checkpoint_weight: float = 0.3,
+        greedy_weight: float = 0.3,
         current_weight: float = 0.2,
-        random_weight: float = 0.1,
+        random_weight: float = 0.2,
         deck: str = "random",
         opponent_deck: str = "random",
         server_url: str = "http://localhost:3333",
@@ -72,6 +88,8 @@ class SelfPlayEnv(gym.Env):
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
         self.pool_size = pool_size
+        self.checkpoint_weight = checkpoint_weight
+        self.greedy_weight = greedy_weight
         self.current_weight = current_weight
         self.random_weight = random_weight
         self.deck = deck
@@ -80,7 +98,8 @@ class SelfPlayEnv(gym.Env):
         # Checkpoint pool (list of paths)
         self.checkpoint_pool: list[str] = []
         self._current_opponent_model: Optional[Any] = None
-        self._current_opponent_type: str = "random"  # "checkpoint", "current", or "random"
+        self._current_opponent_type: str = "random"  # "checkpoint", "current", "greedy", or "random"
+        self._use_server_opponent: bool = False  # True when using greedy (server handles opponent)
 
         # Parse server URL
         if "://" in server_url:
@@ -142,38 +161,75 @@ class SelfPlayEnv(gym.Env):
 
         print(f"[SelfPlayEnv] Added checkpoint: {checkpoint_path} (pool size: {len(self.checkpoint_pool)})")
 
+    def get_checkpoint_pool_size(self) -> int:
+        """Get the current size of the checkpoint pool."""
+        return len(self.checkpoint_pool)
+
     def _select_opponent(self) -> None:
-        """Select an opponent for this game."""
+        """Select an opponent for this game using weighted random selection."""
         try:
             from sb3_contrib import MaskablePPO
         except ImportError:
-            # Fall back to random if sb3-contrib not available
+            # Fall back to greedy if sb3-contrib not available
             self._current_opponent_model = None
-            self._current_opponent_type = "random"
+            self._current_opponent_type = "greedy"
+            self._use_server_opponent = True
             return
 
-        roll = random.random()
+        # Build weight distribution based on available options
+        weights = {
+            "checkpoint": self.checkpoint_weight if len(self.checkpoint_pool) > 0 else 0,
+            "greedy": self.greedy_weight,
+            "current": self.current_weight if self._current_model is not None else 0,
+            "random": self.random_weight,
+        }
 
-        # Probability distribution: current, random, pool
-        if roll < self.current_weight and self._current_model is not None:
-            # Play against current policy
-            self._current_opponent_model = self._current_model
-            self._current_opponent_type = "current"
-        elif roll < self.current_weight + self.random_weight or len(self.checkpoint_pool) == 0:
-            # Play against random (no model needed, server handles it internally)
-            # But we're using external opponent, so we need to make random choices
+        # Normalize weights
+        total = sum(weights.values())
+        if total == 0:
+            # Fallback to greedy if everything is zero
             self._current_opponent_model = None
-            self._current_opponent_type = "random"
-        else:
-            # Play against a checkpoint from pool
-            checkpoint_path = random.choice(self.checkpoint_pool)
-            try:
-                self._current_opponent_model = MaskablePPO.load(checkpoint_path)
-                self._current_opponent_type = "checkpoint"
-            except Exception as e:
-                print(f"[SelfPlayEnv] Failed to load checkpoint {checkpoint_path}: {e}")
-                self._current_opponent_model = None
-                self._current_opponent_type = "random"
+            self._current_opponent_type = "greedy"
+            self._use_server_opponent = True
+            return
+
+        # Weighted random selection
+        roll = random.random() * total
+        cumulative = 0.0
+
+        for opponent_type, weight in weights.items():
+            cumulative += weight
+            if roll < cumulative:
+                if opponent_type == "checkpoint":
+                    checkpoint_path = random.choice(self.checkpoint_pool)
+                    try:
+                        self._current_opponent_model = MaskablePPO.load(checkpoint_path)
+                        self._current_opponent_type = "checkpoint"
+                        self._use_server_opponent = False
+                    except Exception as e:
+                        print(f"[SelfPlayEnv] Failed to load checkpoint {checkpoint_path}: {e}")
+                        # Fallback to greedy on load failure
+                        self._current_opponent_model = None
+                        self._current_opponent_type = "greedy"
+                        self._use_server_opponent = True
+                elif opponent_type == "greedy":
+                    self._current_opponent_model = None
+                    self._current_opponent_type = "greedy"
+                    self._use_server_opponent = True
+                elif opponent_type == "current":
+                    self._current_opponent_model = self._current_model
+                    self._current_opponent_type = "current"
+                    self._use_server_opponent = False
+                else:  # random
+                    self._current_opponent_model = None
+                    self._current_opponent_type = "random"
+                    self._use_server_opponent = False
+                return
+
+        # Fallback (shouldn't reach here)
+        self._current_opponent_model = None
+        self._current_opponent_type = "greedy"
+        self._use_server_opponent = True
 
     def _get_opponent_action(self, opponent_mask: np.ndarray) -> int:
         """Get action from the current opponent."""
@@ -206,22 +262,33 @@ class SelfPlayEnv(gym.Env):
         # Select opponent for this game
         self._select_opponent()
 
-        # Create new game with external opponent
-        if self._game_id is None:
-            response = self.bridge.create_game(
-                opponent="external",  # Use external opponent for self-play
-                deck=self.deck,
-                opponent_deck=self.opponent_deck,
-                seed=seed,
-            )
-            self._game_id = response["gameId"]
-        else:
-            response = self.bridge.reset(self._game_id, seed=seed)
+        # Determine opponent type for server
+        # - "greedy" for server-side greedy bot
+        # - "external" for Python-controlled opponents (checkpoint, current, random)
+        server_opponent = "greedy" if self._use_server_opponent else "external"
+
+        # Always create a new game to ensure correct opponent type
+        # (opponent type can change between games)
+        if self._game_id is not None:
+            # Delete old game first
+            import contextlib
+            with contextlib.suppress(Exception):
+                self.bridge.delete_game(self._game_id)
+            self._game_id = None
+
+        response = self.bridge.create_game(
+            opponent=server_opponent,
+            deck=self.deck,
+            opponent_deck=self.opponent_deck,
+            seed=seed,
+        )
+        self._game_id = response["gameId"]
 
         self._update_state(response)
 
-        # Handle case where opponent moves first
-        self._handle_opponent_priority()
+        # Handle case where opponent moves first (only for external opponents)
+        if not self._use_server_opponent:
+            self._handle_opponent_priority()
 
         return self._get_observation(), self._get_info()
 
@@ -281,8 +348,9 @@ class SelfPlayEnv(gym.Env):
         response = self.bridge.step(self._game_id, action)
         self._update_state(response)
 
-        # Handle opponent moves
-        if not response.get("done", False):
+        # Handle opponent moves (only for external/Python-controlled opponents)
+        # For server-side opponents (greedy), the server already handled opponent moves
+        if not response.get("done", False) and not self._use_server_opponent:
             self._handle_opponent_priority()
 
         observation = self._get_observation()

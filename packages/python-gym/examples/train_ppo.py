@@ -21,6 +21,7 @@ import argparse
 import os
 from datetime import datetime
 
+import gymnasium as gym
 import numpy as np
 
 # Import to register the environment
@@ -34,6 +35,7 @@ def train(
     save_path: str = "./models",
     log_path: str = "./logs/ppo",
     seed: int = 42,
+    n_envs: int = 8,
 ) -> str:
     """
     Train a MaskablePPO agent.
@@ -44,6 +46,7 @@ def train(
         save_path: Directory to save trained model
         log_path: Directory for TensorBoard logs
         seed: Random seed for reproducibility
+        n_envs: Number of parallel environments (default: 8)
 
     Returns:
         Path to the saved model
@@ -51,6 +54,7 @@ def train(
     try:
         from sb3_contrib import MaskablePPO
         from sb3_contrib.common.wrappers import ActionMasker
+        from stable_baselines3.common.vec_env import SubprocVecEnv
     except ImportError as e:
         print("Error: sb3-contrib is required for MaskablePPO training.")
         print("Install with: pip install sb3-contrib")
@@ -61,20 +65,27 @@ def train(
     print("=" * 60)
     print(f"Timesteps:    {total_timesteps:,}")
     print(f"Opponent:     {opponent}")
+    print(f"Parallel Envs: {n_envs}")
     print(f"Seed:         {seed}")
     print(f"Log dir:      {log_path}")
     print("=" * 60)
     print()
 
-    # Create environment
-    print("Creating environment...")
-    env = ManaCoreBattleEnv(opponent=opponent)
+    # Create parallel environments
+    print(f"Creating {n_envs} parallel environments...")
 
-    # Wrap with action masker for sb3-contrib
-    def mask_fn(env: ManaCoreBattleEnv) -> np.ndarray:
+    def mask_fn(env: gym.Env) -> np.ndarray:
+        assert isinstance(env, ManaCoreBattleEnv)
         return env.action_masks()
 
-    env = ActionMasker(env, mask_fn)  # type: ignore[assignment,arg-type]
+    def make_env() -> gym.Env:
+        """Factory function for creating environments."""
+        env: gym.Env = ManaCoreBattleEnv(opponent=opponent)
+        env = ActionMasker(env, mask_fn)
+        return env
+
+    # Create vectorized environments using SubprocVecEnv for parallel execution
+    env = SubprocVecEnv([make_env for _ in range(n_envs)])
 
     # Create model
     print("Initializing MaskablePPO model...")
@@ -206,6 +217,12 @@ def main() -> None:
         help="Random seed (default: 42)",
     )
     parser.add_argument(
+        "--n-envs",
+        type=int,
+        default=8,
+        help="Number of parallel environments (default: 8)",
+    )
+    parser.add_argument(
         "--eval",
         action="store_true",
         help="Run quick evaluation after training",
@@ -225,6 +242,7 @@ def main() -> None:
         save_path=args.save_path,
         log_path=args.log_path,
         seed=args.seed,
+        n_envs=args.n_envs,
     )
 
     if args.eval:

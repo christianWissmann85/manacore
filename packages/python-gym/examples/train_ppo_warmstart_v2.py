@@ -137,6 +137,7 @@ def train_ppo_warmstart_v2(
     save_path: str = "./models",
     log_path: str = "./logs/ppo_warmstart_v2",
     seed: int = 42,
+    n_envs: int = 8,
     verbose: int = 1,
     init_value_net: bool = False,
 ) -> str:

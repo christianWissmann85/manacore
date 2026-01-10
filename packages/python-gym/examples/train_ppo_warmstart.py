@@ -26,6 +26,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+import gymnasium as gym
 import numpy as np
 import torch
 
@@ -162,6 +163,7 @@ def train_ppo_warmstart(
     save_path: str = "./models",
     log_path: str = "./logs/ppo_warmstart",
     seed: int = 42,
+    n_envs: int = 8,
     verbose: int = 1,
 ) -> str:
     """
@@ -184,6 +186,7 @@ def train_ppo_warmstart(
         from sb3_contrib import MaskablePPO
         from sb3_contrib.common.wrappers import ActionMasker
         from stable_baselines3.common.callbacks import EvalCallback
+        from stable_baselines3.common.vec_env import SubprocVecEnv
     except ImportError as e:
         print("Error: sb3-contrib is required.")
         print("Install with: uv pip install sb3-contrib")
@@ -195,14 +198,20 @@ def train_ppo_warmstart(
     input_dim, hidden_dims, output_dim = get_imitator_architecture(imitator_state_dict)
     print(f"  Architecture: {input_dim} -> {hidden_dims} -> {output_dim}")
 
-    # Create environment
-    print(f"\nCreating environment (opponent: {opponent})...")
+    # Create parallel environments
+    print(f"\nCreating {n_envs} parallel environments (opponent: {opponent})...")
 
-    def mask_fn(env: ManaCoreBattleEnv) -> np.ndarray:
+    def mask_fn(env: gym.Env) -> np.ndarray:
+        assert isinstance(env, ManaCoreBattleEnv)
         return env.action_masks()
 
-    env = ActionMasker(ManaCoreBattleEnv(opponent=opponent), mask_fn)  # type: ignore[arg-type]
-    eval_env = ActionMasker(ManaCoreBattleEnv(opponent=opponent), mask_fn)  # type: ignore[arg-type]
+    def make_env() -> gym.Env:
+        env_inst: gym.Env = ManaCoreBattleEnv(opponent=opponent)
+        env_inst = ActionMasker(env_inst, mask_fn)
+        return env_inst
+
+    env = SubprocVecEnv([make_env for _ in range(n_envs)])
+    eval_env = make_env()  # Single env for evaluation
 
     # Create policy kwargs matching ImitatorNet architecture
     policy_kwargs = create_warmstart_policy_kwargs(hidden_dims)

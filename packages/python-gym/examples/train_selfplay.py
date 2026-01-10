@@ -22,6 +22,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+import gymnasium as gym
 import numpy as np
 
 import manacore_gym  # noqa: F401
@@ -73,6 +74,7 @@ def train_selfplay(
     current_weight: float = 0.2,
     random_weight: float = 0.1,
     seed: int = 42,
+    n_envs: int = 8,
 ) -> str:
     """
     Train PPO with historical self-play.
@@ -93,8 +95,9 @@ def train_selfplay(
         from sb3_contrib import MaskablePPO
         from sb3_contrib.common.wrappers import ActionMasker
         from stable_baselines3.common.callbacks import BaseCallback
+        from stable_baselines3.common.vec_env import SubprocVecEnv
     except ImportError as e:
-        print("Error: sb3-contrib is required.")
+        print("Error: sb3-contrib required.")
         print("Install with: pip install sb3-contrib")
         raise SystemExit(1) from e
 
@@ -103,6 +106,7 @@ def train_selfplay(
     print("=" * 60)
     print(f"Timesteps:       {timesteps:,}")
     print(f"Checkpoint Freq: {checkpoint_freq:,}")
+    print(f"Parallel Envs:   {n_envs}")
     print(f"Current Weight:  {current_weight}")
     print(f"Random Weight:   {random_weight}")
     print(f"Pool Weight:     {1 - current_weight - random_weight:.2f}")
@@ -113,15 +117,22 @@ def train_selfplay(
     save_dir.mkdir(parents=True, exist_ok=True)
 
     # Create self-play environment
-    def mask_fn(env: SelfPlayEnv) -> np.ndarray:
+    def mask_fn(env: gym.Env) -> np.ndarray:
+        assert isinstance(env, SelfPlayEnv)
         return env.action_masks()
 
-    base_env = SelfPlayEnv(
-        checkpoint_dir=str(save_dir),
-        current_weight=current_weight,
-        random_weight=random_weight,
-    )
-    env = ActionMasker(base_env, mask_fn)  # type: ignore[arg-type]
+    def make_selfplay_env() -> gym.Env:
+        """Factory function for creating self-play environments."""
+        env: gym.Env = SelfPlayEnv(
+            checkpoint_dir=str(save_dir),
+            current_weight=current_weight,
+            random_weight=random_weight,
+        )
+        env = ActionMasker(env, mask_fn)
+        return env
+
+    # Create vectorized self-play environments
+    env = SubprocVecEnv([make_selfplay_env for _ in range(n_envs)])
 
     # Create model
     model = MaskablePPO(
@@ -140,22 +151,25 @@ def train_selfplay(
         tensorboard_log=log_path,
     )
 
-    # Set reference to current model for self-play
-    base_env.set_current_model(model)  # Access unwrapped env
+    # Set reference to current model for self-play in all envs
+    for i in range(n_envs):
+        env.env_method("set_current_model", model, indices=[i])
 
     # Custom callback for checkpointing
     class SelfPlaySaveCallback(BaseCallback):
         def __init__(
             self,
-            selfplay_env: SelfPlayEnv,
+            selfplay_vec_env: SubprocVecEnv,
             save_dir: Path,
             checkpoint_freq: int,
+            n_envs: int,
             verbose: int = 1,
         ):
             super().__init__(verbose)
-            self.selfplay_env = selfplay_env
+            self.selfplay_vec_env = selfplay_vec_env
             self.save_dir = save_dir
             self.checkpoint_freq = checkpoint_freq
+            self.n_envs = n_envs
             self.checkpoint_count = 0
 
         def _on_step(self) -> bool:
@@ -166,19 +180,23 @@ def train_selfplay(
                 # Save checkpoint
                 self.model.save(str(checkpoint_path).replace(".zip", ""))
 
-                # Add to pool
-                self.selfplay_env.add_checkpoint(str(checkpoint_path))
+                # Add to pool in all environments
+                for i in range(self.n_envs):
+                    self.selfplay_vec_env.env_method("add_checkpoint", str(checkpoint_path), indices=[i])
 
                 if self.verbose:
-                    pool_size = len(self.selfplay_env.checkpoint_pool)
+                    # Get pool size from first environment
+                    pool_sizes = self.selfplay_vec_env.env_method("get_checkpoint_pool_size", indices=[0])
+                    pool_size = pool_sizes[0] if pool_sizes else 0
                     print(f"\n[SelfPlay] Saved checkpoint {self.checkpoint_count} (pool: {pool_size})")
 
             return True
 
     callback = SelfPlaySaveCallback(
-        selfplay_env=base_env,  # Access unwrapped env
+        selfplay_vec_env=env,
         save_dir=save_dir,
         checkpoint_freq=checkpoint_freq,
+        n_envs=n_envs,
     )
 
     # Train
@@ -349,6 +367,8 @@ def main() -> None:
     parser.add_argument("--random-weight", type=float, default=0.1,
                         help="Probability of playing against random")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
+    parser.add_argument("--n-envs", type=int, default=8,
+                        help="Number of parallel environments (default: 8)")
     parser.add_argument("--scaling", action="store_true",
                         help="Run full scaling experiment (100K, 250K, 500K)")
 
@@ -369,6 +389,7 @@ def main() -> None:
             current_weight=args.current_weight,
             random_weight=args.random_weight,
             seed=args.seed,
+            n_envs=args.n_envs,
         )
 
         # Evaluate
