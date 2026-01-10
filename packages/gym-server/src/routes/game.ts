@@ -290,6 +290,44 @@ export function createGameRoutes(sessionManager: SessionManager): Hono {
   });
 
   /**
+   * GET /game/debug/list
+   * List all active game sessions (Debugging)
+   */
+  app.get('/debug/list', (c) => {
+    try {
+      const sessions = sessionManager.listSessions();
+      return c.json({ sessions });
+    } catch (error) {
+      return c.json({ error: error instanceof Error ? error.message : 'Unknown error' }, 500);
+    }
+  });
+
+  /**
+   * GET /game/:id/history
+   * Get the action history for a specific game
+   */
+  app.get('/:id/history', (c) => {
+    try {
+      const gameId = c.req.param('id');
+      const session = sessionManager.getSession(gameId);
+
+      if (!session) {
+        return c.json({ error: `Game not found: ${gameId}` }, 404);
+      }
+
+      return c.json({
+        gameId: session.id,
+        actionHistory: session.state.actionHistory,
+        turnCount: session.state.turnCount,
+        gameOver: session.state.gameOver,
+        winner: session.state.winner,
+      });
+    } catch (error) {
+      return c.json({ error: error instanceof Error ? error.message : 'Unknown error' }, 400);
+    }
+  });
+
+  /**
    * DELETE /game/:id
    * Delete a game session
    */

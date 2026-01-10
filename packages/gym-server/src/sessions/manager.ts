@@ -679,6 +679,31 @@ export class SessionManager {
   }
 
   /**
+   * Get all active sessions with metadata
+   */
+  listSessions(): Array<{
+    id: string;
+    opponentType: string;
+    createdAt: number;
+    lastAccessedAt: number;
+    stepCount: number;
+    turn: number;
+    phase: string;
+    gameOver: boolean;
+  }> {
+    return Array.from(this.sessions.values()).map((s) => ({
+      id: s.id,
+      opponentType: s.opponentType,
+      createdAt: s.createdAt,
+      lastAccessedAt: s.lastAccessedAt,
+      stepCount: s.stepCount,
+      turn: s.state.turnCount,
+      phase: s.state.phase,
+      gameOver: s.state.gameOver,
+    }));
+  }
+
+  /**
    * Get all session IDs
    */
   getSessionIds(): string[] {
