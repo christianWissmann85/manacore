@@ -252,6 +252,13 @@ class SelfPlayEnv(gym.Env):
             info = self._current_state.get("info", {})
             priority = info.get("priorityPlayer", "player")
 
+        # After opponent is done, refresh player's action mask
+        if not self._current_state.get("done", False):
+            assert self._game_id is not None
+            player_response = self.bridge.get_actions(self._game_id)
+            self._legal_action_mask = np.array(player_response.get("actionMask", np.zeros(self.MAX_ACTIONS)), dtype=bool)
+            self._num_legal_actions = int(np.sum(self._legal_action_mask))
+
     def step(self, action: int) -> tuple[np.ndarray, SupportsFloat, bool, bool, dict[str, Any]]:
         """Take a player action and handle opponent response."""
         if self._game_id is None:

@@ -117,6 +117,7 @@ export function createGameRoutes(sessionManager: SessionManager): Hono {
         legalActions: clientActions, // Override with enhanced version
         aiThinking: session?.lastAIThinking ?? null,
         actionTrace: result.actionTrace,
+        info: result.info, // Include full info with priorityPlayer
       });
     } catch (error) {
       return c.json({ error: error instanceof Error ? error.message : 'Unknown error' }, 400);
