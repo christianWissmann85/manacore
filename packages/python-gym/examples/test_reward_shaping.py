@@ -9,8 +9,9 @@ Usage:
     uv run python examples/test_reward_shaping.py
 """
 
-import numpy as np
 from collections import defaultdict
+
+import numpy as np
 
 import manacore_gym  # noqa: F401
 from manacore_gym import ManaCoreBattleEnv
@@ -27,10 +28,10 @@ def test_reward_shaping(n_games: int = 20, opponent: str = "greedy") -> None:
 
     env = ManaCoreBattleEnv(opponent=opponent)
 
-    all_rewards = []
-    shaped_rewards = []
-    terminal_rewards = []
-    reward_by_step = defaultdict(list)
+    all_rewards: list[float] = []
+    shaped_rewards: list[float] = []
+    terminal_rewards: list[float] = []
+    reward_by_step: dict[int, list[float]] = defaultdict(list)
 
     wins = 0
     total_steps = 0
@@ -51,18 +52,18 @@ def test_reward_shaping(n_games: int = 20, opponent: str = "greedy") -> None:
             done = terminated or truncated
             step += 1
 
-            game_rewards.append(reward)
-            all_rewards.append(reward)
-            reward_by_step[step].append(reward)
+            game_rewards.append(float(reward))
+            all_rewards.append(float(reward))
+            reward_by_step[step].append(float(reward))
 
             # Check if this is a shaped reward (non-terminal, non-zero)
-            if not done and reward != 0:
-                shaped_rewards.append(reward)
+            if not done and float(reward) != 0:
+                shaped_rewards.append(float(reward))
             elif done:
-                terminal_rewards.append(reward)
+                terminal_rewards.append(float(reward))
 
         total_steps += step
-        if reward > 0:
+        if float(reward) > 0:
             wins += 1
 
         if (game + 1) % 5 == 0:
@@ -75,36 +76,36 @@ def test_reward_shaping(n_games: int = 20, opponent: str = "greedy") -> None:
     print("REWARD DISTRIBUTION")
     print("=" * 60)
 
-    all_rewards = np.array(all_rewards)
-    print(f"Total reward samples: {len(all_rewards)}")
-    print(f"Mean reward: {np.mean(all_rewards):.4f}")
-    print(f"Std reward: {np.std(all_rewards):.4f}")
-    print(f"Min reward: {np.min(all_rewards):.4f}")
-    print(f"Max reward: {np.max(all_rewards):.4f}")
+    all_rewards_arr = np.array(all_rewards)
+    print(f"Total reward samples: {len(all_rewards_arr)}")
+    print(f"Mean reward: {np.mean(all_rewards_arr):.4f}")
+    print(f"Std reward: {np.std(all_rewards_arr):.4f}")
+    print(f"Min reward: {np.min(all_rewards_arr):.4f}")
+    print(f"Max reward: {np.max(all_rewards_arr):.4f}")
 
     print(f"\nShaped (non-terminal) rewards: {len(shaped_rewards)}")
     if shaped_rewards:
-        shaped_rewards = np.array(shaped_rewards)
-        print(f"  Mean: {np.mean(shaped_rewards):.4f}")
-        print(f"  Std: {np.std(shaped_rewards):.4f}")
-        print(f"  Range: [{np.min(shaped_rewards):.4f}, {np.max(shaped_rewards):.4f}]")
+        shaped_rewards_arr = np.array(shaped_rewards)
+        print(f"  Mean: {np.mean(shaped_rewards_arr):.4f}")
+        print(f"  Std: {np.std(shaped_rewards_arr):.4f}")
+        print(f"  Range: [{np.min(shaped_rewards_arr):.4f}, {np.max(shaped_rewards_arr):.4f}]")
 
         # Distribution of shaped rewards
-        positive = np.sum(shaped_rewards > 0)
-        negative = np.sum(shaped_rewards < 0)
-        zero = np.sum(shaped_rewards == 0)
-        print(f"  Positive: {positive} ({positive/len(shaped_rewards)*100:.1f}%)")
-        print(f"  Negative: {negative} ({negative/len(shaped_rewards)*100:.1f}%)")
-        print(f"  Zero: {zero} ({zero/len(shaped_rewards)*100:.1f}%)")
+        positive = np.sum(shaped_rewards_arr > 0)
+        negative = np.sum(shaped_rewards_arr < 0)
+        zero = np.sum(shaped_rewards_arr == 0)
+        print(f"  Positive: {positive} ({positive/len(shaped_rewards_arr)*100:.1f}%)")
+        print(f"  Negative: {negative} ({negative/len(shaped_rewards_arr)*100:.1f}%)")
+        print(f"  Zero: {zero} ({zero/len(shaped_rewards_arr)*100:.1f}%)")
     else:
         print("  NO SHAPED REWARDS DETECTED!")
         print("  Reward shaping may be disabled or not working.")
 
     print(f"\nTerminal rewards: {len(terminal_rewards)}")
     if terminal_rewards:
-        terminal_rewards = np.array(terminal_rewards)
-        wins_terminal = np.sum(terminal_rewards > 0)
-        losses_terminal = np.sum(terminal_rewards < 0)
+        terminal_rewards_arr = np.array(terminal_rewards)
+        wins_terminal = np.sum(terminal_rewards_arr > 0)
+        losses_terminal = np.sum(terminal_rewards_arr < 0)
         print(f"  Wins (+1): {wins_terminal}")
         print(f"  Losses (-1): {losses_terminal}")
 
@@ -120,7 +121,8 @@ def test_reward_shaping(n_games: int = 20, opponent: str = "greedy") -> None:
     print("=" * 60)
     if len(shaped_rewards) > 0:
         print("Reward shaping IS ACTIVE")
-        print(f"Average shaped reward magnitude: {np.mean(np.abs(shaped_rewards)):.4f}")
+        shaped_rewards_arr = np.array(shaped_rewards)
+        print(f"Average shaped reward magnitude: {np.mean(np.abs(shaped_rewards_arr)):.4f}")
     else:
         print("Reward shaping appears to be DISABLED or returning only zeros")
         print("All experiments so far used sparse rewards only!")

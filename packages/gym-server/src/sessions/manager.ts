@@ -315,47 +315,55 @@ export class SessionManager {
       };
     }
 
+    // Check if opponent is external (self-play mode)
+    const isExternalOpponent =
+      session.opponentType === 'external' || session.opponentType === 'selfplay';
+
     // Run opponent moves until player has priority again or game ends
-    while (!session.state.gameOver && session.state.priorityPlayer === 'opponent') {
-      try {
-        const opponentAction = session.opponent.chooseAction(session.state, 'opponent');
+    // Skip this loop for external opponents - they require explicit opponent-step calls
+    if (!isExternalOpponent) {
+      while (!session.state.gameOver && session.state.priorityPlayer === 'opponent') {
+        try {
+          const opponentAction = session.opponent.chooseAction(session.state, 'opponent');
 
-        // Capture AI thinking after opponent move decision
-        session.lastAIThinking = session.opponent.getLastThinking();
+          // Capture AI thinking after opponent move decision
+          session.lastAIThinking = session.opponent.getLastThinking();
 
-        actionTrace.push({
-          action: opponentAction,
-          playerId: 'opponent',
-          turn: session.state.turnCount,
-          phase: session.state.phase,
-          description: `${describeAction(opponentAction, session.state)} ${getActionStats(session.state, 'opponent')}`,
-          aiThinking: session.lastAIThinking,
-        });
-
-        session.state = applyAction(session.state, opponentAction);
-      } catch (error) {
-        // Opponent action failed - treat as win for player
-        console.warn(
-          `[SessionManager] Opponent action failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        );
-        return {
-          state: session.state,
-          reward: 1.0,
-          done: true,
-          truncated: false,
-          info: {
-            stepCount: session.stepCount,
+          actionTrace.push({
+            action: opponentAction,
+            playerId: 'opponent',
             turn: session.state.turnCount,
             phase: session.state.phase,
-            winner: 'player',
-            error: 'Opponent action failed',
-          },
-          actionTrace,
-        };
+            description: `${describeAction(opponentAction, session.state)} ${getActionStats(session.state, 'opponent')}`,
+            aiThinking: session.lastAIThinking,
+          });
+
+          session.state = applyAction(session.state, opponentAction);
+        } catch (error) {
+          // Opponent action failed - treat as win for player
+          console.warn(
+            `[SessionManager] Opponent action failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          );
+          return {
+            state: session.state,
+            reward: 1.0,
+            done: true,
+            truncated: false,
+            info: {
+              stepCount: session.stepCount,
+              turn: session.state.turnCount,
+              phase: session.state.phase,
+              winner: 'player',
+              error: 'Opponent action failed',
+            },
+            actionTrace,
+          };
+        }
       }
     }
 
     // Auto-pass forced moves for player
+    // For external opponents, don't auto-pass opponent moves
     try {
       while (!session.state.gameOver && session.state.priorityPlayer === 'player') {
         const playerActions = getLegalActions(session.state, 'player');
@@ -372,23 +380,30 @@ export class SessionManager {
 
           session.state = applyAction(session.state, autoAction);
 
-          // Check if opponent now has priority
-          while (!session.state.gameOver && session.state.priorityPlayer === 'opponent') {
-            const opponentAction = session.opponent.chooseAction(session.state, 'opponent');
+          // Check if opponent now has priority (skip for external opponents)
+          if (!isExternalOpponent) {
+            while (!session.state.gameOver && session.state.priorityPlayer === 'opponent') {
+              const opponentAction = session.opponent.chooseAction(session.state, 'opponent');
 
-            // Capture AI thinking after opponent move
-            session.lastAIThinking = session.opponent.getLastThinking();
+              // Capture AI thinking after opponent move
+              session.lastAIThinking = session.opponent.getLastThinking();
 
-            actionTrace.push({
-              action: opponentAction,
-              playerId: 'opponent',
-              turn: session.state.turnCount,
-              phase: session.state.phase,
-              description: `${describeAction(opponentAction, session.state)} ${getActionStats(session.state, 'opponent')}`,
-              aiThinking: session.lastAIThinking,
-            });
+              actionTrace.push({
+                action: opponentAction,
+                playerId: 'opponent',
+                turn: session.state.turnCount,
+                phase: session.state.phase,
+                description: `${describeAction(opponentAction, session.state)} ${getActionStats(session.state, 'opponent')}`,
+                aiThinking: session.lastAIThinking,
+              });
 
-            session.state = applyAction(session.state, opponentAction);
+              session.state = applyAction(session.state, opponentAction);
+            }
+          } else {
+            // For external opponents, break out if opponent has priority
+            if (session.state.priorityPlayer === 'opponent') {
+              break;
+            }
           }
         } else {
           break;
@@ -441,6 +456,167 @@ export class SessionManager {
         phase: session.state.phase,
         winner: session.state.winner,
         shapedReward: reward !== terminalReward,
+        priorityPlayer: session.state.priorityPlayer,
+        isExternalOpponent,
+      },
+      actionTrace,
+    };
+  }
+
+  /**
+   * Apply an opponent action (for external/self-play mode)
+   * Only works when opponent has priority and opponentType is 'external' or 'selfplay'
+   */
+  opponentStep(
+    gameId: string,
+    actionIndex: number,
+  ): {
+    state: GameState;
+    reward: number;
+    done: boolean;
+    truncated: boolean;
+    info: Record<string, unknown>;
+    actionTrace: ActionTraceStep[];
+  } {
+    const session = this.sessions.get(gameId);
+    if (!session) {
+      throw new Error(`Session not found: ${gameId}`);
+    }
+
+    // Verify this is an external opponent game
+    if (session.opponentType !== 'external' && session.opponentType !== 'selfplay') {
+      throw new Error(
+        `opponentStep only works with external/selfplay opponents. Current: ${session.opponentType}`,
+      );
+    }
+
+    // Verify opponent has priority
+    if (session.state.priorityPlayer !== 'opponent') {
+      throw new Error(
+        `Opponent does not have priority. Current priority: ${session.state.priorityPlayer}`,
+      );
+    }
+
+    session.lastAccessedAt = Date.now();
+    const actionTrace: ActionTraceStep[] = [];
+
+    // If game is already over, return terminal state
+    if (session.state.gameOver) {
+      const reward = session.state.winner === 'player' ? 1.0 : -1.0;
+      return {
+        state: session.state,
+        reward,
+        done: true,
+        truncated: false,
+        info: {
+          stepCount: session.stepCount,
+          turn: session.state.turnCount,
+          phase: session.state.phase,
+          winner: session.state.winner,
+          priorityPlayer: session.state.priorityPlayer,
+        },
+        actionTrace,
+      };
+    }
+
+    // Get legal actions for opponent
+    const legalActions = getLegalActions(session.state, 'opponent');
+
+    if (legalActions.length === 0) {
+      return {
+        state: session.state,
+        reward: 1.0, // Opponent has no moves, treat as win for player
+        done: true,
+        truncated: false,
+        info: {
+          stepCount: session.stepCount,
+          turn: session.state.turnCount,
+          phase: session.state.phase,
+          winner: 'player',
+          error: 'No legal actions for opponent',
+          priorityPlayer: session.state.priorityPlayer,
+        },
+        actionTrace,
+      };
+    }
+
+    if (actionIndex < 0 || actionIndex >= legalActions.length) {
+      throw new Error(
+        `Invalid action index: ${actionIndex}. Legal actions: 0-${legalActions.length - 1}`,
+      );
+    }
+
+    // Apply opponent action
+    const action = legalActions[actionIndex];
+    if (!action) {
+      throw new Error(`Action at index ${actionIndex} not found`);
+    }
+
+    try {
+      actionTrace.push({
+        action,
+        playerId: 'opponent',
+        turn: session.state.turnCount,
+        phase: session.state.phase,
+        description: `${describeAction(action, session.state)} ${getActionStats(session.state, 'opponent')}`,
+      });
+      session.state = applyAction(session.state, action);
+    } catch (error) {
+      return {
+        state: session.state,
+        reward: 1.0, // Opponent action failed, player wins
+        done: true,
+        truncated: false,
+        info: {
+          stepCount: session.stepCount,
+          turn: session.state.turnCount,
+          phase: session.state.phase,
+          winner: 'player',
+          error: error instanceof Error ? error.message : 'Opponent action failed',
+          priorityPlayer: session.state.priorityPlayer,
+        },
+        actionTrace,
+      };
+    }
+
+    // Auto-pass forced moves for opponent
+    while (!session.state.gameOver && session.state.priorityPlayer === 'opponent') {
+      const opponentActions = getLegalActions(session.state, 'opponent');
+      if (opponentActions.length === 1 && opponentActions[0]) {
+        const autoAction = opponentActions[0];
+        actionTrace.push({
+          action: autoAction,
+          playerId: 'opponent',
+          turn: session.state.turnCount,
+          phase: session.state.phase,
+          description: `${describeAction(autoAction, session.state)} ${getActionStats(session.state, 'opponent')}`,
+        });
+        session.state = applyAction(session.state, autoAction);
+      } else {
+        break;
+      }
+    }
+
+    // Calculate reward (from player perspective)
+    const terminalReward = session.state.gameOver
+      ? session.state.winner === 'player'
+        ? 1.0
+        : -1.0
+      : 0;
+
+    const truncated = session.stepCount > 500;
+
+    return {
+      state: session.state,
+      reward: terminalReward, // No shaping for opponent step
+      done: session.state.gameOver,
+      truncated,
+      info: {
+        stepCount: session.stepCount,
+        turn: session.state.turnCount,
+        phase: session.state.phase,
+        winner: session.state.winner,
+        priorityPlayer: session.state.priorityPlayer,
       },
       actionTrace,
     };

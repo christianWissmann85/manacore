@@ -42,7 +42,7 @@ def train_ppo_shaped(
     print("=" * 60)
     print(f"Timesteps:    {timesteps:,}")
     print(f"Opponent:     {opponent}")
-    print(f"Reward Scale: 0.5 (5x default)")
+    print("Reward Scale: 0.5 (5x default)")
     print("=" * 60)
 
     # Create environment
@@ -180,7 +180,7 @@ def main() -> None:
     print("\n" + "=" * 60)
     print("COMPARISON TO BASELINE")
     print("=" * 60)
-    print(f"Previous best (pure PPO): 45% vs Greedy")
+    print("Previous best (pure PPO): 45% vs Greedy")
     print(f"With reward shaping:      {greedy_result['win_rate']:.1f}% vs Greedy")
 
     diff = greedy_result['win_rate'] - 45

@@ -74,15 +74,16 @@ Key changes:
 ### 6. Curriculum Learning v2
 
 Progressive difficulty approach:
+
 - Stage 1: 100% Random (30K steps, target 85%)
 - Stage 2: 50% Random + 50% Greedy (30K steps, target 65%)
 - Stage 3: 100% Greedy (50K steps, target 50%)
 
-| Stage | Opponent | Win Rate | Target | Status |
-|-------|----------|----------|--------|--------|
-| 1 | Random | 73.3% | 85% | FAIL |
-| 2 | Mixed | 36.7% vs Greedy | 65% | FAIL |
-| 3 | Greedy | 36.7% vs Greedy | 50% | FAIL |
+| Stage | Opponent | Win Rate        | Target | Status |
+| ----- | -------- | --------------- | ------ | ------ |
+| 1     | Random   | 73.3%           | 85%    | FAIL   |
+| 2     | Mixed    | 36.7% vs Greedy | 65%    | FAIL   |
+| 3     | Greedy   | 36.7% vs Greedy | 50%    | FAIL   |
 
 **Final: 81% vs Random, 36% vs Greedy**
 
@@ -93,14 +94,15 @@ Progressive difficulty approach:
 Increased reward shaping scale from 0.1 to 0.5 (5x) to make intermediate rewards more impactful.
 
 Shaped reward characteristics:
+
 - Range: [-0.038, +0.031] per step
 - Average magnitude: 0.008
 - Based on: life delta, board power, creature count, card advantage, mana
 
-| Metric | Sparse (baseline) | Shaped (5x scale) |
-|--------|-------------------|-------------------|
-| vs Random | 78% | 74% |
-| vs Greedy | 45% | 38% |
+| Metric    | Sparse (baseline) | Shaped (5x scale) |
+| --------- | ----------------- | ----------------- |
+| vs Random | 78%               | 74%               |
+| vs Greedy | 45%               | 38%               |
 
 **Finding**: NEGATIVE. Reward shaping hurt performance (-7%). This is theoretically consistent - potential-based shaping preserves the optimal policy, it doesn't change what that policy is. The 45% ceiling is a property of the problem, not the reward signal.
 

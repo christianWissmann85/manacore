@@ -23,6 +23,10 @@ interface StepGameBody {
   action: unknown;
 }
 
+interface OpponentStepBody {
+  action: unknown;
+}
+
 interface ResetGameBody {
   seed?: number;
 }
@@ -120,6 +124,50 @@ export function createGameRoutes(sessionManager: SessionManager): Hono {
   });
 
   /**
+   * POST /game/:id/opponent-step
+   * Take an action as the opponent (for external/self-play mode)
+   * Only works when opponent has priority and opponentType is 'external' or 'selfplay'
+   */
+  app.post('/:id/opponent-step', async (c) => {
+    try {
+      const gameId = c.req.param('id');
+      const body: unknown = await c.req.json();
+      const { action } = body as OpponentStepBody;
+
+      if (typeof action !== 'number') {
+        return c.json({ error: 'action must be a number (action index)' }, 400);
+      }
+
+      const result = sessionManager.opponentStep(gameId, action);
+      const session = sessionManager.getSession(gameId);
+
+      const response = createStepResponse(
+        result.state,
+        result.reward,
+        result.done,
+        result.truncated,
+        result.info.stepCount as number,
+        'opponent', // Perspective is opponent for this endpoint
+      );
+
+      // Add client-friendly state and legal actions (from player perspective)
+      const clientState = serializeClientState(result.state, gameId);
+      const clientActions = serializeLegalActionsForClient(result.state, 'player');
+
+      return c.json({
+        ...response,
+        clientState,
+        legalActions: clientActions,
+        aiThinking: session?.lastAIThinking ?? null,
+        actionTrace: result.actionTrace,
+        info: result.info,
+      });
+    } catch (error) {
+      return c.json({ error: error instanceof Error ? error.message : 'Unknown error' }, 400);
+    }
+  });
+
+  /**
    * POST /game/:id/reset
    * Reset a game to initial state
    */
@@ -209,6 +257,31 @@ export function createGameRoutes(sessionManager: SessionManager): Hono {
       return c.json({
         legalActions: clientActions,
         actionMask: createActionMask(session.state, 'player'),
+      });
+    } catch (error) {
+      return c.json({ error: error instanceof Error ? error.message : 'Unknown error' }, 400);
+    }
+  });
+
+  /**
+   * GET /game/:id/opponent-actions
+   * Get legal actions for opponent (for external/self-play mode)
+   */
+  app.get('/:id/opponent-actions', (c) => {
+    try {
+      const gameId = c.req.param('id');
+      const session = sessionManager.getSession(gameId);
+
+      if (!session) {
+        return c.json({ error: `Game not found: ${gameId}` }, 404);
+      }
+
+      const clientActions = serializeLegalActionsForClient(session.state, 'opponent');
+
+      return c.json({
+        legalActions: clientActions,
+        actionMask: createActionMask(session.state, 'opponent'),
+        priorityPlayer: session.state.priorityPlayer,
       });
     } catch (error) {
       return c.json({ error: error instanceof Error ? error.message : 'Unknown error' }, 400);

@@ -225,6 +225,24 @@ class BunBridge:
         """Get legal actions for current state."""
         return self._request("GET", f"/game/{game_id}/actions")
 
+    def get_opponent_actions(self, game_id: str) -> dict[str, Any]:
+        """Get legal actions for opponent (for external/self-play mode)."""
+        return self._request("GET", f"/game/{game_id}/opponent-actions")
+
+    def opponent_step(self, game_id: str, action: int) -> dict[str, Any]:
+        """
+        Take an action as the opponent (for external/self-play mode).
+
+        Args:
+            game_id: The game session ID
+            action: Action index for opponent
+
+        Returns:
+            New game state from player's perspective
+        """
+        action = int(action)
+        return self._request("POST", f"/game/{game_id}/opponent-step", json={"action": action})
+
     def delete_game(self, game_id: str) -> dict[str, Any]:
         """Delete a game session."""
         return self._request("DELETE", f"/game/{game_id}")

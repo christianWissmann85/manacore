@@ -30,6 +30,7 @@ from gymnasium.envs.registration import register
 
 from .bridge import BunBridge
 from .env import ManaCoreBattleEnv
+from .selfplay import SelfPlayEnv
 from .utils import make_env, make_masked_vec_env, make_vec_env
 
 
@@ -49,6 +50,7 @@ register(
 
 __all__ = [
     "ManaCoreBattleEnv",
+    "SelfPlayEnv",
     "BunBridge",
     "make_env",
     "make_vec_env",

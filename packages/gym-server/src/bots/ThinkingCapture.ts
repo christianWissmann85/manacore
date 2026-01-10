@@ -156,6 +156,33 @@ export class RandomThinkingBot implements ThinkingBot {
 }
 
 /**
+ * External bot - a placeholder that doesn't auto-play.
+ * Used for self-play where Python controls both sides.
+ */
+export class ExternalBot implements ThinkingBot {
+  getName(): string {
+    return 'ExternalBot';
+  }
+
+  getDescription(): string {
+    return 'External control - no automatic actions';
+  }
+
+  chooseAction(_state: GameState, _playerId: PlayerId): Action {
+    // This should never be called - external bot waits for explicit actions
+    throw new Error('ExternalBot does not auto-play. Use /game/:id/opponent-step endpoint.');
+  }
+
+  getLastThinking(): AIThinking | null {
+    return null;
+  }
+
+  clearThinking(): void {
+    // No-op
+  }
+}
+
+/**
  * Create a thinking-enabled bot from type string
  */
 export function createThinkingBot(botType: string, seed?: number): ThinkingBot {
@@ -173,6 +200,9 @@ export function createThinkingBot(botType: string, seed?: number): ThinkingBot {
     case 'mcts-strong':
     case 'mcts-eval-strong':
       return new MCTSThinkingBot(500, { nameSuffix: 'strong' });
+    case 'external':
+    case 'selfplay':
+      return new ExternalBot();
     default:
       console.warn(`Unknown bot type: ${botType}, defaulting to greedy`);
       return new GreedyThinkingBot(seed);
