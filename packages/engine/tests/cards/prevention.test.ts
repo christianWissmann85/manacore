@@ -3,7 +3,7 @@
  *
  * Tests for:
  * - Fog: Prevent all combat damage this turn
- * - Healing Salve: Gain 3 life (modal - prevention mode TODO)
+ * - Healing Salve: Gain 3 life (prevention mode not needed for ML/AI gym)
  */
 
 import { test, expect, describe, beforeAll } from 'bun:test';

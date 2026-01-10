@@ -109,7 +109,7 @@ export class Profiler {
     };
 
     if (this.detailed) {
-      // TODO: Add detailed profiling (phases, actions, etc.)
+
       // This will require instrumentation in the engine
       profile.detailed = {
         phases: {},

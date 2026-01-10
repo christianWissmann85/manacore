@@ -36,12 +36,15 @@ export const preventionSpells: SpellImplementation[] = [
       // Choose one:
       // - Target player gains 3 life
       // - Prevent the next 3 damage that would be dealt to any target
-      // For now, only implement life gain mode (targets[0] should be 'player' or 'opponent')
+      //
+      // SCOPE DECISION (2026-01-10): Only implement life gain mode for ML/AI Research Gym.
+      // Prevention infrastructure exists (preventionShields, Circles of Protection, etc.),
+      // but adding modal complexity to one spell doesn't significantly enhance the learning
+      // environment. Agents can learn damage prevention from simpler, focused cards.
       const target = stackObj.targets[0];
       if (target === 'player' || target === 'opponent') {
         gainLife(state, target, 3);
       }
-      // TODO: Implement prevention mode with damage shields
     },
   },
 

@@ -607,7 +607,7 @@ function applyUntap(state: GameState, action: Action): void {
  * Activate an ability
  *
  * Mana abilities resolve immediately (don't use the stack)
- * Other abilities go on the stack (TODO: implement stack for abilities)
+ * Other abilities go on the stack (implemented at line 667)
  */
 function applyActivateAbility(state: GameState, action: ActivateAbilityAction): void {
   const player = getPlayer(state, action.playerId);
