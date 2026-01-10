@@ -172,6 +172,14 @@ describe('Damage Abilities', () => {
         },
       } as ActivateAbilityAction);
 
+      // Resolve stack
+      newState = applyAction(newState, { type: 'PASS_PRIORITY', playerId: 'player', payload: {} });
+      newState = applyAction(newState, {
+        type: 'PASS_PRIORITY',
+        playerId: 'opponent',
+        payload: {},
+      });
+
       expect(newState.players.opponent.life).toBe(19); // 20 - 1
 
       const tappedShaman = newState.players.player.battlefield.find(

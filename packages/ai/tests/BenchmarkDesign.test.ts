@@ -1,4 +1,4 @@
-import { expect, test, describe } from "bun:test";
+import { expect, test, describe } from 'bun:test';
 
 /**
  * Task 1: Design Benchmark Metrics
@@ -6,18 +6,18 @@ import { expect, test, describe } from "bun:test";
  * It defines the expected structure of a comprehensive benchmark result.
  */
 
-import { BenchmarkRunner, type BenchmarkResult } from "../src/simulation/BenchmarkRunner";
+import { BenchmarkRunner, type BenchmarkResult } from '../src/simulation/BenchmarkRunner';
 
-describe("Benchmarking Design", () => {
-  test("Benchmark result should contain expanded metrics", () => {
+describe('Benchmarking Design', () => {
+  test('Benchmark result should contain expanded metrics', () => {
     const result: BenchmarkResult = BenchmarkRunner.getPlaceholderResult();
 
     const requiredKeys: (keyof BenchmarkResult)[] = [
-      "actionsPerSecond",
-      "avgTurnResolutionTimeMs",
-      "peakMemoryMb",
-      "avgMemoryMb",
-      "ruleComplianceRate",
+      'actionsPerSecond',
+      'avgTurnResolutionTimeMs',
+      'peakMemoryMb',
+      'avgMemoryMb',
+      'ruleComplianceRate',
     ];
 
     for (const key of requiredKeys) {

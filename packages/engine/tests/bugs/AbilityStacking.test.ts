@@ -16,8 +16,12 @@ describe('Bug: Activated Abilities Skipping Stack', () => {
     const island = CardLoader.getByName('Island');
     if (!island) throw new Error('Basic lands not found');
 
-    const pDeck = Array(40).fill(null).map(() => createCardInstance(island.id, 'player', 'library'));
-    const oDeck = Array(40).fill(null).map(() => createCardInstance(island.id, 'opponent', 'library'));
+    const pDeck = Array(40)
+      .fill(null)
+      .map(() => createCardInstance(island.id, 'player', 'library'));
+    const oDeck = Array(40)
+      .fill(null)
+      .map(() => createCardInstance(island.id, 'opponent', 'library'));
 
     state = createGameState(pDeck, oDeck);
   });
@@ -26,8 +30,8 @@ describe('Bug: Activated Abilities Skipping Stack', () => {
     // Prodigal Sorcerer: {T}: Deal 1 damage to any target.
     const sorcerer = CardLoader.getByName('Prodigal Sorcerer');
     if (!sorcerer) {
-        console.warn("Prodigal Sorcerer not found, skipping test");
-        return; 
+      console.warn('Prodigal Sorcerer not found, skipping test');
+      return;
     }
 
     const player = getPlayer(state, 'player');
@@ -44,7 +48,7 @@ describe('Bug: Activated Abilities Skipping Stack', () => {
     // Verify ability exists
     const abilities = getActivatedAbilities(timInstance, state);
     const ability = abilities[0];
-    if (!ability) throw new Error("Tim has no ability!");
+    if (!ability) throw new Error('Tim has no ability!');
 
     const initialLife = opponent.life;
 
@@ -55,14 +59,14 @@ describe('Bug: Activated Abilities Skipping Stack', () => {
       payload: {
         sourceId: timInstance.instanceId,
         abilityId: ability.id,
-        targets: ['opponent']
-      }
+        targets: ['opponent'],
+      },
     });
 
-    // EXPECTATION (Correct Rules): 
+    // EXPECTATION (Correct Rules):
     // - Ability should be on the stack
     // - Damage should NOT be dealt yet
-    
+
     // CURRENT BUG:
     // - Ability resolves immediately
     // - Stack is empty

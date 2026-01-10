@@ -21,7 +21,7 @@ export interface StackObject {
   resolved: boolean; // Has this resolved?
   countered: boolean; // Was this countered?
   xValue?: number; // For spells with {X} in cost (e.g., Fireball)
-  
+
   // Phase 2: Ability support
   type?: 'spell' | 'ability'; // Defaults to 'spell' for backwards compat if undefined
   abilityId?: string; // ID of the ability (for activated abilities)

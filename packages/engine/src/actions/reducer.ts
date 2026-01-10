@@ -671,7 +671,7 @@ function applyActivateAbility(state: GameState, action: ActivateAbilityAction): 
       ability,
       action.playerId,
       action.payload.targets,
-      action.payload.xValue
+      action.payload.xValue,
     );
   }
 }

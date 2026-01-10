@@ -125,28 +125,28 @@ export function resolveTopOfStack(state: GameState): void {
 
   const stackObj = state.stack[state.stack.length - 1]!;
   const controller = getPlayer(state, stackObj.controller);
-  
+
   // Check for fizzling
   if (stackObj.countered) {
-    // Countered objects are removed. 
+    // Countered objects are removed.
     // Spells go to GY. Abilities just vanish.
     if (stackObj.type !== 'ability') {
-        stackObj.card.zone = 'graveyard';
-        controller.graveyard.push(stackObj.card);
+      stackObj.card.zone = 'graveyard';
+      controller.graveyard.push(stackObj.card);
     }
   } else if (checkSpellFizzles(state, stackObj)) {
     // Fizzled (illegal targets).
     // Spells go to GY. Abilities just vanish.
     if (stackObj.type !== 'ability') {
-        stackObj.card.zone = 'graveyard';
-        controller.graveyard.push(stackObj.card);
+      stackObj.card.zone = 'graveyard';
+      controller.graveyard.push(stackObj.card);
     }
   } else {
     // Resolve
     if (stackObj.type === 'ability') {
-        resolveAbility(state, stackObj);
+      resolveAbility(state, stackObj);
     } else {
-        resolveSpell(state, stackObj);
+      resolveSpell(state, stackObj);
     }
   }
 
@@ -176,48 +176,47 @@ function resolveAbility(state: GameState, stackObj: StackObject): void {
   // But abilities are instance-specific often.
   // For now, if card is gone, let's try to proceed if we can find the ability definition?
   // We don't store the full ability definition on the stack, just the ID.
-  
+
   // Re-fetch abilities to find the definition
   // Note: if card is in GY, `getActivatedAbilities` might not work as expected if it filters by zone.
   // But `getActivatedAbilities` checks registry using card name.
-  
-  // Workaround: We really should store the AbilityEffect on the stack object or the full Ability definition 
+
+  // Workaround: We really should store the AbilityEffect on the stack object or the full Ability definition
   // to be safe against source removal.
   // But `StackObject` in GameState is serializable JSON, `ActivatedAbility` contains functions (`canActivate`).
   // We can't store functions in GameState.
-  
+
   // So we must re-derive the ability.
   const abilities = getActivatedAbilities(card, state);
-  const ability = abilities.find(a => a.id === stackObj.abilityId);
+  const ability = abilities.find((a) => a.id === stackObj.abilityId);
 
   if (!ability) {
-      // Ability not found? Maybe source changed zones and ID changed?
-      // Or maybe it was a one-shot ability?
-      return;
+    // Ability not found? Maybe source changed zones and ID changed?
+    // Or maybe it was a one-shot ability?
+    return;
   }
 
   // Temporarily patch the ability target to be the specific target chosen
   // This is a hack because `applyAbilityEffect` takes `AbilityEffect` which has a single `target` string
   // but `StackObject` has `targets[]`.
   // We need to map stack targets to the effect.
-  
+
   // If the ability has targets, we pass them.
-  // `applyAbilityEffect` signature: 
+  // `applyAbilityEffect` signature:
   // applyAbilityEffect(state, effect, controller, manaColorChoice, sourceId)
-  
+
   // Wait, `applyAbilityEffect` inside `reducer.ts` handled mapping targets:
   // `ability.effect.target = action.payload.targets[0];`
   // We shouldn't mutate the ability definition itself as it might be shared/cached?
   // `getActivatedAbilities` returns new objects usually.
-  
+
   const effectToApply = { ...ability.effect };
   if (stackObj.targets.length > 0) {
-      effectToApply.target = stackObj.targets[0];
+    effectToApply.target = stackObj.targets[0];
   }
-  
+
   applyAbilityEffect(state, effectToApply, stackObj.controller, undefined, stackObj.sourceId);
 }
-
 
 /**
  * Check if a spell should fizzle (all targets became illegal)

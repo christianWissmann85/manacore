@@ -1,9 +1,9 @@
-import { expect, test, describe } from "bun:test";
-import { BenchmarkRunner } from "../src/simulation/BenchmarkRunner";
-import { RandomBot } from "../src/bots/RandomBot";
+import { expect, test, describe } from 'bun:test';
+import { BenchmarkRunner } from '../src/simulation/BenchmarkRunner';
+import { RandomBot } from '../src/bots/RandomBot';
 
-describe("Benchmark Implementation", () => {
-  test("BenchmarkRunner should execute games and return real metrics", async () => {
+describe('Benchmark Implementation', () => {
+  test('BenchmarkRunner should execute games and return real metrics', async () => {
     const p1 = new RandomBot(1);
     const p2 = new RandomBot(2);
     const numGames = 5;

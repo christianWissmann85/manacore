@@ -1,5 +1,5 @@
-import { initializeGame, applyAction, getRandomTestDeck, type GameState } from "@manacore/engine";
-import type { Bot } from "../bots/Bot";
+import { initializeGame, applyAction, getRandomTestDeck } from '@manacore/engine';
+import type { Bot } from '../bots/Bot';
 
 export interface BenchmarkResult {
   p1Name: string;
@@ -24,7 +24,7 @@ export class BenchmarkRunner {
     p2: Bot,
     numGames: number,
     baseSeed: number = 42,
-    maxTurns: number = 200
+    maxTurns: number = 200,
   ): Promise<BenchmarkResult> {
     const p1Name = p1.getName();
     const p2Name = p2.getName();
@@ -36,7 +36,7 @@ export class BenchmarkRunner {
     let totalTurns = 0;
     let totalActions = 0;
     let totalResolutionTimeMs = 0;
-    let memorySamples: number[] = [];
+    const memorySamples: number[] = [];
 
     const startTime = Date.now();
 
@@ -47,36 +47,34 @@ export class BenchmarkRunner {
       let state = initializeGame(deck1, deck2, seed);
 
       let turns = 0;
-      let gameActions = 0;
 
       try {
         while (!state.gameOver && turns < maxTurns) {
-          const currentBot = state.priorityPlayer === "player" ? p1 : p2;
+          const currentBot = state.priorityPlayer === 'player' ? p1 : p2;
           const playerId = state.priorityPlayer;
 
           const actionStartTime = performance.now();
           const action = currentBot.chooseAction(state, playerId);
           const actionEndTime = performance.now();
 
-          totalResolutionTimeMs += (actionEndTime - actionStartTime);
-          gameActions++;
+          totalResolutionTimeMs += actionEndTime - actionStartTime;
           totalActions++;
 
           state = applyAction(state, action);
 
-          if (state.priorityPlayer === "player" && state.phase === "beginning") {
+          if (state.priorityPlayer === 'player' && state.phase === 'beginning') {
             turns++;
           }
         }
 
         if (state.gameOver) {
-          if (state.winner === "player") p1Wins++;
+          if (state.winner === 'player') p1Wins++;
           else p2Wins++;
         } else {
           draws++;
         }
         totalTurns += turns;
-      } catch (err) {
+      } catch {
         errors++;
       }
 
@@ -108,8 +106,8 @@ export class BenchmarkRunner {
 
   static getPlaceholderResult(): BenchmarkResult {
     return {
-      p1Name: "Placeholder",
-      p2Name: "Placeholder",
+      p1Name: 'Placeholder',
+      p2Name: 'Placeholder',
       games: 0,
       p1Wins: 0,
       p2Wins: 0,

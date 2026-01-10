@@ -108,77 +108,139 @@ describe('Regeneration Shield Mechanics', () => {
     state.players.player.battlefield.push(swampCard);
 
     // Add black mana to pool (simulating tapped Swamp)
+
     state.players.player.manaPool.black = 1;
 
+    state.phase = 'main1';
+
     const abilities = getActivatedAbilities(skeletons, state);
+
     const regenAbility = abilities.find((a) => a.effect.type === 'REGENERATE')!;
 
     // Activate regeneration
-    const newState = applyAction(state, {
+
+    let newState = applyAction(state, {
       type: 'ACTIVATE_ABILITY',
+
       playerId: 'player',
+
       payload: {
         sourceId: skeletons.instanceId,
+
         abilityId: regenAbility.id,
       },
     });
 
+    // VERIFY: It should be on the stack, not resolved yet
+
+    expect(newState.stack.length).toBe(1);
+
+    expect(newState.stack[0].type).toBe('ability');
+
+    // Resolve stack
+
+    newState = applyAction(newState, { type: 'PASS_PRIORITY', playerId: 'player', payload: {} });
+
+    newState = applyAction(newState, { type: 'PASS_PRIORITY', playerId: 'opponent', payload: {} });
+
+    // VERIFY: Stack should be empty now
+
+    expect(newState.stack.length).toBe(0);
+
     // Check shield was added
+
     const updatedSkeletons = newState.players.player.battlefield.find(
       (c) => c.instanceId === skeletons.instanceId,
     );
+
     expect(updatedSkeletons?.regenerationShields).toBe(1);
   });
 
   test('Multiple regeneration activations stack shields', () => {
     const state = createTestState();
 
+    state.phase = 'main1';
+
     // Add Drudge Skeletons
+
     const card = CardLoader.getByName('Drudge Skeletons')!;
+
     const skeletons = createCardInstance(card.id, 'player', 'battlefield');
+
     skeletons.summoningSick = false;
+
     state.players.player.battlefield.push(skeletons);
 
     // Add two Swamps for mana
+
     const swamp = CardLoader.getByName('Swamp')!;
+
     const swampCard1 = createCardInstance(swamp.id, 'player', 'battlefield');
+
     swampCard1.summoningSick = false;
+
     const swampCard2 = createCardInstance(swamp.id, 'player', 'battlefield');
+
     swampCard2.summoningSick = false;
+
     state.players.player.battlefield.push(swampCard1, swampCard2);
 
     // Add black mana to pool
+
     state.players.player.manaPool.black = 2;
 
     const abilities = getActivatedAbilities(skeletons, state);
+
     const regenAbility = abilities.find((a) => a.effect.type === 'REGENERATE')!;
 
     // Activate regeneration twice
+
     let newState = applyAction(state, {
       type: 'ACTIVATE_ABILITY',
+
       playerId: 'player',
+
       payload: {
         sourceId: skeletons.instanceId,
+
         abilityId: regenAbility.id,
       },
     });
 
-    // Mana was spent, add more (simulating tapping another swamp)
-    newState.players.player.manaPool.black = 1;
+    // Resolve first activation
+
+    newState = applyAction(newState, { type: 'PASS_PRIORITY', playerId: 'player', payload: {} });
+
+    newState = applyAction(newState, { type: 'PASS_PRIORITY', playerId: 'opponent', payload: {} });
+
+    expect(newState.stack.length).toBe(0);
 
     newState = applyAction(newState, {
       type: 'ACTIVATE_ABILITY',
+
       playerId: 'player',
+
       payload: {
         sourceId: skeletons.instanceId,
+
         abilityId: regenAbility.id,
       },
     });
 
+    // Resolve second activation
+
+    newState = applyAction(newState, { type: 'PASS_PRIORITY', playerId: 'player', payload: {} });
+
+    newState = applyAction(newState, { type: 'PASS_PRIORITY', playerId: 'opponent', payload: {} });
+
+    expect(newState.stack.length).toBe(0);
+
     // Check shields stacked
+
     const updatedSkeletons = newState.players.player.battlefield.find(
       (c) => c.instanceId === skeletons.instanceId,
     );
+
     expect(updatedSkeletons?.regenerationShields).toBe(2);
   });
 });

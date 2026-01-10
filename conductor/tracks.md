@@ -4,5 +4,6 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [ ] Track: Infrastructure Hardening and Performance Benchmarking
-*Link: [./conductor/tracks/infra_benchmarking_20260110/](./conductor/tracks/infra_benchmarking_20260110/)*
+## [~] Track: Infrastructure Hardening and Performance Benchmarking
+
+_Link: [./conductor/tracks/infra_benchmarking_20260110/](./conductor/tracks/infra_benchmarking_20260110/)_
