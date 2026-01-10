@@ -29,7 +29,7 @@ describe('Profiler', () => {
     expect(data.detailed?.ai).toBeDefined();
     expect(data.detailed?.ai?.decisions).toBe(2);
     // Allow for some timing variance, but should be at least the sum of delays
-    expect(data.detailed?.ai?.totalTime).toBeGreaterThanOrEqual(30); 
+    expect(data.detailed?.ai?.totalTime).toBeGreaterThanOrEqual(30);
     expect(data.detailed?.ai?.avgTime).toBeGreaterThanOrEqual(15);
   });
 
@@ -59,17 +59,17 @@ describe('Profiler', () => {
     expect(data.detailed?.ai?.decisions).toBe(2);
     expect(data.detailed?.ai?.totalTime).toBeGreaterThanOrEqual(30);
   });
-  
+
   it('should reset AI metrics', () => {
-      profiler.startSimulation();
-      profiler.startAiDecision();
-      profiler.endAiDecision();
-      
-      profiler.reset();
-      
-      const data = profiler.getProfileData(0);
-      expect(data.detailed?.ai?.decisions).toBe(0);
-      expect(data.detailed?.ai?.totalTime).toBe(0);
+    profiler.startSimulation();
+    profiler.startAiDecision();
+    profiler.endAiDecision();
+
+    profiler.reset();
+
+    const data = profiler.getProfileData(0);
+    expect(data.detailed?.ai?.decisions).toBe(0);
+    expect(data.detailed?.ai?.totalTime).toBe(0);
   });
 
   it('should track Engine action latency', async () => {

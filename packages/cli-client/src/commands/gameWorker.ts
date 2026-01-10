@@ -20,7 +20,6 @@ if (!parentPort) {
 parentPort.on('message', (msg: WorkerMessage) => {
   // Wrap in async IIFE to satisfy @typescript-eslint/no-misused-promises
   void (async () => {
-    const startTime = performance.now();
     try {
       // Dynamic imports to ensure env var is set before modules load
       const { runSingleGame } = await import('./gameRunner');

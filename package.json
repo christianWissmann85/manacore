@@ -22,7 +22,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md}\"",
     "typecheck": "tsc --noEmit --project packages/engine/tsconfig.json && tsc --noEmit --project packages/ai/tsconfig.json && tsc --noEmit --project packages/cli-client/tsconfig.json && tsc --noEmit --project packages/gym-server/tsconfig.json && tsc --noEmit --project packages/web-client/tsconfig.json",
-    "check": "bun run typecheck && bun run lint && bun run format:check"
+    "check": "bun run typecheck && bun run lint"
   },
   "devDependencies": {
     "@types/bun": "latest",

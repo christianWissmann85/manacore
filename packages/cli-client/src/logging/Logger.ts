@@ -16,7 +16,7 @@ export interface LogEntry {
   timestamp: string;
   level: string;
   message: string;
-  data?: any;
+  data?: unknown;
 }
 
 export class Logger {
@@ -72,7 +72,7 @@ export class Logger {
   /**
    * Log a message
    */
-  private log(level: LogLevel, message: string, data?: any): void {
+  private log(level: LogLevel, message: string, data?: unknown): void {
     const entry: LogEntry = {
       timestamp: new Date().toISOString(),
       level: LogLevel[level],
@@ -99,19 +99,19 @@ export class Logger {
     }
   }
 
-  debug(message: string, data?: any): void {
+  debug(message: string, data?: unknown): void {
     this.log(LogLevel.DEBUG, message, data);
   }
 
-  info(message: string, data?: any): void {
+  info(message: string, data?: unknown): void {
     this.log(LogLevel.INFO, message, data);
   }
 
-  warn(message: string, data?: any): void {
+  warn(message: string, data?: unknown): void {
     this.log(LogLevel.WARN, message, data);
   }
 
-  error(message: string, data?: any): void {
+  error(message: string, data?: unknown): void {
     this.log(LogLevel.ERROR, message, data);
   }
 }
