@@ -41,16 +41,10 @@ describe('Bug: Activated Abilities Skipping Stack', () => {
     state.phase = 'main1';
     state.priorityPlayer = 'player';
 
-    // DEBUG: Check abilities
+    // Verify ability exists
     const abilities = getActivatedAbilities(timInstance, state);
-    console.log('DEBUG: Tim abilities:', JSON.stringify(abilities, null, 2));
-
     const ability = abilities[0];
     if (!ability) throw new Error("Tim has no ability!");
-
-    const canActivate = ability.canActivate(state, timInstance.instanceId, 'player');
-    console.log('DEBUG: canActivate result:', canActivate);
-    console.log('DEBUG: Tim state:', JSON.stringify(timInstance, null, 2));
 
     const initialLife = opponent.life;
 
