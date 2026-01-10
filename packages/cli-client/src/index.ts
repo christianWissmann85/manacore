@@ -174,6 +174,7 @@ async function main() {
         opponentBot.getName(),
         {
           formats,
+          outputLevel,
           outputPath: exportPath,
           pretty: true,
         },
@@ -348,6 +349,7 @@ async function main() {
         randomBot.getName(),
         {
           formats,
+          outputLevel,
           outputPath: exportPath,
           pretty: true,
         },

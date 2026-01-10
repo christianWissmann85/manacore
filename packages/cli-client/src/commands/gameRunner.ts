@@ -21,12 +21,14 @@ import {
   isCreature,
 } from '@manacore/engine';
 import { GameError } from '../recording';
+import type { Profiler } from '../profiling';
 
 interface GameOptions {
   maxTurns: number;
   verbose: boolean;
   debugVerbose?: boolean;
   seed?: number;
+  profiler?: Profiler;
 }
 
 const MAX_RECENT_ACTIONS = 50;
@@ -91,7 +93,9 @@ export async function runSingleGame(
     }
 
     // Bot chooses action
+    if (options.profiler) options.profiler.startAiDecision();
     const action = priorityBot.chooseAction(state, state.priorityPlayer);
+    if (options.profiler) options.profiler.endAiDecision();
 
     // Create action signature for loop detection
     const actionSignature = `${action.type}_${action.type === 'ACTIVATE_ABILITY' ? action.payload.abilityId : ''}_${state.phase}_${state.step}`;
@@ -112,7 +116,10 @@ export async function runSingleGame(
       const previousStep = state.step;
       const previousPriorityPlayer = state.priorityPlayer;
 
+      if (options.profiler) options.profiler.startEngineAction();
       state = applyAction(state, action);
+      if (options.profiler) options.profiler.endEngineAction();
+
       actionCount++;
       actionsThisTurn++;
 

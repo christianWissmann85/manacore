@@ -115,6 +115,20 @@ export interface ProfileData {
       byType: Record<string, number>;
       avgPerTurn: number;
     };
+    ai?: {
+      decisions: number;
+      totalTime: number;
+      avgTime: number;
+      minTime: number;
+      maxTime: number;
+    };
+    engine?: {
+      actions: number;
+      totalTime: number;
+      avgTime: number;
+      minTime: number;
+      maxTime: number;
+    };
   };
 }
 
@@ -129,6 +143,7 @@ export interface GameResult {
   playerDeckCards?: CardTemplate[];
   opponentDeckCards?: CardTemplate[];
   durationMs?: number;
+  profile?: ProfileData;
   endReason?: string;
 }
 

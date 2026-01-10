@@ -25,8 +25,14 @@ parentPort.on('message', (msg: WorkerMessage) => {
       // Dynamic imports to ensure env var is set before modules load
       const { runSingleGame } = await import('./gameRunner');
       const { createBot } = await import('../botFactory');
+      const { Profiler } = await import('../profiling/Profiler');
 
       const { gameIndex, seed, p1Type, p2Type, maxTurns, debug } = msg;
+
+      // Always use detailed profiling in workers
+      const profiler = new Profiler(true);
+      profiler.startSimulation(); // Mark start of worker execution
+      profiler.startGame();
 
       // Create bots with seeds derived from the game seed to ensure
       // reproducibility while maintaining independence between games.
@@ -42,10 +48,12 @@ parentPort.on('message', (msg: WorkerMessage) => {
         verbose: false,
         debugVerbose: false,
         seed,
+        profiler,
       });
 
-      // Add duration to result
-      result.durationMs = performance.now() - startTime;
+      // Add duration and profile to result
+      result.durationMs = profiler.endGame();
+      result.profile = profiler.getProfileData(1);
 
       parentPort!.postMessage({
         type: 'success',

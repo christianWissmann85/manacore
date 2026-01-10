@@ -47,8 +47,8 @@ export async function runSimulation(
 
   const recorder = new ResultsRecorder(baseSeed, options.gameCount);
   const snapshotWriter = new SnapshotWriter();
-  // Always enable profiling
-  const profiler = new Profiler(false);
+  // Always enable profiling with detailed metrics for AI tracking
+  const profiler = new Profiler(true);
 
   // Always track simulation start time for log file
   const simulationStartTime = performance.now();
@@ -128,6 +128,7 @@ export async function runSimulation(
           verbose: options.verbose || false,
           debugVerbose: options.debugVerbose || false,
           seed,
+          profiler,
         });
 
         gameResult.durationMs = profiler.endGame();
@@ -285,9 +286,10 @@ async function runParallelSimulation(
             const { gameIndex, seed, result } = msg;
             gamesCompleted++;
 
-            // Profiling (approximate duration based on when we got the message)
-            // Ideally the worker sends duration, but we can't easily profile across threads perfectly
-            // We'll trust the worker's result duration if we added it, or just use 0
+            // Profiling
+            if (result.profile) {
+              profiler.add(result.profile);
+            }
 
             logWriter.writeGameComplete(
               gameIndex + 1,

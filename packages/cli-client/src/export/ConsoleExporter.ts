@@ -226,6 +226,27 @@ export class ConsoleExporter extends ResultsExporter {
       console.log(`Total Time: ${(results.profile.totalMs / 1000).toFixed(2)}s`);
       console.log(`Avg Game: ${results.profile.avgGameMs.toFixed(1)}ms`);
       console.log(`Games/sec: ${results.profile.gamesPerSecond.toFixed(2)}`);
+
+      if (results.profile.detailed) {
+        if (results.profile.detailed.ai) {
+          const ai = results.profile.detailed.ai;
+          console.log('');
+          console.log(`AI Latency:`);
+          console.log(`  Decisions: ${ai.decisions}`);
+          console.log(`  Total: ${ai.totalTime.toFixed(1)}ms`);
+          console.log(`  Avg: ${ai.avgTime.toFixed(2)}ms`);
+          console.log(`  Min/Max: ${ai.minTime.toFixed(1)}ms / ${ai.maxTime.toFixed(1)}ms`);
+        }
+        if (results.profile.detailed.engine) {
+          const eng = results.profile.detailed.engine;
+          console.log('');
+          console.log(`Engine Latency:`);
+          console.log(`  Actions: ${eng.actions}`);
+          console.log(`  Total: ${eng.totalTime.toFixed(1)}ms`);
+          console.log(`  Avg: ${eng.avgTime.toFixed(2)}ms`);
+          console.log(`  Min/Max: ${eng.minTime.toFixed(1)}ms / ${eng.maxTime.toFixed(1)}ms`);
+        }
+      }
     }
 
     // Deck statistics
